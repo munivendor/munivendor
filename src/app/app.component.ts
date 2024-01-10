@@ -1,9 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-
-import { SignupComponent } from './signup/signup.component';
-import { SignupPasswordComponent } from './signup/signup-password.component';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router'
 
 @Component({
     selector: 'app-root',
@@ -12,6 +9,7 @@ import { SignupPasswordComponent } from './signup/signup-password.component';
     <div class="topnav">
       <a routerLink="/first-component" routerLinkActive="active" ariaCurrentWhenActive="page">Signup</a>
       <a routerLink="/second-component" routerLinkActive="active" ariaCurrentWhenActive="page">Password </a>
+      <a routerLink="/dashboard-component" routerLinkActive="active" ariaCurrentWhenActive="page">Dashboard</a>
     </div>
     <h1>Welcome to {{title}}!</h1>
   

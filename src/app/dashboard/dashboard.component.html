@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<title>W3.CSS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<body>
+
+<!-- Sidebar -->
+<div class="w3-sidebar w3-light-grey w3-bar-block" style="width:25%">
+  <a [routerLink]="['/create-component']" routerLinkActive="router-link-active" class="w3-bar-item w3-button">Create</a>
+  <a [routerLink]="['request-component']" routerLinkActive="router-link-active" class="w3-bar-item w3-button">Requests</a>
+  <a href="#" class="w3-bar-item w3-button">Submissions</a>
+  <a href="#" class="w3-bar-item w3-button">Applications</a>
+  <a href="#" class="w3-bar-item w3-button">Users</a>
+  <a href="#" class="w3-bar-item w3-button">Reports</a>
+  <a href="#" class="w3-bar-item w3-button">Categories</a>
+  <a href="#" class="w3-bar-item w3-button">municipality Profile </a>
+</div>
+
+<!-- Page Content -->
+<div style="margin-left:25%">
+
+<div class="w3-container w3-teal">
+ 
+</div>
+
+    <div class="w3-container">
+        <router-outlet></router-outlet>
+    </div>
+
+</div>
+      
+</body>
+</html>

@@ -6,10 +6,10 @@ import { Component } from '@angular/core';
   imports: [],
   template: `
     <p>
-      signup-password works!
+      Set up a password for this account
     </p>
   `,
-  styles: ``
+  styles: `p {text-align: center;}`
 })
 export class SignupPasswordComponent {
 
