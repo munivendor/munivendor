@@ -1,37 +1,44 @@
 
-<p> The person who signs up will be the Super Admin and have all access to the municiaplity account (Don’t worry you can change it later)</p>
-<br>
-<br>
-<br>
-<br>
-<table class="center">
-  <tr>
-    <td>
-      <input type="text" id="rcorners1" value= 'Work email for the Super Admin and have access to the municipality account'>
-    </td>
-  </tr>
-  <tr>
-    <td>
-  <input type="text" id="rcorners1" value= 'Firstname'>
-     </td>
-  </tr>
-  <tr>
-    <td>
-  <input type="text" id="rcorners1" value= 'Lastname'>
-    </td>
-  </tr>
-  <tr>
-    <td>
-  <input type="text" id="rcorners1" value= 'Title'>
-    </td>
-  </tr>
-  <tr>
-    <td>
-  <input type="text" id="rcorners1" value= 'Work phone number'>
-    </td>
-  </tr>
-  <table>
+<form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+    <p> The person who signs up will be the Super Admin and have all access to the municiaplity account (Don’t worry you can change it later)</p>
     <br>
     <br>
     <br>
- <a [routerLink]="['/second-component']" routerLinkActive="router-link-active" >continue </a>
+    <br>
+    <table class="center">
+      <tr>
+        <td>
+          <input type="text" id="rcorners1"  formControlName="email" value= 'Work email for the Super Admin and have access to the municipality account'>
+          <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+            <div *ngIf="loginForm.get('email')?.errors?.['required']">Email is required.</div>
+            <div *ngIf="loginForm.get('email')?.errors?.['email']">Invalid email format.</div>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>
+      <input type="text" id="rcorners1" value= 'Firstname'>
+        </td>
+      </tr>
+      <tr>
+        <td>
+      <input type="text" id="rcorners1" value= 'Lastname'>
+        </td>
+      </tr>
+      <tr>
+        <td>
+      <input type="text" id="rcorners1" value= 'Title'>
+        </td>
+      </tr>
+      <tr>
+        <td>
+      <input type="text" id="rcorners1" value= 'Work phone number'>
+        </td>
+      </tr>
+    </table>
+        <br>
+        <br>
+        <br>
+    <a [routerLink]="['/second-component']" routerLinkActive="router-link-active" >continue </a>
+    <button type="submit" [disabled]="loginForm.invalid">Login</button>
+</form>
