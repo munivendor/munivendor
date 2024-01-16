@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterLink, RouterModule } from '@angular/router';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {  FormGroup,FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -12,11 +12,18 @@ import { CommonModule } from '@angular/common';
 })
 
 export class SignupComponent implements OnInit {
-  loginForm!: FormGroup;
-  ngOnInit() {
-    this.loginForm = new FormGroup({
-      email: new FormControl('', [Validators.required, Validators.email])
-    });
+customerForm: FormGroup | undefined;
+customer = new Customer ();
+loginForm!: FormGroup;
+constructor (private fb: FormBuilder) {}
+
+ngOnInit() {
+    this.customerForm = this.fb.group ({ 
+      firstname:'',
+      lastname:'',
+      email:'',
+      title:'',
+    })
   }
   onSubmit() {
     // Handle form submission here
@@ -27,5 +34,5 @@ export class SignupComponent implements OnInit {
       this.loginForm.controls["email"].value
     }
   }
-
+  
 }

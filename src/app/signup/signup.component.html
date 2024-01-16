@@ -1,39 +1,4 @@
- <html>
-  <header>
-    <script src="https://apis.google.com/js/platform.js" async defer></script>
-  </header>
-<body>
-<div id="g_id_onload"
-      data-client_id="663841766464-tk9helt2d01vu0l2ebnffk460f2n8dt9.apps.googleusercontent.com"
-      data-context="signin"
-      data-ux_mode="popup"
-      data-callback="handleCredentialResponse"
-      data-auto_prompt="false">
-      </div>
 
-      <div class="g_id_signin"
-          data-type="standard"
-          data-shape="rectangular"
-          data-theme="outline"
-          data-text="signin_with"
-          data-size="large"
-          data-logo_alignment="left">
-</div>
-
-<script>
-  function decodeJWTToken(token){
-    return JSON.parse(atob(token.split(".")[1]))
-  }
-  window.handleCredentialResponse = handleCredentialResponse;
-  function handleCredentialResponse(response){
-    const responsePayload = decodeJWTToken(response.credential)
-    console.log(responsePayload)
-    sessionStorage.setItem('loggedinUser',JSON.stringify(responsePayload))
-    window.location('/') 
-    alert ('im here')
-    //Changed the above URL where you want user to be redirected
-  }
-</script>
 
 <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
     <p> The person who signs up will be the Super Admin and have all access to the municiaplity account (Don’t worry you can change it later)</p>
@@ -53,22 +18,22 @@
       </tr>
       <tr>
         <td>
-      <input type="text" id="rcorners1" value= 'Firstname'>
+      <input type="text" id="rcorners1" formControlName="firstname" value= 'Firstname'>
         </td>
       </tr>
       <tr>
         <td>
-      <input type="text" id="rcorners1" value= 'Lastname'>
+      <input type="text" id="rcorners1" formControlName="lastname" value= 'Lastname'>
         </td>
       </tr>
       <tr>
         <td>
-      <input type="text" id="rcorners1" value= 'Title'>
+      <input type="text" id="rcorners1"  formControlName="title" value= 'Title'>
         </td>
       </tr>
       <tr>
         <td>
-      <input type="text" id="rcorners1" value= 'Work phone number'>
+      <input type="text" id="rcorners1" formControlName="phoneNumber" value= 'Work phone number'>
         </td>
       </tr>
     </table>
@@ -78,6 +43,6 @@
     <a [routerLink]="['/second-component']" routerLinkActive="router-link-active" >continue </a>
     <button type="submit" [disabled]="loginForm.invalid">Login</button>
 </form>
-</body>
- </html>
+
+
  
