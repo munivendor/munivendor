@@ -16,16 +16,27 @@
           </div>
         </td>
       </tr>
+
       <tr>
         <td>
-      <input type="text" id="rcorners1" formControlName="firstname" value= 'Firstname'>
+          <input type="text" id="rcorners1" formControlName="firstname" value= 'firstname'>
+          <div *ngIf="loginForm.get('firstname')?.invalid && loginForm.get('firstname')?.touched">
+            <div *ngIf="loginForm.get('firstname')?.errors?.['required']">Firstname is required.</div>
+            <div *ngIf="loginForm.get('firstname')?.errors?.['minlength(3)']">Firstname must be at least 3 characters long.</div>
+          </div>
         </td>
       </tr>
+
       <tr>
         <td>
-      <input type="text" id="rcorners1" formControlName="lastname" value= 'Lastname'>
+        <input type="text" id="rcorners1" formControlName="lastname" value= 'Lastname'>
+          <div *ngIf="loginForm.get('lastname')?.invalid && loginForm.get('lastname')?.touched">
+            <div *ngIf="loginForm.get('lastname')?.errors?.['required']">Lastname is required.</div>
+            <div *ngIf="loginForm.get('lastname')?.errors?.['minlength(3)']">Lastname must be at least 3 characters long.</div>
+          </div>
         </td>
       </tr>
+
       <tr>
         <td>
       <input type="text" id="rcorners1"  formControlName="title" value= 'Title'>

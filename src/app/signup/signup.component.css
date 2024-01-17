@@ -1,9 +1,13 @@
-    #rcorners1 {
-    border-radius: 10px;
-    background: grey;
-    padding: 2px; 
-    width: 500px;
-    height: 10px;  
+  
+
+    input[type=text], select {
+      width: 100%;
+      padding: 12px 20px;
+      margin: 8px 0;
+      display: inline-block;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
     }
   
     table.center {

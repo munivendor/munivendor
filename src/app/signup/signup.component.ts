@@ -12,17 +12,16 @@ import { CommonModule } from '@angular/common';
 })
 
 export class SignupComponent implements OnInit {
-customerForm: FormGroup | undefined;
-customer = new Customer ();
 loginForm!: FormGroup;
 constructor (private fb: FormBuilder) {}
 
 ngOnInit() {
-    this.customerForm = this.fb.group ({ 
-      firstname:'',
-      lastname:'',
-      email:'',
+    this.loginForm = this.fb.group ({ 
+      firstname:['firstname (required)', [Validators.required, Validators.minLength(3)]],
+      lastname:['lastname (required)', [Validators.required, Validators.minLength(3)]],
+      email:['email (required)', Validators.email],
       title:'',
+      phoneNumber:'phone number (required)',
     })
   }
   onSubmit() {
