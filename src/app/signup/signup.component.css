@@ -1,7 +1,7 @@
   
 
-    input[type=text], select {
-      width: 100%;
+    input[type=text] {
+      width: 50%;
       padding: 12px 20px;
       margin: 8px 0;
       display: inline-block;
@@ -9,23 +9,20 @@
       border-radius: 4px;
       box-sizing: border-box;
     }
-  
-    table.center {
-    margin-left: auto; 
-    margin-right: auto;
-    }
-  
-    .button {
-      background-color: blue;
+    
+    button {
+      background-color: #ddd;
       border: none;
-      color: white;
-      padding: 20px;
+      color: black;
+      padding: 10px 20px;
       text-align: center;
       text-decoration: none;
       display: inline-block;
-      font-size: 16px;
       margin: 4px 2px;
+      cursor: pointer;
+      border-radius: 16px;
     }
   
-    .button1 {border-radius: 10px;}
-    p {text-align: center;}
+   
+
+    
