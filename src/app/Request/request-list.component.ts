@@ -8,8 +8,8 @@ import { Observable } from 'rxjs';
   selector: 'app-request',
   standalone: true,
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
-  templateUrl: './request.component.html',
-  styleUrls: ['./request.component.css']
+  templateUrl: './request-list.component.html',
+  styleUrls: ['./request-list.component.css']
 })
 export class RequestComponent implements OnInit {
     requests = new Array<any>();
