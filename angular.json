@@ -43,6 +43,7 @@
             "outputPath": "dist/munivendor",
             "index": "src/index.html",
             "browser": "src/main.ts",
+           
             "polyfills": [
               "zone.js"
             ],
