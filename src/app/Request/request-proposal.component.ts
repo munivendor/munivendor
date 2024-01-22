@@ -7,11 +7,11 @@ import { CommonModule } from '@angular/common';
   selector: 'app-signup',
   standalone: true,
   imports: [ ReactiveFormsModule, RouterModule, RouterLink, CommonModule],
-  templateUrl:'./request.component.html' ,
-  styleUrls:['./request.component.css']  
+  templateUrl:'./request-proposal.component.html' ,
+  styleUrls: ['./request-proposal.component.css']  
 })
 
-export class NewRequestFormComponent implements OnInit {
+export class RequestProposalComponent implements OnInit {
 newRequestForm!: FormGroup;
 decisionMakers: any = ['Javatpoint.com', 'HDTuto.com', 'Tutorialandexample.com'];
 requestTypes: any = ['Javatpoint.com', 'HDTuto.com', 'Tutorialandexample.com'];
