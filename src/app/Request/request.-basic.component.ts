@@ -7,8 +7,8 @@ import { CommonModule } from '@angular/common';
   selector: 'app-signup',
   standalone: true,
   imports: [ ReactiveFormsModule, RouterModule, RouterLink, CommonModule],
-  templateUrl:'./request.component.html' ,
-  styleUrls:['./request.component.css']  
+  templateUrl:'./request-basic.component.html' ,
+  styleUrls:['./request-basic.component.css']  
 })
 
 export class NewRequestFormComponent implements OnInit {
