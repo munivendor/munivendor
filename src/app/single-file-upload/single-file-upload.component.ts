@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
 
 @Component({
   standalone:true,
-  selector: 'app-single-file-upload',
+  selector: 'single-file-upload',
   templateUrl: './single-file-upload.component.html',
   styleUrls: ['./single-file-upload.component.css'],
   imports:[CommonModule]

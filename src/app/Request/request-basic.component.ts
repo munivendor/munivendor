@@ -3,12 +3,14 @@ import { RouterLink, RouterModule } from '@angular/router';
 import {  FormGroup,FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
+import { SingleFileUploadComponent } from "../single-file-upload/single-file-upload.component";
+
 @Component({
-  selector: 'app-signup',
-  standalone: true,
-  imports: [ ReactiveFormsModule, RouterModule, RouterLink, CommonModule],
-  templateUrl:'./request-basic.component.html' ,
-  styleUrls:['./request-basic.component.css']  
+    selector: 'request-basic',
+    standalone: true,
+    templateUrl: './request-basic.component.html',
+    styleUrls: ['./request-basic.component.css'],
+    imports: [ReactiveFormsModule, RouterModule, RouterLink, CommonModule, SingleFileUploadComponent]
 })
 
 export class NewRequestFormComponent implements OnInit {
