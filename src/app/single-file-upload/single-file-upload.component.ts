@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { throwError } from 'rxjs';
 import { CommonModule } from '@angular/common';
@@ -12,6 +12,7 @@ import { CommonModule } from '@angular/common';
   imports:[CommonModule]
 })
 export class SingleFileUploadComponent {
+
   status: 'initial' | 'uploading' | 'success' | 'fail' = 'initial';
   file: File | null = null;
 

@@ -3,23 +3,27 @@
   <textarea id="overview" name="w3review" rows="14" cols="70">
   </textarea>
   <p>Upload your own project overview file</p>
-  
-  <button type="submit" [disabled]="newRequestForm.invalid">Login</button>
+  <single-file-upload #overviewfile></single-file-upload>
+  {{overviewfile.file}}
+ 
 
   <p>Goals</p>
   <textarea id="overview" name="w3review1" rows="14" cols="70"></textarea>
   <p>Upload your own project overview file</p>
-  <button type="submit" [disabled]="newRequestForm.invalid">Login</button>
+  <single-file-upload></single-file-upload>
+  
 
   <p>Scope</p>
   <textarea id="scope" name="w3review2" rows="14" cols="70">
   <p>Upload your own project overview file</p>
-  <button type="submit" [disabled]="newRequestForm.invalid">Login</button>
+  <single-file-upload></single-file-upload>
+ 
 
   <p>Requirements</p>
   <textarea id="project overview" name="w3review3" rows="14" cols="70"></textarea>
   <p>Upload your own requirements file</p>
-  <button type="submit" [disabled]="newRequestForm.invalid">Login</button>
+  <single-file-upload></single-file-upload>
+ 
 
   <p> Upload your Request by clicking on the add request button or press continue </p>
   
