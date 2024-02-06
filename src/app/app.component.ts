@@ -13,8 +13,10 @@ import { SingleFileUploadComponent } from "./single-file-upload/single-file-uplo
       <a routerLink="/first-component" routerLinkActive="active" ariaCurrentWhenActive="page">Signup</a>
       <a routerLink="/second-component" routerLinkActive="active" ariaCurrentWhenActive="page">Password </a>
       <a routerLink="/dashboard-component" routerLinkActive="active" ariaCurrentWhenActive="page">Dashboard</a>
+      <a routerLink="/request-proposal-component" routerLinkActive="active" ariaCurrentWhenActive="page">Proposal</a>
     </div>
-    <single-file-upload><single-file-upload>
+    
+
     <h1>Welcome to {{title}}!</h1>
   
     <router-outlet></router-outlet>
