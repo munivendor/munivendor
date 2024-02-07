@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router'
-import { RequestService } from './request-service.service';
+import { RequestService } from './request.service';
 import { Observable } from 'rxjs';
 
 @Component({

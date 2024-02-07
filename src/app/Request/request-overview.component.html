@@ -1,6 +1,6 @@
 
 
-<form [formGroup]="newRequestForm" (ngSubmit)="onSubmit()">
+<form [formGroup]="requestOverviewForm" (ngSubmit)="onSubmit()">
   <p> New Request</p>
   <br>
   <div>
@@ -8,8 +8,8 @@
       <option>Choose Request Type</option>  
       <option *ngFor="let requestType of requestTypes">{{requestType}}</option>  
   </select>  
-          <div *ngIf="newRequestForm.get('requestType')?.invalid && newRequestForm.get('requestType')?.touched">
-            <div *ngIf="newRequestForm.get('requestType')?.errors?.['required']">Request Type is required.</div>
+          <div *ngIf="requestOverviewForm.get('requestType')?.invalid && requestOverviewForm.get('requestType')?.touched">
+            <div *ngIf="requestOverviewForm.get('requestType')?.errors?.['required']">Request Type is required.</div>
           </div>
   </div>
 
@@ -19,14 +19,14 @@
       <option>Choose subcategory</option>  
       <option *ngFor="let subcategory of subcategories">{{subcategory}}</option>  
   </select>  
-    <div *ngIf="newRequestForm.get('subcategory')?.invalid && newRequestForm.get('subcategory')?.touched">
-      <div *ngIf="newRequestForm.get('subcategory')?.errors?.['required']">Subcategory is required.</div>
+    <div *ngIf="requestOverviewForm.get('subcategory')?.invalid && requestOverviewForm.get('subcategory')?.touched">
+      <div *ngIf="requestOverviewForm.get('subcategory')?.errors?.['required']">Subcategory is required.</div>
     </div>
   </div>
   <div>
     <input type="text" id="rcorners1" formControlName="specificRequestType">
-      <div *ngIf="newRequestForm.get('specificRequestType')?.invalid && newRequestForm.get('specificRequestType')?.touched">
-        <div *ngIf="newRequestForm.get('specificRequestType')?.errors?.['required']">Lastname is required.</div>
+      <div *ngIf="requestOverviewForm.get('specificRequestType')?.invalid && requestOverviewForm.get('specificRequestType')?.touched">
+        <div *ngIf="requestOverviewForm.get('specificRequestType')?.errors?.['required']">Lastname is required.</div>
       </div>
   </div>
   <div>
@@ -49,8 +49,8 @@
       <option>Choose Decision Maker</option>  
       <option *ngFor="let decisionMaker of decisionMakers">{{decisionMaker}}</option>  
   </select>  
-  <div *ngIf="newRequestForm.get('decisionMaker')?.invalid && newRequestForm.get('decisionMaker')?.touched">
-    <div *ngIf="newRequestForm.get('decisionMaker')?.errors?.['required']">Decision Maker is required.</div>
+  <div *ngIf="requestOverviewForm.get('decisionMaker')?.invalid && requestOverviewForm.get('decisionMaker')?.touched">
+    <div *ngIf="requestOverviewForm.get('decisionMaker')?.errors?.['required']">Decision Maker is required.</div>
   </div>
   </div>
       <br>
@@ -58,7 +58,7 @@
       <br>
   <div>
   <a [routerLink]="['/second-component']" routerLinkActive="router-link-active" >continue </a>
-  <button type="submit" [disabled]="newRequestForm.invalid">Login</button>
+  <button type="submit" [disabled]="requestOveriewForm.invalid">Login</button>
   </div>
 </form>
 
