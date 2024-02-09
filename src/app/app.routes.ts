@@ -5,18 +5,17 @@ import { SignupPasswordComponent } from './signup/signup-password.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { RequestComponent } from  './Request/request-list.component';
 import { RequestProposalComponent } from  './Request/request-proposal.component';
-import { RequestProposalComponent } from  './Request/request-proposal.component';
+import { RequestOverviewComponent } from  './Request/request-overview.component';
 
 export const routes: Routes = [
     { path: 'first-component', component: SignupComponent},
     { path: 'second-component', component: SignupPasswordComponent },
     { path: 'dashboard-component', component: DashboardComponent },
     { path: 'request-proposal-component', component: RequestProposalComponent},
-    { path: 'request-overview-component', 
-    component: RequestOverviewComponent, 
-    resolve: {request: RequestOverviewResolver}},
-    children: [ { path: 'request-component',component: RequestComponent},]
-    }
+    { path: 'request-review-component',   component: RequestOverviewComponent}, 
+    
+    //children: [ { path: 'request-component',component: RequestComponent}]
+    //}
     
     
   

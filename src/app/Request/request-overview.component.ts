@@ -20,18 +20,23 @@ import { request } from 'http';
 export class RequestOverviewComponent implements OnInit {
 requestOverviewForm!: FormGroup;
 decisionMakers: any = ['Javatpoint.com', 'HDTuto.com', 'Tutorialandexample.com'];
-requestTypes: any = ['Javatpoint.com', 'HDTuto.com', 'Tutorialandexample.com'];
+requestTypes =['Javatpoint.com', 'HDTuto.com', 'Tutorialandexample.com'];
 subcategories: any = ['Javatpoint.com', 'HDTuto.com', 'Tutorialandexample.com'];
 specificRequestTypes: any = ['Javatpoint.com', 'HDTuto.com', 'Tutorialandexample.com'];
-  
-  requestOverview!: RequestOverview;
-constructor (private fb: FormBuilder,  private route: ActivatedRoute, private requestService: RequestService ) {
-  
-  }
+
+requestOverview!: RequestOverview;
+constructor (private fb: FormBuilder,  private route: ActivatedRoute, private requestService: RequestService ) {}
   ngOnInit() {
     this.requestOverview=this.requestService.getRequestOverview(2);
     this.requestOverviewForm = this.fb.group ({ 
-      
+      subcategory:['', [Validators.required]],
+      publishDate:['', [Validators.required]],
+      publishTime:['', [Validators.required]],
+      openDate:['', [Validators.required]],
+      openTime:['', [Validators.required]],
+      term:['', [Validators.required]],
+      decisionMaker:['', [Validators.required]],
+      specificRequestType:['', [Validators.required]],
       requestType:['', [Validators.required]],
       lastname:['lastname (required)', [Validators.required, Validators.minLength(3)]],
       email:['email (required)', Validators.email],
@@ -39,7 +44,18 @@ constructor (private fb: FormBuilder,  private route: ActivatedRoute, private re
       phoneNumber:'phone number (required)',
       })
     }
-    
+   
+    // Choose city using select dropdown
+  changeSubcategory(e: { value: any; target: { value: any; }; }) {
+    console.log(e.value)
+    this.subcategory?.setValue(e.target.value, {
+      onlySelf: true
+    })
+  }
+  // Getter method to access formcontrols
+  get subcategory() {
+    return this.requestOverviewForm.get('subcategory');
+  }
 
   onSubmit() {
     // Handle form submission here

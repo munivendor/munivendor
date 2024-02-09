@@ -1,22 +1,23 @@
 
 
 <form [formGroup]="requestOverviewForm" (ngSubmit)="onSubmit()">
-  <p> New Request</p>
+  <p> Request Review</p>
   <br>
   <div>
-    <select formControlName="requestType" class="form-control">  
+    <select  class="form-control">  
       <option>Choose Request Type</option>  
       <option *ngFor="let requestType of requestTypes">{{requestType}}</option>  
   </select>  
-          <div *ngIf="requestOverviewForm.get('requestType')?.invalid && requestOverviewForm.get('requestType')?.touched">
+          <!--<div *ngIf="requestOverviewForm.get('requestType')?.invalid && requestOverviewForm.get('requestType')?.touched">
             <div *ngIf="requestOverviewForm.get('requestType')?.errors?.['required']">Request Type is required.</div>
-          </div>
+          </div>-->
   </div>
 
   <div>
-    <single-file-upload></single-file-upload>
-    <select formControlName="subcategory" class="form-control">  
-      <option>Choose subcategory</option>  
+   
+    <select  class="form-control" (change)="changeSubcategory($event)" formControlName="subcategory">  
+      <option>Choose subcategory</option> 
+      
       <option *ngFor="let subcategory of subcategories">{{subcategory}}</option>  
   </select>  
     <div *ngIf="requestOverviewForm.get('subcategory')?.invalid && requestOverviewForm.get('subcategory')?.touched">
@@ -58,7 +59,7 @@
       <br>
   <div>
   <a [routerLink]="['/second-component']" routerLinkActive="router-link-active" >continue </a>
-  <button type="submit" [disabled]="requestOveriewForm.invalid">Login</button>
+  <button type="submit" [disabled]="requestOverviewForm.invalid">Login</button>
   </div>
 </form>
 
