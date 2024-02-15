@@ -18,9 +18,10 @@ export class RequestService {
       }
       getRequestOverview (id: number| null): RequestOverview
       {
-        const requestOverview: RequestOverview = {id: 1};
+        const requestOverview: RequestOverview = {id: 1, requiredDocuments: ['stupid', 'stupider', 'stupidest'] };
         return requestOverview;
       }
+
   
   }
 

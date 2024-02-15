@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterLink, RouterModule } from '@angular/router';
-import {  FormGroup,FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import {  FormGroup,FormBuilder, ReactiveFormsModule, Validators, FormArray, FormControl } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 
@@ -8,6 +8,7 @@ import { SingleFileUploadComponent } from "../single-file-upload/single-file-upl
 import { RequestOverview } from './RequestOverview';
 import { RequestService } from './request.service';
 import { request } from 'http';
+import { of } from 'rxjs';
 
 @Component({
     selector: 'request-overview',
@@ -21,15 +22,18 @@ export class RequestOverviewComponent implements OnInit {
 requestOverviewForm!: FormGroup;
 decisionMakers: any = ['Javatpoint.com', 'HDTuto.com', 'Tutorialandexample.com'];
 requestTypes =['Javatpoint.com', 'HDTuto.com', 'Tutorialandexample.com'];
-subcategories: any = ['Javatpoint.com', 'HDTuto.com', 'Tutorialandexample.com'];
+subcategories = [{ id: 1, name: 'test1' },{ id: 2, name: 'test2' },{ id: 3, name: 'test13' }];
 specificRequestTypes: any = ['Javatpoint.com', 'HDTuto.com', 'Tutorialandexample.com'];
+cities = ["Mohali", "Chandigarih", "ludhiana", "amritsar"]
 
 requestOverview!: RequestOverview;
 constructor (private fb: FormBuilder,  private route: ActivatedRoute, private requestService: RequestService ) {}
   ngOnInit() {
-    this.requestOverview=this.requestService.getRequestOverview(2);
+    this.cities=this.requestService.getRequestOverview (null).requiredDocuments;
     this.requestOverviewForm = this.fb.group ({ 
-      subcategory:['', [Validators.required]],
+      cities: this.fb.array([false, "Chandigarih", "ludhiana", "amritsar"]),
+      
+      subcategory:[2, [Validators.required]],
       publishDate:['', [Validators.required]],
       publishTime:['', [Validators.required]],
       openDate:['', [Validators.required]],
@@ -38,24 +42,16 @@ constructor (private fb: FormBuilder,  private route: ActivatedRoute, private re
       decisionMaker:['', [Validators.required]],
       specificRequestType:['', [Validators.required]],
       requestType:['', [Validators.required]],
-      lastname:['lastname (required)', [Validators.required, Validators.minLength(3)]],
-      email:['email (required)', Validators.email],
-      title:'',
-      phoneNumber:'phone number (required)',
-      })
-    }
    
-    // Choose city using select dropdown
-  changeSubcategory(e: { value: any; target: { value: any; }; }) {
-    console.log(e.value)
-    this.subcategory?.setValue(e.target.value, {
-      onlySelf: true
-    })
-  }
-  // Getter method to access formcontrols
-  get subcategory() {
-    return this.requestOverviewForm.get('subcategory');
-  }
+      })
+      
+      
+  
+    }
+
+     
+   
+
 
   onSubmit() {
     // Handle form submission here
