@@ -14,7 +14,7 @@ export const routes: Routes = [
     { path: 'second-component', component: SignupPasswordComponent },
     { path: 'dashboard-component', component: DashboardComponent },
     { path: 'request-proposal-component', component: RequestProposalComponent},
-    { path: 'request-review-component',   component: RequestOverviewComponent}, 
+    { path: 'request-overview-component',   component: RequestOverviewComponent}, 
     { path: 'request-basic-component',   component: BasicRequestComponent}, 
     //children: [ { path: 'request-component',component: RequestComponent}]
     //}

@@ -14,7 +14,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router'
       <a routerLink="/dashboard-component" routerLinkActive="active" ariaCurrentWhenActive="page">Dashboard</a>
       <a routerLink="/request-basic-component" routerLinkActive="active" ariaCurrentWhenActive="page">Basic Request</a>
       <a routerLink="/request-proposal-component" routerLinkActive="active" ariaCurrentWhenActive="page">Proposal</a>
-      <a routerLink="/request-overview-component" routerLinkActive="active" ariaCurrentWhenActive="page">Review</a>
+      <a routerLink="/request-overview-component" routerLinkActive="active" ariaCurrentWhenActive="page">Overview</a>
     </div>
     
 
