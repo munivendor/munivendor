@@ -1,8 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router'
-import { NewRequestFormComponent } from "./Request/request-basic.component";
-import { SingleFileUploadComponent } from "./single-file-upload/single-file-upload.component";
+ 
 
 
 @Component({
@@ -13,8 +12,9 @@ import { SingleFileUploadComponent } from "./single-file-upload/single-file-uplo
       <a routerLink="/first-component" routerLinkActive="active" ariaCurrentWhenActive="page">Signup</a>
       <a routerLink="/second-component" routerLinkActive="active" ariaCurrentWhenActive="page">Password </a>
       <a routerLink="/dashboard-component" routerLinkActive="active" ariaCurrentWhenActive="page">Dashboard</a>
+      <a routerLink="/request-basic-component" routerLinkActive="active" ariaCurrentWhenActive="page">Basic Request</a>
       <a routerLink="/request-proposal-component" routerLinkActive="active" ariaCurrentWhenActive="page">Proposal</a>
-      <a routerLink="/request-review-component" routerLinkActive="active" ariaCurrentWhenActive="page">Review</a>
+      <a routerLink="/request-overview-component" routerLinkActive="active" ariaCurrentWhenActive="page">Review</a>
     </div>
     
 
@@ -45,7 +45,7 @@ import { SingleFileUploadComponent } from "./single-file-upload/single-file-uplo
       background-color: #04AA6D;
       color: white;
     }`,
-    imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, NewRequestFormComponent, SingleFileUploadComponent]
+    imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive]
 })
 export class AppComponent {
   title = 'munivendor';
