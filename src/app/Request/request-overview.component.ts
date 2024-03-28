@@ -7,7 +7,6 @@ import { ActivatedRoute } from '@angular/router';
 import { SingleFileUploadComponent } from "../single-file-upload/single-file-upload.component";
 import { RequestOverview } from './RequestOverview';
 import { RequestService } from './request.service';
-import { request } from 'http';
 import { of } from 'rxjs';
 
 @Component({
