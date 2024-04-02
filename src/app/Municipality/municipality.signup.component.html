@@ -30,12 +30,12 @@
                 <div *ngIf="loginForm.get('email')?.errors?.['email']">Invalid email format.</div>
               </div>
       </div>
-    <p>Already have an account? Click here to login</p>
+    
         <br>
         <br>
         <br>
     <div>
-    <a [routerLink]="['/second-component']" routerLinkActive="router-link-active" >continue </a>
-    <button type="submit" [disabled]="loginForm.invalid">Login</button>
+    <button type="submit" [disabled]="loginForm.invalid">Continue</button>
+    <a [routerLink]="['/second-component']" routerLinkActive="router-link-active" >Already have an account? Click here to login</a>
     </div>
 </form>
