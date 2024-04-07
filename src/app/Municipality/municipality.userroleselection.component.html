@@ -1,0 +1,6 @@
+
+<form [formGroup]="requestOverviewForm" (ngSubmit)="onSubmit()">
+<span *ngFor="let city of cities; let i=index" formArrayName="cities">
+  <input type="checkbox" [formControlName] = "i" /><span>{{city}}</span>
+</span>
+</form>

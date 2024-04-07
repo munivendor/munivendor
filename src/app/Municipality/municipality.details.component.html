@@ -1,8 +1,9 @@
 <form [formGroup]="detailForm" (ngSubmit)="onSubmit()">
     <p> <center>Let's sign up your account. We'll need some more information before moving on to the next step</center></p>
     <br>
-    <div>
-      <input type="text" id="rcorners1" formControlName="municipalityname" value= 'Municipality Name'>
+    <br>
+    <br>
+    <b> <center>Municipality</center>00i                       e="text" id="rcorners1" formControlName="municipalityname" value= 'Municipality Name'>
       <div *ngIf="detailForm.get('municipalityname')?.invalid && detailForm.get('municipalityname')?.touched">
         <div *ngIf="detailForm.get('municipalityname')?.errors?.['required']">Municipality Name is required.</div>
         <div *ngIf="detailForm.get('municipalityname')?.errors?.['minlength']">Municipality Name must be at least 3 characters long.</div>

@@ -24,7 +24,7 @@ ngOnInit() {
     })
   }
   onSubmit() {
-    // Handle form submission here
+    // Handle form submission here 
     if (this.detailForm.valid) {
       console.log(this.detailForm.value);
       // Additional logic to authenticate user or 
