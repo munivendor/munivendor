@@ -12,7 +12,7 @@ import { ActivatedRoute } from '@angular/router';
     imports: [ReactiveFormsModule, RouterModule, RouterLink, CommonModule]
 })
 
-export class MunicipalityUserSelectionComponent implements OnInit {
+export class MunicipalityUserRoleSelectionComponent implements OnInit {
 userRoleSelectionForm!: FormGroup;
 userRoles = ["City Clerk", "Head of the Legal Department", "A Qualified Purchasing Agent"]
 
