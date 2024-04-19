@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { RequestOverview } from './RequestOverview';
+import { RequestOverview } from '../RequestOverview';
 import * as sql from 'mssql';
 import { Observable } from 'rxjs';
 
