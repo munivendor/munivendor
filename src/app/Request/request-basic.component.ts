@@ -2,8 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { RouterLink, RouterModule } from '@angular/router';
 import {  FormGroup,FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
- import { CountryService } from './request-type.service';
- import { DecisionMakerService } from './services/decisionmaker.service';
+ import { RequestService } from './services/request.service';
 
 @Component({
     selector: 'request-basic',
@@ -17,18 +16,20 @@ export class BasicRequestComponent implements OnInit {
 basicRequestForm!: FormGroup;
 decisionMakers: any 
 specificRequestTypes: any = ['Javatpoint.com', 'HDTuto.com', 'Tutorialandexample.com'];
-requestTypes: any;
+categories: any;
 subcategories: any;
 
-constructor (private fb: FormBuilder, private countryService: CountryService, private decisionMakerService: DecisionMakerService) {
-  this.requestTypes = this.countryService.getCountries();
-  this.decisionMakers;
+constructor (private fb: FormBuilder, private requestService: RequestService) {
+  this.categories = this.requestService.GetCategories();
+  //this.subcategories = this.requestService.GetSubcategories();
+  this.decisionMakers = this.requestService.GetDecisionMakers();;
 }
+
 ngOnInit() {
  
     this.basicRequestForm = this.fb.group ({ 
       
-      requestType:['', [Validators.required]],
+      category:['', [Validators.required]],
       subcategory:['', [Validators.required]],
       decisionMaker1:['', [Validators.required]],
       decisionMaker2:['', [Validators.required]],
@@ -47,11 +48,13 @@ ngOnInit() {
    
     })
   }
-  onRequestTypeChange(event: Event) {
-    const filterValue = (event.target as HTMLInputElement).value;
-    this.subcategories=this.countryService.getStatesByCountry(filterValue);
-   
-  }
+
+  onCategoryChange(event: Event) {
+    const categoryId = (event.target as HTMLInputElement).value;
+    this.subcategories=this.requestService.GetSubcategories(parseInt(categoryId)).subscribe(response => {
+     this.subcategories = response.data});
+    }
+
   onSubmit() {
     // Handle form submission here
     if (this.basicRequestForm.valid) {

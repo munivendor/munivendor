@@ -1,10 +1,10 @@
 <form [formGroup]="basicRequestForm" (ngSubmit)="onSubmit()">
-  <p> What type of request are you looking to create?</p>
+  <p> What category are you looking to create?</p>
   <br>
   <div>
-    <select (change)="onRequestTypeChange($event)" formControlName="requestType" class="form-control">  
-      <option>Choose Request Type</option>  
-      <option *ngFor="let requestType of requestTypes">{{requestType}}</option>  
+    <select (change)="onCategoryChange($event)" formControlName="requestType" class="form-control">  
+      <option>Choose Catgory</option>  
+      <option *ngFor="let category of categories" [ngValue]="category.id">{{category}}</option>  
   </select>  
           <div *ngIf="basicRequestForm.get('requestType')?.invalid && basicRequestForm.get('requestType')?.touched">
             <div *ngIf="basicRequestForm.get('requestType')?.errors?.['required']">Request Type is required.</div>
@@ -14,7 +14,7 @@
     <p> What subcategory will this request be for?</p>
     <select formControlName="subcategory" class="form-control">  
       <option>Choose subcategory</option>  
-      <option *ngFor="let subcategory of subcategories">{{subcategory}}</option>  
+      <option *ngFor="let subcategory of subcategories" [ngValue]="subcategory.id">{{subcategory}}</option>  
   </select>  
     <div *ngIf="basicRequestForm.get('subcategory')?.invalid && basicRequestForm.get('subcategory')?.touched">
       <div *ngIf="basicRequestForm.get('subcategory')?.errors?.['required']">Subcategory is required.</div>
@@ -24,7 +24,7 @@
     <p> Please choose the request type below</p>
     <select formControlName="requestType" class="form-control">  
       <option>Choose Request Type</option>  
-      <option *ngFor="let requestType of requestTypes">{{requestType}}</option>  
+      <option *ngFor="let category of categories">{{category}}</option>  
     </select>  
     <div *ngIf="basicRequestForm.get('requestType')?.invalid && basicRequestForm.get('requestType')?.touched">
       <div *ngIf="basicRequestForm.get('requestType')?.errors?.['required']">Request Type is required.</div>

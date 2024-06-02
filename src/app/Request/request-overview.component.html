@@ -19,7 +19,7 @@
    The subcategory you chose was:
     <select  class="form-control" formControlName="subcategory">  
       <option >Choose your subcategory</option>
-      <option *ngFor="let subcategory of subcategories"  [ngValue]="subcategory.id">{{subcategory.name}}</option>  
+      <option *ngFor="let subcategory of subcategories"  >{{subcategory.name}}</option>  
   </select>  
     <div *ngIf="requestOverviewForm.get('subcategory')?.invalid && requestOverviewForm.get('subcategory')?.touched">
       <div *ngIf="requestOverviewForm.get('subcategory')?.errors?.['required']">Subcategory is required.</div>
