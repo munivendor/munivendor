@@ -14,15 +14,22 @@ import { CommonModule } from '@angular/common';
 
 export class BasicRequestComponent implements OnInit {
 basicRequestForm!: FormGroup;
-decisionMakers: any 
-specificRequestTypes: any = ['Javatpoint.com', 'HDTuto.com', 'Tutorialandexample.com'];
+decisionMakers1: any;
+decisionMakers2: any;
+decisionMakers3: any;
+decisionMakers4: any;
 categories: any;
 subcategories: any;
+requestTypes: any;
 
 constructor (private fb: FormBuilder, private requestService: RequestService) {
-  this.categories = this.requestService.GetCategories();
+  this.categories = this.requestService.getCategories();
   //this.subcategories = this.requestService.GetSubcategories();
-  this.decisionMakers = this.requestService.GetDecisionMakers();;
+  this.decisionMakers1 = this.requestService.GetDecisionMakers();
+  this.requestTypes = this.requestService.GetRequestTypes();
+  this.decisionMakers2 = this.decisionMakers1;
+  this.decisionMakers3 = this.decisionMakers1;
+  this.decisionMakers1= this.decisionMakers1;
 }
 
 ngOnInit() {
@@ -44,8 +51,8 @@ ngOnInit() {
       publishTime:'',
       openDate:'',
       openTime:'',
-      term:'',
-   
+      contractStartDate:'',
+      contractEndDate:''
     })
   }
 

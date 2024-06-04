@@ -2,14 +2,15 @@
   <p> What category are you looking to create?</p>
   <br>
   <div>
-    <select (change)="onCategoryChange($event)" formControlName="requestType" class="form-control">  
+    <select (change)="onCategoryChange($event)" formControlName="category" class="form-control">  
       <option>Choose Catgory</option>  
       <option *ngFor="let category of categories" [ngValue]="category.id">{{category}}</option>  
   </select>  
-          <div *ngIf="basicRequestForm.get('requestType')?.invalid && basicRequestForm.get('requestType')?.touched">
-            <div *ngIf="basicRequestForm.get('requestType')?.errors?.['required']">Request Type is required.</div>
+          <div *ngIf="basicRequestForm.get('category')?.invalid && basicRequestForm.get('category')?.touched">
+            <div *ngIf="basicRequestForm.get('category')?.errors?.['required']">Category is required.</div>
           </div>
   </div>
+
   <div>
     <p> What subcategory will this request be for?</p>
     <select formControlName="subcategory" class="form-control">  
@@ -20,6 +21,7 @@
       <div *ngIf="basicRequestForm.get('subcategory')?.errors?.['required']">Subcategory is required.</div>
     </div>
   </div>
+
   <div>
     <p> Please choose the request type below</p>
     <select formControlName="requestType" class="form-control">  
@@ -38,6 +40,7 @@
       <div *ngIf="basicRequestForm.get('publishDate')?.errors?.['required']">Request Type is required.</div>
     </div>
   </div>
+
   <div>
     <P> What is the Publish Time</P>
   <input type="time" formControlName="publishTime" >
@@ -45,6 +48,7 @@
     <div *ngIf="basicRequestForm.get('publishTime')?.errors?.['required']">Request Type is required.</div>
   </div>
   </div>
+
   <div>
     <P> What is the Open Date</P>
     <input type="date"  formControlName="openDate">
@@ -52,6 +56,7 @@
       <div *ngIf="basicRequestForm.get('openDate')?.errors?.['required']">Request Type is required.</div>
     </div>
   </div>
+
   <div>
     <P> What is the Open Time</P>
     <input type="time"  formControlName="openTime">
@@ -59,15 +64,28 @@
       <div *ngIf="basicRequestForm.get('openTime')?.errors?.['required']">Request Type is required.</div>
     </div>
   </div>
+
   <div>
-    <P> What is the term</P>
-    <input type="text"  formControlName="term">
+    <P> Contract Start Date</P>
+    <input type="date"  formControlName="contractStartDate">
+    <div *ngIf="basicRequestForm.get('contractStartDate')?.invalid && basicRequestForm.get('contractStartDate')?.touched">
+      <div *ngIf="basicRequestForm.get('contractStartDate')?.errors?.['required']">Contract Start Date is required.</div>
+    </div>
   </div>
+
+  <div>
+    <P> Contract End Date</P>
+    <input type="date"  formControlName="contractEndDate">
+    <div *ngIf="basicRequestForm.get('contractEndDate')?.invalid && basicRequestForm.get('contractEndtDate')?.touched">
+      <div *ngIf="basicRequestForm.get('contractEndDate')?.errors?.['required']">Contract Start Date is required.</div>
+    </div>
+  </div>
+
   <div>
     <P> Choose who will be the decision maker on this proposal</P>
     <select formControlName="decisionMaker1" class="form-control">  
       <option>Choose Decision Maker 1</option>  
-      <option *ngFor="let decisionMaker of decisionMakers">{{decisionMaker}}</option>  
+      <option *ngFor="let decisionMaker of decisionMakers1">{{decisionMaker}}</option>  
     </select>  
     <div *ngIf="basicRequestForm.get('decisionMaker1')?.invalid && basicRequestForm.get('decisionMaker1')?.touched">
       <div *ngIf="basicRequestForm.get('decisionMaker1')?.errors?.['required']">Decision Maker is required.</div>
@@ -77,27 +95,27 @@
   <div>
     <select formControlName="decisionMaker2" class="form-control">  
       <option>Choose Decision Maker 2</option>  
-      <option *ngFor="let decisionMaker of decisionMakers">{{decisionMaker}}</option>  
+      <option *ngFor="let decisionMaker of decisionMakers2">{{decisionMaker}}</option>  
     </select>  
-    <div *ngIf="basicRequestForm.get('decisionMaker')?.invalid && basicRequestForm.get('decisionMaker')?.touched">
-      <div *ngIf="basicRequestForm.get('decisionMaker')?.errors?.['required']">Decision Maker is required.</div>
+    <div *ngIf="basicRequestForm.get('decisionMaker2')?.invalid && basicRequestForm.get('decisionMaker2')?.touched">
+      <div *ngIf="basicRequestForm.get('decisionMaker2')?.errors?.['required']">Decision Maker is required.</div>
     </div>
   </div>
 
   <div>
     <select formControlName="decisionMaker3" class="form-control">  
       <option>Choose Decision Maker 3</option>  
-      <option *ngFor="let decisionMaker of decisionMakers">{{decisionMaker}}</option>  
+      <option *ngFor="let decisionMaker of decisionMakers3">{{decisionMaker}}</option>  
     </select>  
-    <div *ngIf="basicRequestForm.get('decisionMaker')?.invalid && basicRequestForm.get('decisionMaker')?.touched">
-      <div *ngIf="basicRequestForm.get('decisionMaker')?.errors?.['required']">Decision Maker is required.</div>
+    <div *ngIf="basicRequestForm.get('decisionMaker3')?.invalid && basicRequestForm.get('decisionMaker3')?.touched">
+      <div *ngIf="basicRequestForm.get('decisionMaker3')?.errors?.['required']">Decision Maker is required.</div>
     </div>
   </div>
 
   <div>
     <select formControlName="decisionMaker4" class="form-control">  
       <option>Choose Decision Maker 4</option>  
-      <option *ngFor="let decisionMaker of decisionMakers">{{decisionMaker}}</option>  
+      <option *ngFor="let decisionMaker of decisionMakers4">{{decisionMaker}}</option>  
     </select>  
     <div *ngIf="basicRequestForm.get('decisionMaker')?.invalid && basicRequestForm.get('decisionMaker')?.touched">
       <div *ngIf="basicRequestForm.get('decisionMaker')?.errors?.['required']">Decision Maker is required.</div>

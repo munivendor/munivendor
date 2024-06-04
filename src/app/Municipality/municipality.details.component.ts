@@ -7,8 +7,8 @@ import { CommonModule } from '@angular/common';
   selector: 'app-signup',
   standalone: true,
   imports: [ ReactiveFormsModule, RouterModule, RouterLink, CommonModule],
-  templateUrl:'/municipality.signup.component.html' ,
-  styleUrls:['./signup.component.css']  
+  templateUrl:'./municipality.details.component.html' ,
+  styleUrls:['./municipality.details.component.css']  
 })
 
 export class SignupComponent implements OnInit {
