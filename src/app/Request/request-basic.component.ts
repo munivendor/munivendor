@@ -3,6 +3,8 @@ import { RouterLink, RouterModule } from '@angular/router';
 import {  FormGroup,FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
  import { RequestService } from './services/request.service';
+import { Observable } from 'rxjs';
+import { SubCategory } from './model/subcategory.model';
 
 @Component({
     selector: 'request-basic',
@@ -13,18 +15,19 @@ import { CommonModule } from '@angular/common';
 })
 
 export class BasicRequestComponent implements OnInit {
+  [x: string]: any;
 basicRequestForm!: FormGroup;
 decisionMakers1: any;
 decisionMakers2: any;
 decisionMakers3: any;
 decisionMakers4: any;
 categories: any;
-subcategories: any;
+subcategories: Observable<SubCategory[]> | undefined;
 requestTypes: any;
-
+ 
 constructor (private fb: FormBuilder, private requestService: RequestService) {
   this.categories = this.requestService.getCategories();
-  //this.subcategories = this.requestService.GetSubcategories();
+  //this.subcategories//this.requestService.GetSubcategories();
   this.decisionMakers1 = this.requestService.GetDecisionMakers();
   this.requestTypes = this.requestService.GetRequestTypes();
   this.decisionMakers2 = this.decisionMakers1;
@@ -32,7 +35,7 @@ constructor (private fb: FormBuilder, private requestService: RequestService) {
   this.decisionMakers1= this.decisionMakers1;
 }
 
-ngOnInit() {
+ngOnInit(): void {
  
     this.basicRequestForm = this.fb.group ({ 
       
@@ -58,8 +61,9 @@ ngOnInit() {
 
   onCategoryChange(event: Event) {
     const categoryId = (event.target as HTMLInputElement).value;
-    this.subcategories=this.requestService.GetSubcategories(parseInt(categoryId)).subscribe(response => {
-     this.subcategories = response.data});
+    this.subcategories=this.requestService.GetSubcategories(parseInt(categoryId))
+    /*.subscribe(response => {
+     this.subcategories = response.});*/
     }
 
   onSubmit() {

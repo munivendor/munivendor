@@ -5,7 +5,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 
 import { SingleFileUploadComponent } from "../single-file-upload/single-file-upload.component";
-import { RequestOverview } from './RequestOverview';
+//import { RequestOverview } from './RequestOverview';
 import { RequestService } from './services/request.service';
 import { of } from 'rxjs';
 
@@ -25,10 +25,10 @@ subcategories = [{ id: 1, name: 'test1' },{ id: 2, name: 'test2' },{ id: 3, name
 specificRequestTypes: any = ['Javatpoint.com', 'HDTuto.com', 'Tutorialandexample.com'];
 cities = ["Mohali", "Chandigarih", "ludhiana", "amritsar"]
 
-requestOverview!: RequestOverview;
+//requestOverview!: RequestOverview;
 constructor (private fb: FormBuilder,  private route: ActivatedRoute, private requestService: RequestService ) {}
   ngOnInit() {
-    this.cities=this.requestService.getRequestOverview (null).requiredDocuments;
+    //this.cities=this.requestService.getRequestOverview (null).requiredDocuments;
     this.requestOverviewForm = this.fb.group ({ 
       cities: this.fb.array([false, "Chandigarih", "ludhiana", "amritsar"]),
       

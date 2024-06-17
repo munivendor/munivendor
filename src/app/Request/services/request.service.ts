@@ -5,18 +5,19 @@ import { Category } from '../model/category.model';
 import { SubCategory } from '../model/subcategory.model';
 import { DecisionMaker } from '../model/decisionmaker.model';
 import { RequestType } from '../model/requesttype.model';
-
+import { environment} from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RequestService {
-  
+  url = environment.apiUrl;
+
   constructor(private http: HttpClient) {}
-  const url = 'http://127.0.0.1:5084/requestors';
 
       loadRequests (): Observable<any> 
       {
+        
         return this.http.get<any>(this.url);
       }
       
@@ -44,8 +45,11 @@ export class RequestService {
       CreateRequest(): Observable<Request>  {
         return this.http.get<Request>(this.url);
       }
-          
-         
+
+      /*GetRequestOverview(): Observable<Request>  {
+        return this.http.get<Request>(this.url);
+      }*/
+               
   }
 
 

@@ -15,7 +15,7 @@
     <p> What subcategory will this request be for?</p>
     <select formControlName="subcategory" class="form-control">  
       <option>Choose subcategory</option>  
-      <option *ngFor="let subcategory of subcategories" [ngValue]="subcategory.id">{{subcategory}}</option>  
+      <option *ngFor="let subcategory of subcategories | async" [ngValue]="subcategory.subCategoryId">{{subcategory}}</option>  
   </select>  
     <div *ngIf="basicRequestForm.get('subcategory')?.invalid && basicRequestForm.get('subcategory')?.touched">
       <div *ngIf="basicRequestForm.get('subcategory')?.errors?.['required']">Subcategory is required.</div>
