@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
  import { RequestService } from './services/request.service';
 import { Observable } from 'rxjs';
 import { SubCategory } from './model/subcategory.model';
+import { Category } from './model/category.model';
 
 @Component({
     selector: 'request-basic',
@@ -26,7 +27,7 @@ subcategories: Observable<SubCategory[]> | undefined;
 requestTypes: any;
  
 constructor (private fb: FormBuilder, private requestService: RequestService) {
-  this.categories = this.requestService.getCategories();
+  this.categories = this.requestService.getCategories().subscribe ((categories: Category [])=>this.categories = categories);
   //this.subcategories//this.requestService.GetSubcategories();
   this.decisionMakers1 = this.requestService.GetDecisionMakers();
   this.requestTypes = this.requestService.GetRequestTypes();
