@@ -6,6 +6,8 @@ import { CommonModule } from '@angular/common';
 import { Observable } from 'rxjs';
 import { SubCategory } from './model/subcategory.model';
 import { Category } from './model/category.model';
+import { DecisionMaker } from './model/decisionmaker.model';
+import { RequestType } from './model/requesttype.model';
 
 @Component({
     selector: 'request-basic',
@@ -18,22 +20,22 @@ import { Category } from './model/category.model';
 export class BasicRequestComponent implements OnInit {
   [x: string]: any;
 basicRequestForm!: FormGroup;
-decisionMakers1: any;
-decisionMakers2: any;
-decisionMakers3: any;
-decisionMakers4: any;
-categories: any;
-subcategories: Observable<SubCategory[]> | undefined;
+decisionMakers1!: DecisionMaker [];
+decisionMakers2!: DecisionMaker [];
+decisionMakers3!: DecisionMaker [];
+decisionMakers4!: DecisionMaker [];
+categories!: Category[];
+subcategories: any;
 requestTypes: any;
  
 constructor (private fb: FormBuilder, private requestService: RequestService) {
-  this.categories = this.requestService.getCategories().subscribe ((categories: Category [])=>this.categories = categories);
+  this.requestService.getCategories().subscribe ((categories: Category [])=>this.categories = categories);
   //this.subcategories//this.requestService.GetSubcategories();
-  this.decisionMakers1 = this.requestService.GetDecisionMakers();
-  this.requestTypes = this.requestService.GetRequestTypes();
-  this.decisionMakers2 = this.decisionMakers1;
-  this.decisionMakers3 = this.decisionMakers1;
-  this.decisionMakers1= this.decisionMakers1;
+   this.requestService.GetDecisionMakers().subscribe ((decisionmakers: DecisionMaker [])=>this.decisionMakers1 = decisionmakers);;
+   this.requestService.GetDecisionMakers().subscribe ((decisionmakers: DecisionMaker [])=>this.decisionMakers2 = decisionmakers);;
+ this.requestService.GetDecisionMakers().subscribe ((decisionmakers: DecisionMaker [])=>this.decisionMakers3 = decisionmakers);;
+   this.requestService.GetDecisionMakers().subscribe ((decisionmakers: DecisionMaker [])=>this.decisionMakers4 = decisionmakers);
+  this.requestTypes = this.requestService.GetRequestTypes().subscribe ((requestTypes: RequestType [])=>this.requestTypes= requestTypes);
 }
 
 ngOnInit(): void {
@@ -42,6 +44,7 @@ ngOnInit(): void {
       
       category:['', [Validators.required]],
       subcategory:['', [Validators.required]],
+      requestType:['', [Validators.required]],
       decisionMaker1:['', [Validators.required]],
       decisionMaker2:['', [Validators.required]],
       decisionMaker3:['', [Validators.required]],

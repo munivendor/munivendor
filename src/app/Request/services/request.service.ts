@@ -23,7 +23,7 @@ export class RequestService {
       
       getCategories(): Observable<Category []>  {
         
-        return this.http.get<Category []>(this.url); 
+        return this.http.get<Category []>(this.url+'getcategories'); 
       }
 
       GetSubcategories(categoryId: number): Observable<SubCategory []>  {
