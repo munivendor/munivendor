@@ -27,23 +27,23 @@ export class RequestService {
       }
 
       GetSubcategories(categoryId: number): Observable<SubCategory []>  {
-        return this.http.get<SubCategory []>(this.url); 
+        return this.http.get<SubCategory []>(this.url+'getsubcategories'); 
       }
 
       GetDecisionMakers(): Observable<DecisionMaker []>  {
-        return this.http.get<DecisionMaker []>(this.url);
+        return this.http.get<DecisionMaker []>(this.url +'getdecisionmakers');
       }
 
       GetRequestTypes(): Observable<RequestType []>  {
-        return this.http.get<RequestType []>(this.url);
+        return this.http.get<RequestType []>(this.url +'getdecisionmakers');
       }
 
       GetRequest(): Observable<Request>  {
-        return this.http.get<Request>(this.url);
+        return this.http.get<Request>(this.url +'getdecisionmakers');
       }
 
       CreateRequest(): Observable<Request>  {
-        return this.http.get<Request>(this.url);
+        return this.http.get<Request>(this.url +'getdecisionmakers');
       }
 
       /*GetRequestOverview(): Observable<Request>  {
