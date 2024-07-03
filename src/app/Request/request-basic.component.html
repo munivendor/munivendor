@@ -15,7 +15,7 @@
     <p> What subcategory will this request be for?</p>
     <select formControlName="subcategory" class="form-control">  
       <option>Choose subcategory</option>  
-      <option *ngFor="let subcategory of subcategories" [ngValue]="subcategory.subCategoryId">{{subcategory}}</option>  
+      <option *ngFor="let subcategory of subcategories" [ngValue]="subcategory.subCategoryId">{{subcategory.subCategoryName}}</option>  
   </select>  
     <div *ngIf="basicRequestForm.get('subcategory')?.invalid && basicRequestForm.get('subcategory')?.touched">
       <div *ngIf="basicRequestForm.get('subcategory')?.errors?.['required']">Subcategory is required.</div>
@@ -85,7 +85,7 @@
     <P> Choose who will be the decision maker on this proposal</P>
     <select formControlName="decisionMaker1" class="form-control">  
       <option>Choose Decision Maker 1</option>  
-      <option *ngFor="let decisionMaker of decisionMakers1">{{decisionMaker}}</option>  
+      <option *ngFor="let decisionMaker of decisionMakers1">{{decisionMaker.decisionMakerName}}</option>  
     </select>  
     <div *ngIf="basicRequestForm.get('decisionMaker1')?.invalid && basicRequestForm.get('decisionMaker1')?.touched">
       <div *ngIf="basicRequestForm.get('decisionMaker1')?.errors?.['required']">Decision Maker is required.</div>
@@ -95,7 +95,7 @@
   <div>
     <select formControlName="decisionMaker2" class="form-control">  
       <option>Choose Decision Maker 2</option>  
-      <option *ngFor="let decisionMaker of decisionMakers2">{{decisionMaker}}</option>  
+      <option *ngFor="let decisionMaker of decisionMakers2">{{decisionMaker.decisionMakerName}}</option>  
     </select>  
     <div *ngIf="basicRequestForm.get('decisionMaker2')?.invalid && basicRequestForm.get('decisionMaker2')?.touched">
       <div *ngIf="basicRequestForm.get('decisionMaker2')?.errors?.['required']">Decision Maker is required.</div>
@@ -105,7 +105,7 @@
   <div>
     <select formControlName="decisionMaker3" class="form-control">  
       <option>Choose Decision Maker 3</option>  
-      <option *ngFor="let decisionMaker of decisionMakers3">{{decisionMaker}}</option>  
+      <option *ngFor="let decisionMaker of decisionMakers3">{{decisionMaker.decisionMakerName}}</option>  
     </select>  
     <div *ngIf="basicRequestForm.get('decisionMaker3')?.invalid && basicRequestForm.get('decisionMaker3')?.touched">
       <div *ngIf="basicRequestForm.get('decisionMaker3')?.errors?.['required']">Decision Maker is required.</div>
@@ -115,7 +115,7 @@
   <div>
     <select formControlName="decisionMaker4" class="form-control">  
       <option>Choose Decision Maker 4</option>  
-      <option *ngFor="let decisionMaker of decisionMakers4">{{decisionMaker}}</option>  
+      <option *ngFor="let decisionMaker of decisionMakers4">{{decisionMaker.decisionMakerName}}</option>  
     </select>  
     <div *ngIf="basicRequestForm.get('decisionMaker')?.invalid && basicRequestForm.get('decisionMaker')?.touched">
       <div *ngIf="basicRequestForm.get('decisionMaker')?.errors?.['required']">Decision Maker is required.</div>
@@ -130,6 +130,9 @@
   <button type="submit" [disabled]="basicRequestForm.invalid">Next</button>
   </div>
 </form>
+
+
+
 
 
 

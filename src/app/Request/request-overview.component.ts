@@ -5,7 +5,6 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 
 import { SingleFileUploadComponent } from "../single-file-upload/single-file-upload.component";
-//import { RequestOverview } from './RequestOverview';
 import { RequestService } from './services/request.service';
 import { of } from 'rxjs';
 

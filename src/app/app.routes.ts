@@ -7,6 +7,7 @@ import { RequestComponent } from  './Request/request-list.component';
 import { RequestProposalComponent } from  './Request/request-proposal.component';
 import { RequestOverviewComponent } from  './Request/request-overview.component';
 import { BasicRequestComponent } from  './Request/request-basic.component';
+import { RequestOutFrameComponent } from './Request/request-outframe.component';
 
 
 export const routes: Routes = [
@@ -15,10 +16,17 @@ export const routes: Routes = [
     { path: 'dashboard-component', component: DashboardComponent },
     { path: 'request-proposal-component', component: RequestProposalComponent},
     { path: 'request-overview-component',   component: RequestOverviewComponent}, 
-    { path: 'request-basic-component',   component: BasicRequestComponent}, 
+    //{ path: 'request-basic-component',   component: BasicRequestComponent}, 
     //children: [ { path: 'request-component',component: RequestComponent}]
     //}
+    { path: 'request-outframe-component',   component: RequestOutFrameComponent,
+    children: [
+      { path: 'request-basic-component', component: BasicRequestComponent },
+      
+    ]
+  }
     
+    , 
     
   
   ];

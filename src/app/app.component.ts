@@ -12,7 +12,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router'
       <a routerLink="/first-component" routerLinkActive="active" ariaCurrentWhenActive="page">Signup</a>
       <a routerLink="/second-component" routerLinkActive="active" ariaCurrentWhenActive="page">Password </a>
       <a routerLink="/dashboard-component" routerLinkActive="active" ariaCurrentWhenActive="page">Dashboard</a>
-      <a routerLink="/request-basic-component" routerLinkActive="active" ariaCurrentWhenActive="page">Basic Request</a>
+      <a routerLink="/request-outframe-component" routerLinkActive="active" ariaCurrentWhenActive="page">Basic Request</a>
       <a routerLink="/request-proposal-component" routerLinkActive="active" ariaCurrentWhenActive="page">Proposal</a>
       <a routerLink="/request-overview-component" routerLinkActive="active" ariaCurrentWhenActive="page">Overview</a>
     </div>
