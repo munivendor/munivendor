@@ -25,8 +25,8 @@ decisionMakers2!: DecisionMaker [];
 decisionMakers3!: DecisionMaker [];
 decisionMakers4!: DecisionMaker [];
 categories!: Category[];
-subcategories: any;
-requestTypes: any;
+subcategories: SubCategory[] | undefined;
+requestTypes: RequestType[] | undefined;
  
 constructor (private fb: FormBuilder, private requestService: RequestService) {
   this.requestService.getCategories().subscribe ((categories: Category [])=>this.categories = categories);
@@ -35,7 +35,7 @@ constructor (private fb: FormBuilder, private requestService: RequestService) {
    this.requestService.GetDecisionMakers().subscribe ((decisionmakers: DecisionMaker [])=>this.decisionMakers2 = decisionmakers);;
  this.requestService.GetDecisionMakers().subscribe ((decisionmakers: DecisionMaker [])=>this.decisionMakers3 = decisionmakers);;
    this.requestService.GetDecisionMakers().subscribe ((decisionmakers: DecisionMaker [])=>this.decisionMakers4 = decisionmakers);
-  this.requestTypes = this.requestService.GetRequestTypes().subscribe ((requestTypes: RequestType [])=>this.requestTypes= requestTypes);
+   this.requestService.GetRequestTypes().subscribe ((requestTypes: RequestType [])=>this.requestTypes= requestTypes);
 }
 
 ngOnInit(): void {
@@ -64,8 +64,9 @@ ngOnInit(): void {
   }
 
   onCategoryChange(event: Event) {
-    const categoryId = (event.target as HTMLInputElement).value;
-    this.subcategories=this.requestService.GetSubcategories(parseInt(categoryId))
+    const categoryIdString = (event.target as HTMLInputElement).value;
+    const categoryId = parseInt (categoryIdString);
+    this.requestService.GetSubcategories(categoryId).subscribe ((subcategories: SubCategory [])=>this.subcategories = subcategories);
     /*.subscribe(response => {
      this.subcategories = response.});*/
     }

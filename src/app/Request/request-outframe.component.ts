@@ -15,6 +15,6 @@ import { ActivatedRoute } from '@angular/router';
 
 export class RequestOutFrameComponent implements OnInit {
     ngOnInit(): void {
-        throw new Error('Method not implemented.');
+        //throw new Error('Method not implemented.');
     }
 }

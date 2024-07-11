@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Category } from '../model/category.model';
@@ -27,7 +27,9 @@ export class RequestService {
       }
 
       GetSubcategories(categoryId: number): Observable<SubCategory []>  {
-        return this.http.get<SubCategory []>(this.url+'getsubcategories'); 
+        let params = this.url+'getsubcategories/'+categoryId
+
+        return this.http.get<SubCategory []>(params); 
       }
 
       GetDecisionMakers(): Observable<DecisionMaker []>  {
@@ -35,15 +37,19 @@ export class RequestService {
       }
 
       GetRequestTypes(): Observable<RequestType []>  {
-        return this.http.get<RequestType []>(this.url +'getdecisionmakers');
+        return this.http.get<RequestType []>(this.url +'getrequesttypes');
       }
 
       GetRequest(): Observable<Request>  {
         return this.http.get<Request>(this.url +'getdecisionmakers');
       }
 
-      CreateRequest(): Observable<Request>  {
-        return this.http.get<Request>(this.url +'getdecisionmakers');
+      CreateRequest(request: Request): Observable<Request>  {
+
+        const body = JSON.stringify(request);
+
+        return this.http.post<Request>(this.url +'createrequest', body);
+       
       }
 
       /*GetRequestOverview(): Observable<Request>  {
