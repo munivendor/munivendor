@@ -8,6 +8,7 @@ import { SubCategory } from './model/subcategory.model';
 import { Category } from './model/category.model';
 import { DecisionMaker } from './model/decisionmaker.model';
 import { RequestType } from './model/requesttype.model';
+import {  Request } from './model/request.model';
 
 @Component({
     selector: 'request-basic',
@@ -49,11 +50,6 @@ ngOnInit(): void {
       decisionMaker2:['', [Validators.required]],
       decisionMaker3:['', [Validators.required]],
       decisionMaker4:['', [Validators.required]],
-      specificRequestType:['', [Validators.required]],
-      lastname:['lastname (required)', [Validators.required, Validators.minLength(3)]],
-      email:['email (required)', Validators.email],
-      title:'',
-      phoneNumber:'phone number (required)',
       publishDate:'',
       publishTime:'',
       openDate:'',
@@ -77,7 +73,11 @@ ngOnInit(): void {
       console.log(this.basicRequestForm.value);
       // Additional logic to authenticate user or 
       // perform other actions
-      this.basicRequestForm.controls["email"].value
+      ;
+      let request = new Request();
+      let requestResponse1 = new Request ();
+       
+      this.requestService.CreateRequest(request).subscribe ((requestResponse: Request)=>requestResponse1 = requestResponse)
     }
   }
   

@@ -1,9 +1,13 @@
 import { Time } from "@angular/common"
+import internal from "stream"
 
 export class Request
     {
         requestId!: number
         requestName!: string
+        requestTypeId!: number
+        categoryId!: number
+        subcategoryId!: number
         publishDate!: Date 
         publishTime!:Time
         openDate!: Date

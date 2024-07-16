@@ -5,6 +5,7 @@ import { Category } from '../model/category.model';
 import { SubCategory } from '../model/subcategory.model';
 import { DecisionMaker } from '../model/decisionmaker.model';
 import { RequestType } from '../model/requesttype.model';
+import { Request } from '../model/request.model';
 import { environment} from '../../../environments/environment';
 
 @Injectable({
@@ -48,7 +49,11 @@ export class RequestService {
 
         const body = JSON.stringify(request);
 
-        return this.http.post<Request>(this.url +'createrequest', body);
+        const headers = { 'Content-Type': 'application/json' };
+        const options = { headers };
+      
+
+        return this.http.post<Request>(this.url +'createrequest', body, options);
        
       }
 
