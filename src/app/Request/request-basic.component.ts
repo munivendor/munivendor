@@ -3,7 +3,7 @@ import { RouterLink, RouterModule } from '@angular/router';
 import {  FormGroup,FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
  import { RequestService } from './services/request.service';
-import { Observable } from 'rxjs';
+
 import { SubCategory } from './model/subcategory.model';
 import { Category } from './model/category.model';
 import { DecisionMaker } from './model/decisionmaker.model';
@@ -31,7 +31,6 @@ requestTypes: RequestType[] | undefined;
  
 constructor (private fb: FormBuilder, private requestService: RequestService) {
   this.requestService.getCategories().subscribe ((categories: Category [])=>this.categories = categories);
-  //this.subcategories//this.requestService.GetSubcategories();
    this.requestService.GetDecisionMakers().subscribe ((decisionmakers: DecisionMaker [])=>this.decisionMakers1 = decisionmakers);;
    this.requestService.GetDecisionMakers().subscribe ((decisionmakers: DecisionMaker [])=>this.decisionMakers2 = decisionmakers);;
  this.requestService.GetDecisionMakers().subscribe ((decisionmakers: DecisionMaker [])=>this.decisionMakers3 = decisionmakers);;
@@ -68,14 +67,22 @@ ngOnInit(): void {
     }
 
   onSubmit() {
-    // Handle form submission here
+    
     if (this.basicRequestForm.valid) {
       console.log(this.basicRequestForm.value);
-      // Additional logic to authenticate user or 
-      // perform other actions
+     
       ;
       let request = new Request();
       let requestResponse1 = new Request ();
+
+      request.categoryId=this.basicRequestForm.controls["category"].value;
+      request.subcategoryId=this.basicRequestForm.controls["subcategory"].value;
+      request.requestTypeId=this.basicRequestForm.controls["requestType"].value;
+      request.publishDate=  new Date(this.basicRequestForm.controls["publishDate"].value + ' ' + this.basicRequestForm.controls["publishTime"].value);
+      request.openDate= new Date(this.basicRequestForm.controls["openDate"].value + ' ' + this.basicRequestForm.controls["openTime"].value);
+      request.contractStart= new Date(this.basicRequestForm.controls["contractStartDate"].value);
+      request.contractEnd= new Date (this.basicRequestForm.controls["contractEndDate"].value);
+       
        
       this.requestService.CreateRequest(request).subscribe ((requestResponse: Request)=>requestResponse1 = requestResponse)
     }

@@ -26,7 +26,7 @@
     <p> Please choose the request type below</p>
     <select formControlName="requestType" class="form-control">  
       <option>Choose Request Type</option>  
-      <option *ngFor="let requestType of requestTypes">{{requestType.requestTypeDesc}}</option>  
+      <option *ngFor="let requestType of requestTypes" [ngValue]="requestType.requestTypeId">{{requestType.requestTypeDesc}}</option>  
     </select>  
     <div *ngIf="basicRequestForm.get('requestType')?.invalid && basicRequestForm.get('requestType')?.touched">
       <div *ngIf="basicRequestForm.get('requestType')?.errors?.['required']">Request Type is required.</div>

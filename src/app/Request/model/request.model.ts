@@ -8,7 +8,7 @@ export class Request
         requestTypeId!: number
         categoryId!: number
         subcategoryId!: number
-        publishDate!: Date 
+        publishDate!: Date
         publishTime!:Time
         openDate!: Date
         openTime!: Time

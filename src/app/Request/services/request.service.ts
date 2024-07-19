@@ -48,6 +48,7 @@ export class RequestService {
       CreateRequest(request: Request): Observable<Request>  {
 
         const body = JSON.stringify(request);
+        console.log(body);
 
         const headers = { 'Content-Type': 'application/json' };
         const options = { headers };
