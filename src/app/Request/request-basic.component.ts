@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterLink, RouterModule } from '@angular/router';
-import {  FormGroup,FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import {  FormGroup,FormBuilder, FormArray, ReactiveFormsModule, Validators, FormControlName, FormControl } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+
+
  import { RequestService } from './services/request.service';
 
 import { SubCategory } from './model/subcategory.model';
@@ -41,7 +43,7 @@ constructor (private fb: FormBuilder, private requestService: RequestService) {
 ngOnInit(): void {
  
     this.basicRequestForm = this.fb.group ({ 
-      
+      dropdowns: this.fb.array([]), // FormArray for dynamic dropdowns
       category:['', [Validators.required]],
       subcategory:['', [Validators.required]],
       requestType:['', [Validators.required]],
@@ -54,7 +56,7 @@ ngOnInit(): void {
       openDate:'',
       openTime:'',
       contractStartDate:'',
-      contractEndDate:''
+      contractEndDate:'',
     })
   }
 
@@ -65,6 +67,14 @@ ngOnInit(): void {
     /*.subscribe(response => {
      this.subcategories = response.});*/
     }
+  addDropdown() {
+    const dropdown = this.fb.control('');
+    this.dropdowns.push(dropdown);
+  }
+  
+  get dropdowns() {
+    return this.basicRequestForm.get('dropdowns') as FormArray;
+  }
 
   onSubmit() {
     
@@ -82,9 +92,19 @@ ngOnInit(): void {
       request.openDate= new Date(this.basicRequestForm.controls["openDate"].value + ' ' + this.basicRequestForm.controls["openTime"].value);
       request.contractStart= new Date(this.basicRequestForm.controls["contractStartDate"].value);
       request.contractEnd= new Date (this.basicRequestForm.controls["contractEndDate"].value);
-       
+      
+      this.dropdowns.controls.map(control => control.value)
+
+      /*for (const control of this.dropdowns.controls)
+      {
+        
+        control.value
+      }*/
+      
+      
        
       this.requestService.CreateRequest(request).subscribe ((requestResponse: Request)=>requestResponse1 = requestResponse)
+
     }
   }
   

@@ -83,13 +83,23 @@
 
   <div>
     <P> Choose who will be the decision maker on this proposal</P>
-    <select formControlName="decisionMaker1" class="form-control">  
+    <select formControlName="decisionMaker" class="form-control">  
       <option>Choose Decision Maker 1</option>  
       <option *ngFor="let decisionMaker of decisionMakers1">{{decisionMaker.decisionMakerName}}</option>  
     </select>  
-    <div *ngIf="basicRequestForm.get('decisionMaker1')?.invalid && basicRequestForm.get('decisionMaker1')?.touched">
-      <div *ngIf="basicRequestForm.get('decisionMaker1')?.errors?.['required']">Decision Maker 1 is required.</div>
+    <div *ngIf="basicRequestForm.get('decisionMaker')?.invalid && basicRequestForm.get('decisionMaker')?.touched">
+      <div *ngIf="basicRequestForm.get('decisionMaker')?.errors?.['required']">Decision Maker 1 is required.</div>
     </div>
+  </div>
+
+  <button type="button" (click)="addDropdown()">Add Dropdown</button>
+  <div formArrayName="dropdowns">
+    <div *ngFor="let dropdown of dropdowns.controls; let i = index">
+      <select [formControlName]="'decisionMaker_'+i" class="form-control">
+        <option>Choose Decision Maker</option>  
+        <option *ngFor="let decisionMaker of decisionMakers1">{{decisionMaker.decisionMakerName}}</option>  
+      </select>
+  </div>
   </div>
 
   <div>
