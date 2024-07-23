@@ -1,5 +1,6 @@
 import { Time } from "@angular/common"
 import internal from "stream"
+import { DecisionMaker } from "./decisionmaker.model"
 
 export class Request
     {
@@ -13,5 +14,6 @@ export class Request
         openDate!: Date
         openTime!: Time
         contractStart!: Date
-        contractEnd!: Date     
+        contractEnd!: Date    
+        decisionMakers!: any [] 
 }

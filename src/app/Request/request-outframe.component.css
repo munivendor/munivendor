@@ -49,3 +49,12 @@ input[type=date], input[type=time], input[type=text], select {
   background-color: #04AA6D;
   color: white;
 }
+
+.main {
+  display: flex;
+  align-items: center; /* Vertically center */
+  justify-content: center; /* Horizontally center */
+  width: 90%;
+  /* Add any other styles you need */
+}
+

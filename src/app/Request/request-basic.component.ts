@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterLink, RouterModule } from '@angular/router';
-import {  FormGroup,FormBuilder, FormArray, ReactiveFormsModule, Validators, FormControlName, FormControl } from '@angular/forms';
+import {  FormGroup,FormBuilder, FormArray, ReactiveFormsModule, Validators, FormControlName, FormControl, AbstractControl, ValidatorFn } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
 
@@ -23,7 +23,7 @@ import {  Request } from './model/request.model';
 export class BasicRequestComponent implements OnInit {
   [x: string]: any;
 basicRequestForm!: FormGroup;
-decisionMakers1!: DecisionMaker [];
+decisionMakers!: DecisionMaker [];
 decisionMakers2!: DecisionMaker [];
 decisionMakers3!: DecisionMaker [];
 decisionMakers4!: DecisionMaker [];
@@ -33,7 +33,7 @@ requestTypes: RequestType[] | undefined;
  
 constructor (private fb: FormBuilder, private requestService: RequestService) {
   this.requestService.getCategories().subscribe ((categories: Category [])=>this.categories = categories);
-   this.requestService.GetDecisionMakers().subscribe ((decisionmakers: DecisionMaker [])=>this.decisionMakers1 = decisionmakers);;
+   this.requestService.GetDecisionMakers().subscribe ((decisionmakers: DecisionMaker [])=>this.decisionMakers = decisionmakers);;
    this.requestService.GetDecisionMakers().subscribe ((decisionmakers: DecisionMaker [])=>this.decisionMakers2 = decisionmakers);;
  this.requestService.GetDecisionMakers().subscribe ((decisionmakers: DecisionMaker [])=>this.decisionMakers3 = decisionmakers);;
    this.requestService.GetDecisionMakers().subscribe ((decisionmakers: DecisionMaker [])=>this.decisionMakers4 = decisionmakers);
@@ -47,16 +47,12 @@ ngOnInit(): void {
       category:['', [Validators.required]],
       subcategory:['', [Validators.required]],
       requestType:['', [Validators.required]],
-      decisionMaker1:['', [Validators.required]],
-      decisionMaker2:['', [Validators.required]],
-      decisionMaker3:['', [Validators.required]],
-      decisionMaker4:['', [Validators.required]],
-      publishDate:'',
-      publishTime:'',
-      openDate:'',
-      openTime:'',
-      contractStartDate:'',
-      contractEndDate:'',
+      publishDate:['', [Validators.required]],
+      publishTime:['', [Validators.required]],
+      openDate:['', [Validators.required]],
+      openTime:['', [Validators.required]],
+      contractStartDate:['', [Validators.required]],
+      contractEndDate:['', [Validators.required]]
     })
   }
 
@@ -64,11 +60,11 @@ ngOnInit(): void {
     const categoryIdString = (event.target as HTMLInputElement).value;
     const categoryId = parseInt (categoryIdString);
     this.requestService.GetSubcategories(categoryId).subscribe ((subcategories: SubCategory [])=>this.subcategories = subcategories);
-    /*.subscribe(response => {
-     this.subcategories = response.});*/
     }
+
   addDropdown() {
-    const dropdown = this.fb.control('');
+    const dropdown = this.fb.control('',Validators.required );
+   
     this.dropdowns.push(dropdown);
   }
   
@@ -81,7 +77,6 @@ ngOnInit(): void {
     if (this.basicRequestForm.valid) {
       console.log(this.basicRequestForm.value);
      
-      ;
       let request = new Request();
       let requestResponse1 = new Request ();
 
@@ -92,17 +87,12 @@ ngOnInit(): void {
       request.openDate= new Date(this.basicRequestForm.controls["openDate"].value + ' ' + this.basicRequestForm.controls["openTime"].value);
       request.contractStart= new Date(this.basicRequestForm.controls["contractStartDate"].value);
       request.contractEnd= new Date (this.basicRequestForm.controls["contractEndDate"].value);
-      
-      this.dropdowns.controls.map(control => control.value)
-
-      /*for (const control of this.dropdowns.controls)
-      {
         
-        control.value
-      }*/
-      
-      
-       
+      request.decisionMakers = this.dropdowns.controls.map((control, index) => ({
+        decisionMakerNumber: index + 1,
+        decisionMakerId: control.value
+    }));
+    
       this.requestService.CreateRequest(request).subscribe ((requestResponse: Request)=>requestResponse1 = requestResponse)
 
     }
