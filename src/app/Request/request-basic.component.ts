@@ -88,9 +88,9 @@ ngOnInit(): void {
       request.contractStart= new Date(this.basicRequestForm.controls["contractStartDate"].value);
       request.contractEnd= new Date (this.basicRequestForm.controls["contractEndDate"].value);
         
-      request.decisionMakers = this.dropdowns.controls.map((control, index) => ({
-        decisionMakerNumber: index + 1,
-        decisionMakerId: control.value
+      request.decisionMakerSelections = this.dropdowns.controls.map((control, index) => ({
+      decisionMakerNumber: index + 1,
+      decisionMakerId: control.value
     }));
     
       this.requestService.CreateRequest(request).subscribe ((requestResponse: Request)=>requestResponse1 = requestResponse)

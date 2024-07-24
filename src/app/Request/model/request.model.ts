@@ -15,5 +15,5 @@ export class Request
         openTime!: Time
         contractStart!: Date
         contractEnd!: Date    
-        decisionMakers!: any [] 
+        decisionMakerSelections!: any [] 
 }
