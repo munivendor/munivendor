@@ -1,6 +1,5 @@
 <form [formGroup]="basicRequestForm" (ngSubmit)="onSubmit()">
   <p> What category are you looking to create?</p>
-  <br>
   <div>
     <select (change)="onCategoryChange($event)" formControlName="category" class="form-control">
       <option>Choose Catgory</option>
@@ -87,8 +86,10 @@
 
   <P> Choose who will be the decision maker on this proposal</P>
   <button type="button" (click)="addDropdown()">Add Dropdown</button>
+  <i class="glyphicon glyphicon-trash"></i>
   <div formArrayName="dropdowns">
     <div *ngFor="let dropdown of dropdowns.controls; let i = index">
+      <br>
       <select [formControlName]="i" id = "{{'decisionMaker' + i}}" class="form-control">
         <option value="">Choose Decision Maker</option>
         <option [value]= "decisMaker.decisionMakerId" *ngFor="let decisMaker of decisionMakers">{{decisMaker.decisionMakerName}}</option>
