@@ -11,8 +11,8 @@ import { of } from 'rxjs';
 @Component({
     selector: 'request-overview',
     standalone: true,
-    templateUrl: './request-overview.component.html',
-    styleUrls: ['./request-overview.component.css'],
+    templateUrl: './request-review.component.html',
+    styleUrls: ['./request-review.component.css'],
     imports: [ReactiveFormsModule, RouterModule, RouterLink, CommonModule, SingleFileUploadComponent]
 })
 

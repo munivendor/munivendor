@@ -2,6 +2,7 @@ import { Component, EventEmitter, Output } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { throwError } from 'rxjs';
 import { CommonModule } from '@angular/common';
+import { environment } from '../../environments/environment';
 
 
 @Component({
@@ -32,10 +33,11 @@ export class SingleFileUploadComponent {
   onUpload() {
     if (this.file) {
       const formData = new FormData();
+      const url = environment.apiUrl;
 
       formData.append('file', this.file, this.file.name);
 
-      const upload$ = this.http.post('https://httpbin.org/post', formData);
+      const upload$ = this.http.post(url+'UploadRequestFile', formData);
 
       this.status = 'uploading';
 

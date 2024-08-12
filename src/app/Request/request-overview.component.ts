@@ -13,9 +13,14 @@ import { SingleFileUploadComponent } from "../single-file-upload/single-file-upl
 })
 
 export class RequestOverviewComponent implements OnInit {
+ 
+  overviewText: any;
 
-constructor () {}
-ngOnInit() {
-   
-  }  
+  constructor() { }
+  ngOnInit() { }
+
+  isTextareaNotEmpty(): boolean {
+    return this.overviewText.trim().length > 0;
+  }
+
 }
