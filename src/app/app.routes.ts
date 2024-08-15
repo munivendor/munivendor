@@ -8,8 +8,7 @@ import { RequestProposalComponent } from  './Request/request-proposal.component'
 import { RequestOverviewComponent } from  './Request/request-overview.component';
 import { BasicRequestComponent } from  './Request/request-basic.component';
 import { RequestOutFrameComponent } from './Request/request-outframe.component';
-
-
+import { RequestReviewComponent } from './Request/request-review.component';
 
 export const routes: Routes = [
     { path: 'first-component', component: SignupComponent},
@@ -25,7 +24,6 @@ export const routes: Routes = [
       
     ]
   }
-    
     , 
     
   

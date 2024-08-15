@@ -1,11 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { RouterLink, RouterModule } from '@angular/router';
-import {  FormGroup,FormBuilder, FormArray, ReactiveFormsModule, Validators, FormControlName, FormControl, AbstractControl, ValidatorFn } from '@angular/forms';
+import { Router, RouterLink, RouterModule } from '@angular/router';
+import { FormGroup,FormBuilder, FormArray, ReactiveFormsModule, Validators, FormControlName, FormControl, AbstractControl, ValidatorFn } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { StateService } from './services/state.service';
-
-
- import { RequestService } from './services/request.service';
+import { RequestService } from './services/request.service';
 
 import { SubCategory } from './model/subcategory.model';
 import { Category } from './model/category.model';
@@ -32,7 +30,7 @@ categories!: Category[];
 subcategories: SubCategory[] | undefined;
 requestTypes: RequestType[] | undefined;
  
-constructor (private fb: FormBuilder, private requestService: RequestService, private stateService: StateService) {
+constructor (private fb: FormBuilder, private requestService: RequestService, private stateService: StateService, private router: Router) {
   this.requestService.getCategories().subscribe ((categories: Category [])=>this.categories = categories);
    this.requestService.GetDecisionMakers().subscribe ((decisionmakers: DecisionMaker [])=>this.decisionMakers = decisionmakers);;
    this.requestService.GetDecisionMakers().subscribe ((decisionmakers: DecisionMaker [])=>this.decisionMakers2 = decisionmakers);;
@@ -78,8 +76,8 @@ ngOnInit(): void {
       console.log(this.basicRequestForm.value);
 
       let request = new Request();
-      let requestResponse1 = new Request();
-
+    
+    
       request.categoryId = this.basicRequestForm.controls["category"].value;
       request.subcategoryId = this.basicRequestForm.controls["subcategory"].value;
       request.requestTypeId = this.basicRequestForm.controls["requestType"].value;
@@ -93,8 +91,17 @@ ngOnInit(): void {
         decisionMakerId: control.value
       }));
 
-      this.requestService.CreateRequest(request).subscribe((requestResponse: Request) => requestResponse1 = requestResponse);
-      this.stateService.saveState(request);
+      this.requestService.CreateRequest(request).subscribe((responseRequestId: number) => {
+        request.requestId = responseRequestId;
+        this.stateService.saveState(request);
+        this.router.navigate(['/request-outframe-component/request-overview-component']);
+
+        },
+        error => {
+          console.error('Error creating request:', error);
+        }
+      );
+     
     }
   }
 }

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { throwError } from 'rxjs';
 import { CommonModule } from '@angular/common';
@@ -14,6 +14,8 @@ import { environment } from '../../environments/environment';
 })
 export class SingleFileUploadComponent {
 
+  @Output() fileUploaded = new EventEmitter<boolean>();
+  @Input() data: any;
   status: 'initial' | 'uploading' | 'success' | 'fail' = 'initial';
   file: File | null = null;
 
@@ -27,6 +29,7 @@ export class SingleFileUploadComponent {
     if (file) {
       this.status = 'initial';
       this.file = file;
+      this.fileUploaded.emit(true);
     }
   }
 
@@ -36,6 +39,7 @@ export class SingleFileUploadComponent {
       const url = environment.apiUrl;
 
       formData.append('file', this.file, this.file.name);
+      formData.append('requestId', this.data);
 
       const upload$ = this.http.post(url+'UploadRequestFile', formData);
 

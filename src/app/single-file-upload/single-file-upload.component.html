@@ -3,7 +3,7 @@
 
 <div *ngIf="file" class="file-section">
   <section>
-    File details:
+    File details: <button (click)="onUpload()" class="upload-button">Upload the file</button>
     <ul>
       <li>Name: {{file?.name}}</li>
       <li>Type: {{file?.type}}</li>
@@ -11,7 +11,8 @@
     </ul>
   </section>
 
-  <button (click)="onUpload()" class="upload-button">Upload the file</button>
+  
+  
 
   <section [ngSwitch]="status">
     <p *ngSwitchCase="'uploading'">⏳ Uploading...</p>

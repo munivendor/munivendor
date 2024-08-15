@@ -45,7 +45,7 @@ export class RequestService {
         return this.http.get<Request>(this.url +'getdecisionmakers');
       }
 
-      CreateRequest(request: Request): Observable<Request>  {
+      CreateRequest(request: Request): Observable<number>  {
 
         const body = JSON.stringify(request);
         console.log(body);
@@ -54,7 +54,7 @@ export class RequestService {
         const options = { headers };
       
 
-        return this.http.post<Request>(this.url +'createrequest', body, options);
+        return this.http.post<number>(this.url +'createrequest', body, options);
        
       }
 
