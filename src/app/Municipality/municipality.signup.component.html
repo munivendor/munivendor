@@ -1,0 +1,41 @@
+<form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+    <p> <center>Welcome to Munivendor</center></p>
+    <br>
+    Sign up with Google
+    -------- or use your email to sign up -----------
+
+    <p> Role</p>
+    <select formControlName="role" class="form-control">  
+      <option>Choose Role</option>  
+      <option *ngFor="let role of roles">{{role}}</option>  
+    </select>
+    <div>
+      <input type="text" id="rcorners1" formControlName="firstname" value= 'firstname'>
+      <div *ngIf="loginForm.get('firstname')?.invalid && loginForm.get('firstname')?.touched">
+        <div *ngIf="loginForm.get('firstname')?.errors?.['required']">Firstname is required.</div>
+        <div *ngIf="loginForm.get('firstname')?.errors?.['minlength']">Firstname must be at least 3 characters long.</div>
+      </div>
+    </div>
+    <div>
+      <input type="text" id="rcorners1" formControlName="lastname" value= 'Lastname'>
+        <div *ngIf="loginForm.get('lastname')?.invalid && loginForm.get('lastname')?.touched">
+          <div *ngIf="loginForm.get('lastname')?.errors?.['required']">Lastname is required.</div>
+          <div *ngIf="loginForm.get('lastname')?.errors?.['minlength']">Lastname must be at least 3 characters long.</div>
+        </div>
+    </div>
+    <div>
+        <input type="text" id="rcorners1"  formControlName="email" value= 'Work email for the Super Admin and have access to the municipality account'>
+              <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+                <div *ngIf="loginForm.get('email')?.errors?.['required']">Email is required.</div>
+                <div *ngIf="loginForm.get('email')?.errors?.['email']">Invalid email format.</div>
+              </div>
+      </div>
+    
+        <br>
+        <br>
+        <br>
+    <div>
+    <button type="submit" [disabled]="loginForm.invalid">Continue</button>
+    <a [routerLink]="['/second-component']" routerLinkActive="router-link-active" >Already have an account? Click here to login</a>
+    </div>
+</form>

@@ -1,92 +1,27 @@
 
-
-<form [formGroup]="requestOverviewForm" (ngSubmit)="onSubmit()">
-  <p> Request Review</p>
-  <br>
-  <div>
-    The Request Type you chose was:
-
-    <select  class="form-control">  
-      <option disabled selected>Choose Request Type</option>  
-      <option *ngFor="let requestType of requestTypes">{{requestType}}</option>  
-  </select>  
-          <div *ngIf="requestOverviewForm.get('requestType')?.invalid && requestOverviewForm.get('requestType')?.touched">
-            <div *ngIf="requestOverviewForm.get('requestType')?.errors?.['required']">Request Type is required.</div>
-          </div>
-  </div>
-
-  <div>
-   The subcategory you chose was:
-    <select  class="form-control" formControlName="subcategory">  
-      <option >Choose your subcategory</option>
-      <option *ngFor="let subcategory of subcategories"  [ngValue]="subcategory.id">{{subcategory.name}}</option>  
-  </select>  
-    <div *ngIf="requestOverviewForm.get('subcategory')?.invalid && requestOverviewForm.get('subcategory')?.touched">
-      <div *ngIf="requestOverviewForm.get('subcategory')?.errors?.['required']">Subcategory is required.</div>
-    </div>
-  </div>
-
-  <div>
-    The Specific Request Type you chose was:
-    <select  class="form-control" formControlName="specificRequestType">  
-      <option >Choose your Specific Request Type</option>
-      <option *ngFor="let specificRequestType of specificRequestTypes">{{specificRequestTypes}}</option>  
-  </select>  
-      <div *ngIf="requestOverviewForm.get('specificRequestType')?.invalid && requestOverviewForm.get('specificRequestType')?.touched">
-        <div *ngIf="requestOverviewForm.get('specificRequestType')?.errors?.['required']">Lastname is required.</div>
-      </div>
-  </div>
-  <div>
-    Request Details
-    Publish Date:
-  <input type="date" id="rcorners1"  formControlName="publishDate">
-  </div>
-  <div>
-   Publish Time:
-  <input type="time" id="rcorners1" formControlName="publishTime" >
-  </div>
-  <div>
-    Open Date:
-    <input type="date" id="rcorners1"  formControlName="openDate">
-  </div>
-  <div>
-    Open Time:
-    <input type="time" id="rcorners1"  formControlName="openTime">
-  </div>
-  <div>
-    Term: 
-    <input type="text" id="term"  formControlName="term">
-  </div>
-
-  <div>
-    Decision Maker:
-    <select formControlName="decisionMaker" class="form-control">  
-      <option>Choose Decision Maker</option>  
-      <option *ngFor="let decisionMaker of decisionMakers">{{decisionMaker}}</option>  
-  </select>  
-  <div *ngIf="requestOverviewForm.get('decisionMaker')?.invalid && requestOverviewForm.get('decisionMaker')?.touched">
-    <div *ngIf="requestOverviewForm.get('decisionMaker')?.errors?.['required']">Decision Maker is required.</div>
-  </div>
-  </div>
-  <div>
-    Notarization Method:
-    <input type="checkbox" id="vehicle1" name="vehicle1" value="Bike">
-    As a digital notary public, I am authorized by law to certify the execution of certain legal documents. 
-    However, it is important to note that I am not an attorney and cannot provide legal advice or assistance. 
-    My role as a notary is limited to verifying the identity of signers, administering oaths or affirmations, and witnessing the signing of documents.
-Description
-  </div>
-      <br>
-      <br>
-      <br>
-  <div>
-    <span *ngFor="let city of cities; let i=index" formArrayName="cities">
-      <input type="checkbox" [formControlName] = "i" /><span>{{city}}</span>
-    </span>
-  <a [routerLink]="['/second-component']" routerLinkActive="router-link-active" >continue </a>
-  <button type="submit" [disabled]="requestOverviewForm.invalid">Login</button>
-  </div>
-</form>
-
-
-
+    <p>Overview</p>
+    <textarea id="overview" name="w3review" rows="14" cols="70">
+    </textarea>
+    <p>Upload your own project overview file</p>
+   
+    <p>Goals</p>
+    <textarea id="overview" name="w3review1" rows="14" cols="70"></textarea>
+    <p>You can also upload your own project overview file</p>
+    <single-file-upload></single-file-upload>
+    
+  
+    <p>Scope</p>
+    <textarea id="scope" name="w3review2" rows="14" cols="70">
+    <p>You can also upload your own project overview file</p>
+    <single-file-upload></single-file-upload>
+   
+  
+    <p>Requirements</p>
+    <textarea id="project overview" name="w3review3" rows="14" cols="70"></textarea>
+    <p>You can also pload your own requirements file</p>
+    <single-file-upload></single-file-upload>
+   
+  
+    <p> Upload your Request by clicking on the add request button or press continue </p>
+    <single-file-upload></single-file-upload>
+    
