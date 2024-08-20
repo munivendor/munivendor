@@ -8,20 +8,19 @@
    
     <p>Goals</p>
     <textarea id="overview" name="w3review1" rows="14" cols="70"></textarea>
-    <p>You can also upload your own project overview file</p>
-    <single-file-upload></single-file-upload>
+    <p *ngIf="isTextareaEmpty()">You can also upload your own project goals file</p>
+    <single-file-upload *ngIf="isTextareaEmpty()" (fileUploaded)="onFileUploaded($event)" [data]="requestId"></single-file-upload>
     
     <p>Scope</p>
     <textarea id="scope" name="w3review2" rows="14" cols="70"></textarea>
-    <p>You can also upload your own project overview file</p>
-    <single-file-upload></single-file-upload>
+    <p *ngIf="isTextareaEmpty()">You can also upload your own project scope file</p>
+    <single-file-upload *ngIf="isTextareaEmpty()" (fileUploaded)="onFileUploaded($event)" [data]="requestId"></single-file-upload>
    
    <p>Requirements</p>
     <textarea id="project overview" name="w3review3" rows="14" cols="70"></textarea>
-    <p>You can also pload your own requirements file</p>
-    <single-file-upload></single-file-upload>
+    <p *ngIf="isTextareaEmpty()">You can also pload your own requirements file</p>
+    <single-file-upload *ngIf="isTextareaEmpty()" (fileUploaded)="onFileUploaded($event)" [data]="requestId"></single-file-upload>
    
-  
-    <p> Upload your Request by clicking on the add request button or press continue </p>
-    <single-file-upload></single-file-upload>
+    <p > Upload your Request by clicking on the add request button or press continue </p>
+    <single-file-upload [data]="requestId"></single-file-upload>
     

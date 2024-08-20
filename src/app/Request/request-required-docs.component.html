@@ -1,0 +1,10 @@
+<form [formGroup]="requestDocumentsForm" (ngSubmit)="onSubmit()">
+<p>Now please check off which documents you want to be required for this request</p>
+  <br>
+  <div formArrayName="requestDocumentItems">
+    <div *ngFor="let requestDocument of requestDocuments; let i = index">
+      <input type="checkbox" [formControlName]="i" />
+      {{ requestDocument.documentTypeDescription }}
+    </div>
+  </div>
+</form>

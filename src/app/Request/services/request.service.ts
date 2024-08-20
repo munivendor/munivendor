@@ -7,6 +7,7 @@ import { DecisionMaker } from '../model/decisionmaker.model';
 import { RequestType } from '../model/requesttype.model';
 import { Request } from '../model/request.model';
 import { environment} from '../../../environments/environment';
+import { DocumentType } from '../model/documenttype.model';
 
 @Injectable({
   providedIn: 'root'
@@ -58,9 +59,10 @@ export class RequestService {
        
       }
 
-      /*GetRequestOverview(): Observable<Request>  {
-        return this.http.get<Request>(this.url);
-      }*/
+      GetRequiredDocuments(municipalityId: number): Observable<DocumentType []>  {
+        let params = this.url+'getrequireddocuments/'+municipalityId
+        return this.http.get<DocumentType[]>(params); 
+      }
                
   }
 
