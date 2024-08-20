@@ -31,7 +31,7 @@ constructor (private fb: FormBuilder, private requestService: RequestService, pr
     this.requestService.GetRequiredDocuments(1).subscribe (
         (requestDocuments: DocumentType [])=>{
             this.requestDocuments= requestDocuments;
-            this.addCheckboxes();
+          //  this.addCheckboxes();
             });   
   }
 
@@ -44,7 +44,7 @@ constructor (private fb: FormBuilder, private requestService: RequestService, pr
   }
 
   onSubmit() {
-    const selectedItems = this.requestDocumentsForm.value.items
+    const selectedItems = this.requestDocumentsForm.value.requestDocumentItems
     .map((checked: boolean, i: number) => checked ? this.requestDocuments[i] : null)
     .filter((v: any) => v !== null);
   console.log(selectedItems);
