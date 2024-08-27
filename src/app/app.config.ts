@@ -7,8 +7,9 @@ import { provideClientHydration } from '@angular/platform-browser';
 import { SocialAuthServiceConfig , GoogleLoginProvider } from '@abacritt/angularx-social-login';
 import { provideHttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideRouter(routes), provideClientHydration(), provideHttpClient()]
+  providers: [provideRouter(routes), provideClientHydration(), provideHttpClient(), provideAnimationsAsync('noop')]
 };

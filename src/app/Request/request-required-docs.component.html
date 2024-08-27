@@ -1,12 +1,14 @@
 <form [formGroup]="requestDocumentsForm" (ngSubmit)="onSubmit()">
 <p>Now please check off which documents you want to be required for this request</p>
-  <br>
    <div formArrayName="requestDocumentItems"> 
     <div *ngFor="let requestDocument of requestDocuments; let i = index">
-        <input type="checkbox" />
+        <input type="checkbox" [formControlName]="i"/>
         {{ requestDocument.documentTypeDescription }}
     </div>
   </div>
-
+  <p> NOTE: IF you see a document that you would like to be required just hit the add button and you can upload it</p>
+  <button mat-button (click)="openDialog()">Add</button>
+<div>
   <button type="submit">Submit</button>
+</div>
 </form>

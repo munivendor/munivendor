@@ -49,12 +49,8 @@ export class RequestService {
       CreateRequest(request: Request): Observable<number>  {
 
         const body = JSON.stringify(request);
-        console.log(body);
-
         const headers = { 'Content-Type': 'application/json' };
         const options = { headers };
-      
-
         return this.http.post<number>(this.url +'createrequest', body, options);
        
       }
@@ -63,7 +59,17 @@ export class RequestService {
         let params = this.url+'getrequireddocuments/'+municipalityId
         return this.http.get<DocumentType[]>(params); 
       }
-               
+
+      SaveRequiredDocuments(requestId: number, requiredDocumentTypes: DocumentType []): Observable<boolean> {
+
+        const body = JSON.stringify(requiredDocumentTypes);
+        const headers = { 'Content-Type': 'application/json' };
+        const options = { headers };
+
+        const url = `${this.url}saverequireddocuments/${requestId}`;
+        return this.http.post<boolean>(url,  body, options);
+      }
+                     
   }
 
 
