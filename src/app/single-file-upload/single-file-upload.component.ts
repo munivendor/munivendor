@@ -41,7 +41,7 @@ export class SingleFileUploadComponent {
       formData.append('file', this.file, this.file.name);
       formData.append('requestId', this.data);
 
-      const upload$ = this.http.post(url+'UploadRequestFile', formData);
+      const upload$ = this.http.post(url+'UploadDocumentType', formData);
 
       this.status = 'uploading';
 

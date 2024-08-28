@@ -44,7 +44,7 @@ constructor (private fb: FormBuilder, private requestService: RequestService, pr
     .map((checked: boolean, i: number) => checked ? this.requestDocuments[i] : null)
     .filter((v: any) => v !== null);
 
-    var requestId= (this.stateService.getState() as Request).requestId; // Replace with the actual requestId  
+    var requestId= (this.stateService.getState() as Request).requestId;
     this.requestService.SaveRequiredDocuments(requestId, selectedItems).subscribe(
       (success: boolean) => {
         if (success) {
@@ -63,7 +63,8 @@ constructor (private fb: FormBuilder, private requestService: RequestService, pr
 
   openDialog(): void {
     const dialogRef = this.dialog.open(FileUploadDialogComponent, {
-      width: '350px',
+      width: '270px',
+      height: 'auto'
     });
 
     dialogRef.afterClosed().subscribe(result => {
