@@ -8,13 +8,8 @@ import { StateService } from '../Request/services/state.service';
 import { Request } from '../Request/model/request.model';
 import { HttpClient } from '@angular/common/http';
 
-import {
-  MatDialogActions,
-  MatDialogClose,
-  MatDialogContent,
-  MatDialogRef,
-  MatDialogTitle
-} from '@angular/material/dialog';
+import {  MatDialogActions, MatDialogClose, MatDialogContent,  MatDialogRef,  MatDialogTitle } from '@angular/material/dialog';
+
 import { environment } from '../../environments/environment';
 import { throwError } from 'rxjs';
 
@@ -52,7 +47,7 @@ export class FileUploadDialogComponent {
     this.requestId= request.requestId;
  }
 
- onChange(event: any) {
+ onFileSelected(event: any) {
   const file: File = event.target.files[0];
   if (file) {this.file = file;}
   }
@@ -64,7 +59,7 @@ export class FileUploadDialogComponent {
       const url = environment.apiUrl;
 
       formData.append('file', this.file, this.file.name);
-      formData.append('requestId', this.requestId.toString());
+      formData.append('documentName', this.text);
 
       const upload$ = this.http.post<DocumentType>(url+'UploadDocumentType', formData);
 

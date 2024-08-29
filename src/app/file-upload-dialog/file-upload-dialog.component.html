@@ -7,7 +7,7 @@
           <input matInput [(ngModel)]="text">
         </mat-form-field>
       </div>
-      <input type="file" id="fileUpload" name="fileUpload">
+      <input type="file" id="fileUpload" name="fileUpload" (change)="onFileSelected($event)">
     </div>
     
     <div mat-dialog-actions>
