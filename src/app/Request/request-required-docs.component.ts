@@ -69,8 +69,18 @@ constructor (private fb: FormBuilder, private requestService: RequestService, pr
 
     dialogRef.afterClosed().subscribe(result => {
       console.log('The dialog was closed');
+      if (result) {
+        this.addNewDocument(result);
+      }
+
     });
 
+  }
+
+  addNewDocument(newDocument: DocumentType): void {
+    this.requestDocuments.push(newDocument);
+    const control = new FormControl(false);
+    (this.requestDocumentsForm.get('requestDocumentItems') as FormArray).push(control);
   }
   
 
