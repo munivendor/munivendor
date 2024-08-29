@@ -57,11 +57,8 @@ export class FileUploadDialogComponent {
   if (file) {this.file = file;}
   }
 
-  onNoClick(): void {
+  onUpload(): void {
 
-    // upload file and document name
-    // get back document type id
-    // get back document name
     if (this.file) {
       const formData = new FormData();
       const url = environment.apiUrl;
@@ -73,6 +70,7 @@ export class FileUploadDialogComponent {
 
       upload$.subscribe({
         next: (response: DocumentType) => {
+          this.dialogRef.close(response);
           this.status = 'success';
         },
         error: (error: any) => {
@@ -81,7 +79,7 @@ export class FileUploadDialogComponent {
         },
       })
     }
-      this.dialogRef.close();
+      
   }
 
   onFileUploaded(isUploaded: boolean) {
@@ -89,7 +87,7 @@ export class FileUploadDialogComponent {
   }
 
 
-  onUpload(): void {
+  onNoClick(): void {
     if (this.selectedFile) {
       console.log('File:', this.selectedFile);
       console.log('Text:', this.text);

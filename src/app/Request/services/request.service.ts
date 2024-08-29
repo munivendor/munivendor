@@ -69,6 +69,16 @@ export class RequestService {
         const url = `${this.url}saverequireddocuments/${requestId}`;
         return this.http.post<boolean>(url,  body, options);
       }
+
+      UploadDocumentType(requestId: number, requiredDocumentTypes: DocumentType []): Observable<boolean> {
+
+        const body = JSON.stringify(requiredDocumentTypes);
+        const headers = { 'Content-Type': 'application/json' };
+        const options = { headers };
+
+        const url = `${this.url}saverequireddocuments/${requestId}`;
+        return this.http.post<boolean>(url,  body, options);
+      }
                      
   }
 

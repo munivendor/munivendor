@@ -26,7 +26,12 @@ export class RequestRequiredDocumentsComponent implements OnInit {
 requestDocumentsForm!: FormGroup;
 requestDocuments!: DocumentType[];  
 
-constructor (private fb: FormBuilder, private requestService: RequestService, private stateService: StateService, private router: Router, public dialog: MatDialog) {}
+constructor (private fb: FormBuilder, 
+            private requestService: RequestService,
+            private stateService: StateService, 
+            private router: Router, 
+            public dialog: MatDialog) 
+  {}
 
   ngOnInit(): void {
     this.requestService.GetRequiredDocuments(1).subscribe (
@@ -44,7 +49,8 @@ constructor (private fb: FormBuilder, private requestService: RequestService, pr
     .map((checked: boolean, i: number) => checked ? this.requestDocuments[i] : null)
     .filter((v: any) => v !== null);
 
-    var requestId= (this.stateService.getState() as Request).requestId;
+    //var requestId= (this.stateService.getState() as Request).requestId;
+    var requestId= 100;
     this.requestService.SaveRequiredDocuments(requestId, selectedItems).subscribe(
       (success: boolean) => {
         if (success) {
@@ -68,11 +74,9 @@ constructor (private fb: FormBuilder, private requestService: RequestService, pr
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      console.log('The dialog was closed');
       if (result) {
         this.addNewDocument(result);
       }
-
     });
 
   }
@@ -82,14 +86,4 @@ constructor (private fb: FormBuilder, private requestService: RequestService, pr
     const control = new FormControl(false);
     (this.requestDocumentsForm.get('requestDocumentItems') as FormArray).push(control);
   }
-  
-
- /* private addCheckboxes() {
-     this.requestDocuments.forEach(() => this.itemArray.push(this.fb.control(false)));
-  }
-
-  get itemArray() {
-    return this.requestDocumentsForm.controls['requestDocumentItems'] as FormArray;
-  }*/
-  
 }
