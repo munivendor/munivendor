@@ -3,6 +3,7 @@ import { Router, RouterLink, RouterModule } from '@angular/router';
 import {  FormGroup,FormBuilder, ReactiveFormsModule, Validators, FormArray, FormControl } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
 
 import { FileUploadDialogComponent } from '../file-upload-dialog/file-upload-dialog.component';
 import { SingleFileUploadComponent } from "../single-file-upload/single-file-upload.component";
@@ -19,10 +20,11 @@ import { Request } from './model/request.model';
     standalone: true,
     templateUrl:'./request-required-docs.component.html',
     styleUrls: ['./request-required-docs.component.css'],
-    imports: [ReactiveFormsModule, RouterModule, RouterLink, CommonModule, SingleFileUploadComponent]
+    imports: [ReactiveFormsModule, RouterModule, RouterLink, CommonModule, SingleFileUploadComponent, MatButtonModule]
 })
 
 export class RequestRequiredDocumentsComponent implements OnInit {
+  [x: string]: any;
 requestDocumentsForm!: FormGroup;
 requestDocuments!: DocumentType[];  
 
@@ -34,12 +36,18 @@ constructor (private fb: FormBuilder,
   {}
 
   ngOnInit(): void {
+
+    
+    this.requestDocumentsForm = this.fb.group ({ 
+      requestDocumentItems: this.fb.array([])
+    });
+
     this.requestService.GetRequiredDocuments(1).subscribe (
         (requestDocuments: DocumentType [])=>{
             this.requestDocuments= requestDocuments;
-
-            this.requestDocumentsForm = this.fb.group ({ 
-              requestDocumentItems: this.fb.array(this.requestDocuments.map(() => new FormControl(false)))
+            //this.requestDocuments.map(() => new FormControl(false))
+            this.requestDocuments.forEach(() => {
+              (this.requestDocumentsForm.get('requestDocumentItems') as FormArray).push(new FormControl(false));
             });
          });   
   }

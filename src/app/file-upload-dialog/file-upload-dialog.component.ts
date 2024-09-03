@@ -6,6 +6,7 @@ import { MatInputModule } from '@angular/material/input';
 import { SingleFileUploadComponent } from "../single-file-upload/single-file-upload.component";
 import { StateService } from '../Request/services/state.service';
 import { Request } from '../Request/model/request.model';
+import { DocumentType} from '../Request/model/documenttype.model';
 import { HttpClient } from '@angular/common/http';
 
 import {  MatDialogActions, MatDialogClose, MatDialogContent,  MatDialogRef,  MatDialogTitle } from '@angular/material/dialog';
@@ -43,8 +44,10 @@ export class FileUploadDialogComponent {
 
   ngOnInit() {
      
-    var request = this.state.getState () as Request;   
-    this.requestId= request.requestId;
+    var request = this.state.getState () as Request;  
+ 
+    this.requestId = request?.requestId ?? 0;
+    
  }
 
  onFileSelected(event: any) {
@@ -66,6 +69,7 @@ export class FileUploadDialogComponent {
       upload$.subscribe({
         next: (response: DocumentType) => {
           this.dialogRef.close(response);
+          console.log(response);
           this.status = 'success';
         },
         error: (error: any) => {
@@ -86,9 +90,9 @@ export class FileUploadDialogComponent {
     if (this.selectedFile) {
       console.log('File:', this.selectedFile);
       console.log('Text:', this.text);
+      this.dialogRef.close({ documentName: this.text, documentTypeId: 'this.documentTypeId' });
     }
-    this.dialogRef.close();
-    this.dialogRef.close({ documentName: this.text, documentTypeId: 'this.documentTypeId' });
+   
 
   }
 }
