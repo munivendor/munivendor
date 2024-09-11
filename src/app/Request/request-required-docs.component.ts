@@ -1,14 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, RouterLink, RouterModule } from '@angular/router';
-import {  FormGroup,FormBuilder, ReactiveFormsModule, Validators, FormArray, FormControl } from '@angular/forms';
+import { FormGroup,FormBuilder, ReactiveFormsModule, Validators, FormArray, FormControl } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule} from '@angular/material/icon';
 
 import { FileUploadDialogComponent } from '../file-upload-dialog/file-upload-dialog.component';
-import { SingleFileUploadComponent } from "../single-file-upload/single-file-upload.component";
 
-import { Category } from './model/category.model';
 import { RequestService } from './services/request.service';
 import { StateService } from './services/state.service';
 import { DocumentType } from './model/documenttype.model';
@@ -20,13 +19,13 @@ import { Request } from './model/request.model';
     standalone: true,
     templateUrl:'./request-required-docs.component.html',
     styleUrls: ['./request-required-docs.component.css'],
-    imports: [ReactiveFormsModule, RouterModule, RouterLink, CommonModule, SingleFileUploadComponent, MatButtonModule]
+    imports: [ReactiveFormsModule, RouterModule, RouterLink, CommonModule, MatButtonModule, MatIconModule]
 })
 
 export class RequestRequiredDocumentsComponent implements OnInit {
-  [x: string]: any;
 requestDocumentsForm!: FormGroup;
 requestDocuments!: DocumentType[];  
+additionalRequestDocuments!: DocumentType[];  
 
 constructor (private fb: FormBuilder, 
             private requestService: RequestService,
@@ -37,15 +36,14 @@ constructor (private fb: FormBuilder,
 
   ngOnInit(): void {
 
-    
     this.requestDocumentsForm = this.fb.group ({ 
-      requestDocumentItems: this.fb.array([])
+      requestDocumentItems: this.fb.array([]),
+      additionalRequestDocumentItems: this.fb.array([])
     });
 
     this.requestService.GetRequiredDocuments(1).subscribe (
         (requestDocuments: DocumentType [])=>{
             this.requestDocuments= requestDocuments;
-            //this.requestDocuments.map(() => new FormControl(false))
             this.requestDocuments.forEach(() => {
               (this.requestDocumentsForm.get('requestDocumentItems') as FormArray).push(new FormControl(false));
             });
@@ -71,10 +69,9 @@ constructor (private fb: FormBuilder,
         console.error('Error saving documents:', error);
       }
     );
-
-  console.log(selectedItems);
   }
 
+  /*------------------------------------------------------------------------------------*/
   openDialog(): void {
     const dialogRef = this.dialog.open(FileUploadDialogComponent, {
       width: '270px',
@@ -90,8 +87,8 @@ constructor (private fb: FormBuilder,
   }
 
   addNewDocument(newDocument: DocumentType): void {
-    this.requestDocuments.push(newDocument);
+    this. additionalRequestDocuments.push(newDocument);
     const control = new FormControl(false);
-    (this.requestDocumentsForm.get('requestDocumentItems') as FormArray).push(control);
+    (this.requestDocumentsForm.get('additionalRequestDocumentItems') as FormArray).push(control);
   }
 }

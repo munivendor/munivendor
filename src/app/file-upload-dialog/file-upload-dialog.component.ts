@@ -45,7 +45,6 @@ export class FileUploadDialogComponent {
   ngOnInit() {
      
     var request = this.state.getState () as Request;  
- 
     this.requestId = request?.requestId ?? 0;
     
  }
@@ -59,17 +58,15 @@ export class FileUploadDialogComponent {
 
     if (this.file) {
       const formData = new FormData();
-      const url = environment.apiUrl;
-
+      const url = `${environment.apiUrl}Uploaddocument/${this.requestId}`;
       formData.append('file', this.file, this.file.name);
       formData.append('documentName', this.text);
 
-      const upload$ = this.http.post<DocumentType>(url+'UploadDocumentType', formData);
+      const upload$ = this.http.post<DocumentType>(url, formData);
 
       upload$.subscribe({
         next: (response: DocumentType) => {
           this.dialogRef.close(response);
-          console.log(response);
           this.status = 'success';
         },
         error: (error: any) => {

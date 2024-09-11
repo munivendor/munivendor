@@ -6,9 +6,22 @@
         {{ requestDocument.documentTypeDescription }}
     </div>
   </div>
-  <p> NOTE: IF you see a document that you would like to be required just hit the add button and you can upload it</p>
+  <p> NOTE: IF you see a document that you would like to be required just hit the Add button and you can upload it</p>
+  <p> additional documents</p>
+  
+  <div formArrayName="additionalRequestDocumentItems"> 
+    <div *ngFor="let additionalRequestDocument of additionalRequestDocuments; let i = index">
+        <input type="checkbox" [formControlName]="i"/>
+        {{ additionalRequestDocument.documentTypeDescription }}
+      <div class="example-button-container">
+        <button mat-fab aria-label="Additional Request Delete Icon">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <button mat-raised-button type="button" (click)="openDialog()">Add</button>
- 
+   
   <button mat-raised-button type="submit">Submit</button>
- 
 </form>
