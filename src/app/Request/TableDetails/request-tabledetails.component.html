@@ -1,0 +1,30 @@
+<h1>Requests</h1>
+<table>
+    <thead>
+        <tr>
+            <th></th>
+            <th></th>
+            <th>Request Name</th>
+            <th>Type</th>
+            <th>Categories</th>
+            <th>Publish Date</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of items">
+            <td [ngClass]="{'button-column': canDelete(item) || canCancel(item) || canEdit(item)}">
+                <button *ngIf="canDelete(item)" (click)="openConfirmationDialog('delete', item)">Delete</button>
+                <button *ngIf="canCancel(item)" (click)="openConfirmationDialog('cancel', item)">Cancel</button>
+                <button *ngIf="canEdit(item)" (click)="openConfirmationDialog('edit', item)">Edit</button>
+            </td>
+            <td>[✓]</td>
+            <td>{{ item.requestName }}</td>
+            <td>{{ item.requestType.requestTypeDesc }}</td>
+            <td>{{ item.category.categoryName }}</td>
+            <td>{{ item.publishDate }}</td>
+            <td>{{ item.requestStatus.requestStatusDesc }}</td>
+
+        </tr>
+    </tbody>
+</table>
