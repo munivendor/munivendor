@@ -1,25 +1,35 @@
 <form [formGroup]="requestDocumentsForm" (ngSubmit)="onSubmit()">
 <p>Now please check off which documents you want to be required for this request</p>
-   <div formArrayName="requestDocumentItems"> 
-    <div *ngFor="let requestDocument of requestDocuments; let i = index">
-        <input type="checkbox" [formControlName]="i"/>
-        {{ requestDocument.documentTypeDescription }}
+<p>Required forms from the State of NJ</p>
+   <div formArrayName="requiredRequestDocumentItems"> 
+    <div *ngFor="let requiredRequestDocument of requiredRequestDocuments; let i = index">
+        <input type="checkbox" [formControlName]="i" [checked]="true" [disabled]="true"/>
+        {{ requiredRequestDocument.documentTypeDescription }}
     </div>
   </div>
-  <p> NOTE: IF you see a document that you would like to be required just hit the Add button and you can upload it</p>
-  <p> additional documents</p>
-  
-  <div formArrayName="additionalRequestDocumentItems"> 
-    <div *ngFor="let additionalRequestDocument of additionalRequestDocuments; let i = index">
+
+  <p>Optional forms from the State of NJ</p>
+   <div formArrayName="optionalRequestDocumentItems"> 
+    <div *ngFor="let optionalRequestDocument of optionalRequestDocuments; let i = index">
         <input type="checkbox" [formControlName]="i"/>
-        {{ additionalRequestDocument.documentTypeDescription }}
+        {{ optionalRequestDocument.documentTypeDescription }}
+    </div>
+  </div>
+
+  <p>Optional forms from Municipality</p>
+  <div formArrayName="municipalityRequestDocumentItems"> 
+    <div *ngFor="let municipalityRequestDocument of municipalityRequestDocuments; let i = index">
+        <input type="checkbox" [formControlName]="i"/>
+        {{ municipalityRequestDocument.documentTypeDescription }}
       <div class="example-button-container">
-        <button mat-fab aria-label="Additional Request Delete Icon">
+        <button mat-fab aria-label="Additional Request Delete Icon" (click)="onDeleteMunicipalityRequestDocument(i)">
           <mat-icon>delete</mat-icon>
         </button>
       </div>
     </div>
   </div>
+
+  <p> Upload a document you would like to be required</p>
 
   <button mat-raised-button type="button" (click)="openDialog()">Add</button>
    
