@@ -1,87 +1,140 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { forkJoin, map } from 'rxjs';
+import { forkJoin } from 'rxjs';
 import { CommonModule } from '@angular/common';
+import { MatDialog } from '@angular/material/dialog';
+import { ConfirmationDialog } from '../RequestConfirmationDialog/confirmation-dialog.component';
 
 @Component({
   selector: 'request-tabledetails',
   standalone: true,
   templateUrl: './request-tabledetails.component.html',
   styleUrls: ['./request-tabledetails.component.css'],
-  imports: [CommonModule]
+  imports: [CommonModule, ConfirmationDialog]
 })
 export class TableDetailsComponent implements OnInit {
-
   private url = "https://localhost:7135";
   items: any[] = [];
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, public dialog: MatDialog) {}
 
   ngOnInit(): void {
-   this.getData();
+    this.getData();
   }
 
-  getData(){
-    const requests$ = this.http.get<any[]>(this.url + '/GetRequests');
+  getData() {
+    const requests$ = this.http.get<any[]>(this.url + '/GetRequestsAsync');
     const categories$ = this.http.get<any[]>(this.url + '/GetCategories');
     const requestTypes$ = this.http.get<any[]>(this.url + '/GetRequestTypes');
-    const requestStates$ = this.http.get<any[]>(this.url + '/GetRequestStates');
+    const requestStatuses$ = this.http.get<any[]>(this.url + '/GetRequestStatusesAsync');
   
     const combinedData: any[] = [];
 
-    forkJoin([requests$, categories$, requestTypes$, requestStates$]).subscribe(
-      ([requests, categories, requestTypes, requestStates]) => {
-        // Process combined results here
-        const combinedResults = {
-          requests,
-          categories,
-          requestTypes
-        };
-        console.log(combinedResults);
+    forkJoin([requests$, categories$, requestTypes$, requestStatuses$]).subscribe(
+      ([requests, categories, requestTypes, requestStatuses]) => {
         requests.forEach((request) => {
           const category = categories.find((c) => c.categoryId === request.categoryId);
           const requestType = requestTypes.find(r => r.requestTypeId === request.requestTypeId);
-          const requestState = requestStates.find(rs => rs.requestStateId === request.requestStateId);
+          const requestStatus = requestStatuses.find(rs => rs.requestStatusId === request.requestStatusId);
           combinedData.push({
             ...request,
             category,
             requestType,
-            requestState
+            requestStatus
           });
-        })
-        console.log("combinedData", combinedData)
+        });
         this.items.push(...combinedData);
       },
-     
       error => {
         console.error('Error fetching data', error);
       }
     );
-   
-  }
-
-  canEdit(item: any): boolean {
-    if (item.requestState && item.requestState.requestStatus) {
-      return item.requestState.requestStatus === 'Draft' || item.requestState.requestStatus === 'Live';
-    }
-    return false;
   }
 
   canDelete(item: any): boolean {
-    if (item.requestState && item.requestState.requestStatus) {
-      return item.requestState.requestStatus === 'Draft';
-    }
-    return false;
+    return item.requestStatus?.requestStatusDesc === 'Draft';
+  }
+
+  canEdit(item: any): boolean {
+    return item.requestStatus?.requestStatusDesc === 'Draft' || item.requestStatus?.requestStatusDesc === 'Live';
   }
 
   canCancel(item: any): boolean {
-    if (item.requestState && item.requestState.requestStatus) {
-      return item.requestState.requestStatus === 'Scheduled' || item.requestState.requestStatus === 'Live';
-    }
-    return false;
+    return item.requestStatus?.requestStatusDesc === 'Scheduled' || item.requestStatus?.requestStatusDesc === 'Live';
   }
   
-  performAction(item: any, action: string) {
-    console.log(`${action} action performed on`, item);
+  openConfirmationDialog(action: string, item: any): void {
+    const dialogRef = this.dialog.open(ConfirmationDialog, {
+      width: '250px',
+      data: { action, item }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && action === "delete") {
+        this.deleteRequest(item, action);
+      }
+      if (result && action === "cancel") {
+        this.cancelRequest(item, action);
+      }
+      if (result && action === "edit") {
+        this.editRequest(item, action);
+      }
+    });
+  }
+
+  deleteRequest(item: any, action: string): void {
+    this.http.delete(`${this.url}/api/requests/${item.requestId}`).subscribe(
+      () => {
+        console.log(`Request with ID ${item.requestId} deleted successfully.`);
+        // Correctly update the table after deletion
+        this.items = this.items.filter(i => i.requestId !== item.requestId);
+      },
+      error => {
+        console.error('Error deleting the request:', error);
+      }
+    );
+  }
+
+  cancelRequest(item: any, action: string): void {
+      // Define the updated request data based on the action
+      let updatedData: any;
+
+      if (action === "cancel") {
+        updatedData = { ...item, requestStatusId: 3 }; // Assuming 3 is the status for 'Canceled'
+      }
+
+      this.http.put(`${this.url}/api/requests/${item.requestId}`, updatedData).subscribe(
+      () => {
+        console.log(`Request with ID ${item.requestId} canceled successfully.`);
+        // Correctly update the table after cancelation
+        this.items = this.items.filter(i => i.requestId !== item.requestId);
+         // Example: Canceling request (changing the status to canceled)
+     
+      },
+      error => {
+        console.error('Error canceling the request:', error);
+      }
+    );
+  }
+
+  editRequest(item: any, action: string): void {
+    // Define the updated request data based on the action
+    let updatedData: any;
+  
+    if (action === 'edit') {
+      // Example: Editing request (you can modify the fields as per your requirements)
+      updatedData = { ...item, requestName: 'Updated Request Name' }; // Modify requestName or other fields
+    } 
+  
+    this.http.put(`${this.url}/api/requests/${item.requestId}`, updatedData).subscribe(
+      (updatedItem) => {
+        console.log(`Request with ID ${item.requestId} updated successfully.`);
+        // Update the table with the updated item
+        this.items = this.items.map(i => i.requestId === item.requestId ? updatedItem : i);
+      },
+      error => {
+        console.error('Error updating the request:', error);
+      }
+    );
   }
 }

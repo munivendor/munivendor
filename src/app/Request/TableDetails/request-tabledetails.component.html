@@ -14,16 +14,16 @@
     <tbody>
         <tr *ngFor="let item of items">
             <td [ngClass]="{'button-column': canDelete(item) || canCancel(item) || canEdit(item)}">
-                <button *ngIf="canDelete(item)" (click)="performAction(item, 'delete')">Delete</button>
-                <button *ngIf="canCancel(item)" (click)="performAction(item, 'cancel')">Cancel</button>
-                <button *ngIf="canEdit(item)" (click)="performAction(item, 'edit')">Edit</button>
+                <button *ngIf="canDelete(item)" (click)="openConfirmationDialog('delete', item)">Delete</button>
+                <button *ngIf="canCancel(item)" (click)="openConfirmationDialog('cancel', item)">Cancel</button>
+                <button *ngIf="canEdit(item)" (click)="openConfirmationDialog('edit', item)">Edit</button>
             </td>
             <td>[✓]</td>
             <td>{{ item.requestName }}</td>
             <td>{{ item.requestType.requestTypeDesc }}</td>
             <td>{{ item.category.categoryName }}</td>
             <td>{{ item.publishDate }}</td>
-            <td>{{ item.requestState.requestStatus }}</td>
+            <td>{{ item.requestStatus.requestStatusDesc }}</td>
 
         </tr>
     </tbody>
