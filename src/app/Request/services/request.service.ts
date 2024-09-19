@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, catchError, tap, throwError } from 'rxjs';
 import { Category } from '../model/category.model';
 import { SubCategory } from '../model/subcategory.model';
 import { DecisionMaker } from '../model/decisionmaker.model';
@@ -60,6 +60,16 @@ export class RequestService {
         return this.http.get<DocumentType[]>(params); 
       }
 
+      GetOptionalDocuments(municipalityId: number): Observable<DocumentType []>  {
+        let params = this.url+'getoptionaldocuments/'+municipalityId
+        return this.http.get<DocumentType[]>(params); 
+      }
+
+      GetMunicipalityDocuments(municipalityId: number): Observable<DocumentType []>  {
+        let params = this.url+'getmunicipalitydocuments/'+municipalityId
+        return this.http.get<DocumentType[]>(params); 
+      }
+
       SaveRequiredDocuments(requestId: number, requiredDocumentTypes: DocumentType []): Observable<boolean> {
 
         const body = JSON.stringify(requiredDocumentTypes);
@@ -70,15 +80,27 @@ export class RequestService {
         return this.http.post<boolean>(url,  body, options);
       }
 
-      UploadDocumentType(requestId: number, requiredDocumentTypes: DocumentType []): Observable<boolean> {
+      DeleteMunicipalityRequestDocument(requestId: number, additionalRequestDocumentId: number): Observable<boolean> {
+        const url = `${this.url}deleteadditionaldocument/${requestId}/${additionalRequestDocumentId}`;
+        return this.http.delete<boolean>(url).pipe(
+          tap((response: any) => console.log('DELETE response:', response)), // Log the response
+          catchError((error: any) => {
+              console.error('DELETE error:', error); // Log any errors
+              return throwError(error);})
 
-        const body = JSON.stringify(requiredDocumentTypes);
-        const headers = { 'Content-Type': 'application/json' };
-        const options = { headers };
-
-        const url = `${this.url}saverequireddocuments/${requestId}`;
-        return this.http.post<boolean>(url,  body, options);
+          );
       }
+
+      /*UploadDocumentType(requestId: number, requiredDocumentTypes: DocumentType[]): Observable<boolean> {
+
+    const body = JSON.stringify(requiredDocumentTypes);
+    const headers = { 'Content-Type': 'application/json' };
+    const options = { headers };
+
+    const url = `${this.url}saverequireddocuments/${requestId}`;
+    return this.http.post<boolean>(url, body, options);
+  }*/
+
                      
   }
 
