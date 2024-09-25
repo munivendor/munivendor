@@ -31,7 +31,22 @@ export class ConfirmationDialog {
     @Inject(MAT_DIALOG_DATA) public data: DialogData,
   ) {}
 
+   // Function to get the confirmation message based on the action
+   getConfirmationMessage(): string {
+    switch (this.data.action) {
+      case 'cancel':
+        return 'Are you sure you want to cancel this request?';
+      case 'delete':
+        return 'Are you sure you want to delete this request? If you delete this request your progress will not be saved.';
+      case 'edit':
+        return 'Are you sure you want to edit this request?';
+      default:
+        return `Are you sure you want to ${this.data.action} this request?`;
+    }
+  }
+ 
   onNoClick(): void {
+    console.log("DialogData", this.data)
     this.dialogRef.close(false); // Close the dialog with 'false' value
   }
 
