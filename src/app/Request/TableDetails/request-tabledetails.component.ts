@@ -81,9 +81,9 @@ export class TableDetailsComponent implements OnInit {
       if (result && action === "delete") {
         this.deleteRequest(item, action);
       }
-      if (result && action === "edit") {
-        this.editRequest(item, action);
-      }
+      // if (result && action === "edit") {
+      //   this.editRequest(item, action);
+      // }
     });
   }
 
@@ -155,24 +155,24 @@ export class TableDetailsComponent implements OnInit {
     );
   }
 
-  editRequest(item: any, action: string): void {
-    // Define the updated request data based on the action
-    let updatedData: any;
+  // editRequest(item: any, action: string): void {
+  //   // Define the updated request data based on the action
+  //   let updatedData: any;
 
-    if (action === 'edit') {
-      // Example: Editing request (you can modify the fields as per your requirements)
-      updatedData = { ...item, requestName: 'Updated Request Name' }; // Modify requestName or other fields
-    }
+  //   if (action === 'edit') {
+  //     // Example: Editing request (you can modify the fields as per your requirements)
+  //     updatedData = { ...item, requestName: 'Updated Request Name' }; // Modify requestName or other fields
+  //   }
 
-    this.http.put(`${this.url}/api/requests/${item.requestId}`, updatedData).subscribe(
-      (updatedItem) => {
-        console.log(`Request with ID ${item.requestId} updated successfully.`);
-        // Update the table with the updated item
-        this.items = this.items.map(i => i.requestId === item.requestId ? updatedItem : i);
-      },
-      error => {
-        console.error('Error updating the request:', error);
-      }
-    );
-  }
+  //   this.http.put(`${this.url}/api/requests/${item.requestId}`, updatedData).subscribe(
+  //     (updatedItem) => {
+  //       console.log(`Request with ID ${item.requestId} updated successfully.`);
+  //       // Update the table with the updated item
+  //       this.items = this.items.map(i => i.requestId === item.requestId ? updatedItem : i);
+  //     },
+  //     error => {
+  //       console.error('Error updating the request:', error);
+  //     }
+  //   );
+  // }
 }
