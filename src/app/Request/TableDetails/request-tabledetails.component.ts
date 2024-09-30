@@ -24,10 +24,10 @@ export class TableDetailsComponent implements OnInit {
   }
 
   getData() {
-    const requests$ = this.http.get<any[]>(this.url + '/GetRequestsAsync');
+    const requests$ = this.http.get<any[]>(this.url + '/GetRequests');
     const categories$ = this.http.get<any[]>(this.url + '/GetCategories');
     const requestTypes$ = this.http.get<any[]>(this.url + '/GetRequestTypes');
-    const requestStatuses$ = this.http.get<any[]>(this.url + '/GetRequestStatusesAsync');
+    const requestStatuses$ = this.http.get<any[]>(this.url + '/GetRequestStatuses');
 
     const combinedData: any[] = [];
 
@@ -66,16 +66,20 @@ export class TableDetailsComponent implements OnInit {
 
   openConfirmationDialog(action: string, item: any): void {
     const dialogRef = this.dialog.open(ConfirmationDialog, {
-      width: '250px',
+      width: '600px',
       data: { action, item }
     });
+
+    dialogRef.componentInstance.cancellationRequested.subscribe((cancelData: { item: any, action: string, value: any, otherNote: string }) => {
+      this.onCancelUpdateRequestCancelReason(cancelData.item, cancelData.value, cancelData.otherNote);
+      this.onCancelUpdateRequestStatus(cancelData.item, cancelData.action);
+      
+    });
+  
 
     dialogRef.afterClosed().subscribe(result => {
       if (result && action === "delete") {
         this.deleteRequest(item, action);
-      }
-      if (result && action === "cancel") {
-        this.cancelRequest(item, action);
       }
       if (result && action === "edit") {
         this.editRequest(item, action);
@@ -88,7 +92,6 @@ export class TableDetailsComponent implements OnInit {
     this.requestService.DeleteRequest(item.requestId).subscribe(
       () => {
         console.log(`Request with ID ${item.requestId} deleted successfully.`);
-        // Correctly update the table after deletion
         this.items = this.items.filter(i => i.requestId !== item.requestId);
       },
       error => {
@@ -97,31 +100,57 @@ export class TableDetailsComponent implements OnInit {
     );
   }
 
-  cancelRequest(item: any, action: string): void {
-    // Define the updated request data based on the action
-    let updatedData: any;
-  
-    // Handle cancelation logic based on the request status
-  if (action === "cancel") {
-    if (item.requestStatus.requestStatusDesc === "Scheduled") {
-      updatedData = { ...item, requestStatusId: 1 }; // Set status to 'Draft'
-    } else if (item.requestStatus.requestStatusDesc === "Live") {
-      updatedData = { ...item, requestStatusId: 3 }; // Set status to 'Cancelled' (assuming 3 is Cancelled)
-    } 
+  onCancelUpdateRequestStatus(item: any, action: string): void {
+    const DRAFT_STATUS_ID = 1;
+    const CANCELLED_STATUS_ID = 5;
+    
+    if (action === "cancel") {
+      const statusDesc = item.requestStatus.requestStatusDesc;
+      let newRequestStatusId: number;
+      let newRequestStatusDesc: string
+
+      if (statusDesc === "Scheduled") {
+        newRequestStatusId = DRAFT_STATUS_ID;
+        newRequestStatusDesc = "Draft"
+      } else if (statusDesc === "Live") {
+        newRequestStatusId = CANCELLED_STATUS_ID;
+        newRequestStatusDesc = "Cancelled"
+      } else {
+        console.warn("Unexpected request status:", statusDesc);
+        return;
+      }
+
+      this.requestService.UpdateRequestStatus(item.requestId, newRequestStatusId).subscribe(
+        () => {
+          console.log("Request status updated successfully");
+          this.items = this.items.map((i) => {
+            if (i.requestId === item.requestId) {
+                return {
+                    ...i,
+                    requestStatus: {
+                        ...i.requestStatus,
+                        requestStatusId: newRequestStatusId,
+                        requestStatusDesc: newRequestStatusDesc,
+                    },
+                };
+            }
+            return i;
+        });
+        },
+        (error) => {
+          console.error("Error updating request status:", error);
+        }
+      );
+    }
   }
 
-    this.http.put(`${this.url}/api/requests/${item.requestId}`, updatedData).subscribe(
+  onCancelUpdateRequestCancelReason(item: any, value: any, otherNote: string): void {
+    this.requestService.UpdateRequestCancelReason(item.requestId, value, otherNote).subscribe(
       () => {
-        console.log(`Request with ID ${item.requestId} canceled successfully.`);
-
-        // Update the request status in the items array without removing the item
-        const index = this.items.findIndex(i => i.requestId === item.requestId);
-        if (index !== -1) {
-          this.items[index] = { ...this.items[index], requestStatusId: updatedData.requestStatusId };
-        }
+        console.log(`Request with ID ${item.requestId} updated successfully with cancel reason ID ${value}.`);
       },
       error => {
-        console.error('Error canceling the request:', error);
+        console.error('Error updating the request:', error);
       }
     );
   }
