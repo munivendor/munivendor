@@ -1,0 +1,30 @@
+<h1>Requests</h1>
+<table>
+    <thead>
+        <tr>
+            <th></th>
+            <th></th>
+            <th>Request Name</th>
+            <th>Type</th>
+            <th>Categories</th>
+            <th>Publish Date</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let joinedRequest of joinedRequestData">
+            <td [ngClass]="{'button-column': canDelete(joinedRequest) || canCancel(joinedRequest) || canEdit(joinedRequest)}">
+                <button *ngIf="canDelete(joinedRequest)" (click)="openConfirmationDialog('delete', joinedRequest)">Delete</button>
+                <button *ngIf="canCancel(joinedRequest)" (click)="openConfirmationDialog('cancel', joinedRequest)">Cancel</button>
+                <button *ngIf="canEdit(joinedRequest)" (click)="openConfirmationDialog('edit', joinedRequest)">Edit</button>
+            </td>
+            <td>[✓]</td>
+            <td>{{ joinedRequest.requestName }}</td>
+            <td>{{ joinedRequest.requestType.requestTypeDesc }}</td>
+            <td>{{ joinedRequest.category.categoryName }}</td>
+            <td>{{ joinedRequest.publishDate }}</td>
+            <td>{{ joinedRequest.requestStatus.requestStatusDesc }}</td>
+
+        </tr>
+    </tbody>
+</table>

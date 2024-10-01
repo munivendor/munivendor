@@ -1,0 +1,8 @@
+<h2 mat-dialog-title>Confirmation</h2>
+<mat-dialog-content>
+  <p>{{ getConfirmationMessage() }}</p>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button (click)="onNoClick()">No</button>
+  <button mat-button (click)="confirm(requestObjAndUserAction.action, requestObjAndUserAction.request)">Yes</button>
+</mat-dialog-actions>
