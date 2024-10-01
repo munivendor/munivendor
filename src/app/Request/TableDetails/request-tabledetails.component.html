@@ -12,18 +12,18 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of items">
-            <td [ngClass]="{'button-column': canDelete(item) || canCancel(item) || canEdit(item)}">
-                <button *ngIf="canDelete(item)" (click)="openConfirmationDialog('delete', item)">Delete</button>
-                <button *ngIf="canCancel(item)" (click)="openConfirmationDialog('cancel', item)">Cancel</button>
-                <button *ngIf="canEdit(item)" (click)="openConfirmationDialog('edit', item)">Edit</button>
+        <tr *ngFor="let joinedRequest of joinedRequestData">
+            <td [ngClass]="{'button-column': canDelete(joinedRequest) || canCancel(joinedRequest) || canEdit(joinedRequest)}">
+                <button *ngIf="canDelete(joinedRequest)" (click)="openConfirmationDialog('delete', joinedRequest)">Delete</button>
+                <button *ngIf="canCancel(joinedRequest)" (click)="openConfirmationDialog('cancel', joinedRequest)">Cancel</button>
+                <button *ngIf="canEdit(joinedRequest)" (click)="openConfirmationDialog('edit', joinedRequest)">Edit</button>
             </td>
             <td>[✓]</td>
-            <td>{{ item.requestName }}</td>
-            <td>{{ item.requestType.requestTypeDesc }}</td>
-            <td>{{ item.category.categoryName }}</td>
-            <td>{{ item.publishDate }}</td>
-            <td>{{ item.requestStatus.requestStatusDesc }}</td>
+            <td>{{ joinedRequest.requestName }}</td>
+            <td>{{ joinedRequest.requestType.requestTypeDesc }}</td>
+            <td>{{ joinedRequest.category.categoryName }}</td>
+            <td>{{ joinedRequest.publishDate }}</td>
+            <td>{{ joinedRequest.requestStatus.requestStatusDesc }}</td>
 
         </tr>
     </tbody>

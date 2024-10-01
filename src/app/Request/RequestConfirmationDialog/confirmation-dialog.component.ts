@@ -1,14 +1,16 @@
-import {Component, Inject} from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { Component, Inject, EventEmitter, Output, Input } from '@angular/core';
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogTitle, MatDialogContent, MatDialogActions } from '@angular/material/dialog';
 import { FormsModule } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { CancellationReasonDialog } from '../CancellationReasonDialog/cancellation-reason-dialog.component';
+import { Request } from '../model/request.model';
 
 export interface DialogData {
   action: string;
-  item: any;
+  request: Request;
 }
 
 @Component({
@@ -22,35 +24,66 @@ export interface DialogData {
     MatButtonModule,
     MatDialogTitle,
     MatDialogContent,
-    MatDialogActions
+    MatDialogActions,
+    CancellationReasonDialog
   ],
 })
 export class ConfirmationDialog {
+  @Output() cancellationRequested = new EventEmitter<{ request: any, action: string }>();
+  @Input() onCancelUpdateRequestStatus!: (request: any, action: string) => void;
+
   constructor(
     public dialogRef: MatDialogRef<ConfirmationDialog>,
-    @Inject(MAT_DIALOG_DATA) public data: DialogData,
+    @Inject(MAT_DIALOG_DATA) public requestObjAndUserAction: DialogData,
+    public dialog: MatDialog, // Injecting MatDialog for opening another dialog,
   ) {}
 
-   // Function to get the confirmation message based on the action
-   getConfirmationMessage(): string {
-    switch (this.data.action) {
-      case 'cancel':
+  getConfirmationMessage(): string {
+    if (this.requestObjAndUserAction.action === 'cancel') {
+      const statusDesc = this.requestObjAndUserAction.request.requestStatus.requestStatusDesc;
+      if (statusDesc === 'Scheduled') {
+        return 'This request is scheduled to go live and canceling it will revert it back to a Draft. Are you sure you want to cancel this request?';
+      } else if (statusDesc === 'Live') {
+        return 'By law, you will need to provide your reasoning for canceling a live request. Are you sure you want to cancel this request?';
+      } else {
         return 'Are you sure you want to cancel this request?';
+      }
+    }
+
+    switch (this.requestObjAndUserAction.action) {
       case 'delete':
-        return 'Are you sure you want to delete this request? If you delete this request your progress will not be saved.';
+        return 'If you delete this request your progress will not be saved. Are you sure you want to delete this request?';
       case 'edit':
         return 'Are you sure you want to edit this request?';
       default:
-        return `Are you sure you want to ${this.data.action} this request?`;
+        return `Are you sure you want to ${this.requestObjAndUserAction.action} this request?`;
     }
   }
- 
+
+
   onNoClick(): void {
-    console.log("DialogData", this.data)
-    this.dialogRef.close(false); // Close the dialog with 'false' value
+    this.dialogRef.close(false);
   }
 
-  confirm(): void {
-    this.dialogRef.close(true); // Close the dialog with 'true' value
+  confirm(action: string, request: any): void {
+    this.dialogRef.close(true); 
+    if (this.requestObjAndUserAction.action === 'cancel' && request.requestStatus.requestStatusDesc === "Live") {
+      this.openCancellationReasonDialog(action, request);
+    } else if (this.requestObjAndUserAction.action === 'cancel' && request.requestStatus.requestStatusDesc === "Scheduled") {
+      this.onCancelUpdateRequestStatus(request, action);
+    }
   }
+
+  openCancellationReasonDialog(action: string, request: any): void {
+    const cancelDialogRef = this.dialog.open(CancellationReasonDialog, {
+      width: '500px',
+      data:  { action, request }
+    });
+
+    cancelDialogRef.componentInstance.cancelConfirmed.subscribe((cancelData: { request: any, action: string }) => {
+      this.cancellationRequested.emit(cancelData); // Emit event to parent
+    });
+  }
+
+   
 }
