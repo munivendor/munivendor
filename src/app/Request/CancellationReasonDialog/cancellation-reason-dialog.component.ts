@@ -16,12 +16,14 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { ErrorStateMatcher } from '@angular/material/core';
 import { RequestService } from '../services/request.service';
 import { CommonModule } from '@angular/common';
+import { CancellationReasons } from '../model/cancellationreasons.model';
+import { Request } from '../model/request.model';
 
 export interface DialogData {
   action: string;
-  item: any;
+  request: Request;
   value: number;
-  otherNote: string;
+  reasonNote: string;
 }
 
 /** Error when invalid control is dirty, touched, or submitted. */
@@ -51,14 +53,14 @@ export class MyErrorStateMatcher implements ErrorStateMatcher {
   ],
 })
 export class CancellationReasonDialog implements OnInit  {
-  cancellationReason = new FormControl('', [Validators.required]);
-  otherNoteControl = new FormControl({ value: '', disabled: true }); // Initially disabled
-  cancellationReasonsList: any[] = [];  // To store the cancellation reasons fetched from the API
+  cancellationReasonId = new FormControl<number | null>(null, [Validators.required]);
+  cancellationReasonNote = new FormControl({ value: '', disabled: true }); // Initially disabled
+  requestCancellationReasons: CancellationReasons[] = [];
 
   // Error matcher
   matcher = new MyErrorStateMatcher();
 
-  @Output() cancelConfirmed = new EventEmitter<{ item: any, action: string, value: string, otherNote: string }>();
+  @Output() cancelConfirmed = new EventEmitter<{ request: any, action: string, reasonId: number, reasonNote: string }>();
 
 
   constructor(
@@ -69,21 +71,29 @@ export class CancellationReasonDialog implements OnInit  {
 
   ngOnInit(): void {
     this.fetchCancellationReasons();
-    // Watch the cancellationReason control value to enable or disable the otherNoteControl
-    this.cancellationReason.valueChanges.subscribe((selectedValue) => {
-      if (selectedValue?.toString() === '10') {
-        this.otherNoteControl.enable();
-      } else {
-        this.otherNoteControl.disable();
-        this.otherNoteControl.reset();
-      }
+    this.cancellationReasonId.valueChanges.subscribe((value) => {
+      this.toggleReasonNoteValidation(value);
     });
+  }
+
+  toggleReasonNoteValidation(reasonId: any): void {
+    // "Other" has requestCancellationReasonListId === 10.
+    if (reasonId === 10) {  
+      this.cancellationReasonNote.setValidators([Validators.required]);
+      this.cancellationReasonNote.enable();
+    } else {
+      this.cancellationReasonNote.clearValidators();
+      // Clear the value when not "Other"
+      this.cancellationReasonNote.setValue('');
+      this.cancellationReasonNote.disable();
+    }
+    this.cancellationReasonNote.updateValueAndValidity();
   }
 
   fetchCancellationReasons(): void {
     this.requestService.GetCancellationReasons().subscribe(
       (response) => {
-        this.cancellationReasonsList = response;
+        this.requestCancellationReasons = response;
       },
       (error) => {
         console.error('Error fetching cancellation reasons:', error);
@@ -95,9 +105,11 @@ export class CancellationReasonDialog implements OnInit  {
     this.dialogRef.close(false);
   }
 
-  confirm(item: any, action: string, value: any, otherNote: string): void {
-    if (this.cancellationReason.valid) {
-      this.cancelConfirmed.emit({ item, action, value, otherNote });
+  confirm(request: any, action: string, value: any, reasonNote: string): void {
+    console.log("request line 108", request)
+    const reasonId = Number(value);
+    if (this.cancellationReasonId.valid && (!this.cancellationReasonNote.disabled || this.cancellationReasonNote.valid)) {
+      this.cancelConfirmed.emit({ request, action, reasonId, reasonNote });
       this.dialogRef.close(true);
     }
   }

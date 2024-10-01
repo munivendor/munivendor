@@ -95,7 +95,6 @@ export class RequestService {
     return this.http.delete<void>(`${this.url}DeleteRequest/${requestId}`);
   }
 
-
   UpdateRequestStatus(requestId: number, newRequestStatusId: number): Observable<void> {
     const body = { requestId, requestStatusId: newRequestStatusId };  // Ensure both parameters are included
     const headers = { 'Content-Type': 'application/json' };  // Set Content-Type to application/json
@@ -111,6 +110,19 @@ export class RequestService {
     const headers = { 'Content-Type': 'application/json' }; 
     return this.http.put<void>(`${this.url}UpdateRequestCancellationReason/${requestId}`, body, {headers});
   }
+
+  GetRequests(): Observable<any> {
+    return this.http.get<any>(`${this.url}GetRequests`);
+  }
+
+  GetCategories(): Observable<any> {
+    return this.http.get<any>(`${this.url}GetCategories`);
+  }
+
+  GetRequestStatuses(): Observable<any> {
+    return this.http.get<any>(`${this.url}GetRequestStatuses`);
+  }
+
 }
 
 

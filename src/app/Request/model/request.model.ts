@@ -1,6 +1,9 @@
 import { Time } from "@angular/common"
 import internal from "stream"
 import { DecisionMaker } from "./decisionmaker.model"
+import { Category } from "./category.model"
+import { RequestStatus } from "./requeststatus.model"
+import { RequestType } from "./requesttype.model"
 
 export class Request
     {
@@ -16,4 +19,10 @@ export class Request
         contractStart!: Date
         contractEnd!: Date    
         decisionMakerSelections!: any [] 
+        category!: Category;
+        requestCancelOtherNote!: string | null;
+        requestCancelReasonId!: number;
+        requestStatus!: RequestStatus;
+        requestStatusId!: number;
+        requestType!: RequestType;
 }
