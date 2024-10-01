@@ -77,7 +77,7 @@ export class CancellationReasonDialog implements OnInit  {
   }
 
   toggleReasonNoteValidation(reasonId: any): void {
-    // "Other" has requestCancellationReasonListId === 10.
+    // "Other" has requestCancellationReasonId === 10.
     if (reasonId === 10) {  
       this.cancellationReasonNote.setValidators([Validators.required]);
       this.cancellationReasonNote.enable();
@@ -106,9 +106,9 @@ export class CancellationReasonDialog implements OnInit  {
   }
 
   confirm(request: any, action: string, value: any, reasonNote: string): void {
-    console.log("request line 108", request)
     const reasonId = Number(value);
     if (this.cancellationReasonId.valid && (!this.cancellationReasonNote.disabled || this.cancellationReasonNote.valid)) {
+      console.log("this.cancellationReasonId.valid", this.cancellationReasonId.valid)
       this.cancelConfirmed.emit({ request, action, reasonId, reasonNote });
       this.dialogRef.close(true);
     }

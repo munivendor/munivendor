@@ -20,7 +20,7 @@ export class Request
         contractEnd!: Date    
         decisionMakerSelections!: any [] 
         category!: Category;
-        requestCancelOtherNote!: string | null;
+        RequestCancelNote!: string | null;
         requestCancelReasonId!: number;
         requestStatus!: RequestStatus;
         requestStatusId!: number;
