@@ -101,10 +101,9 @@ export class TableDetailsComponent implements OnInit {
   }
 
   onCancelUpdateRequestStatus(request: any, action: string): void {
-    console.log("request", request)
     const DRAFT_STATUS_ID = 1;
     const CANCELLED_STATUS_ID = 5;
-    
+
     if (action === "cancel") {
       const statusDesc = request.requestStatus.requestStatusDesc;
       let newRequestStatusId: number;

@@ -28,7 +28,7 @@ import { throwError } from 'rxjs';
     MatDialogContent,
     MatDialogActions,
     MatDialogClose,
-    SingleFileUploadComponent
+    SingleFileUploadComponent,
   ],
  
 })
