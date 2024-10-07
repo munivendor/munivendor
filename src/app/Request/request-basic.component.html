@@ -1,4 +1,5 @@
 <form [formGroup]="basicRequestForm" (ngSubmit)="onSubmit()">
+  <ng-template matStepLabel>Basics</ng-template>
   <p> What category are you looking to create?</p>
   <div>
     <select (change)="onCategoryChange($event)" formControlName="category" class="form-control">
@@ -31,6 +32,14 @@
     </select>
     <div *ngIf="basicRequestForm.get('requestType')?.invalid && basicRequestForm.get('requestType')?.touched">
       <div *ngIf="basicRequestForm.get('requestType')?.errors?.['required']">Request Type is required.</div>
+    </div>
+  </div>
+
+  <div>
+    <P> Request Name</P>
+    <input formControlName="requestName">
+    <div *ngIf="basicRequestForm.get('requestName')?.invalid && basicRequestForm.get('requestName')?.touched">
+      <div *ngIf="basicRequestForm.get('requestName')?.errors?.['required']">Request Name is required.</div>
     </div>
   </div>
 
@@ -85,7 +94,7 @@
   </div>
 
   <P> Choose who will be the decision maker on this proposal</P>
-  <button type="button" (click)="addDropdown()">Add Dropdown</button>
+  <button type="button" (click)="addDropdown()">Add Decision Maker</button>
   <i class="glyphicon glyphicon-trash"></i>
   <div formArrayName="dropdowns">
     <div *ngFor="let dropdown of dropdowns.controls; let i = index">

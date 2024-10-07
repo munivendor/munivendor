@@ -15,7 +15,7 @@ import { Request } from './model/request.model';
 
 
 @Component({
-    selector: 'app-signup',
+    selector: 'request-required-documents',
     standalone: true,
     templateUrl:'./request-required-docs.component.html',
     styleUrls: ['./request-required-docs.component.css'],

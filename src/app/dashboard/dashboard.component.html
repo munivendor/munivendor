@@ -6,11 +6,11 @@
 <body>
 
 <!-- Sidebar -->
-<div class="w3-sidebar w3-light-grey w3-bar-block" style="width:25%">
+<div class="w3-sidebar w3-light-grey w3-bar-block" style="width:15%">
   <a [routerLink]="['request-component']" routerLinkActive="router-link-active" class="w3-bar-item w3-button">Dashboard</a>
-  <a [routerLink]="['request-component']" routerLinkActive="router-link-active" class="w3-bar-item w3-button">Create New</a>
+  <a [routerLink]="['create-request-view']" routerLinkActive="router-link-active" class="w3-bar-item w3-button">Create New Request</a>
   <a [routerLink]="['request-component']" routerLinkActive="router-link-active" class="w3-bar-item w3-button">Create from Templates</a>
-  <a [routerLink]="['request-component']" routerLinkActive="router-link-active" class="w3-bar-item w3-button">Requests</a>
+  <a [routerLink]="['requests-view']" routerLinkActive="router-link-active" class="w3-bar-item w3-button">Requests</a>
   <a [routerLink]="['/create-component']" routerLinkActive="router-link-active" class="w3-bar-item w3-button">Submissions</a>
   <a [routerLink]="['/create-component']" routerLinkActive="router-link-active" class="w3-bar-item w3-button">Applications</a>
   <a [routerLink]="['/create-component']" routerLinkActive="router-link-active" class="w3-bar-item w3-button">Forms</a>
@@ -27,12 +27,11 @@
 </div>
 
 <!-- Page Content -->
-<div style="margin-left:25%">
+<div style="margin-left:15%">
 
 <div class="w3-container w3-teal">
 
 </div>
-<request-tabledetails />
     <div class="w3-container">
         <router-outlet></router-outlet>
     </div>

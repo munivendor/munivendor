@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, RouterLink, RouterModule } from '@angular/router';
-import { FormGroup,FormBuilder, FormArray, ReactiveFormsModule, Validators, FormControlName, FormControl, AbstractControl, ValidatorFn } from '@angular/forms';
+import { FormGroup, FormBuilder, FormArray, ReactiveFormsModule, Validators, FormControlName, FormControl, AbstractControl, ValidatorFn, FormsModule, } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { StateService } from './services/state.service';
 import { RequestService } from './services/request.service';
@@ -9,78 +9,84 @@ import { SubCategory } from './model/subcategory.model';
 import { Category } from './model/category.model';
 import { DecisionMaker } from './model/decisionmaker.model';
 import { RequestType } from './model/requesttype.model';
-import {  Request } from './model/request.model';
+import { Request } from './model/request.model';
+
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
 
 @Component({
-    selector: 'request-basic',
-    standalone: true,
-    templateUrl: './request-basic.component.html',
-    styleUrls: ['./request-basic.component.css'],
-    imports: [ReactiveFormsModule, RouterModule, RouterLink, CommonModule]
+  selector: 'request-basic',
+  standalone: true,
+  templateUrl: './request-basic.component.html',
+  styleUrls: ['./request-basic.component.css'],
+  imports: [ReactiveFormsModule, RouterModule, RouterLink, CommonModule, MatSelectModule,
+    FormsModule, MatFormFieldModule]
 })
 
 export class BasicRequestComponent implements OnInit {
   [x: string]: any;
-basicRequestForm!: FormGroup;
-decisionMakers!: DecisionMaker [];
-decisionMakers2!: DecisionMaker [];
-decisionMakers3!: DecisionMaker [];
-decisionMakers4!: DecisionMaker [];
-categories!: Category[];
-subcategories: SubCategory[] | undefined;
-requestTypes: RequestType[] | undefined;
- 
-constructor (private fb: FormBuilder, private requestService: RequestService, private stateService: StateService, private router: Router) {
-  this.requestService.getCategories().subscribe ((categories: Category [])=>this.categories = categories);
-   this.requestService.GetDecisionMakers().subscribe ((decisionmakers: DecisionMaker [])=>this.decisionMakers = decisionmakers);;
-   this.requestService.GetDecisionMakers().subscribe ((decisionmakers: DecisionMaker [])=>this.decisionMakers2 = decisionmakers);;
- this.requestService.GetDecisionMakers().subscribe ((decisionmakers: DecisionMaker [])=>this.decisionMakers3 = decisionmakers);;
-   this.requestService.GetDecisionMakers().subscribe ((decisionmakers: DecisionMaker [])=>this.decisionMakers4 = decisionmakers);
-   this.requestService.GetRequestTypes().subscribe ((requestTypes: RequestType [])=>this.requestTypes= requestTypes);
-}
+  basicRequestForm!: FormGroup;
+  decisionMakers!: DecisionMaker[];
+  decisionMakers2!: DecisionMaker[];
+  decisionMakers3!: DecisionMaker[];
+  decisionMakers4!: DecisionMaker[];
+  categories!: Category[];
+  subcategories: SubCategory[] | undefined;
+  requestTypes: RequestType[] | undefined;
+  requestName = new FormControl<string | null>(null, [Validators.required]);
 
-ngOnInit(): void {
- 
-    this.basicRequestForm = this.fb.group ({ 
+  constructor(private fb: FormBuilder, private requestService: RequestService, private stateService: StateService, private router: Router) {
+    this.requestService.getCategories().subscribe((categories: Category[]) => this.categories = categories);
+    this.requestService.GetDecisionMakers().subscribe((decisionmakers: DecisionMaker[]) => this.decisionMakers = decisionmakers);;
+    this.requestService.GetDecisionMakers().subscribe((decisionmakers: DecisionMaker[]) => this.decisionMakers2 = decisionmakers);;
+    this.requestService.GetDecisionMakers().subscribe((decisionmakers: DecisionMaker[]) => this.decisionMakers3 = decisionmakers);;
+    this.requestService.GetDecisionMakers().subscribe((decisionmakers: DecisionMaker[]) => this.decisionMakers4 = decisionmakers);
+    this.requestService.GetRequestTypes().subscribe((requestTypes: RequestType[]) => this.requestTypes = requestTypes);
+  }
+
+  ngOnInit(): void {
+
+    this.basicRequestForm = this.fb.group({
       dropdowns: this.fb.array([]), // FormArray for dynamic dropdowns
-      category:['', [Validators.required]],
-      subcategory:['', [Validators.required]],
-      requestType:['', [Validators.required]],
-      publishDate:['', [Validators.required]],
-      publishTime:['', [Validators.required]],
-      openDate:['', [Validators.required]],
-      openTime:['', [Validators.required]],
-      contractStartDate:['', [Validators.required]],
-      contractEndDate:['', [Validators.required]]
+      category: ['', [Validators.required]],
+      subcategory: ['', [Validators.required]],
+      requestType: ['', [Validators.required]],
+      publishDate: ['', [Validators.required]],
+      publishTime: ['', [Validators.required]],
+      openDate: ['', [Validators.required]],
+      openTime: ['', [Validators.required]],
+      contractStartDate: ['', [Validators.required]],
+      contractEndDate: ['', [Validators.required]],
+      requestName: ['', [Validators.required]]
     })
   }
 
   onCategoryChange(event: Event) {
     const categoryIdString = (event.target as HTMLInputElement).value;
-    const categoryId = parseInt (categoryIdString);
-    this.requestService.GetSubcategories(categoryId).subscribe ((subcategories: SubCategory [])=>this.subcategories = subcategories);
-    }
+    const categoryId = parseInt(categoryIdString);
+    this.requestService.GetSubcategories(categoryId).subscribe((subcategories: SubCategory[]) => this.subcategories = subcategories);
+  }
 
   addDropdown() {
-    const dropdown = this.fb.control('',Validators.required );
+    const dropdown = this.fb.control('', Validators.required);
     this.dropdowns.push(dropdown);
   }
-  
+
   get dropdowns() {
     return this.basicRequestForm.get('dropdowns') as FormArray;
   }
 
   onSubmit() {
-    
+
     if (this.basicRequestForm.valid) {
       console.log(this.basicRequestForm.value);
 
       let request = new Request();
-    
-    
+
       request.categoryId = this.basicRequestForm.controls["category"].value;
       request.subcategoryId = this.basicRequestForm.controls["subcategory"].value;
       request.requestTypeId = this.basicRequestForm.controls["requestType"].value;
+      request.requestName = this.basicRequestForm.controls["requestName"].value;
       request.publishDate = new Date(this.basicRequestForm.controls["publishDate"].value + ' ' + this.basicRequestForm.controls["publishTime"].value);
       request.openDate = new Date(this.basicRequestForm.controls["openDate"].value + ' ' + this.basicRequestForm.controls["openTime"].value);
       request.contractStart = new Date(this.basicRequestForm.controls["contractStartDate"].value);
@@ -94,14 +100,14 @@ ngOnInit(): void {
       this.requestService.CreateRequest(request).subscribe((responseRequestId: number) => {
         request.requestId = responseRequestId;
         this.stateService.saveState(request);
-        this.router.navigate(['/request-outframe-component/request-overview-component']);
+        // this.router.navigate(['/request-outframe-component/request-overview-component']);
 
-        },
+      },
         error => {
           console.error('Error creating request:', error);
         }
       );
-     
+
     }
   }
 }
