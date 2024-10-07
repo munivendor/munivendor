@@ -106,7 +106,6 @@ export class CancellationReasonDialog implements OnInit  {
   }
 
   confirm(request: any, action: string, value: any, reasonNote: string): void {
-    console.log("request line 108", request)
     const reasonId = Number(value);
     if (this.cancellationReasonId.valid && (!this.cancellationReasonNote.disabled || this.cancellationReasonNote.valid)) {
       this.cancelConfirmed.emit({ request, action, reasonId, reasonNote });

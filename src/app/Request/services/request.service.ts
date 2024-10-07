@@ -102,7 +102,7 @@ export class RequestService {
   }
 
   GetCancellationReasons(): Observable<any> {
-    return this.http.get<any>(`${this.url}GetRequestCancellationReasonsList`);
+    return this.http.get<any>(`${this.url}GetRequestCancellationReasons`);
   }
 
   UpdateRequestCancelReason(requestId: number, requestCancelReasonId: number, requestCancelOtherNote: string): Observable<void> {

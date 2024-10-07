@@ -1,4 +1,4 @@
 export class CancellationReasons {
-    requestCancellationReasonListId!: number;
+    requestCancellationReasonId!: number;
     requestCancellationReason!: string;
 }
