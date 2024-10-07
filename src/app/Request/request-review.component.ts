@@ -6,10 +6,9 @@ import { ActivatedRoute } from '@angular/router';
 
 import { SingleFileUploadComponent } from "../single-file-upload/single-file-upload.component";
 import { RequestService } from './services/request.service';
-import { of } from 'rxjs';
 
 @Component({
-    selector: 'request-overview',
+    selector: 'request-review',
     standalone: true,
     templateUrl: './request-review.component.html',
     styleUrls: ['./request-review.component.css'],

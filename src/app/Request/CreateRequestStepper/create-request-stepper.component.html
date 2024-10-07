@@ -1,0 +1,50 @@
+  <mat-stepper [linear]="isLinear" #stepper>
+    <mat-step [stepControl]="firstFormGroup" label="Basics">
+      <form [formGroup]="firstFormGroup">
+        <request-basic></request-basic>
+        <div>
+          <button mat-button matStepperNext>Next</button>
+        </div>
+      </form>
+     
+    </mat-step>
+    <mat-step [stepControl]="secondFormGroup" label="Proposals">
+      <form [formGroup]="secondFormGroup">
+        <request-overview></request-overview>
+        <div>
+          <button mat-button matStepperPrevious>Back</button>
+          <button mat-button matStepperNext>Next</button>
+        </div>
+      </form>
+    </mat-step>
+
+    <mat-step [stepControl]="fourthFormGroup" label="Documents">
+      <form [formGroup]="fourthFormGroup">
+       <request-required-documents></request-required-documents>
+        <div>
+          <button mat-button matStepperPrevious>Back</button>
+          <button mat-button matStepperNext>Next</button>
+        </div>
+      </form>
+    </mat-step>
+
+    <mat-step [stepControl]="fifthFormGroup" label="Review">
+      <form [formGroup]="fifthFormGroup">
+        <request-review></request-review>
+        <div>
+          <button mat-button matStepperPrevious>Back</button>
+          <button mat-button matStepperNext>Next</button>
+        </div>
+      </form>
+    </mat-step>
+
+    <mat-step>
+      <ng-template matStepLabel>Done</ng-template>
+      <p>You are now done.</p>
+      <div>
+        <button mat-button matStepperPrevious>Back</button>
+        <button mat-button (click)="stepper.reset()">Reset</button>
+      </div>
+    </mat-step>
+  </mat-stepper>
+  

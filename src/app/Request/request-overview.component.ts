@@ -7,7 +7,7 @@ import { StateService } from './services/state.service';
 import { Request } from './model/request.model';
 
 @Component({
-    selector: 'app-signup',
+    selector: 'request-overview',
     standalone: true,
     templateUrl:'./request-overview.component.html',
     styleUrls: ['./request-overview.component.css'],
