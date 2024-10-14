@@ -1,0 +1,32 @@
+.full-width {
+  width: 100%;
+}
+
+.button-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.section-title-container {
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.section-title-container p {
+  margin: 0;
+  font-size: 16px;
+}
+
+.propsal-divider {
+  margin-top: 8px;
+  border-top: 1px solid #333;
+}
+
+
