@@ -8,6 +8,7 @@ import { RequestType } from '../model/requesttype.model';
 import { Request } from '../model/request.model';
 import { environment } from '../../../environments/environment';
 import { DocumentType } from '../model/documenttype.model';
+import { RequestSection } from '../model/requestsection.model';
 
 @Injectable({
   providedIn: 'root'
@@ -106,9 +107,9 @@ export class RequestService {
   }
 
   UpdateRequestCancelReason(requestId: number, requestCancelReasonId: number, requestCancelOtherNote: string): Observable<void> {
-    const body = {requestId, requestCancelReasonId, requestCancelOtherNote};
-    const headers = { 'Content-Type': 'application/json' }; 
-    return this.http.put<void>(`${this.url}UpdateRequestCancellationReason/${requestId}`, body, {headers});
+    const body = { requestId, requestCancelReasonId, requestCancelOtherNote };
+    const headers = { 'Content-Type': 'application/json' };
+    return this.http.put<void>(`${this.url}UpdateRequestCancellationReason/${requestId}`, body, { headers });
   }
 
   GetRequests(): Observable<any> {
@@ -123,6 +124,19 @@ export class RequestService {
     return this.http.get<any>(`${this.url}GetRequestStatuses`);
   }
 
+  GetRequestSections(requestId: number): Observable<any> {
+    return this.http.get<any>(`${this.url}RequestSections/${requestId}`)
+  }
+
+  GetRequestSectionDefaultTitles(): Observable<any> {
+    return this.http.get<any>(`${this.url}RequestSectionDefaults`);
+  }
+
+  SaveRequestSections(requestSection: RequestSection): Observable<void> {
+    const headers = { 'Content-Type': 'application/json' };
+    return this.http.post<void>(`${this.url}RequestSections`, requestSection, { headers });
+  }
+  
 }
 
 
