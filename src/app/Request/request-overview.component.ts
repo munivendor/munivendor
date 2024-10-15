@@ -111,8 +111,8 @@ export class RequestOverviewComponent implements OnInit {
     this.proposalSections.push({
       requestId: this.requestId,
       requestSectionId: null,
-      requestSectionTitle: 'Enter Title',
-      requestSectionContent: 'Enter Description'
+      requestSectionTitle: '',
+      requestSectionContent: ''
     });
   }
 }
