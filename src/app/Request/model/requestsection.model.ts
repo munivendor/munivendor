@@ -1,5 +1,5 @@
 export class RequestSection {
-    requestId!: number;
+    requestId!: number | null;
     requestSectionId!: number | null;
     requestSectionTitle!: string;
     requestSectionContent!: string;

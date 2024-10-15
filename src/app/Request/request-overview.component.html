@@ -14,25 +14,19 @@
 
 <div>
     <div *ngFor="let proposalSection of proposalSections">
-        <h3 *ngIf="!isEditMode">{{proposalSection.requestSectionTitle}}</h3>
-        <mat-form-field appearance="outline" *ngIf="isEditMode">
-            <mat-label>{{proposalSection.requestSectionTitle}}</mat-label>
+        <h2 *ngIf="!isEditMode">{{proposalSection.requestSectionTitle}}</h2>
+        <mat-form-field *ngIf="isEditMode">
+            <mat-label>Enter title</mat-label>
             <input matInput [(ngModel)]="proposalSection.requestSectionTitle">
         </mat-form-field>
 
-        <!-- Description textarea: set to readonly based on edit mode -->
-    <mat-form-field class="full-width">
-        <mat-label *ngIf="isEditMode">Enter description</mat-label>
-        <textarea 
-          matInput 
-          id="overview" 
-          name="w3review" 
-          rows="4" 
-          [(ngModel)]="proposalSection.requestSectionContent"
-          [readonly]="!isEditMode" 
-         >
+        <p *ngIf="!isEditMode">{{proposalSection.requestSectionContent}}</p>
+        <mat-form-field *ngIf="isEditMode" class="full-width">
+            <mat-label>Enter content</mat-label>
+            <textarea matInput id="overview" name="w3review" rows="4"
+                [(ngModel)]="proposalSection.requestSectionContent">
         </textarea>
-      </mat-form-field>
+        </mat-form-field>
         <hr class="propsal-divider" />
     </div>
 </div>
