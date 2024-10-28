@@ -1,26 +1,36 @@
+<div class="button-container">
+    <div class="buttons">
+        <button mat-fab color="" extended *ngIf="!isEditMode" (click)="onEdit()">
+            <mat-icon>edit</mat-icon>
+            Edit
+        </button>
 
-    <p>Overview</p>
-    
-    <textarea id="overview" name="w3review" rows="14" cols="70" [(ngModel)]="overviewText" (ngModelChange)="isTextareaEmpty()" [disabled]="isFileUploaded"></textarea>
-    <p *ngIf="isTextareaEmpty()">Upload your own project overview file</p>
-    <single-file-upload *ngIf="isTextareaEmpty()" (fileUploaded)="onFileUploaded($event)" [data]="requestId"></single-file-upload>
+        <button mat-fab color="primary" extended *ngIf="isEditMode" (click)="onSave()">
+            <mat-icon>save</mat-icon>
+            Save
+        </button>
+    </div>
+</div>
 
-   
-    <p>Goals</p>
-    <textarea id="overview" name="w3review1" rows="14" cols="70"></textarea>
-    <p *ngIf="isTextareaEmpty()">You can also upload your own project goals file</p>
-    <single-file-upload *ngIf="isTextareaEmpty()" (fileUploaded)="onFileUploaded($event)" [data]="requestId"></single-file-upload>
-    
-    <p>Scope</p>
-    <textarea id="scope" name="w3review2" rows="14" cols="70"></textarea>
-    <p *ngIf="isTextareaEmpty()">You can also upload your own project scope file</p>
-    <single-file-upload *ngIf="isTextareaEmpty()" (fileUploaded)="onFileUploaded($event)" [data]="requestId"></single-file-upload>
-   
-   <p>Requirements</p>
-    <textarea id="project overview" name="w3review3" rows="14" cols="70"></textarea>
-    <p *ngIf="isTextareaEmpty()">You can also pload your own requirements file</p>
-    <single-file-upload *ngIf="isTextareaEmpty()" (fileUploaded)="onFileUploaded($event)" [data]="requestId"></single-file-upload>
-   
-    <p > Upload your Request by clicking on the add request button or press continue </p>
-    <single-file-upload [data]="requestId"></single-file-upload>
-    
+<div>
+    <div *ngFor="let proposalSection of proposalSections">
+        <h2 *ngIf="!isEditMode">{{proposalSection.requestSectionTitle}}</h2>
+        <mat-form-field *ngIf="isEditMode">
+            <mat-label>Enter title</mat-label>
+            <input matInput [(ngModel)]="proposalSection.requestSectionTitle">
+        </mat-form-field>
+
+        <p *ngIf="!isEditMode">{{proposalSection.requestSectionContent}}</p>
+        <mat-form-field *ngIf="isEditMode" class="full-width">
+            <mat-label>Enter content</mat-label>
+            <textarea matInput id="overview" name="w3review" rows="4"
+                [(ngModel)]="proposalSection.requestSectionContent">
+        </textarea>
+        </mat-form-field>
+        <hr class="propsal-divider" />
+    </div>
+</div>
+<button mat-fab color="primary" style="margin-bottom: 16px;" extended *ngIf="isEditMode" (click)="addSection()">
+    <mat-icon>add</mat-icon>
+    Add Section
+</button>

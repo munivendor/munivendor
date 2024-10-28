@@ -1,4 +1,4 @@
-  <mat-stepper [linear]="isLinear" #stepper>
+  <mat-stepper [linear]="false" #stepper>
     <mat-step [stepControl]="firstFormGroup" label="Basics">
       <form [formGroup]="firstFormGroup">
         <request-basic></request-basic>
@@ -8,9 +8,10 @@
       </form>
      
     </mat-step>
-    <mat-step [stepControl]="secondFormGroup" label="Proposals">
-      <form [formGroup]="secondFormGroup">
-        <request-overview></request-overview>
+    <mat-step [stepControl]="proposalsOverviewFormGroup" label="Proposals">
+      <form [formGroup]="proposalsOverviewFormGroup">
+        <request-overview 
+        (formUpdated)="handleFormUpdate($event)"></request-overview>
         <div>
           <button mat-button matStepperPrevious>Back</button>
           <button mat-button matStepperNext>Next</button>
