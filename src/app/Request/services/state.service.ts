@@ -16,15 +16,14 @@ export class StateService {
   }
 
 
-  private requestIdSource = new BehaviorSubject<number | null>(null); // BehaviorSubject holds the latest requestId
-  currentRequestId$ = this.requestIdSource.asObservable(); // Observable for components to subscribe
+  private requestIdSource = new BehaviorSubject<number | null>(null);
+  currentRequestId$ = this.requestIdSource.asObservable();
 
   setRequestId(requestId: number) {
-    console.log("im here", requestId)
-    this.requestIdSource.next(requestId); // Emit the new requestId value
+    this.requestIdSource.next(requestId);
   }
 
   getRequestId(): number | null {
-    return this.requestIdSource.getValue(); // Get the current value of the requestId
+    return this.requestIdSource.getValue();
   }
 }
