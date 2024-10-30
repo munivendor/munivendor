@@ -1,58 +1,57 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterLink, RouterModule } from '@angular/router';
-import {  FormGroup,FormBuilder, ReactiveFormsModule, Validators, FormArray, FormControl } from '@angular/forms';
+import { FormGroup, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { MatFormField } from '@angular/material/form-field';
+import { MatLabel } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 
 import { SingleFileUploadComponent } from "../single-file-upload/single-file-upload.component";
 import { RequestService } from './services/request.service';
 
 @Component({
-    selector: 'request-review',
-    standalone: true,
-    templateUrl: './request-review.component.html',
-    styleUrls: ['./request-review.component.css'],
-    imports: [ReactiveFormsModule, RouterModule, RouterLink, CommonModule, SingleFileUploadComponent]
+  selector: 'request-review',
+  standalone: true,
+  templateUrl: './request-review.component.html',
+  styleUrls: ['./request-review.component.css'],
+  imports: [ReactiveFormsModule, RouterModule, RouterLink, CommonModule, SingleFileUploadComponent, MatCheckbox, MatFormField, MatLabel, MatInputModule]
 })
 
 export class RequestReviewComponent implements OnInit {
-requestOverviewForm!: FormGroup;
-decisionMakers: any = ['Javatpoint.com', 'HDTuto.com', 'Tutorialandexample.com'];
-requestTypes =['Javatpoint.com', 'HDTuto.com', 'Tutorialandexample.com'];
-subcategories = [{ id: 1, name: 'test1' },{ id: 2, name: 'test2' },{ id: 3, name: 'test13' }];
-specificRequestTypes: any = ['Javatpoint.com', 'HDTuto.com', 'Tutorialandexample.com'];
-cities = ["Mohali", "Chandigarih", "ludhiana", "amritsar"]
+  requestFinalReviewDetailsForm!: FormGroup;
 
-//requestOverview!: RequestOverview;
-constructor (private fb: FormBuilder,  private route: ActivatedRoute, private requestService: RequestService ) {}
+  requestFinalReviewDetails = {
+    requestType: "Request for Information",
+    subcategory: "IT",
+    specificRequestTypes: "what is specific request type",
+    publishDate: "10/27/2024",
+    publishTime: "11:00AM",
+    openDate: "11/27/2024",
+    openTime: "11:00AM",
+    term: "where's term from",
+    decisionMakers: [
+      { name: "Chris" },
+      { name: "Josh" },
+      { name: "Eli" }
+    ],
+    requiredDocuments: ["Document 1", "Document 2", "Document 3", "Document 4"]
+  }
+
+  constructor(private fb: FormBuilder, private route: ActivatedRoute, private requestService: RequestService) { }
   ngOnInit() {
-    //this.cities=this.requestService.getRequestOverview (null).requiredDocuments;
-    this.requestOverviewForm = this.fb.group ({ 
-      cities: this.fb.array([false, "Chandigarih", "ludhiana", "amritsar"]),
-      
-      subcategory:[2, [Validators.required]],
-      publishDate:['', [Validators.required]],
-      publishTime:['', [Validators.required]],
-      openDate:['', [Validators.required]],
-      openTime:['', [Validators.required]],
-      term:['', [Validators.required]],
-      decisionMaker:['', [Validators.required]],
-      specificRequestType:['', [Validators.required]],
-      requestType:['', [Validators.required]],
-   
-      })
-      
-    }
+  }
 
-     
+
   onSubmit() {
     // Handle form submission here
-    if (this.requestOverviewForm.valid) {
-      console.log(this.requestOverviewForm.value);
+    if (this.requestFinalReviewDetailsForm.valid) {
+      console.log(this.requestFinalReviewDetailsForm.value);
       // Additional logic to authenticate user or 
       // perform other actions
-      this.requestOverviewForm.controls["email"].value
+      this.requestFinalReviewDetailsForm.controls["email"].value
     }
   }
-  
+
 }
