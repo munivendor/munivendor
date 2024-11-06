@@ -22,15 +22,18 @@ import { RequestService } from './services/request.service';
 export class RequestReviewComponent implements OnInit {
   requestFinalReviewDetailsForm!: FormGroup;
 
+  // data should come from state service instead of API calls
   requestFinalReviewDetails = {
+    category: "Technology",
     requestType: "Request for Information",
     subcategory: "IT",
-    specificRequestTypes: "what is specific request type",
+    requestName: "Example Name",
     publishDate: "10/27/2024",
     publishTime: "11:00AM",
     openDate: "11/27/2024",
     openTime: "11:00AM",
-    term: "where's term from",
+    contractStart: "01/01/2025",
+    contractEnd: "12/31/2025",
     decisionMakers: [
       { name: "Chris" },
       { name: "Josh" },
@@ -48,8 +51,6 @@ export class RequestReviewComponent implements OnInit {
     // Handle form submission here
     if (this.requestFinalReviewDetailsForm.valid) {
       console.log(this.requestFinalReviewDetailsForm.value);
-      // Additional logic to authenticate user or 
-      // perform other actions
       this.requestFinalReviewDetailsForm.controls["email"].value
     }
   }
