@@ -1,21 +1,16 @@
 import { FormsModule } from '@angular/forms';
-import { Component } from '@angular/core';
+import { Component, Inject, ChangeDetectorRef } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { SingleFileUploadComponent } from "../single-file-upload/single-file-upload.component";
-import { StateService } from '../Request/services/state.service';
-import { Request } from '../Request/model/request.model';
-import { DocumentType} from '../Request/model/documenttype.model';
-import { HttpClient } from '@angular/common/http';
+import { Document} from '../Request/model/document.model';
+import { RequestService } from '../Request/services/request.service';
 
-import {  MatDialogActions, MatDialogClose, MatDialogContent,  MatDialogRef,  MatDialogTitle } from '@angular/material/dialog';
-
-import { environment } from '../../environments/environment';
-import { throwError } from 'rxjs';
+import {  MatDialogActions, MatDialogClose, MatDialogContent,  MatDialogRef,  MatDialogTitle, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 @Component({
-  selector: 'app-file-upload-dialog',
+  selector: 'file-upload-dialog',
   templateUrl: './file-upload-dialog.component.html',
   styleUrls: ['./file-upload-dialog.component.css'],
   standalone: true,
@@ -33,64 +28,73 @@ import { throwError } from 'rxjs';
  
 })
 export class FileUploadDialogComponent {
-  text: string = '';
+  documentName: string = '';
   selectedFile: File | null = null;
-  isFileUploaded: boolean = false;
-  requestId: number =0;
-  file: File | null = null;
-  status: 'initial' | 'uploading' | 'success' | 'fail' = 'initial';
-  
-  constructor(public dialogRef: MatDialogRef<FileUploadDialogComponent>, private state: StateService,  private http: HttpClient ) {}
+  municipalityDocuments: Document[] = []; 
 
-  ngOnInit() {
-     
-    var request = this.state.getState () as Request;  
-    this.requestId = request?.requestId ?? 0;
-    
- }
-
- onFileSelected(event: any) {
-  const file: File = event.target.files[0];
-  if (file) {this.file = file;}
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private dialogRef: MatDialogRef<FileUploadDialogComponent>,
+    private requestService: RequestService,
+    @Inject(MAT_DIALOG_DATA) public data: { municipalityId: number, municipalityDocuments: Document[] }
+  ) {
+    this.municipalityDocuments = data.municipalityDocuments;
   }
 
-  onUpload(): void {
+  onFileSelected(event: any): void {
+    this.selectedFile = event.target.files[0];
+  }
 
-    if (this.file) {
-      const formData = new FormData();
-      const url = `${environment.apiUrl}Uploaddocument/${this.requestId}`;
-      formData.append('file', this.file, this.file.name);
-      formData.append('documentName', this.text);
-
-      const upload$ = this.http.post<DocumentType>(url, formData);
-
-      upload$.subscribe({
-        next: (response: DocumentType) => {
-          this.dialogRef.close(response);
-          this.status = 'success';
-        },
-        error: (error: any) => {
-          this.status = 'fail';
-          return throwError(() => error);
-        },
-      })
+  onUpload(municipalityId: number): void {
+    if (!this.selectedFile || !this.documentName) {
+      console.error('File or document name is missing');
+      return;
     }
-      
+
+    const documentPayload = {
+      municipalityId: this.data.municipalityId,
+      documentName: this.documentName,
+      documentId: null,
+    };
+    this.requestService.SaveMunicipalityDocument(municipalityId, documentPayload).subscribe(
+      (responseDocumentId) => {
+        const documentId = responseDocumentId;
+        this.uploadFile(documentId);
+        console.log('Document saved successfully with documentId:', documentId);
+        this.dialogRef.close(documentId);
+      },
+      (error) => {
+        console.error('Error saving document', error);
+      }
+    );
   }
 
-  onFileUploaded(isUploaded: boolean) {
-    this.isFileUploaded = isUploaded;
+  private uploadFile(documentId: number): void {
+    const formData = new FormData();
+    formData.append('file', this.selectedFile as File);
+    formData.append('fileName', this.documentName);
+  
+    this.requestService.UploadDocument(documentId, formData).subscribe(
+      (response) => {
+        const newDocument = {
+          municipalityId: this.data.municipalityId,
+          documentId,
+          documentName: this.documentName,
+          documentDescription: '',
+          documentRequired: true
+        };
+        this.municipalityDocuments.push(newDocument);
+        this.cdr.detectChanges();
+        this.dialogRef.close(response);
+      },
+      (error) => {
+        console.error('Error uploading file', error);
+      }
+    );
   }
-
 
   onNoClick(): void {
-    if (this.selectedFile) {
-      console.log('File:', this.selectedFile);
-      console.log('Text:', this.text);
-      this.dialogRef.close({ documentName: this.text, documentTypeId: 'this.documentTypeId' });
-    }
-   
-
+    this.dialogRef.close(false);
   }
 }
 

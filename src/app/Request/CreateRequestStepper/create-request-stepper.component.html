@@ -1,51 +1,50 @@
-  <mat-stepper [linear]="false" #stepper>
-    <mat-step [stepControl]="basicsFormGroup" label="Basics">
-      <form [formGroup]="basicsFormGroup">
-        <request-basic></request-basic>
-        <div>
-          <button mat-button matStepperNext>Next</button>
-        </div>
-      </form>
-     
-    </mat-step>
-    <mat-step [stepControl]="proposalsOverviewFormGroup" label="Proposals">
-      <form [formGroup]="proposalsOverviewFormGroup">
-        <request-overview 
-        (formUpdated)="handleFormUpdate($event)"></request-overview>
-        <div>
-          <button mat-button matStepperPrevious>Back</button>
-          <button mat-button matStepperNext>Next</button>
-        </div>
-      </form>
-    </mat-step>
+<mat-stepper [linear]="true" #stepper>
+  <mat-step [stepControl]="basicsFormGroup" label="Basics" [completed]="basicsFormGroup.valid">
+    <form [formGroup]="basicsFormGroup">
+      <request-basic [parentFormGroup]="basicsFormGroup"></request-basic>
+      <div>
+        <button mat-button matStepperNext [disabled]="!basicsFormGroup.valid">Next</button>
+      </div>
+    </form>
+  </mat-step>
+  
 
-    <mat-step [stepControl]="requestDocumentsFormGroup" label="Documents">
-      <form [formGroup]="requestDocumentsFormGroup">
-       <request-required-documents></request-required-documents>
-        <div>
-          <button mat-button matStepperPrevious>Back</button>
-          <button mat-button matStepperNext>Next</button>
-        </div>
-      </form>
-    </mat-step>
-
-    <mat-step [stepControl]="finalReviewFormGroup" label="Review">
-      <form [formGroup]="finalReviewFormGroup">
-        <request-review></request-review>
-        <div>
-          <button mat-button matStepperPrevious>Back</button>
-          <button mat-button matStepperNext>Next</button>
-        </div>
-      </form>
-    </mat-step>
-
-    <mat-step>
-      <ng-template matStepLabel>Done</ng-template>
-      <p>You are now done.</p>
+  <mat-step [stepControl]="proposalsOverviewFormGroup" label="Proposals">
+    <form [formGroup]="proposalsOverviewFormGroup">
+      <request-overview (formUpdated)="handleFormUpdate($event)"></request-overview>
       <div>
         <button mat-button matStepperPrevious>Back</button>
-        <button mat-button (click)="stepper.reset()">Reset</button>
+        <button mat-button matStepperNext>Next</button>
       </div>
-    </mat-step>
-  </mat-stepper>
-  
+    </form>
+  </mat-step>
+
+  <mat-step [stepControl]="requestDocumentsFormGroup" label="Documents">
+    <form [formGroup]="requestDocumentsFormGroup">
+      <request-required-documents (documentsUpdated)="onDocumentsUpdated($event)"></request-required-documents>
+      <div>
+        <button mat-button matStepperPrevious>Back</button>
+        <button mat-button matStepperNext (click)="saveDocuments()">Next</button>
+      </div>
+    </form>
+  </mat-step>
+
+  <mat-step [stepControl]="finalReviewFormGroup" label="Review">
+    <form [formGroup]="finalReviewFormGroup">
+      <request-review></request-review>
+      <div>
+        <button mat-button matStepperPrevious>Back</button>
+        <button mat-button matStepperNext>Next</button>
+      </div>
+    </form>
+  </mat-step>
+
+  <mat-step>
+    <ng-template matStepLabel>Done</ng-template>
+    <p>You are now done.</p>
+    <div>
+      <button mat-button matStepperPrevious>Back</button>
+      <button mat-button (click)="stepper.reset()">Reset</button>
+    </div>
+  </mat-step>
+</mat-stepper>

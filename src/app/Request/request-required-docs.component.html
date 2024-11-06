@@ -1,37 +1,52 @@
-<form [formGroup]="requestDocumentsForm" (ngSubmit)="onSubmit()">
-<p>Now please check off which documents you want to be required for this request</p>
-<p>Required forms from the State of NJ</p>
-   <div formArrayName="requiredRequestDocumentItems"> 
-    <div *ngFor="let requiredRequestDocument of requiredRequestDocuments; let i = index">
-        <input type="checkbox" [formControlName]="i" [checked]="true" [disabled]="true"/>
-        {{ requiredRequestDocument.documentTypeDescription }}
+<form [formGroup]="requestDocumentsForm">
+  <p>Please check off which documents you want to be required for this request</p>
+  <h2>Required forms from the State of NJ</h2>
+  <div formArrayName="requiredRequestDocumentItems">
+    <div *ngFor="let requiredStateDocument of requiredStateDocuments; let i = index">
+      <mat-checkbox color="primary" [formControlName]="i" [checked]="true" [disabled]="true"> {{
+        requiredStateDocument.documentDescription }}</mat-checkbox>
     </div>
   </div>
 
-  <p>Optional forms from the State of NJ</p>
-   <div formArrayName="optionalRequestDocumentItems"> 
-    <div *ngFor="let optionalRequestDocument of optionalRequestDocuments; let i = index">
-        <input type="checkbox" [formControlName]="i"/>
-        {{ optionalRequestDocument.documentTypeDescription }}
+  <br />
+
+  <h2>Optional forms from the State of NJ</h2>
+  <div formArrayName="optionalRequestDocumentItems">
+    <div *ngFor="let optionalStateDocument of optionalStateDocuments; let i = index">
+      <mat-checkbox color="primary" [formControlName]="i" (change)="onOptionalStateDocsCheckboxChange(i, $event)">{{ optionalStateDocument.documentDescription }}</mat-checkbox>
     </div>
   </div>
 
-  <p>Optional forms from Municipality</p>
-  <div formArrayName="municipalityRequestDocumentItems"> 
-    <div *ngFor="let municipalityRequestDocument of municipalityRequestDocuments; let i = index">
-        <input type="checkbox" [formControlName]="i"/>
-        {{ municipalityRequestDocument.documentTypeDescription }}
-      <div class="example-button-container">
-        <button mat-fab aria-label="Additional Request Delete Icon" (click)="onDeleteMunicipalityRequestDocument(i)">
+  <br />
+
+  <h2>Optional forms from [Municipality]</h2>
+  <p>Upload documents you would like to be required</p>
+  <div formArrayName="municipalityRequestDocumentItems">
+    <div *ngFor="let municipalityDocument of municipalityDocuments; let i = index" class="document-item">
+        <button mat-icon-button aria-label="delete" type="button" color="warn" (click)="deleteMunicipalityDocument(municipalityDocument.documentId)" class="delete-button">
           <mat-icon>delete</mat-icon>
         </button>
-      </div>
+        <mat-checkbox color="primary" [formControlName]="i" [checked]="true" [disabled]="true">
+          <span class="document-content">{{ municipalityDocument?.documentName || 'Unnamed Document' }}</span>
+        </mat-checkbox>
     </div>
   </div>
 
-  <p> Upload a document you would like to be required</p>
+  <!-- commented out for future feature ehancement -->
+  <!-- <app-drag-and-drop (filesDropped)="handleFilesDropped($event)"></app-drag-and-drop> -->
 
-  <button mat-raised-button type="button" (click)="openDialog()">Add</button>
-   
-  <button mat-raised-button type="submit">Submit</button>
+  <button mat-raised-button type="button" (click)="openFileUploadDialog(municipalityId)">Add</button>
+
+  <br />
+  <br />
+
+  <h3>What is the notarization type you would like to use for this proposal?</h3>
+
+  <mat-checkbox [checked]="true" [disabled]="true">Digital Notarization (Our platform enables proposers to
+    notarize required documents using our platform digitally
+    with one of our certified notaries.) You will receive
+    confirmation of each document notarized with the
+    notary’s contact information.
+  </mat-checkbox>
 </form>
+<br/>

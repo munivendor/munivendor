@@ -4,7 +4,7 @@
       <div class="form-field-container">
         <mat-form-field>
           <mat-label>Enter Document Name</mat-label>
-          <input matInput [(ngModel)]="text">
+          <input matInput [(ngModel)]="documentName">
         </mat-form-field>
       </div>
       <input type="file" id="fileUpload" name="fileUpload" (change)="onFileSelected($event)">
@@ -12,6 +12,6 @@
     
     <div mat-dialog-actions>
       <button mat-button (click)="onNoClick()">Cancel</button>
-      <button mat-button (click)="onUpload()">Upload</button>
+      <button mat-button (click)="onUpload(this.data.municipalityId)">Upload</button>
     </div>
  </div>
