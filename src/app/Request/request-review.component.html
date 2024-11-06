@@ -1,92 +1,112 @@
+<form [formGroup]="requestFinalReviewDetailsForm" (ngSubmit)="onSubmit()">
+  <h2>Please review the following selections before submitting your request:</h2>
 
+  <div class="field-container">
+    <div class="inline-field">
+      <p>Request Type:</p>
+      <mat-form-field appearance="fill" class="input-width">
+        <input matInput formControlName="requestType" readonly placeholder="Chosen Request Type"
+          value={{requestFinalReviewDetails.requestType}}>
+      </mat-form-field>
+    </div>
 
-<form [formGroup]="requestOverviewForm" (ngSubmit)="onSubmit()">
-  <p> Request Review</p>
-  <br>
-  <div>
-    The Request Type you chose was:
+    <div class="inline-field">
+      <p>Subcategory:</p>
+      <mat-form-field appearance="fill" class="input-width">
+        <input matInput formControlName="subcategory" readonly placeholder="Chosen Subcategory"
+          value={{requestFinalReviewDetails.subcategory}}>
+      </mat-form-field>
+    </div>
 
-    <select  class="form-control">  
-      <option disabled selected>Choose Request Type</option>  
-      <option *ngFor="let requestType of requestTypes">{{requestType}}</option>  
-  </select>  
-          <div *ngIf="requestOverviewForm.get('requestType')?.invalid && requestOverviewForm.get('requestType')?.touched">
-            <div *ngIf="requestOverviewForm.get('requestType')?.errors?.['required']">Request Type is required.</div>
-          </div>
+    <div class="inline-field">
+      <p>Specific Request Type:</p>
+      <mat-form-field appearance="fill" class="input-width">
+        <input matInput formControlName="specificRequestType" readonly placeholder="Chosen Specific Request Type"
+          value={{requestFinalReviewDetails.specificRequestTypes}}>
+      </mat-form-field>
+    </div>
   </div>
 
-  <div>
-   The subcategory you chose was:
-    <select  class="form-control" formControlName="subcategory">  
-      <option >Choose your subcategory</option>
-      <option *ngFor="let subcategory of subcategories"  >{{subcategory.name}}</option>  
-  </select>  
-    <div *ngIf="requestOverviewForm.get('subcategory')?.invalid && requestOverviewForm.get('subcategory')?.touched">
-      <div *ngIf="requestOverviewForm.get('subcategory')?.errors?.['required']">Subcategory is required.</div>
+  <h2>Request Details</h2>
+
+  <div class="field-container">
+    <div class="inline-field">
+      <p>Publish Date:</p>
+      <mat-form-field appearance="fill" class="input-width">
+        <input matInput formControlName="publishDate" readonly placeholder="Chosen Publish Date"
+          value={{requestFinalReviewDetails.publishDate}}>
+      </mat-form-field>
+    </div>
+
+    <div class="inline-field">
+      <p>Publish Time:</p>
+      <mat-form-field appearance="fill" class="input-width">
+        <input matInput formControlName="publishTime" readonly placeholder="Chosen Publish Time"
+          value={{requestFinalReviewDetails.publishTime}}>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <div class="field-container">
+    <div class="inline-field">
+      <p>Open Date:</p>
+      <mat-form-field appearance="fill" class="input-width">
+        <input matInput formControlName="openDate" readonly placeholder="Chosen Open Date"
+          value={{requestFinalReviewDetails.openDate}}>
+      </mat-form-field>
+    </div>
+
+    <div class="inline-field">
+      <p>Open Time:</p>
+      <mat-form-field appearance="fill" class="input-width">
+        <input matInput formControlName="openTime" readonly placeholder="Chosen Open Time"
+          value={{requestFinalReviewDetails.openTime}}>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <div class="field-container">
+    <div class="inline-field">
+      <p>Term:</p>
+      <mat-form-field appearance="fill" class="input-width">
+        <input matInput formControlName="term" readonly placeholder="Chosen Term"
+          value={{requestFinalReviewDetails.term}}>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <div class="field-container">
+    <div *ngFor="let decisionMaker of requestFinalReviewDetails.decisionMakers; let i = index" class="inline-field">
+      <p *ngIf="i === 0">Decision Makers:</p>
+      <p *ngIf="i > 0" style="visibility: hidden;">&nbsp;</p>
+      <mat-form-field appearance="fill" class="input-width">
+        <input matInput readonly placeholder="Chosen Decision Maker(s)" [value]="decisionMaker.name">
+      </mat-form-field>
     </div>
   </div>
 
   <div>
-    The Specific Request Type you chose was:
-    <select  class="form-control" formControlName="specificRequestType">  
-      <option >Choose your Specific Request Type</option>
-      <option *ngFor="let specificRequestType of specificRequestTypes">{{specificRequestTypes}}</option>  
-  </select>  
-      <div *ngIf="requestOverviewForm.get('specificRequestType')?.invalid && requestOverviewForm.get('specificRequestType')?.touched">
-        <div *ngIf="requestOverviewForm.get('specificRequestType')?.errors?.['required']">Lastname is required.</div>
-      </div>
-  </div>
-  <div>
-    Request Details
-    Publish Date:
-  <input type="date" id="rcorners1"  formControlName="publishDate">
-  </div>
-  <div>
-   Publish Time:
-  <input type="time" id="rcorners1" formControlName="publishTime" >
-  </div>
-  <div>
-    Open Date:
-    <input type="date" id="rcorners1"  formControlName="openDate">
-  </div>
-  <div>
-    Open Time:
-    <input type="time" id="rcorners1"  formControlName="openTime">
-  </div>
-  <div>
-    Term: 
-    <input type="text" id="term"  formControlName="term">
+    <h3>Notarization Method</h3>
+    <mat-checkbox [checked]="true" [disabled]="true">
+      Mail In By Close Date/Time- This means that the proposer will
+      need to mail all notarized forms separately from their submission
+      through Munivendor. The proposer will label the original documents
+      with a corresponding and unique proposal submission reference
+      number that will be given to the proposer upon proposal submission.
+    </mat-checkbox>
   </div>
 
-  <div>
-    Decision Maker:
-    <select formControlName="decisionMaker" class="form-control">  
-      <option>Choose Decision Maker</option>  
-      <option *ngFor="let decisionMaker of decisionMakers">{{decisionMaker}}</option>  
-  </select>  
-  <div *ngIf="requestOverviewForm.get('decisionMaker')?.invalid && requestOverviewForm.get('decisionMaker')?.touched">
-    <div *ngIf="requestOverviewForm.get('decisionMaker')?.errors?.['required']">Decision Maker is required.</div>
+  <br>
+
+  <h2>Document Details</h2>
+  <div *ngFor="let requiredDocument of requestFinalReviewDetails.requiredDocuments">
+    <mat-checkbox [checked]="true" [disabled]="true"> {{
+      requiredDocument }}</mat-checkbox>
   </div>
-  </div>
-  <div>
-    Notarization Method:
-    <input type="checkbox" id="vehicle1" name="vehicle1" value="Bike">
-    As a digital notary public, I am authorized by law to certify the execution of certain legal documents. 
-    However, it is important to note that I am not an attorney and cannot provide legal advice or assistance. 
-    My role as a notary is limited to verifying the identity of signers, administering oaths or affirmations, and witnessing the signing of documents.
-Description
-  </div>
-      <br>
-      <br>
-      <br>
-  <div>
-    <span *ngFor="let city of cities; let i=index" formArrayName="cities">
-      <input type="checkbox" [formControlName] = "i" /><span>{{city}}</span>
-    </span>
-  <a [routerLink]="['/second-component']" routerLinkActive="router-link-active" >continue </a>
-  <button type="submit" [disabled]="requestOverviewForm.invalid">Login</button>
-  </div>
+
+  <br />
+  <p>Note: You did not upload any additional documents</p>
+
+  <h2>You have uploaded the following request:</h2>
+  <p>proposal.pdf?</p>
 </form>
-
-
-

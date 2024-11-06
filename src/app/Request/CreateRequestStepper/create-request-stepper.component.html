@@ -1,6 +1,6 @@
   <mat-stepper [linear]="false" #stepper>
-    <mat-step [stepControl]="firstFormGroup" label="Basics">
-      <form [formGroup]="firstFormGroup">
+    <mat-step [stepControl]="basicsFormGroup" label="Basics">
+      <form [formGroup]="basicsFormGroup">
         <request-basic></request-basic>
         <div>
           <button mat-button matStepperNext>Next</button>
@@ -19,8 +19,8 @@
       </form>
     </mat-step>
 
-    <mat-step [stepControl]="fourthFormGroup" label="Documents">
-      <form [formGroup]="fourthFormGroup">
+    <mat-step [stepControl]="requestDocumentsFormGroup" label="Documents">
+      <form [formGroup]="requestDocumentsFormGroup">
        <request-required-documents></request-required-documents>
         <div>
           <button mat-button matStepperPrevious>Back</button>
@@ -29,8 +29,8 @@
       </form>
     </mat-step>
 
-    <mat-step [stepControl]="fifthFormGroup" label="Review">
-      <form [formGroup]="fifthFormGroup">
+    <mat-step [stepControl]="finalReviewFormGroup" label="Review">
+      <form [formGroup]="finalReviewFormGroup">
         <request-review></request-review>
         <div>
           <button mat-button matStepperPrevious>Back</button>

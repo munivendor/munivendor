@@ -2,6 +2,10 @@
   width: 100%;
 }
 
+.title-width {
+  width: 35%;
+}
+
 .button-container {
   display: flex;
   justify-content: flex-end;

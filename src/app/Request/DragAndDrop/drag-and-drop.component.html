@@ -1,0 +1,36 @@
+<mat-card class="upload-card">
+    <!-- Drag-and-drop zone -->
+    <div class="drag-drop-zone" (drop)="onDrop($event)" (dragover)="onDragOver($event)">
+        <p>Drag and drop your files here</p>
+        <p>---- or ----</p>
+        <button mat-raised-button color="primary" (click)="fileInput.click()">Browse</button>
+        <input #fileInput type="file" (change)="onFileSelect($event)" hidden multiple />
+    </div>
+
+    <!-- Selected files list with remove button -->
+    <div class="file-list" *ngIf="municipalityDocuments.length > 0">
+        <h3>Selected Files:</h3>
+        <ul>
+            <li *ngFor="let document of municipalityDocuments; let i = index">
+                {{ document.file.name }} ({{ formatBytes(document.file.size) }})
+              
+                <mat-form-field appearance="outline">
+                  <mat-label>Document Title (Optional)</mat-label>
+                  <input matInput [(ngModel)]="document.documentTitle" placeholder="Enter a document title">
+                </mat-form-field>
+              
+                <button mat-icon-button color="warn" (click)="removeFile(i)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </li>
+          </ul>  
+    </div>
+
+    <br />
+
+    <!-- Button to emit the files with optional titles -->
+    <div class="upload-button-container">
+        <button mat-raised-button color="primary" class="upload-button" (click)="uploadDocuments()">Upload
+            Files hhii</button>
+    </div>
+</mat-card>

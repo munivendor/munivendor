@@ -28,34 +28,34 @@ import { RequestService } from '../services/request.service';
     RequestReviewComponent
   ],
 })
+
+// comments are WIP for when validation is required before users
+// are able to move onto the next step
+// can save data for each step
+// submit the final request data to database
 export class CreateRequestStepper {
 
-  formGroup1!: FormGroup;
+  basics!: FormGroup;
   proposalsOverview!: FormGroup;
 
-  firstFormGroup = this._formBuilder.group({
-    // firstCtrl: ['', Validators.required],
+  basicsFormGroup = this._formBuilder.group({
+    // basics: ['', Validators.required],
   });
   proposalsOverviewFormGroup = this._formBuilder.group({
     // proposalsOverview: ['', Validators.required],
   });
-  thirdFormGroup = this._formBuilder.group({
-    // thirdCtrl: ['', Validators.required],
+  requestDocumentsFormGroup = this._formBuilder.group({
+    // requestDocuments: ['', Validators.required],
   });
-  fourthFormGroup = this._formBuilder.group({
-    // thirdCtrl: ['', Validators.required],
+  finalReviewFormGroup = this._formBuilder.group({
+    // finalReview: ['', Validators.required],
   });
-  fifthFormGroup = this._formBuilder.group({
-    // thirdCtrl: ['', Validators.required],
-  });
-
-
 
   constructor(private _formBuilder: FormBuilder, private requestService: RequestService) {}
 
   ngOnInit() {
     // Initialize form groups with FormControl
-    this.formGroup1 = this._formBuilder.group({
+    this.basics = this._formBuilder.group({
       // field1: new FormControl(this.requestService.getRequestData('step1')?.field1 || '')
     });
     this.proposalsOverview = this._formBuilder.group({
@@ -76,7 +76,7 @@ export class CreateRequestStepper {
   handleFormUpdate(updatedData: any) {
     // Update the relevant form group when child component emits the update
     if (updatedData.step1) {
-      this.formGroup1.patchValue(updatedData.step1);
+      this.basics.patchValue(updatedData.step1);
     }
     if (updatedData.step2) {
       this.proposalsOverview.patchValue(updatedData.step2);
@@ -85,10 +85,10 @@ export class CreateRequestStepper {
 
   submit() {
     // Do the final submission and clear the form data if needed
-    console.log('Request Data:', {
+    // console.log('Request Data:', {
       // step1: this.requestService.getRequestData('step1'),
       // step2: this.requestService.getRequestData('step2')
-    });
+    // });
     // this.requestService.clearRequestData();  // Clear if needed after submission
   }
 }
