@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { Router, RouterLink, RouterModule } from '@angular/router';
 import { FormGroup, FormBuilder, FormArray, ReactiveFormsModule, Validators, FormControlName, FormControl, AbstractControl, ValidatorFn, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -31,8 +31,7 @@ import { NgxMatTimepickerModule } from 'ngx-mat-timepicker';
 })
 
 export class BasicRequestComponent implements OnInit {
-  [x: string]: any;
-  basicRequestForm!: FormGroup;
+  @Input() parentFormGroup!: FormGroup;
   decisionMakers!: DecisionMaker[];
   decisionMakers2!: DecisionMaker[];
   decisionMakers3!: DecisionMaker[];
@@ -44,10 +43,8 @@ export class BasicRequestComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private requestService: RequestService,
-    private stateService: StateService,
-    private router: Router) {
-    this.requestService.getCategories().subscribe((categories: Category[]) => this.categories = categories);
+    private requestService: RequestService) {
+    this.requestService.GetCategories().subscribe((categories: Category[]) => this.categories = categories);
     this.requestService.GetDecisionMakers().subscribe((decisionmakers: DecisionMaker[]) => this.decisionMakers = decisionmakers);;
     this.requestService.GetDecisionMakers().subscribe((decisionmakers: DecisionMaker[]) => this.decisionMakers2 = decisionmakers);;
     this.requestService.GetDecisionMakers().subscribe((decisionmakers: DecisionMaker[]) => this.decisionMakers3 = decisionmakers);;
@@ -56,31 +53,27 @@ export class BasicRequestComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Load data for dropdowns
+    this.requestService.GetCategories().subscribe((categories: Category[]) => (this.categories = categories));
+    this.requestService.GetDecisionMakers().subscribe((decisionmakers: DecisionMaker[]) => (this.decisionMakers = decisionmakers));
+    this.requestService.GetRequestTypes().subscribe((requestTypes: RequestType[]) => (this.requestTypes = requestTypes));
 
-    this.basicRequestForm = this.fb.group({
-      dropdowns: this.fb.array([]), // FormArray for dynamic dropdowns
-      category: ['', [Validators.required]],
-      subcategory: ['', [Validators.required]],
-      requestType: ['', [Validators.required]],
-      requestName: ['', [Validators.required]],
-      publishDate: ['', [Validators.required]],
-      publishTime: ['', [Validators.required]],
-      openDate: ['', [Validators.required]],
-      openTime: ['', [Validators.required]],
-      contractStartDate: ['', [Validators.required]],
-      contractEndDate: ['', [Validators.required]]
-    })
+    // Initialize form controls on the parent form group
+    this.parentFormGroup.addControl('category', this.fb.control('', Validators.required));
+    this.parentFormGroup.addControl('subcategory', this.fb.control('', Validators.required));
+    this.parentFormGroup.addControl('requestType', this.fb.control('', Validators.required));
+    this.parentFormGroup.addControl('requestName', this.fb.control('', Validators.required));
+    this.parentFormGroup.addControl('publishDate', this.fb.control('', Validators.required));
+    this.parentFormGroup.addControl('publishTime', this.fb.control('', Validators.required));
+    this.parentFormGroup.addControl('openDate', this.fb.control('', Validators.required));
+    this.parentFormGroup.addControl('openTime', this.fb.control('', Validators.required));
+    this.parentFormGroup.addControl('contractStartDate', this.fb.control('', Validators.required));
+    this.parentFormGroup.addControl('contractEndDate', this.fb.control('', Validators.required));
+    this.parentFormGroup.addControl('dropdowns', this.fb.array([])); // Dynamic dropdown FormArray
   }
 
-  onCategoryChange(event: MatSelectChange): void {
-    // The selected value will be directly available in event.value with typeof number
-    const categoryId = event.value;
-
-    this.requestService.GetSubcategories(categoryId).subscribe(
-      (subcategories: SubCategory[]) => {
-        this.subcategories = subcategories;
-      }
-    );
+  get dropdowns(): FormArray {
+    return this.parentFormGroup.get('dropdowns') as FormArray;
   }
 
   addDropdown() {
@@ -88,52 +81,20 @@ export class BasicRequestComponent implements OnInit {
     this.dropdowns.push(dropdown);
   }
 
-  get dropdowns() {
-    return this.basicRequestForm.get('dropdowns') as FormArray;
-  }
-
-  onSubmit() {
-
-    if (this.basicRequestForm.valid) {
-      console.log(this.basicRequestForm.value);
-
-      let request = new Request();
-
-
-      request.categoryId = this.basicRequestForm.controls["category"].value;
-      request.subcategoryId = this.basicRequestForm.controls["subcategory"].value;
-      request.requestTypeId = this.basicRequestForm.controls["requestType"].value;
-      request.requestName = this.basicRequestForm.controls["requestName"].value;
-      request.publishDate = new Date(this.basicRequestForm.controls["publishDate"].value + ' ' + this.basicRequestForm.controls["publishTime"].value);
-      request.openDate = new Date(this.basicRequestForm.controls["openDate"].value + ' ' + this.basicRequestForm.controls["openTime"].value);
-      request.contractStart = new Date(this.basicRequestForm.controls["contractStartDate"].value);
-      request.contractEnd = new Date(this.basicRequestForm.controls["contractEndDate"].value);
-
-      request.decisionMakerSelections = this.dropdowns.controls.map((control, index) => ({
-        decisionMakerNumber: index + 1,
-        decisionMakerId: control.value
-      }));
-
-      this.requestService.CreateRequest(request).subscribe(
-        (responseRequestId: number) => {
-          request.requestId = responseRequestId;
-          this.stateService.setRequestId(responseRequestId);
-          // this.router.navigate(['/request-outframe-component/request-overview-component']);
-
-      },
-        error => {
-          console.error('Error creating request:', error);
-        }
-      );
-
-    }
+  onCategoryChange(event: MatSelectChange): void {
+    const categoryId = event.value;
+    this.requestService.GetSubcategories(categoryId).subscribe(
+      (subcategories: SubCategory[]) => {
+        this.subcategories = subcategories;
+      }
+    );
   }
 
   formatToISO(controlName: string, event: MatDatepickerInputEvent<Date>) {
     if (event.value) {
       const selectedDate = event.value;
-      const formattedDate = selectedDate.toISOString().split('T')[0]; // Extract the date part
-      this.basicRequestForm.get(controlName)?.setValue(formattedDate);
+      const formattedDate = selectedDate.toISOString().split('T')[0]; // Extract date part
+      this.parentFormGroup.get(controlName)?.setValue(formattedDate);
     }
   }
 }

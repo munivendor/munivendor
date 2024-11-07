@@ -3,10 +3,10 @@
 
   <div class="field-container">
     <div class="inline-field">
-      <p>Request Type:</p>
+      <p>Category:</p>
       <mat-form-field appearance="fill" class="input-width">
-        <input matInput formControlName="requestType" readonly placeholder="Chosen Request Type"
-          value={{requestFinalReviewDetails.requestType}}>
+        <input matInput formControlName="category" readonly placeholder="Chosen Category"
+          value={{requestFinalReviewDetails.category}}>
       </mat-form-field>
     </div>
 
@@ -19,15 +19,25 @@
     </div>
 
     <div class="inline-field">
-      <p>Specific Request Type:</p>
+      <p>Request Type:</p>
       <mat-form-field appearance="fill" class="input-width">
-        <input matInput formControlName="specificRequestType" readonly placeholder="Chosen Specific Request Type"
-          value={{requestFinalReviewDetails.specificRequestTypes}}>
+        <input matInput formControlName="requestType" readonly placeholder="Chosen Request Type"
+          value={{requestFinalReviewDetails.requestType}}>
       </mat-form-field>
     </div>
   </div>
 
   <h2>Request Details</h2>
+
+  <div class="field-container">
+    <div class="inline-field">
+      <p>Request Name:</p>
+      <mat-form-field appearance="fill" class="input-width">
+        <input matInput formControlName="requestName" readonly placeholder="Chosen Request Name"
+          value={{requestFinalReviewDetails.requestName}}>
+      </mat-form-field>
+    </div>
+  </div>
 
   <div class="field-container">
     <div class="inline-field">
@@ -67,10 +77,18 @@
 
   <div class="field-container">
     <div class="inline-field">
-      <p>Term:</p>
+      <p>Contract Start:</p>
       <mat-form-field appearance="fill" class="input-width">
-        <input matInput formControlName="term" readonly placeholder="Chosen Term"
-          value={{requestFinalReviewDetails.term}}>
+        <input matInput formControlName="contractStart" readonly placeholder="Chosen Contract Start"
+          value={{requestFinalReviewDetails.contractStart}}>
+      </mat-form-field>
+    </div>
+
+    <div class="inline-field">
+      <p>Contract End:</p>
+      <mat-form-field appearance="fill" class="input-width">
+        <input matInput formControlName="contractEnd" readonly placeholder="Chosen Contract End"
+          value={{requestFinalReviewDetails.contractEnd}}>
       </mat-form-field>
     </div>
   </div>
@@ -98,15 +116,18 @@
 
   <br>
 
-  <h2>Document Details</h2>
+  <h2>The Bid Checklist that proposers will complete for this opportunity will include a list of the following forms. Any documents that require notarization will be digitally notarized and included in the proposer’s submission.</h2>
   <div *ngFor="let requiredDocument of requestFinalReviewDetails.requiredDocuments">
     <mat-checkbox [checked]="true" [disabled]="true"> {{
       requiredDocument }}</mat-checkbox>
   </div>
 
   <br />
-  <p>Note: You did not upload any additional documents</p>
+
+  <!-- this note displays ONLY if user has not uploaded any documents for municipality -->
+  <p>Note: You have not uploaded/selected any additional documents.</p>
 
   <h2>You have uploaded the following request:</h2>
+  <!-- the PDF of the proposals step (all sections that have been filled out by user compiled into a PDF) -->
   <p>proposal.pdf?</p>
 </form>

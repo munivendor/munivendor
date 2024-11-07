@@ -1,9 +1,11 @@
-import {Component} from '@angular/core';
-import {FormBuilder, Validators, FormsModule, ReactiveFormsModule, FormGroup, FormControl} from '@angular/forms';
-import {MatInputModule} from '@angular/material/input';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatStepperModule} from '@angular/material/stepper';
-import {MatButtonModule} from '@angular/material/button';
+import { Component } from '@angular/core';
+import { FormBuilder, Validators, FormsModule, ReactiveFormsModule, FormGroup } from '@angular/forms';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatStepperModule } from '@angular/material/stepper';
+import { MatButtonModule } from '@angular/material/button';
+import { Document } from '../model/document.model';
+import { IRequestDocuments } from '../../interfaces/IRequestDocuments';
 
 import { BasicRequestComponent } from '../request-basic.component';
 import { RequestOverviewComponent } from '../request-overview.component';
@@ -25,7 +27,7 @@ import { RequestService } from '../services/request.service';
     BasicRequestComponent,
     RequestOverviewComponent,
     RequestRequiredDocumentsComponent,
-    RequestReviewComponent
+    RequestReviewComponent,
   ],
 })
 
@@ -34,61 +36,78 @@ import { RequestService } from '../services/request.service';
 // can save data for each step
 // submit the final request data to database
 export class CreateRequestStepper {
-
-  basics!: FormGroup;
+  basicsFormGroup!: FormGroup;
   proposalsOverview!: FormGroup;
+  requestDocumentsFormGroup!: FormGroup;
+  municipalityId = 1; // Example ID, replace as needed
+  requestId = 1;
 
-  basicsFormGroup = this._formBuilder.group({
-    // basics: ['', Validators.required],
-  });
+  // Variables to hold document data passed from the child component
+  requiredDocuments: Document[] = [];
+  optionalDocuments: Document[] = [];
+  municipalityDocuments: Document[] = [];
+
   proposalsOverviewFormGroup = this._formBuilder.group({
     // proposalsOverview: ['', Validators.required],
   });
-  requestDocumentsFormGroup = this._formBuilder.group({
-    // requestDocuments: ['', Validators.required],
-  });
+  // requestDocumentsFormGroup = this._formBuilder.group({
+  //   // requestDocuments: ['', Validators.required],
+  // });
   finalReviewFormGroup = this._formBuilder.group({
     // finalReview: ['', Validators.required],
   });
 
-  constructor(private _formBuilder: FormBuilder, private requestService: RequestService) {}
+  constructor(private _formBuilder: FormBuilder, private requestService: RequestService) {
+    this.requestDocumentsFormGroup = this._formBuilder.group({});
+  }
 
   ngOnInit() {
     // Initialize form groups with FormControl
-    this.basics = this._formBuilder.group({
-      // field1: new FormControl(this.requestService.getRequestData('step1')?.field1 || '')
+    this.basicsFormGroup = this._formBuilder.group({
+      category: ['', Validators.required],
+      subcategory: ['', Validators.required],
+      requestType: ['', Validators.required],
+      requestName: ['', Validators.required],
+      publishDate: ['', Validators.required],
+      publishTime: ['', Validators.required],
+      openDate: ['', Validators.required],
+      openTime: ['', Validators.required],
+      contractStartDate: ['', Validators.required],
+      contractEndDate: ['', Validators.required],
     });
+
     this.proposalsOverview = this._formBuilder.group({
       // field2: new FormControl(this.requestService.getRequestData('step2')?.field2 || '')
     });
   }
 
-  saveStep1() {
-    // Save data from step 1
-    // this.requestService.setRequestData('step1', this.formGroup1.value);
+  onDocumentsUpdated(documents: IRequestDocuments) {
+    this.requiredDocuments = documents.required;
+    this.optionalDocuments = documents.optional;
+    this.municipalityDocuments = documents.municipality;
   }
 
-  saveStep2() {
-    // Save data from step 2
-    // this.requestService.setRequestData('step2', this.proposalsOverview.value);
+  saveDocuments() {
+    const documentIds: number[] = [
+      ...this.requiredDocuments,
+      ...this.optionalDocuments,
+      ...this.municipalityDocuments
+    ].map(documentId => documentId.documentId);
+
+    this.requestService.SaveRequestDocuments(this.requestId, documentIds)
+      .subscribe(response => {
+        console.log('Documents saved successfully:', response);
+      }, error => {
+        console.error('Error saving documents:', error);
+      });
   }
 
   handleFormUpdate(updatedData: any) {
-    // Update the relevant form group when child component emits the update
     if (updatedData.step1) {
-      this.basics.patchValue(updatedData.step1);
+      this.basicsFormGroup.patchValue(updatedData.step1);
     }
     if (updatedData.step2) {
       this.proposalsOverview.patchValue(updatedData.step2);
     }
-  }
-
-  submit() {
-    // Do the final submission and clear the form data if needed
-    // console.log('Request Data:', {
-      // step1: this.requestService.getRequestData('step1'),
-      // step2: this.requestService.getRequestData('step2')
-    // });
-    // this.requestService.clearRequestData();  // Clear if needed after submission
   }
 }

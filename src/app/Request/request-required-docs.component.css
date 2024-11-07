@@ -1,0 +1,9 @@
+.document-item {
+    display: flex;
+    align-items: center;
+  }
+  
+  .delete-button {
+    margin-bottom: 5px;
+  }
+  

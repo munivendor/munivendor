@@ -1,13 +1,11 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, catchError, tap, throwError } from 'rxjs';
-import { Category } from '../model/category.model';
 import { SubCategory } from '../model/subcategory.model';
 import { DecisionMaker } from '../model/decisionmaker.model';
 import { RequestType } from '../model/requesttype.model';
 import { Request } from '../model/request.model';
 import { environment } from '../../../environments/environment';
-import { DocumentType } from '../model/documenttype.model';
 import { RequestSection } from '../model/requestsection.model';
 
 @Injectable({
@@ -19,27 +17,20 @@ export class RequestService {
   constructor(private http: HttpClient) { }
 
   loadRequests(): Observable<any> {
-
     return this.http.get<any>(this.url);
   }
 
-  getCategories(): Observable<Category[]> {
-
-    return this.http.get<Category[]>(this.url + 'getcategories');
-  }
-
   GetSubcategories(categoryId: number): Observable<SubCategory[]> {
-    let params = this.url + 'getsubcategories/' + categoryId
-
+    let params = this.url + 'Subcategories/' + categoryId
     return this.http.get<SubCategory[]>(params);
   }
 
   GetDecisionMakers(): Observable<DecisionMaker[]> {
-    return this.http.get<DecisionMaker[]>(this.url + 'getdecisionmakers');
+    return this.http.get<DecisionMaker[]>(this.url + 'DecisionMakers');
   }
 
   GetRequestTypes(): Observable<RequestType[]> {
-    return this.http.get<RequestType[]>(this.url + 'getrequesttypes');
+    return this.http.get<RequestType[]>(this.url + 'RequestTypes');
   }
 
   GetRequest(): Observable<Request> {
@@ -55,29 +46,27 @@ export class RequestService {
 
   }
 
-  GetRequiredDocuments(municipalityId: number): Observable<DocumentType[]> {
-    let params = this.url + 'getrequireddocuments/' + municipalityId
-    return this.http.get<DocumentType[]>(params);
-  }
-
-  GetOptionalDocuments(municipalityId: number): Observable<DocumentType[]> {
-    let params = this.url + 'getoptionaldocuments/' + municipalityId
-    return this.http.get<DocumentType[]>(params);
-  }
-
-  GetMunicipalityDocuments(municipalityId: number): Observable<DocumentType[]> {
-    let params = this.url + 'getmunicipalitydocuments/' + municipalityId
-    return this.http.get<DocumentType[]>(params);
-  }
-
   SaveRequiredDocuments(requestId: number, requiredDocumentTypes: DocumentType[]): Observable<boolean> {
-
     const body = JSON.stringify(requiredDocumentTypes);
     const headers = { 'Content-Type': 'application/json' };
     const options = { headers };
-
     const url = `${this.url}saverequireddocuments/${requestId}`;
     return this.http.post<boolean>(url, body, options);
+  }
+
+  UploadMunicipalityRequestDocument(requestId: number, file: File, documentTitle?: string): Observable<any> {
+    console.log("hello")
+    const url = `${this.url}/UploadDocument/${requestId}`;
+    const formData = new FormData();
+  
+    // Append the file and optional document title
+    formData.append('file', file, file.name);
+    if (documentTitle) {
+      formData.append('documentTitle', documentTitle);
+    }
+  
+    // Send the request with the FormData
+    return this.http.post(url, formData, { reportProgress: true, observe: 'events' });
   }
 
   DeleteMunicipalityRequestDocument(requestId: number, additionalRequestDocumentId: number): Observable<boolean> {
@@ -88,7 +77,6 @@ export class RequestService {
         console.error('DELETE error:', error); // Log any errors
         return throwError(error);
       })
-
     );
   }
 
@@ -113,19 +101,19 @@ export class RequestService {
   }
 
   GetRequests(): Observable<any> {
-    return this.http.get<any>(`${this.url}GetRequests`);
+    return this.http.get<any>(`${this.url}Requests`);
   }
 
   GetCategories(): Observable<any> {
-    return this.http.get<any>(`${this.url}GetCategories`);
+    return this.http.get<any>(`${this.url}Categories`);
   }
 
   GetRequestStatuses(): Observable<any> {
-    return this.http.get<any>(`${this.url}GetRequestStatuses`);
+    return this.http.get<any>(`${this.url}RequestStatus`);
   }
 
   GetRequestSections(requestId: number): Observable<any> {
-    return this.http.get<any>(`${this.url}RequestSections/${requestId}`)
+    return this.http.get<any>(`${this.url}RequestSections/${requestId}`);
   }
 
   GetRequestSectionDefaultTitles(): Observable<any> {
@@ -136,7 +124,39 @@ export class RequestService {
     const headers = { 'Content-Type': 'application/json' };
     return this.http.post<void>(`${this.url}RequestSections`, requestSection, { headers });
   }
-  
+
+  GetRequiredDocuments(): Observable<any> {
+    return this.http.get<any>(`${this.url}RequiredDocuments`);
+  }
+
+  GetOptionalDocuments(): Observable<any> {
+    return this.http.get<any>(`${this.url}OptionalDocuments`);
+  }
+
+  GetMunicipalityDocuments(municipalityId: number): Observable<any> {
+    return this.http.get<any>(`${this.url}MunicipalityDocuments/${municipalityId}`)
+  }
+
+  SaveMunicipalityDocument(municipalityId: number, municipalityDocument: any): Observable<any> {
+    const headers = { 'Content-Type': 'application/json' };
+    const url = `${this.url}MunicipalityDocuments/${municipalityId}`;
+    return this.http.post<void>(url, municipalityDocument, {headers} )
+  }
+
+  DeleteMunicipalityDocument(documentId: number): Observable<void> {
+    return this.http.delete<void>(`${this.url}MunicipalityDocuments/${documentId}`)
+  }
+
+  UploadDocument(documentId: number, formData: FormData): Observable<any> {
+    const url = `${this.url}Documents/${documentId}`;
+    return this.http.post<void>(url, formData);
+  }
+
+  SaveRequestDocuments(requestId: number, documentIds: number[]): Observable<any> {
+    const headers = { 'Content-Type': 'application/json' };
+    const url = `${this.url}RequestDocuments/${requestId}`;
+    return this.http.post<void>(url, documentIds, { headers });
+  }
 }
 
 
