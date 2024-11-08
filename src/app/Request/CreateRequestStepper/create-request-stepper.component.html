@@ -1,9 +1,9 @@
 <mat-stepper [linear]="true" #stepper>
   <mat-step [stepControl]="basicsFormGroup" label="Basics" [completed]="basicsFormGroup.valid">
     <form [formGroup]="basicsFormGroup">
-      <request-basic [parentFormGroup]="basicsFormGroup"></request-basic>
+      <request-basic [parentFormGroup]="basicsFormGroup" (requestData)="onRequestDataReceived($event)"></request-basic>
       <div>
-        <button mat-button matStepperNext [disabled]="!basicsFormGroup.valid">Next</button>
+        <button mat-button matStepperNext [disabled]="!basicsFormGroup.valid" (click)="saveRequestData()">Next</button>
       </div>
     </form>
   </mat-step>
@@ -11,10 +11,10 @@
 
   <mat-step [stepControl]="proposalsOverviewFormGroup" label="Proposals">
     <form [formGroup]="proposalsOverviewFormGroup">
-      <request-overview (formUpdated)="handleFormUpdate($event)"></request-overview>
+      <request-overview (proposalOverviewData)="handleProposalData($event)"></request-overview>
       <div>
         <button mat-button matStepperPrevious>Back</button>
-        <button mat-button matStepperNext>Next</button>
+        <button mat-button matStepperNext (click)="saveSections()">Next</button>
       </div>
     </form>
   </mat-step>
