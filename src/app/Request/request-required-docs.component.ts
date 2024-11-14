@@ -1,15 +1,15 @@
 import { Component, OnInit, Output, EventEmitter } from '@angular/core';
-import { Router, RouterLink, RouterModule } from '@angular/router';
-import { FormGroup, FormBuilder, ReactiveFormsModule, Validators, FormArray, FormControl } from '@angular/forms';
+import { RouterModule } from '@angular/router';
+import { FormGroup, FormBuilder, ReactiveFormsModule, FormArray, FormControl } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { DragAndDropUploaderComponent } from './DragAndDrop/drag-and-drop.component';
+// to be added as future update
+// import { DragAndDropUploaderComponent } from './DragAndDrop/drag-and-drop.component';
 import { FileUploadDialogComponent } from '../file-upload-dialog/file-upload-dialog.component';
 import { RequestService } from './services/request.service';
-import { StateService } from './services/state.service';
 import { Document } from './model/document.model';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { IRequestDocuments } from '../interfaces/IRequestDocuments';
@@ -22,12 +22,11 @@ import { IRequestDocuments } from '../interfaces/IRequestDocuments';
   imports: [
     ReactiveFormsModule, 
     RouterModule, 
-    RouterLink, 
     CommonModule, 
     MatButtonModule, 
     MatIconModule, 
     MatCheckboxModule, 
-    DragAndDropUploaderComponent, 
+    // DragAndDropUploaderComponent, 
     MatProgressSpinnerModule]
 })
 export class RequestRequiredDocumentsComponent implements OnInit {
@@ -118,29 +117,6 @@ export class RequestRequiredDocumentsComponent implements OnInit {
         this.selectedMunicipalityDocs = this.municipalityDocuments;
       }
     })
-  }
-
- 
-
-  populateRequiredRequestDocumentFormArray(): void {
-    const formArray = this.requestDocumentsForm.get('requiredRequestDocumentItems') as FormArray;
-    this.requiredRequestDocuments.forEach(() => {
-      formArray.push(new FormControl(false));
-    });
-  }
-
-  populateOptionalRequestDocumentFormArray(): void {
-    const formArray = this.requestDocumentsForm.get('optionalRequestDocumentItems') as FormArray;
-    this.optionalRequestDocuments.forEach(() => {
-      formArray.push(new FormControl(false));
-    });
-  }
-
-  populateMunicipalityRequestDocumentsFormArray(): void {
-    const formArray = this.requestDocumentsForm.get('municipalityRequestDocumentItems') as FormArray;
-    this.municipalityRequestDocuments.forEach(() => {
-      formArray.push(new FormControl(false));
-    });
   }
 
   openFileUploadDialog(municipalityId: number): void {

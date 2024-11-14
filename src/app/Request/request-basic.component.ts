@@ -1,8 +1,7 @@
-import { Component, OnInit, Input } from '@angular/core';
-import { Router, RouterLink, RouterModule } from '@angular/router';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { RouterModule } from '@angular/router';
 import { FormGroup, FormBuilder, FormArray, ReactiveFormsModule, Validators, FormControlName, FormControl, AbstractControl, ValidatorFn, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { StateService } from './services/state.service';
 import { RequestService } from './services/request.service';
 
 import { SubCategory } from './model/subcategory.model';
@@ -26,12 +25,24 @@ import { NgxMatTimepickerModule } from 'ngx-mat-timepicker';
   standalone: true,
   templateUrl: './request-basic.component.html',
   styleUrls: ['./request-basic.component.css'],
-  imports: [ReactiveFormsModule, RouterModule, RouterLink, CommonModule, MatSelectModule,
-    FormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatDatepickerModule, MatNativeDateModule, NgxMatTimepickerModule]
+  imports: [
+    ReactiveFormsModule, 
+    RouterModule,  
+    CommonModule, 
+    MatSelectModule,
+    FormsModule, 
+    MatFormFieldModule, 
+    MatInputModule,
+    MatButtonModule, 
+    MatDatepickerModule, 
+    MatNativeDateModule, 
+    NgxMatTimepickerModule]
 })
 
 export class BasicRequestComponent implements OnInit {
   @Input() parentFormGroup!: FormGroup;
+  @Output() requestData = new EventEmitter<Request>();
+
   decisionMakers!: DecisionMaker[];
   decisionMakers2!: DecisionMaker[];
   decisionMakers3!: DecisionMaker[];
@@ -69,7 +80,7 @@ export class BasicRequestComponent implements OnInit {
     this.parentFormGroup.addControl('openTime', this.fb.control('', Validators.required));
     this.parentFormGroup.addControl('contractStartDate', this.fb.control('', Validators.required));
     this.parentFormGroup.addControl('contractEndDate', this.fb.control('', Validators.required));
-    this.parentFormGroup.addControl('dropdowns', this.fb.array([])); // Dynamic dropdown FormArray
+    this.parentFormGroup.addControl('dropdowns', this.fb.array([]));
   }
 
   get dropdowns(): FormArray {
@@ -90,10 +101,31 @@ export class BasicRequestComponent implements OnInit {
     );
   }
 
+  emitRequestData(): void {
+    if (this.parentFormGroup.valid) {
+      let request = new Request();
+
+      request.categoryId = this.parentFormGroup.controls['category'].value;
+      request.subcategoryId = this.parentFormGroup.controls['subcategory'].value;
+      request.requestTypeId = this.parentFormGroup.controls['requestType'].value;
+      request.requestName = this.parentFormGroup.controls['requestName'].value;
+      request.publishDate = new Date(this.parentFormGroup.controls['publishDate'].value + ' ' + this.parentFormGroup.controls['publishTime'].value);
+      request.openDate = new Date(this.parentFormGroup.controls['openDate'].value + ' ' + this.parentFormGroup.controls['openTime'].value);
+      request.contractStart = new Date(this.parentFormGroup.controls['contractStartDate'].value);
+      request.contractEnd = new Date(this.parentFormGroup.controls['contractEndDate'].value);
+      request.decisionMakerSelections = this.dropdowns.controls.map((control, index) => ({
+        decisionMakerNumber: index + 1,
+        decisionMakerId: control.value
+      }));
+
+      this.requestData.emit(request);
+    }
+  }
+
   formatToISO(controlName: string, event: MatDatepickerInputEvent<Date>) {
     if (event.value) {
       const selectedDate = event.value;
-      const formattedDate = selectedDate.toISOString().split('T')[0]; // Extract date part
+      const formattedDate = selectedDate.toISOString().split('T')[0];
       this.parentFormGroup.get(controlName)?.setValue(formattedDate);
     }
   }

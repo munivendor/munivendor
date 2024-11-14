@@ -8,7 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { RequestService } from '../services/request.service';
 import { FormsModule } from '@angular/forms';
 import { StateService } from '../services/state.service';
-
+// to use component as future enhancement
 @Component({
     selector: 'app-drag-and-drop',
     standalone: true,
@@ -116,20 +116,9 @@ export class DragAndDropUploaderComponent {
     }
 
     uploadDocuments(): void {
-        const requestId = 29;
+        const requestId = 1;
         if (requestId === null || requestId === undefined) {
             return;
         }
-        // this.municipalityDocuments.forEach(document => {
-        //     this.requestService.UploadMunicipalityRequestDocument(requestId, document.file, document.documentTitle)
-        //         .subscribe(
-        //             (response) => {
-        //                 console.log('File uploaded successfully', response);
-        //             },
-        //             (error) => {
-        //                 console.error('Error uploading file:', error);
-        //             }
-        //         );
-        // });
     }
 }

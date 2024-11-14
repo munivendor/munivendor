@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, catchError, tap, throwError } from 'rxjs';
+import { Observable } from 'rxjs';
 import { SubCategory } from '../model/subcategory.model';
 import { DecisionMaker } from '../model/decisionmaker.model';
 import { RequestType } from '../model/requesttype.model';
@@ -38,12 +38,9 @@ export class RequestService {
   }
 
   CreateRequest(request: Request): Observable<number> {
-
-    const body = JSON.stringify(request);
     const headers = { 'Content-Type': 'application/json' };
-    const options = { headers };
-    return this.http.post<number>(this.url + 'createrequest', body, options);
-
+    const url = `${this.url}Requests`;
+    return this.http.post<number>(url, request, { headers });
   }
 
   SaveRequiredDocuments(requestId: number, requiredDocumentTypes: DocumentType[]): Observable<boolean> {
@@ -55,7 +52,6 @@ export class RequestService {
   }
 
   UploadMunicipalityRequestDocument(requestId: number, file: File, documentTitle?: string): Observable<any> {
-    console.log("hello")
     const url = `${this.url}/UploadDocument/${requestId}`;
     const formData = new FormData();
   
@@ -69,25 +65,14 @@ export class RequestService {
     return this.http.post(url, formData, { reportProgress: true, observe: 'events' });
   }
 
-  DeleteMunicipalityRequestDocument(requestId: number, additionalRequestDocumentId: number): Observable<boolean> {
-    const url = `${this.url}deleteadditionaldocument/${requestId}/${additionalRequestDocumentId}`;
-    return this.http.delete<boolean>(url).pipe(
-      tap((response: any) => console.log('DELETE response:', response)), // Log the response
-      catchError((error: any) => {
-        console.error('DELETE error:', error); // Log any errors
-        return throwError(error);
-      })
-    );
-  }
-
   DeleteRequest(requestId: number): Observable<void> {
     return this.http.delete<void>(`${this.url}DeleteRequest/${requestId}`);
   }
 
   UpdateRequestStatus(requestId: number, newRequestStatusId: number): Observable<void> {
-    const body = { requestId, requestStatusId: newRequestStatusId };  // Ensure both parameters are included
-    const headers = { 'Content-Type': 'application/json' };  // Set Content-Type to application/json
-    return this.http.put<void>(`${this.url}UpdateRequestStatus/${requestId}`, body, { headers });  // Send the request body as JSON
+    const body = { requestId, requestStatusId: newRequestStatusId };
+    const headers = { 'Content-Type': 'application/json' };
+    return this.http.put<void>(`${this.url}UpdateRequestStatus/${requestId}`, body, { headers });
   }
 
   GetCancellationReasons(): Observable<any> {

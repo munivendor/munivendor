@@ -1,27 +1,11 @@
-<div class="button-container">
-    <div class="buttons">
-        <button mat-fab color="" extended *ngIf="!isEditMode" (click)="onEdit()">
-            <mat-icon>edit</mat-icon>
-            Edit
-        </button>
-
-        <button mat-fab color="primary" extended *ngIf="isEditMode" (click)="onSave()">
-            <mat-icon>save</mat-icon>
-            Save
-        </button>
-    </div>
-</div>
-
 <div>
     <div *ngFor="let proposalSection of proposalSections">
-        <h2 *ngIf="!isEditMode">{{proposalSection.requestSectionTitle}}</h2>
-        <mat-form-field *ngIf="isEditMode" class="title-width">
+        <mat-form-field class="title-width">
             <mat-label>Enter title</mat-label>
             <input matInput [(ngModel)]="proposalSection.requestSectionTitle">
         </mat-form-field>
 
-        <p *ngIf="!isEditMode">{{proposalSection.requestSectionContent}}</p>
-        <mat-form-field *ngIf="isEditMode" class="full-width">
+        <mat-form-field class="full-width">
             <mat-label>Enter content</mat-label>
             <textarea matInput id="overview" name="w3review" rows="4"
                 [(ngModel)]="proposalSection.requestSectionContent">
@@ -40,7 +24,7 @@
         <hr class="propsal-divider" />
     </div>
 </div>
-<button mat-fab color="primary" style="margin-bottom: 16px;" extended *ngIf="isEditMode" (click)="addSection()">
+<button mat-fab color="primary" style="margin-bottom: 16px;" extended (click)="addSection()">
     <mat-icon>add</mat-icon>
     Add Section
 </button>

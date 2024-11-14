@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { FormBuilder, Validators, FormsModule, ReactiveFormsModule, FormGroup } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -12,6 +12,8 @@ import { RequestOverviewComponent } from '../request-overview.component';
 import { RequestRequiredDocumentsComponent } from '../request-required-docs.component';
 import { RequestReviewComponent } from '../request-review.component';
 import { RequestService } from '../services/request.service';
+import { Request } from '../model/request.model';
+import { RequestSection } from '../model/requestsection.model';
 
 @Component({
   selector: 'create-request-stepper',
@@ -36,13 +38,16 @@ import { RequestService } from '../services/request.service';
 // can save data for each step
 // submit the final request data to database
 export class CreateRequestStepper {
+  @ViewChild(BasicRequestComponent) basicRequestComponent!: BasicRequestComponent;
+  receivedProposalSections: RequestSection[] = [];
+  requestData!: Request;
   basicsFormGroup!: FormGroup;
   proposalsOverview!: FormGroup;
   requestDocumentsFormGroup!: FormGroup;
-  municipalityId = 1; // Example ID, replace as needed
+  municipalityId = 1;
   requestId = 1;
 
-  // Variables to hold document data passed from the child component
+  // Variables to hold document data passed from required docs child component
   requiredDocuments: Document[] = [];
   optionalDocuments: Document[] = [];
   municipalityDocuments: Document[] = [];
@@ -77,10 +82,58 @@ export class CreateRequestStepper {
     });
 
     this.proposalsOverview = this._formBuilder.group({
-      // field2: new FormControl(this.requestService.getRequestData('step2')?.field2 || '')
     });
   }
 
+  //******* Handles request data from basics page *********/ 
+  onRequestDataReceived(data: Request) {
+    this.requestData = data;
+  }
+
+  saveRequestData() {
+    this.basicRequestComponent.emitRequestData();
+
+    if (this.requestData) {
+      this.requestService.CreateRequest(this.requestData).subscribe(
+        (responseRequestId: number) => {
+          console.log('Request created successfully:', responseRequestId);
+        },
+        error => {
+          console.error('Error creating request:', error);
+        }
+      );
+    }
+  }
+  //*******************************************************/ 
+
+
+  //*** Handles proposal overview section data from proposals page ***/
+  handleProposalData(data: RequestSection[]): void {
+    this.receivedProposalSections = data;
+  }
+
+  saveSections(): void {
+    this.receivedProposalSections.forEach((section) => {
+      const payload = {
+        requestId: section.requestId,
+        requestSectionId: section.requestSectionId,
+        requestSectionTitle: section.requestSectionTitle,
+        requestSectionContent: section.requestSectionContent
+      };
+      this.requestService.SaveRequestSections(payload)
+        .subscribe({
+          next: (response) => {
+            console.log(`Section ${section.requestSectionTitle} saved successfully!`);
+          },
+          error: (error) => {
+            console.error(`Error saving section ${section.requestSectionTitle}`, error);
+          }
+        });
+    });
+  }
+  //*******************************************************/ 
+
+  //*** Handles checked docs data from documents page ***/
   onDocumentsUpdated(documents: IRequestDocuments) {
     this.requiredDocuments = documents.required;
     this.optionalDocuments = documents.optional;
@@ -101,13 +154,7 @@ export class CreateRequestStepper {
         console.error('Error saving documents:', error);
       });
   }
+  //*******************************************************/
 
-  handleFormUpdate(updatedData: any) {
-    if (updatedData.step1) {
-      this.basicsFormGroup.patchValue(updatedData.step1);
-    }
-    if (updatedData.step2) {
-      this.proposalsOverview.patchValue(updatedData.step2);
-    }
-  }
+  // Add handling for final review page
 }
