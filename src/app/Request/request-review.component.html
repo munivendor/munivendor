@@ -6,7 +6,7 @@
       <p>Category:</p>
       <mat-form-field appearance="fill" class="input-width">
         <input matInput formControlName="category" readonly placeholder="Chosen Category"
-          value={{requestFinalReviewDetails.category}}>
+          value={{requestFinalReviewDetails.category?.categoryName}}>
       </mat-form-field>
     </div>
 
@@ -14,7 +14,7 @@
       <p>Subcategory:</p>
       <mat-form-field appearance="fill" class="input-width">
         <input matInput formControlName="subcategory" readonly placeholder="Chosen Subcategory"
-          value={{requestFinalReviewDetails.subcategory}}>
+          value={{requestFinalReviewDetails.subCategory?.subCategoryName}}>
       </mat-form-field>
     </div>
 
@@ -22,7 +22,7 @@
       <p>Request Type:</p>
       <mat-form-field appearance="fill" class="input-width">
         <input matInput formControlName="requestType" readonly placeholder="Chosen Request Type"
-          value={{requestFinalReviewDetails.requestType}}>
+          value={{requestFinalReviewDetails.requestType?.requestTypeDesc}}>
       </mat-form-field>
     </div>
   </div>
@@ -98,7 +98,7 @@
       <p *ngIf="i === 0">Decision Makers:</p>
       <p *ngIf="i > 0" style="visibility: hidden;">&nbsp;</p>
       <mat-form-field appearance="fill" class="input-width">
-        <input matInput readonly placeholder="Chosen Decision Maker(s)" [value]="decisionMaker.name">
+        <input matInput readonly placeholder="Chosen Decision Maker(s)" [value]="decisionMaker.decisionMakerName">
       </mat-form-field>
     </div>
   </div>
@@ -119,7 +119,7 @@
   <h2>The Bid Checklist that proposers will complete for this opportunity will include a list of the following forms. Any documents that require notarization will be digitally notarized and included in the proposer’s submission.</h2>
   <div *ngFor="let requiredDocument of requestFinalReviewDetails.requiredDocuments">
     <mat-checkbox [checked]="true" [disabled]="true"> {{
-      requiredDocument }}</mat-checkbox>
+      requiredDocument.documentName }}</mat-checkbox>
   </div>
 
   <br />
