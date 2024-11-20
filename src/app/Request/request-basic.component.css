@@ -2,6 +2,10 @@
     width: 80%;
 }
 
+.basics-decision-maker-width {
+    width: 40%;
+}
+
 .field-container {
     display: flex;
     justify-content: space-between;

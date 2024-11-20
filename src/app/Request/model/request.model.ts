@@ -3,6 +3,11 @@ import { Category } from "./category.model"
 import { RequestStatus } from "./requeststatus.model"
 import { RequestType } from "./requesttype.model"
 
+export interface DecisionMakerSelection {
+    decisionMakerId: number;
+    decisionMakerNumber: number;
+  }
+
 export class Request
     {
         requestId!: number
@@ -16,7 +21,7 @@ export class Request
         openTime!: Time
         contractStart!: Date
         contractEnd!: Date    
-        decisionMakerSelections!: any [] 
+        decisionMakerSelections?: DecisionMakerSelection[] 
         category!: Category;
         RequestCancelNote!: string | null;
         requestCancelReasonId!: number;

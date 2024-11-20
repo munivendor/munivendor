@@ -27,5 +27,5 @@
 <div mat-dialog-actions>
   <button mat-button (click)="onNoClick()">Cancel</button>
   <!-- Use the non-null assertion operator when passing the cancellationReason value -->
-<button mat-button  [disabled]="!cancellationReasonId.valid || (cancellationReasonId.value === 10 && cancellationReasonNote.invalid)" (click)="confirm(data.request, data.action, cancellationReasonId.value!, cancellationReasonNote.value!)">Confirm</button>
+<button mat-button  [disabled]="!cancellationReasonId.valid || (cancellationReasonId.value === 10 && cancellationReasonNote.invalid)" (click)="onConfirmCancelRequest(data.request, data.action, cancellationReasonId.value!, cancellationReasonNote.value!)">Confirm</button>
 </div>
