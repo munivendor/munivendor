@@ -3,7 +3,6 @@ import { Routes } from '@angular/router';
 import { SignupComponent } from './signup/signup.component';
 import { SignupPasswordComponent } from './signup/signup-password.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
-import { RequestComponent } from './Request/request-list.component';
 import { RequestProposalComponent } from './Request/request-proposal.component';
 import { RequestOverviewComponent } from './Request/request-overview.component';
 import { BasicRequestComponent } from './Request/request-basic.component';
@@ -11,7 +10,7 @@ import { RequestOutFrameComponent } from './Request/request-outframe.component';
 import { RequestReviewComponent } from './Request/request-review.component';
 import { RequestRequiredDocumentsComponent } from './Request/request-required-docs.component';
 import { TableDetailsComponent } from './Request/TableDetails/request-tabledetails.component';
-import { CreateRequestPage } from './Request/CreateRequestPage/create-request-page.component';
+import { CreateRequestStepper } from './Request/CreateRequestStepper/create-request-stepper.component';
 
 export const routes: Routes = [
   { path: 'first-component', component: SignupComponent },
@@ -19,8 +18,6 @@ export const routes: Routes = [
 
   { path: 'request-proposal-component', component: RequestProposalComponent },
   { path: 'request-overview-component', component: RequestOverviewComponent },
-  // { path: 'dashboard-component/request-outframe-component', redirectTo: '/dashboard-component/request-outframe-component/request-basic-component', pathMatch: 'full' },
-  // { path: 'dashboard-component/request-outframe-component', redirectTo: '/dashboard-component/request-outframe-component/request-overview-component', pathMatch: 'full' },
   {
     path: 'dashboard-component', component: DashboardComponent,
     children: [
@@ -28,7 +25,10 @@ export const routes: Routes = [
         path: 'requests-view', component: TableDetailsComponent,
       },
       { 
-        path: 'create-request-view', component: CreateRequestPage 
+        path: 'create-request-view', component: CreateRequestStepper 
+      },
+      { 
+        path: 'edit-request-view/:requestId', component: CreateRequestStepper 
       },
       {
         path: 'request-outframe-component', component: RequestOutFrameComponent,

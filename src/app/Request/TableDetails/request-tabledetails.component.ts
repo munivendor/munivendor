@@ -6,15 +6,23 @@ import { ConfirmationDialog } from '../RequestConfirmationDialog/confirmation-di
 import { RequestService } from '../services/request.service';
 import { Request } from '../model/request.model';
 
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+
 @Component({
   selector: 'request-tabledetails',
   standalone: true,
   templateUrl: './request-tabledetails.component.html',
   styleUrls: ['./request-tabledetails.component.css'],
-  imports: [CommonModule, ConfirmationDialog]
+  imports: [
+    CommonModule,
+    MatTableModule
+  ]
 })
 export class TableDetailsComponent implements OnInit {
   joinedRequestData: Request[] = [];
+
+  displayedColumns: string[] = ['actions', 'emptyColumn', 'requestName', 'requestType', 'category', 'publishDate', 'requestStatus',];
+  dataSource = new MatTableDataSource<any>();
 
   constructor(public dialog: MatDialog, private requestService: RequestService) { }
 
@@ -44,6 +52,7 @@ export class TableDetailsComponent implements OnInit {
           });
         });
         this.joinedRequestData.push(...combinedData);
+        this.dataSource = new MatTableDataSource(this.joinedRequestData);
       },
       error => {
         console.error('Error fetching data', error);
@@ -75,7 +84,7 @@ export class TableDetailsComponent implements OnInit {
       this.onCancelUpdateRequestCancelReason(cancelData.request, cancelData.reasonId, cancelData.reasonNote);
       this.onCancelUpdateRequestStatus(cancelData.request, cancelData.action);
     });
-  
+
 
     dialogRef.afterClosed().subscribe(result => {
       if (result && action === "delete") {
@@ -93,6 +102,7 @@ export class TableDetailsComponent implements OnInit {
       () => {
         console.log(`Request with ID ${request.requestId} deleted successfully.`);
         this.joinedRequestData = this.joinedRequestData.filter(i => i.requestId !== request.requestId);
+        this.dataSource.data = this.joinedRequestData;
       },
       error => {
         console.error('Error deleting the request:', error);
@@ -122,20 +132,20 @@ export class TableDetailsComponent implements OnInit {
 
       this.requestService.UpdateRequestStatus(request.requestId, newRequestStatusId).subscribe(
         () => {
-          console.log("Request status updated successfully");
           this.joinedRequestData = this.joinedRequestData.map((i) => {
             if (i.requestId === request.requestId) {
-                return {
-                    ...i,
-                    requestStatus: {
-                        ...i.requestStatus,
-                        requestStatusId: newRequestStatusId,
-                        requestStatusDesc: newRequestStatusDesc,
-                    },
-                };
+              return {
+                ...i,
+                requestStatus: {
+                  ...i.requestStatus,
+                  requestStatusId: newRequestStatusId,
+                  requestStatusDesc: newRequestStatusDesc,
+                },
+              };
             }
             return i;
-        });
+          });
+          this.dataSource.data = this.joinedRequestData;
         },
         (error) => {
           console.error("Error updating request status:", error);

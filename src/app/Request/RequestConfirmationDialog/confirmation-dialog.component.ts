@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { CancellationReasonDialog } from '../CancellationReasonDialog/cancellation-reason-dialog.component';
 import { Request } from '../model/request.model';
+import { Router } from '@angular/router';
 
 export interface DialogData {
   action: string;
@@ -25,7 +26,6 @@ export interface DialogData {
     MatDialogTitle,
     MatDialogContent,
     MatDialogActions,
-    CancellationReasonDialog
   ],
 })
 export class ConfirmationDialog {
@@ -35,7 +35,8 @@ export class ConfirmationDialog {
   constructor(
     public dialogRef: MatDialogRef<ConfirmationDialog>,
     @Inject(MAT_DIALOG_DATA) public requestObjAndUserAction: DialogData,
-    public dialog: MatDialog, // Injecting MatDialog for opening another dialog,
+    public dialog: MatDialog,
+    private router: Router
   ) {}
 
   getConfirmationMessage(): string {
@@ -66,12 +67,16 @@ export class ConfirmationDialog {
   }
 
   confirm(action: string, request: any): void {
-    this.dialogRef.close(true); 
     if (this.requestObjAndUserAction.action === 'cancel' && request.requestStatus.requestStatusDesc === "Live") {
       this.openCancellationReasonDialog(action, request);
     } else if (this.requestObjAndUserAction.action === 'cancel' && request.requestStatus.requestStatusDesc === "Scheduled") {
       this.onCancelUpdateRequestStatus(request, action);
     }
+
+    if (this.requestObjAndUserAction.action === 'edit') {
+      this.router.navigate(['/dashboard-component/edit-request-view', this.requestObjAndUserAction.request.requestId]);
+    }
+    this.dialogRef.close(true); 
   }
 
   openCancellationReasonDialog(action: string, request: any): void {
@@ -81,7 +86,7 @@ export class ConfirmationDialog {
     });
 
     cancelDialogRef.componentInstance.cancelConfirmed.subscribe((cancelData: { request: any, action: string }) => {
-      this.cancellationRequested.emit(cancelData); // Emit event to parent
+      this.cancellationRequested.emit(cancelData);
     });
   }
 

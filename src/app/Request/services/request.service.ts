@@ -20,9 +20,13 @@ export class RequestService {
     return this.http.get<any>(this.url);
   }
 
-  GetSubcategories(categoryId: number): Observable<SubCategory[]> {
+  GetSubcategories(categoryId: any ): Observable<SubCategory[]> {
     let params = this.url + 'Subcategories/' + categoryId
     return this.http.get<SubCategory[]>(params);
+  }
+
+  GetAllSubcategories(): Observable<SubCategory[]> {
+    return this.http.get<SubCategory[]>(this.url + 'Subcategories');
   }
 
   GetDecisionMakers(): Observable<DecisionMaker[]> {
@@ -66,23 +70,23 @@ export class RequestService {
   }
 
   DeleteRequest(requestId: number): Observable<void> {
-    return this.http.delete<void>(`${this.url}DeleteRequest/${requestId}`);
+    return this.http.delete<void>(`${this.url}Requests/${requestId}`);
   }
 
   UpdateRequestStatus(requestId: number, newRequestStatusId: number): Observable<void> {
     const body = { requestId, requestStatusId: newRequestStatusId };
     const headers = { 'Content-Type': 'application/json' };
-    return this.http.put<void>(`${this.url}UpdateRequestStatus/${requestId}`, body, { headers });
+    return this.http.put<void>(`${this.url}RequestStatus/${requestId}`, body, { headers });
   }
 
   GetCancellationReasons(): Observable<any> {
-    return this.http.get<any>(`${this.url}GetRequestCancellationReasons`);
+    return this.http.get<any>(`${this.url}RequestCancellationReason`);
   }
 
-  UpdateRequestCancelReason(requestId: number, requestCancelReasonId: number, requestCancelOtherNote: string): Observable<void> {
-    const body = { requestId, requestCancelReasonId, requestCancelOtherNote };
+  UpdateRequestCancelReason(requestId: number, requestCancelReasonId: number, requestCancelNote: string): Observable<void> {
+    const body = { requestId, requestCancelReasonId, requestCancelNote };
     const headers = { 'Content-Type': 'application/json' };
-    return this.http.put<void>(`${this.url}UpdateRequestCancellationReason/${requestId}`, body, { headers });
+    return this.http.put<void>(`${this.url}RequestCancellationReason/${requestId}`, body, { headers });
   }
 
   GetRequests(): Observable<any> {
@@ -141,6 +145,14 @@ export class RequestService {
     const headers = { 'Content-Type': 'application/json' };
     const url = `${this.url}RequestDocuments/${requestId}`;
     return this.http.post<void>(url, documentIds, { headers });
+  }
+
+  GetRequestDetailsById(requestId: number): Observable<any> {
+    return this.http.get<void>(`${this.url}Requests/${requestId}`);
+  }
+
+  GetRequestRequiredDocumentsById(requestId: number): Observable<any> {
+    return this.http.get<void>(`${this.url}RequestDocuments/${requestId}`);
   }
 }
 
