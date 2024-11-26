@@ -168,7 +168,8 @@
           <mat-label>Decision Maker</mat-label>
           <mat-select formControlName="decisionMaker">
             <mat-option value="">Choose Decision Maker</mat-option>
-            <mat-option *ngFor="let decisionMaker of decisionMakers" [value]="decisionMaker.decisionMakerId">
+            <mat-option *ngFor="let decisionMaker of getFilteredDecisionMakers(i)"
+              [value]="decisionMaker.decisionMakerId">
               {{ decisionMaker.decisionMakerName }}
             </mat-option>
           </mat-select>
@@ -184,7 +185,8 @@
     </div>
   </div>
 
-  <button mat-raised-button style="margin-bottom: 8px; margin-top: 8px;" color="primary" (click)="addDropdown()">Add
-    Decision
-    Maker</button>
+  <button mat-raised-button style="margin-bottom: 8px; margin-top: 8px;" color="primary" (click)="addDropdown()">
+    Add Decision Maker
+  </button>
+
 </form>

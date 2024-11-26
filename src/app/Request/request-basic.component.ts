@@ -163,4 +163,14 @@ export class BasicRequestComponent implements OnInit {
     }
     return dateTime;
   }
+
+   // Get filtered decision makers for a specific dropdown
+   getFilteredDecisionMakers(index: number) {
+    const selectedDecisionMakerIds = this.dropdowns.controls
+      .map((control, i) => (i !== index ? control.get('decisionMaker')?.value : null))
+      .filter((value) => value !== null);
+    return this.decisionMakers.filter(
+      (decisionMaker) => !selectedDecisionMakerIds.includes(decisionMaker.decisionMakerId)
+    );
+  }
 }
