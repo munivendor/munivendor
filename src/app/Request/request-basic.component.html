@@ -160,30 +160,31 @@
   </div>
 
   <!-- Decision Maker Selection -->
-    <p>Choose who will be the decision maker on this proposal.</p>
-    <div formArrayName="dropdowns">
-      <div *ngFor="let dropdown of dropdowns.controls; let i = index" [formGroupName]="i">
-        <div class="inline-field">
-          <mat-form-field appearance="fill" class="basics-decision-maker-width">
-            <mat-label>Decision Maker</mat-label>
-            <mat-select formControlName="decisionMaker">
-              <mat-option value="">Choose Decision Maker</mat-option>
-              <mat-option *ngFor="let decisionMaker of decisionMakers" [value]="decisionMaker.decisionMakerId">
-                {{ decisionMaker.decisionMakerName }}
-              </mat-option>
-            </mat-select>
-            <mat-error *ngIf="dropdown.get('decisionMaker')?.hasError('required')">
-              Decision Maker is required.
-            </mat-error>
-          </mat-form-field>
-          <button *ngIf="i > 0" mat-icon-button aria-label="delete" type="button" color="warn" (click)="removeDropdown(i)">
-            <mat-icon>delete</mat-icon>
-          </button>
-        </div>
+  <p>Choose who will be the decision maker on this proposal.</p>
+  <div formArrayName="dropdowns">
+    <div *ngFor="let dropdown of dropdowns.controls; let i = index" [formGroupName]="i">
+      <div class="inline-field">
+        <mat-form-field appearance="fill" class="basics-decision-maker-width">
+          <mat-label>Decision Maker</mat-label>
+          <mat-select formControlName="decisionMaker">
+            <mat-option value="">Choose Decision Maker</mat-option>
+            <mat-option *ngFor="let decisionMaker of decisionMakers" [value]="decisionMaker.decisionMakerId">
+              {{ decisionMaker.decisionMakerName }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="dropdown.get('decisionMaker')?.hasError('required')">
+            Decision Maker is required.
+          </mat-error>
+        </mat-form-field>
+        <button *ngIf="i > 0" mat-icon-button aria-label="delete" type="button" color="warn"
+          (click)="removeDropdown(i)">
+          <mat-icon>delete</mat-icon>
+        </button>
       </div>
     </div>
+  </div>
 
-   <button mat-raised-button style="margin-bottom: 8px; margin-top: 8px;" color="primary" (click)="addDropdown()">Add
+  <button mat-raised-button style="margin-bottom: 8px; margin-top: 8px;" color="primary" (click)="addDropdown()">Add
     Decision
     Maker</button>
 </form>
