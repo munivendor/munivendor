@@ -1,41 +1,54 @@
 <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-    <p> <center>Welcome to Munivendor</center></p>
-    <br>
-    Sign up with Google
-    -------- or use your email to sign up -----------
-
-    <p> Role</p>
-    <select formControlName="role" class="form-control">  
-      <option>Choose Role</option>  
-      <option *ngFor="let role of roles">{{role}}</option>  
-    </select>
-    <div>
-      <input type="text" id="rcorners1" formControlName="firstname" value= 'firstname'>
-      <div *ngIf="loginForm.get('firstname')?.invalid && loginForm.get('firstname')?.touched">
-        <div *ngIf="loginForm.get('firstname')?.errors?.['required']">Firstname is required.</div>
-        <div *ngIf="loginForm.get('firstname')?.errors?.['minlength']">Firstname must be at least 3 characters long.</div>
-      </div>
-    </div>
-    <div>
-      <input type="text" id="rcorners1" formControlName="lastname" value= 'Lastname'>
-        <div *ngIf="loginForm.get('lastname')?.invalid && loginForm.get('lastname')?.touched">
-          <div *ngIf="loginForm.get('lastname')?.errors?.['required']">Lastname is required.</div>
-          <div *ngIf="loginForm.get('lastname')?.errors?.['minlength']">Lastname must be at least 3 characters long.</div>
-        </div>
-    </div>
-    <div>
-        <input type="text" id="rcorners1"  formControlName="email" value= 'Work email for the Super Admin and have access to the municipality account'>
-              <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
-                <div *ngIf="loginForm.get('email')?.errors?.['required']">Email is required.</div>
-                <div *ngIf="loginForm.get('email')?.errors?.['email']">Invalid email format.</div>
-              </div>
-      </div>
+  <mat-card> 
+    <mat-card-header>
+      <mat-card-title>Welcome to Munivendor</mat-card-title>
+    </mat-card-header>   
+    <mat-card-content>
+      <div class="form-container">
+   
+      <asl-google-signin-button type='standard' size='medium' text='signup_with' theme='filled_blue'></asl-google-signin-button>
     
-        <br>
-        <br>
-        <br>
-    <div>
-    <button type="submit" [disabled]="loginForm.invalid">Continue</button>
-    <a [routerLink]="['/second-component']" routerLinkActive="router-link-active" >Already have an account? Click here to login</a>
-    </div>
+      <p>-------- or use your email to sign up -----------</p>
+      
+      <mat-form-field class="full-width">
+        <mat-label>Firstname</mat-label>
+        <input matInput type="text" formControlName="firstname" placeholder="Enter your firstname">
+        <mat-error *ngIf="loginForm.get('firstname')?.hasError('required')">
+          Firstname is required.
+        </mat-error>
+        <mat-error *ngIf="loginForm.get('firstname')?.hasError('minlength')">
+          Firstname must be at least 3 characters long.
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field class="full-width">
+        <mat-label>Lastname</mat-label>
+        <input matInput type="text" formControlName="lastname" placeholder="Enter your lastname">
+        <mat-error *ngIf="loginForm.get('lastname')?.hasError('required')">
+          Lastname is required.
+        </mat-error>
+        <mat-error *ngIf="loginForm.get('lastname')?.hasError('minlength')">
+          Lastname must be at least 3 characters long.
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field class="full-width">
+        <mat-label>Email</mat-label>
+        <input matInput type="email" formControlName="email" placeholder="Enter your work email">
+        <mat-error *ngIf="loginForm.get('email')?.hasError('required')">
+          Email is required.
+        </mat-error>
+        <mat-error *ngIf="loginForm.get('email')?.hasError('email')">
+          Invalid email format.
+        </mat-error>
+      </mat-form-field>
+        </div>
+    </mat-card-content>
+
+
+    <mat-card-actions>
+      <button mat-raised-button color="accent" type="submit" [disabled]="loginForm.invalid">Continue</button>
+      <a mat-button [routerLink]="['/second-component']" routerLinkActive="router-link-active">Already have an account? Click here to login</a>
+    </mat-card-actions>
+  </mat-card>
 </form>

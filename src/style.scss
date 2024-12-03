@@ -22,3 +22,6 @@ html {
 
 @include mat.core();
 @include mat.color-variants-backwards-compatibility($theme);
+
+@import "~@angular/material/prebuilt-themes/indigo-pink.css";
+

@@ -1,11 +1,9 @@
 
-
-
 <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-    <p> The person who signs up will be the Super Admin and have all access to the municiaplity account (Don’t worry you can change it later)</p>
     <br>
+    <asl-google-signin-button type='icon' size='medium'></asl-google-signin-button>
     <div>
-      <input type="text" id="rcorners1"  formControlName="email" value= 'Work email for the Super Admin and have access to the municipality account'>
+      <input type="text" id="rcorners1"  formControlName="email" value= 'Work email'>
             <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
               <div *ngIf="loginForm.get('email')?.errors?.['required']">Email is required.</div>
               <div *ngIf="loginForm.get('email')?.errors?.['email']">Invalid email format.</div>
