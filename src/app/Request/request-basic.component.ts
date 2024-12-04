@@ -101,7 +101,7 @@ export class BasicRequestComponent implements OnInit {
   onCategoryChange(event: MatSelectChange): void {
     const categoryId = event.value;
 
-    // Always fetch subcategories, even during initialization
+    // Always get subcategories, even during initialization
     this.requestService.GetSubcategories(categoryId).subscribe((subcategories: SubCategory[]) => {
       this.subcategories = subcategories;
 

@@ -83,7 +83,7 @@ export class CreateRequestStepper {
     this.initializeRequestDocuments();
 
     if (this.idParam && this.requestId !== 0) {
-      this.fetchRequestById(this.requestId);
+      this.getRequestById(this.requestId);
     }
   }
 
@@ -104,7 +104,7 @@ export class CreateRequestStepper {
     });
   }
 
-  private fetchRequestById(requestId: number): void {
+  private getRequestById(requestId: number): void {
     const request$ = this.requestService.GetRequestDetailsById(requestId);
     const categories$ = this.requestService.GetCategories();
     const requestTypes$ = this.requestService.GetRequestTypes();
@@ -150,7 +150,7 @@ export class CreateRequestStepper {
     );
   }
 
-  fetchRequestDetails(requestId: number): void {
+  getRequestDetails(requestId: number): void {
     this.requestService.GetRequestDetailsById(requestId).subscribe((data) => {
       this.basicsFormGroup.patchValue({
         category: data.categoryId,
@@ -231,11 +231,11 @@ export class CreateRequestStepper {
   saveRequestData() {
     this.basicRequestComponent.emitRequestData();
     if (this.idParam !== null) {
-      this.fetchRequestById(this.requestId);
+      this.getRequestById(this.requestId);
       this.requestService.UpdateRequest(this.requestId, this.requestData).subscribe(
         (responseRequestId: number) => {
           console.log('Request updated successfully:', responseRequestId);
-          this.fetchRequestById(this.requestId);
+          this.getRequestById(this.requestId);
           this.stateService.setRequestId(this.requestId);
         },
         error => {
@@ -264,9 +264,9 @@ export class CreateRequestStepper {
     });
 
     if (!this.requestId) {
-      this.fetchRequestSectionDefaultTitles()
+      this.getRequestSectionDefaultTitle()
     } else {
-      this.fetchRequestSectionsById(this.requestId)
+      this.getRequestSectionsById(this.requestId)
     }
   }
 
@@ -274,7 +274,7 @@ export class CreateRequestStepper {
     return this.proposalsOverviewFormGroup?.get('proposalSections') as FormArray;
   }
 
-  fetchRequestSectionDefaultTitles(): void {
+  getRequestSectionDefaultTitle(): void {
     this.requestService.GetRequestSectionDefaultTitles().subscribe(
       (response) => {
         response.forEach((section: {
@@ -295,7 +295,7 @@ export class CreateRequestStepper {
     )
   }
 
-  fetchRequestSectionsById(requestId: number): void {
+  getRequestSectionsById(requestId: number): void {
     this.requestService.GetRequestSections(requestId).subscribe(
       (response) => {
         response.forEach((section: { requestId: any; requestSectionId: any; requestSectionTitle: any; requestSectionContent: any; }) => {
@@ -357,13 +357,13 @@ export class CreateRequestStepper {
     })
 
     if (!this.requestId) {
-      this.fetchRequestSectionDefaultTitles()
+      this.getRequestSectionDefaultTitle()
     } else {
-      this.fetchRequestSectionsById(this.requestId)
+      this.getRequestSectionsById(this.requestId)
     }
   }
 
-  fetchRequiredDocuments(): void {
+  getRequiredDocuments(): void {
     this.requestService.GetRequiredDocuments().subscribe({
       next: (requiredStateDocumentsData: any[]) => {
         this.requiredDocuments = requiredStateDocumentsData
