@@ -65,13 +65,11 @@ export class RequestService {
     const url = `${this.url}/UploadDocument/${requestId}`;
     const formData = new FormData();
 
-    // Append the file and optional document title
     formData.append('file', file, file.name);
     if (documentTitle) {
       formData.append('documentTitle', documentTitle);
     }
 
-    // Send the request with the FormData
     return this.http.post(url, formData, { reportProgress: true, observe: 'events' });
   }
 
@@ -115,9 +113,9 @@ export class RequestService {
     return this.http.get<any>(`${this.url}RequestSectionDefaults`);
   }
 
-  SaveRequestSections(requestSection: RequestSection): Observable<void> {
+  SaveRequestSections(requestSection: RequestSection, requestId: number): Observable<void> {
     const headers = { 'Content-Type': 'application/json' };
-    return this.http.post<void>(`${this.url}RequestSections`, requestSection, { headers });
+    return this.http.post<void>(`${this.url}RequestSections/${requestId}`, requestSection, { headers });
   }
 
   GetRequiredDocuments(): Observable<any> {
