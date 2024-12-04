@@ -1,4 +1,4 @@
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter, Input } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { FormGroup, FormBuilder, ReactiveFormsModule, FormArray, FormControl } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -30,6 +30,8 @@ import { IRequestDocuments } from '../interfaces/IRequestDocuments';
     MatProgressSpinnerModule]
 })
 export class RequestRequiredDocumentsComponent implements OnInit {
+  @Input() parentDocumentsFormGroup!: FormGroup;
+  
   requestDocumentsForm!: FormGroup;
   requiredRequestDocuments!: Document[];
   optionalRequestDocuments: Document[] = [];
