@@ -71,7 +71,7 @@ export class RequestReviewComponent implements OnInit {
         const requestStatus = requestStatuses.find((rs: { requestStatusId: any }) => rs.requestStatusId === request.requestStatusId);
         const subCategory = subCategories.find((sc: { subCategoryId: number }) => sc.subCategoryId === request.subCategoryId);
 
-        // Map over decisionMakerSelections in request to match decisionMakers from API response
+        // Map over decisionMakerSelections in Request to match decisionMakers from API response
         const decisionMakersMapped = request.decisionMakerSelections.map((selection: { decisionMakerId: number }) =>
           decisionMakers.find((dm: { decisionMakerId: number }) => dm.decisionMakerId === selection.decisionMakerId)
         ).filter((dm: any) => dm);

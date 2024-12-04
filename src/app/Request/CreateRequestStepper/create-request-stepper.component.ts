@@ -65,12 +65,13 @@ export class CreateRequestStepper {
   finalReviewFormGroup = this._formBuilder.group({
     // finalReview: ['', Validators.required],
   });
+  idParam: string | null | undefined;
 
   constructor(private _formBuilder: FormBuilder, private requestService: RequestService, private route: ActivatedRoute) {
     this.requestDocumentsFormGroup = this._formBuilder.group({});
     this.route.paramMap.subscribe((params) => {
-      const idParam = params.get('requestId'); 
-      this.requestId = idParam ? +idParam : 0; 
+      this.idParam = params.get('requestId');
+      this.requestId = this.idParam ? +this.idParam : 0;
     });
   }
 
@@ -82,7 +83,6 @@ export class CreateRequestStepper {
     }
   }
 
-  //******* Handles request data from basics page *********/ 
   private initializeForm(data: any = null): void {
     this.basicsFormGroup = this._formBuilder.group({
       category: [data?.category || '', Validators.required],
@@ -101,13 +101,14 @@ export class CreateRequestStepper {
     this.proposalsOverview = this._formBuilder.group({});
   }
 
+  //******* Handles request data from basics page *********/ 
   private fetchRequestById(requestId: number): void {
     const request$ = this.requestService.GetRequestDetailsById(requestId);
     const categories$ = this.requestService.GetCategories();
     const requestTypes$ = this.requestService.GetRequestTypes();
     const subCategories$ = this.requestService.GetAllSubcategories();
     const decisionMakers$ = this.requestService.GetDecisionMakers();
-  
+
     forkJoin([request$, categories$, requestTypes$, subCategories$, decisionMakers$]).subscribe(
       ([request, categories, requestTypes, subCategories, decisionMakers]) => {
         const category = categories.find((c: { categoryId: any }) => c.categoryId === request.categoryId);
@@ -115,14 +116,14 @@ export class CreateRequestStepper {
         const subCategory = subCategories.find(
           (sc: { subCategoryId: number }) => sc.subCategoryId === request.subCategoryId
         );
-  
+
         this.subcategories = subCategories.filter(sc => sc.categoryId === request.categoryId);
-  
+
         const decisionMakersMapped = request.decisionMakerSelections.map(
           (selection: { decisionMakerId: number }) =>
             decisionMakers.find((dm: { decisionMakerId: number }) => dm.decisionMakerId === selection.decisionMakerId)
         ).filter((dm: any) => dm);
-  
+
         const formData = {
           category: category?.categoryId,
           subcategory: subCategory?.subCategoryId || '',
@@ -136,9 +137,9 @@ export class CreateRequestStepper {
           contractEndDate: request.contractEnd,
           dropdowns: this.createDropdownControls(decisionMakersMapped),
         };
-  
+
         this.initializeForm(formData);
-  
+
         this.basicRequestComponent.onCategoryChange({ value: formData.category } as MatSelectChange);
       },
       (error: any) => {
@@ -147,15 +148,46 @@ export class CreateRequestStepper {
     );
   }
 
+  fetchRequestDetails(requestId: number): void {
+    this.requestService.GetRequestDetailsById(requestId).subscribe((data) => {
+      this.basicsFormGroup.patchValue({
+        category: data.categoryId,
+        subcategory: data.subcategoryId,
+        requestType: data.requestTypeId,
+        requestName: data.requestName,
+        publishDate: this.extractDate(data.publishDate),
+        openDate: this.extractDate(data.openDate),
+        contractStartDate: data.contractStart,
+        contractEndDate: data.contractEnd,
+      });
+
+      // Update decision maker dropdowns
+      this.dropdowns.clear();
+      data.decisionMakerSelections.forEach((decisionMaker: { decisionMakerId: any; }) => {
+        
+        this.createDropdownControls(decisionMaker.decisionMakerId);
+        console.log("this.dropdowns", this.dropdowns)
+      });
+    });
+  }
+
+  // Utility to extract date and time
+  extractDate(dateTime: string): string {
+    return new Date(dateTime).toISOString().split('T')[0];
+  }
+
   convertTo24HourFormat(dateTimeString: string): string {
     if (!dateTimeString || dateTimeString.startsWith("0001-01-01")) return ''; // Handle invalid placeholder
-    
-    const date = new Date(dateTimeString);
-    if (isNaN(date.getTime())) return ''; // Handle invalid time
-    
-    return date.toISOString().split('T')[1].substring(0, 5); // Extract HH:mm
-  }
-  
+
+    // Extract the time part (e.g., "T04:32:00") from the string
+    const timeMatch = dateTimeString.match(/T(\d{2}:\d{2}:\d{2})/);
+    if (!timeMatch || timeMatch.length < 2) return ''; // Handle invalid time format
+
+    const time = timeMatch[1].substring(0, 5); // Get the HH:mm part (first 5 characters of the matched time)
+
+    return time; // Return the time in 24-hour format
+}
+
   // dropdowns is for decision makers
   private createDropdownControls(decisionMakers: any[]): any[] {
     return decisionMakers.map((decisionMaker) =>
@@ -183,10 +215,38 @@ export class CreateRequestStepper {
     this.requestData = data;
   }
 
+  deleteDropdownFromRequest(event: { decisionMakerId: number | null }): void {
+    const { decisionMakerId } = event;
+
+    if (decisionMakerId) {
+      // Call the delete API with the decisionMakerId
+      this.requestService.DeleteDecisionMaker(this.requestId, decisionMakerId).subscribe(
+        () => {
+          console.log(`Decision Maker with ID ${decisionMakerId} deleted successfully.`);
+        },
+        (error) => {
+          console.error(`Failed to delete Decision Maker with ID ${decisionMakerId}:`, error);
+        }
+      );
+    } 
+  }
+
   saveRequestData() {
     this.basicRequestComponent.emitRequestData();
-
-    if (this.requestData) {
+    // call API to update request data with edited data
+    if (this.idParam !== null) {
+      this.fetchRequestById(this.requestId);
+      this.requestService.UpdateRequest(this.requestId, this.requestData).subscribe(
+        (responseRequestId: number) => {
+          console.log('Request updated successfully:', responseRequestId);
+          this.fetchRequestById(this.requestId);
+        },
+        error => {
+          console.error('Error updating request:', error);
+        }
+      );
+      // call API to create new request
+    } else if (this.requestData) {
       this.requestService.CreateRequest(this.requestData).subscribe(
         (responseRequestId: number) => {
           console.log('Request created successfully:', responseRequestId);

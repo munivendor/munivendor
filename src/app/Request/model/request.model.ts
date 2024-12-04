@@ -5,7 +5,7 @@ import { RequestType } from "./requesttype.model"
 
 export interface DecisionMakerSelection {
     decisionMakerId: number;
-    decisionMakerNumber: number;
+    decisionMakerNumber?: number;
   }
 
 export class Request

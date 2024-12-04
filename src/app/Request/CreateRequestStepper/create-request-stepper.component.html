@@ -1,13 +1,13 @@
 <mat-stepper [linear]="true" #stepper>
   <mat-step [stepControl]="basicsFormGroup" label="Basics" [completed]="basicsFormGroup.valid">
     <form [formGroup]="basicsFormGroup">
-      <request-basic [parentFormGroup]="basicsFormGroup" (requestData)="onRequestDataReceived($event)"></request-basic>
+      <request-basic [parentFormGroup]="basicsFormGroup" (requestData)="onRequestDataReceived($event)"
+      (deleteDropdown)="deleteDropdownFromRequest($event)"></request-basic>
       <div>
         <button mat-button matStepperNext [disabled]="!basicsFormGroup.valid" (click)="saveRequestData()">Next</button>
       </div>
     </form>
   </mat-step>
-  
 
   <mat-step [stepControl]="proposalsOverviewFormGroup" label="Proposals">
     <form [formGroup]="proposalsOverviewFormGroup">
