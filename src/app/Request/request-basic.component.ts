@@ -164,13 +164,15 @@ export class BasicRequestComponent implements OnInit {
     return dateTime;
   }
 
-   // Get filtered decision makers for a specific dropdown
-   getFilteredDecisionMakers(index: number) {
+  getFilteredDecisionMakers(index: number) {
     const selectedDecisionMakerIds = this.dropdowns.controls
-      .map((control, i) => (i !== index ? control.get('decisionMaker')?.value : null))
-      .filter((value) => value !== null);
+        .map((control, i) => (i !== index ? control.get('decisionMaker')?.value : null))
+        .filter((value) => value !== null);
+    if (!this.decisionMakers || this.decisionMakers.length === 0) {
+        return [];
+    }
     return this.decisionMakers.filter(
-      (decisionMaker) => !selectedDecisionMakerIds.includes(decisionMaker.decisionMakerId)
+        (decisionMaker) => !selectedDecisionMakerIds.includes(decisionMaker.decisionMakerId)
     );
-  }
+}
 }
