@@ -1,27 +1,35 @@
-<div>
-    <div *ngFor="let proposalSection of proposalSections">
-        <mat-form-field class="title-width">
-            <mat-label>Enter title</mat-label>
-            <input matInput [(ngModel)]="proposalSection.requestSectionTitle">
-        </mat-form-field>
+<div [formGroup]="parentProposalsOverviewFormGroup">
+    <div style="margin-top: 8px;" formArrayName="proposalSections">
+        <div *ngFor="let proposalSection of proposalSections.controls; let i = index" [formGroupName]="i">
+            <mat-form-field class="title-width">
+                <mat-label>Enter title</mat-label>
+                <input matInput formControlName="requestSectionTitle">
+                <mat-error *ngIf="proposalSection.get('requestSectionTitle')?.hasError('required') && proposalSection.get('requestSectionTitle')?.touched">
+                    Title is required.
+                </mat-error>
+            </mat-form-field>
+           
+            <mat-form-field class="full-width">
+                <mat-label>Enter content</mat-label>
+                <textarea matInput id="overview" name="w3review" rows="4" formControlName="requestSectionContent">
+            </textarea>
+            </mat-form-field>
 
-        <mat-form-field class="full-width">
-            <mat-label>Enter content</mat-label>
-            <textarea matInput id="overview" name="w3review" rows="4"
-                [(ngModel)]="proposalSection.requestSectionContent">
-        </textarea>
-        </mat-form-field>
-
-        <ul *ngIf="proposalSection.requestSectionTitle === 'Technical Proposal Standard Requirements'">
-            <li>Note: N.J.S.A 52:32-44 provides that municipalities may not enter into a contract for goods or services
-                unless the other party to the contract provides a copy of its business registration certificate and the
-                business registration certificate of any subcontractors at the time that it submits its proposal.
-                MuniVendor automatically inserts your business registration certificate from your MuniVendor vendor
-                profile. If you plan to utilize subcontractors, then please include copies of those subcontractor’s
-                business registration certificates in your technical proposal upload. The contracting party must also
-                collect the state use tax where applicable.</li>
-        </ul>
-        <hr class="propsal-divider" />
+            <ul
+                *ngIf="proposalSection.get('requestSectionTitle')?.value === 'Technical Proposal Standard Requirements'">
+                <li>Note: N.J.S.A 52:32-44 provides that municipalities may not enter into a contract for goods or
+                    services
+                    unless the other party to the contract provides a copy of its business registration certificate and
+                    the
+                    business registration certificate of any subcontractors at the time that it submits its proposal.
+                    MuniVendor automatically inserts your business registration certificate from your MuniVendor vendor
+                    profile. If you plan to utilize subcontractors, then please include copies of those subcontractor’s
+                    business registration certificates in your technical proposal upload. The contracting party must
+                    also
+                    collect the state use tax where applicable.</li>
+            </ul>
+            <hr class="propsal-divider" />
+        </div>
     </div>
 </div>
 <button mat-fab color="primary" style="margin-bottom: 16px;" extended (click)="addSection()">

@@ -68,7 +68,7 @@ export class CancellationReasonDialog implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.fetchCancellationReasons();
+    this.getCancellationReasons();
     this.cancellationReasonId.valueChanges.subscribe((value) => {
       this.toggleReasonNoteValidation(value);
     });
@@ -88,7 +88,7 @@ export class CancellationReasonDialog implements OnInit {
     this.cancellationReasonNote.updateValueAndValidity();
   }
 
-  fetchCancellationReasons(): void {
+  getCancellationReasons(): void {
     this.requestService.GetCancellationReasons().subscribe(
       (response) => {
         this.requestCancellationReasons = response;

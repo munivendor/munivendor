@@ -1,4 +1,4 @@
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter, Input } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { FormGroup, FormBuilder, ReactiveFormsModule, FormArray, FormControl } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -30,6 +30,8 @@ import { IRequestDocuments } from '../interfaces/IRequestDocuments';
     MatProgressSpinnerModule]
 })
 export class RequestRequiredDocumentsComponent implements OnInit {
+  @Input() parentDocumentsFormGroup!: FormGroup;
+  
   requestDocumentsForm!: FormGroup;
   requiredRequestDocuments!: Document[];
   optionalRequestDocuments: Document[] = [];
@@ -70,12 +72,12 @@ export class RequestRequiredDocumentsComponent implements OnInit {
       municipalityDocuments: this.fb.array([])
     });
 
-      this.fetchRequiredDocuments();
-      this.fetchOptionalDocuments();
-      this.fetchMunicipalityDocuments(this.municipalityId)
+      this.getRequiredDocuments();
+      this.getOptionalDocuments();
+      this.getMunicipalityDocuments(this.municipalityId)
   }
 
-  fetchRequiredDocuments(): void {
+  getRequiredDocuments(): void {
     this.requestService.GetRequiredDocuments().subscribe({
       next: (requiredStateDocumentsArr: any[]) => {
         this.requiredStateDocuments = requiredStateDocumentsArr;
@@ -90,7 +92,7 @@ export class RequestRequiredDocumentsComponent implements OnInit {
 
   }
 
-  fetchOptionalDocuments(): void {
+  getOptionalDocuments(): void {
     this.requestService.GetOptionalDocuments().subscribe({
       next: (optionalStateDocumentsArr: any[]) => {
         this.optionalStateDocuments = optionalStateDocumentsArr;
@@ -104,7 +106,7 @@ export class RequestRequiredDocumentsComponent implements OnInit {
     })
   }
 
-  fetchMunicipalityDocuments(municipalityId: number): void {
+  getMunicipalityDocuments(municipalityId: number): void {
     this.requestService.GetMunicipalityDocuments(municipalityId).subscribe({
       next: (municipalityDocumentsArr: any[]) => {
         this.municipalityDocuments = municipalityDocumentsArr;
