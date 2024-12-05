@@ -75,7 +75,7 @@
       <p>What is the Publish Date?</p>
       <mat-form-field appearance="fill" class="basics-width">
         <mat-label>Publish Date</mat-label>
-        <input matInput [matDatepicker]="publishDatePicker" formControlName="publishDate"
+        <input matInput [matDatepicker]="publishDatePicker" formControlName="publishDate" placeholder="publishDate"
           (dateChange)="formatToISO('publishDate', $event)">
         <mat-datepicker-toggle matSuffix [for]="publishDatePicker"></mat-datepicker-toggle>
         <mat-datepicker #publishDatePicker></mat-datepicker>
@@ -90,7 +90,7 @@
       <p>What is the Publish Time?</p>
       <mat-form-field appearance="fill" class="basics-width">
         <mat-label>Publish Time</mat-label>
-        <input matInput type="time" formControlName="publishTime">
+        <input matInput type="time" formControlName="publishTime" placeholder="publishTime"> 
         <mat-error *ngIf="parentFormGroup.get('publishTime')?.hasError('required')">
           Publish Time is required.
         </mat-error>
@@ -104,7 +104,7 @@
       <p>What is the Open Date?</p>
       <mat-form-field appearance="fill" class="basics-width">
         <mat-label>Open Date</mat-label>
-        <input matInput [matDatepicker]="openDatePicker" formControlName="openDate"
+        <input matInput [matDatepicker]="openDatePicker" formControlName="openDate" placeholder="openDate"
           (dateChange)="formatToISO('openDate', $event)">
         <mat-datepicker-toggle matSuffix [for]="openDatePicker"></mat-datepicker-toggle>
         <mat-datepicker #openDatePicker></mat-datepicker>
@@ -119,7 +119,7 @@
       <p>What is the Open Time?</p>
       <mat-form-field appearance="fill" class="basics-width">
         <mat-label>Open Time</mat-label>
-        <input matInput type="time" formControlName="openTime">
+        <input matInput type="time" formControlName="openTime" placeholder="openTime">
         <mat-error *ngIf="parentFormGroup.get('openTime')?.hasError('required')">
           Open Time is required.
         </mat-error>
@@ -133,7 +133,7 @@
       <p>Contract Start Date</p>
       <mat-form-field appearance="fill" class="basics-width">
         <mat-label>Contract Start Date</mat-label>
-        <input matInput [matDatepicker]="contractStartDatePicker" formControlName="contractStartDate"
+        <input matInput [matDatepicker]="contractStartDatePicker" formControlName="contractStartDate" placeholder="contractStartDate"
           (dateChange)="formatToISO('contractStartDate', $event)">
         <mat-datepicker-toggle matSuffix [for]="contractStartDatePicker"></mat-datepicker-toggle>
         <mat-datepicker #contractStartDatePicker></mat-datepicker>
@@ -148,7 +148,7 @@
       <p>Contract End Date</p>
       <mat-form-field appearance="fill" class="basics-width">
         <mat-label>Contract End Date</mat-label>
-        <input matInput [matDatepicker]="contractEndDatePicker" formControlName="contractEndDate"
+        <input matInput [matDatepicker]="contractEndDatePicker" formControlName="contractEndDate" placeholder="contractEndDate"
           (dateChange)="formatToISO('contractEndDate', $event)">
         <mat-datepicker-toggle matSuffix [for]="contractEndDatePicker"></mat-datepicker-toggle>
         <mat-datepicker #contractEndDatePicker></mat-datepicker>

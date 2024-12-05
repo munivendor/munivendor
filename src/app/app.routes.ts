@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 
-import { SignupComponent } from './signup/signup.component';
-import { SignupPasswordComponent } from './signup/signup-password.component';
+import { SignupComponent } from './Municipality/Signup/municipality.signup.component';
+//import { SignupPasswordComponent } from './Signup_toremove/signup-password.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { RequestProposalComponent } from './Request/request-proposal.component';
 import { RequestOverviewComponent } from './Request/request-overview.component';
@@ -14,7 +14,10 @@ import { CreateRequestStepper } from './Request/CreateRequestStepper/create-requ
 
 export const routes: Routes = [
   { path: 'first-component', component: SignupComponent },
-  { path: 'second-component', component: SignupPasswordComponent },
+  { 
+    path: 'login', component: SignupComponent
+  },
+  { path: 'second-component', component: SignupComponent },
 
   { path: 'request-proposal-component', component: RequestProposalComponent },
   { path: 'request-overview-component', component: RequestOverviewComponent },
@@ -30,6 +33,7 @@ export const routes: Routes = [
       { 
         path: 'edit-request-view/:requestId', component: CreateRequestStepper 
       },
+      
       {
         path: 'request-outframe-component', component: RequestOutFrameComponent,
         children: [
@@ -37,8 +41,7 @@ export const routes: Routes = [
           { path: 'request-overview-component', component: RequestOverviewComponent },
           { path: 'request-requireddocuments-component', component: RequestRequiredDocumentsComponent },
           { path: 'request-review-component', component: RequestReviewComponent },
-
-
+      
         ]
       }
     ]

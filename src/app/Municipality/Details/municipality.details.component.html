@@ -6,7 +6,7 @@
     <b> Municipality </b>>
 
     <div>
-      <input type="text" id="rcorners1" formControlName="municipalityname" value= 'Municipality Name'>
+      <input type="text" id="rcorners1" formControlName="municipalityname" value= 'Municipality Name' placeholder="Municipality Name">
       <div *ngIf="detailForm.get('municipalityname')?.invalid && detailForm.get('municipalityname')?.touched">
         <div *ngIf="detailForm.get('municipalityname')?.errors?.['required']">Municipality Name is required.</div>
         <div *ngIf="detailForm.get('municipalityname')?.errors?.['minlength']">Municipality Name must be at least 3 characters long.</div>
@@ -14,7 +14,7 @@
     </div>
 
     <div>
-      <input type="text" id="rcorners1" formControlName="address" value= 'address'>
+      <input type="text" id="rcorners1" formControlName="address" value= 'address' placeholder="address">
         <div *ngIf="detailForm.get('address')?.invalid && detailForm.get('address')?.touched">
           <div *ngIf="detailForm.get('address')?.errors?.['required']">Address is required.</div>
           <div *ngIf="detailForm.get('address')?.errors?.['minlength']">Address must be at least 3 characters long.</div>
@@ -22,7 +22,7 @@
     </div>
 
     <div>
-        <input type="text" id="rcorners1"  formControlName="city" value= 'city'>
+        <input type="text" id="rcorners1"  formControlName="city" value= 'city' placeholder="city">
               <div *ngIf="detailForm.get('city')?.invalid && detailForm.get('city')?.touched">
                 <div *ngIf="detailForm.get('city')?.errors?.['required']">Email is required.</div>
                 <div *ngIf="detailForm.get('city')?.errors?.['minlength']">City must be at least 3 characters long.</div>
