@@ -17,7 +17,7 @@ export const routes: Routes = [
   { 
     path: 'login', component: SignupComponent
   },
-  { path: 'second-component', component: SignupPasswordComponent },
+  { path: 'second-component', component: SignupComponent },
 
   { path: 'request-proposal-component', component: RequestProposalComponent },
   { path: 'request-overview-component', component: RequestOverviewComponent },
