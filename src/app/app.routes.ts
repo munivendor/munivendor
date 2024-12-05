@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { SignupComponent } from './Municipality/Signup/municipality.signup.component';
-import { SignupPasswordComponent } from './Signup_toremove/signup-password.component';
+//import { SignupPasswordComponent } from './Signup_toremove/signup-password.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { RequestProposalComponent } from './Request/request-proposal.component';
 import { RequestOverviewComponent } from './Request/request-overview.component';
