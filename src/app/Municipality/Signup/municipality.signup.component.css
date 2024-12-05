@@ -32,3 +32,8 @@ mat-card-title {
   text-align: center;
   width: 100%; /* Optional: ensures the title takes up the full width */
 }
+
+mat-card-actions > * {
+  margin-bottom: 10px; /* Optional: Add space between elements */
+}
+

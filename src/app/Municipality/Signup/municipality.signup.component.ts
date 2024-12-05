@@ -3,7 +3,6 @@ import { RouterLink, RouterModule } from '@angular/router';
 import {  FormGroup,FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialogTitle, MatDialogContent, MatDialogActions } from '@angular/material/dialog';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -25,7 +24,7 @@ const CLIENT_ID =  "954795010792-oafduvq9mhtlatg68rhl4hadtcuajos6.apps.googleuse
 @Component({
   selector: 'signup',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterModule, RouterLink, CommonModule, SocialLoginModule, GoogleSigninButtonModule, MatButtonModule, MatInputModule, MatCardModule, MatSelectModule],
+  imports: [ReactiveFormsModule, RouterModule, RouterLink, CommonModule,  MatButtonModule, MatInputModule, MatCardModule, MatSelectModule, GoogleSigninButtonModule],
   providers: [
     {
       provide: 'SocialAuthServiceConfig',
@@ -55,7 +54,14 @@ constructor (private fb: FormBuilder, private userService: UserService) {
   onSubmit() {
     if (this.loginForm.valid) {
       console.log(this.loginForm.value);
-      this.loginForm.controls["email"].value
+     
+      let municipalityUser: User = {
+        firstName: this.loginForm.controls["firstname"].value,
+        lastName: this.loginForm.controls["lastname"].value,
+        workEmail: this.loginForm.controls["email"].value
+      };
+
+      this.createMunivendorUser (municipalityUser)
     }
   }
 
@@ -72,7 +78,13 @@ constructor (private fb: FormBuilder, private userService: UserService) {
           this.router.navigate(['/protected']);
         }*/
         
-        this.createMunicipalityUser(user, 1);
+          let municipalityUser: User = {
+            firstName: user.firstName,
+            lastName: user.lastName,
+            workEmail: user.email
+          };
+    
+        this.createMunivendorUser(user);
       }
       else {
         console.log('User is not logged in');
@@ -88,18 +100,13 @@ constructor (private fb: FormBuilder, private userService: UserService) {
     })
   }
 
-  private createMunicipalityUser(socialUser: SocialUser, municipalityId: number) {
+  private createMunivendorUser(user: User) {
 
-    let municipalityUser: User = {
-      firstName: socialUser.firstName,
-      lastName: socialUser.lastName,
-      workEmail: socialUser.email
-    };
-
+  
     /*this.saveUser(municipalityUser, municipalityId);
     console.log('User is logged in:', this.user);*/
 
-    this.saveUser(municipalityUser, municipalityId).subscribe(
+    this.saveMunivendorUser(user).subscribe(
       (userId: number) => {
         console.log('User ID:', userId);
       },
@@ -128,16 +135,8 @@ constructor (private fb: FormBuilder, private userService: UserService) {
     });
   }
 
-  /*saveUser(municipalityUser: User, municipalityId: number): void 
-  { 
-    this.userService.SaveUser(municipalityUser, municipalityId).subscribe( (userId:number) => { 
-      this.userId = userId; },
-     (error) => { console.error('Error fetching users', error); } 
-    ); 
-  }*/
     
-    
-    saveUser(municipalityUser: User, municipalityId: number): Observable<number> 
+    saveMunivendorUser(municipalityUser: User): Observable<number> 
     { 
       return this.userService.SaveUser(municipalityUser).pipe(
         map((userId: number) => {

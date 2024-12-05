@@ -42,12 +42,12 @@
           Invalid email format.
         </mat-error>
       </mat-form-field>
-        </div>
+       </div>
+ 
     </mat-card-content>
 
-
-    <mat-card-actions>
-      <button mat-raised-button color="accent" type="submit" [disabled]="loginForm.invalid">Continue</button>
+    <mat-card-actions class="form-container">
+      <button mat-raised-button color="accent" type="submit" [disabled]="loginForm.invalid">Sign Up</button>
       <a mat-button [routerLink]="['/second-component']" routerLinkActive="router-link-active">Already have an account? Click here to login</a>
     </mat-card-actions>
   </mat-card>
