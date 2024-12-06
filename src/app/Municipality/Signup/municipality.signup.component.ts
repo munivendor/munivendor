@@ -17,7 +17,11 @@ import { UserService } from './Services/user.service';
 import { User } from './model/User';
 
 import { Observable } from 'rxjs';
-    import { map } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
+
+import { MatDialog } from '@angular/material/dialog'; 
+import { EmailVerificationDialogComponent } from './email-verification-dialog.component';
+import { open } from 'fs/promises';
 
 const CLIENT_ID =  "954795010792-oafduvq9mhtlatg68rhl4hadtcuajos6.apps.googleusercontent.com";
 
@@ -38,7 +42,7 @@ const CLIENT_ID =  "954795010792-oafduvq9mhtlatg68rhl4hadtcuajos6.apps.googleuse
         ]
       } as SocialAuthServiceConfig
     },
-    SocialAuthService
+    //SocialAuthService
   ],
   templateUrl:'./municipality.signup.component.html' ,
   styleUrls:['./municipality.signup.component.css'], 
@@ -48,7 +52,7 @@ export class SignupComponent implements OnInit {
 loginForm!: FormGroup;
 userId!: number;
 
-constructor (private fb: FormBuilder, private userService: UserService) {
+constructor (private fb: FormBuilder, private userService: UserService, public dialog: MatDialog) {
 }
 
   onSubmit() {
@@ -60,7 +64,7 @@ constructor (private fb: FormBuilder, private userService: UserService) {
         lastName: this.loginForm.controls["lastname"].value,
         workEmail: this.loginForm.controls["email"].value
       };
-
+      this.openDialog ();
       this.createMunivendorUser (municipalityUser)
     }
   }
@@ -135,16 +139,19 @@ constructor (private fb: FormBuilder, private userService: UserService) {
     });
   }
 
+  openDialog(): void { 
+    this.dialog.open(EmailVerificationDialogComponent);
+  }
     
-    saveMunivendorUser(municipalityUser: User): Observable<number> 
-    { 
-      return this.userService.SaveUser(municipalityUser).pipe(
-        map((userId: number) => {
-          this.userId = userId; 
-          return userId;
-        })
-      );
-    }
+  saveMunivendorUser(municipalityUser: User): Observable<number> 
+  { 
+    return this.userService.SaveUser(municipalityUser).pipe(
+      map((userId: number) => {
+        this.userId = userId; 
+        return userId;
+      })
+    );
+  }
     
   
 }
