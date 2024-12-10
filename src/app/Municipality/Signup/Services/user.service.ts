@@ -15,4 +15,14 @@ export class UserService {
         const headers = { 'Content-Type': 'application/json' };
         return this.http.post<number>(`${this.url}Users`, user, { headers });
   }
+
+    SendUserVerificationEmail(userId: number): Observable<boolean> {
+      const headers = { 'Content-Type': 'application/json' };
+      return this.http.post<boolean>(`${this.url}users/sendveremail/1`, null, { headers });
+    }
+
+    ValidateEmailToken(token: string): Observable<boolean> {
+      const headers = { 'Content-Type': 'application/json' };
+      return this.http.post<boolean>(`${this.url}/users/validate/{userId}`, null, { headers });
+    }
 }

@@ -42,7 +42,7 @@ const CLIENT_ID =  "954795010792-oafduvq9mhtlatg68rhl4hadtcuajos6.apps.googleuse
         ]
       } as SocialAuthServiceConfig
     },
-    //SocialAuthService
+    SocialAuthService
   ],
   templateUrl:'./municipality.signup.component.html' ,
   styleUrls:['./municipality.signup.component.css'], 
@@ -64,8 +64,9 @@ constructor (private fb: FormBuilder, private userService: UserService, public d
         lastName: this.loginForm.controls["lastname"].value,
         workEmail: this.loginForm.controls["email"].value
       };
-      this.openDialog ();
+      this.sendUserEmailVerification ();
       this.createMunivendorUser (municipalityUser)
+      this.openEmailVerificationDialog ();
     }
   }
 
@@ -139,11 +140,11 @@ constructor (private fb: FormBuilder, private userService: UserService, public d
     });
   }
 
-  openDialog(): void { 
+  openEmailVerificationDialog(): void { 
     this.dialog.open(EmailVerificationDialogComponent);
   }
     
-  saveMunivendorUser(municipalityUser: User): Observable<number> 
+  /*saveMunivendorUser(municipalityUser: User): Observable<number> 
   { 
     return this.userService.SaveUser(municipalityUser).pipe(
       map((userId: number) => {
@@ -152,6 +153,23 @@ constructor (private fb: FormBuilder, private userService: UserService, public d
       })
     );
   }
-    
+    */
+  saveMunivendorUser(municipalityUser: User): Observable<number> {
+    const saveUserObservable = this.userService.SaveUser(municipalityUser);
+    saveUserObservable.subscribe((userId: number) => {
+      this.userId = userId;
+    });
+    return saveUserObservable;
+  }
+
+  sendUserEmailVerification(): Observable<boolean> {
+    const sendUserVerificationEmailObservable = this.userService.SendUserVerificationEmail(1);
+    sendUserVerificationEmailObservable.subscribe ((success: boolean) => {
+      this.openEmailVerificationDialog();
+    });
+    return sendUserVerificationEmailObservable;
+  }
+  
+  
   
 }

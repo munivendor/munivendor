@@ -11,6 +11,7 @@ import { RequestReviewComponent } from './Request/request-review.component';
 import { RequestRequiredDocumentsComponent } from './Request/request-required-docs.component';
 import { TableDetailsComponent } from './Request/TableDetails/request-tabledetails.component';
 import { CreateRequestStepper } from './Request/CreateRequestStepper/create-request-stepper.component';
+import { TokenValidationComponent } from './Municipality/Signup/token-validation.component';
 
 export const routes: Routes = [
   { path: 'first-component', component: SignupComponent },
@@ -18,6 +19,7 @@ export const routes: Routes = [
     path: 'login', component: SignupComponent
   },
   { path: 'second-component', component: SignupComponent },
+  { path: 'validateuser', component: TokenValidationComponent },
 
   { path: 'request-proposal-component', component: RequestProposalComponent },
   { path: 'request-overview-component', component: RequestOverviewComponent },
