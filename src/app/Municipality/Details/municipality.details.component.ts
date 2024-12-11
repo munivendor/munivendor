@@ -1,36 +1,37 @@
 import { Component, OnInit } from '@angular/core';
-import { RouterLink, RouterModule } from '@angular/router';
-import { FormGroup,FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+
+import { MatInputModule } from '@angular/material/input'; 
+import { MatFormFieldModule } from '@angular/material/form-field'; 
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card'; // Import MatCardModule
+import { ReactiveFormsModule } from '@angular/forms'
 
 @Component({
-  selector: 'app-signup',
+  selector: 'app-account-setup',
+  templateUrl: './municipality.details.component.html',
+  styleUrls: ['./municipality.details.component.css'],
   standalone: true,
-  imports: [ ReactiveFormsModule, RouterModule, RouterLink, CommonModule],
-  templateUrl:'./municipality.details.component.html' ,
-  styleUrls:['./municipality.details.component.css']  
+  imports: [ReactiveFormsModule, MatInputModule, MatFormFieldModule, MatButtonModule, MatCardModule ]
 })
+export class AccountSetupComponent implements OnInit {
+  accountForm: FormGroup;
 
-export class SignupComponent implements OnInit {
-detailForm!: FormGroup;
-constructor (private fb: FormBuilder) {}
-
-ngOnInit() {
-    this.detailForm = this.fb.group ({ 
-      municipality:['municipality (required)', [Validators.required, Validators.minLength(3)]],
-      lastname:['address (required)', [Validators.required, Validators.minLength(3)]],
-      city:['city (required)', [Validators.required, Validators.minLength(3)]],
-      state:['state (required)', [Validators.required, Validators.minLength(3)]],
-    })
+  constructor(private fb: FormBuilder) {
+    this.accountForm = this.fb.group({
+      municipalityName: ['', [Validators.required, Validators.minLength(3)]],
+      address: ['', [Validators.required, Validators.minLength(3)]],
+      city: ['', [Validators.required, Validators.minLength(3)]],
+      state: ['', [Validators.required, Validators.minLength(3)]]
+    });
   }
-  onSubmit() {
-    // Handle form submission here
-    if (this.detailForm.valid) {
-      console.log(this.detailForm.value);
-      // Additional logic to authenticate user or 
-      // perform other actions
-      this.detailForm.controls["email"].value
+
+  ngOnInit(): void {}
+
+  onSubmit(): void {
+    if (this.accountForm.valid) {
+      console.log('Form Submitted', this.accountForm.value);
+      // Handle form submission logic here
     }
   }
-  
 }

@@ -1,0 +1,10 @@
+<div class="container">
+    <h1>Are you a Vendor or Municipality?</h1>
+    <form [formGroup]="userTypeForm" (ngSubmit)="onSubmit($event)">
+      <div class="button-group">
+        <button mat-raised-button color="primary" name="municipality" type="submit">Municipality</button> 
+        <button mat-raised-button color="primary" name="vendor" type="submit">Vendor
+      </div>
+    </form>
+  </div>
+  

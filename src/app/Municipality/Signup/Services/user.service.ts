@@ -23,6 +23,6 @@ export class UserService {
 
     ValidateEmailToken(token: string): Observable<boolean> {
       const headers = { 'Content-Type': 'application/json' };
-      return this.http.post<boolean>(`${this.url}/users/validate/{userId}`, null, { headers });
+      return this.http.post<boolean>(`${this.url}users/validate/${token}`, null, { headers });
     }
 }
