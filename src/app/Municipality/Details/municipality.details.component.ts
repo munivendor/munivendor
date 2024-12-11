@@ -14,7 +14,7 @@ import { ReactiveFormsModule } from '@angular/forms'
   standalone: true,
   imports: [ReactiveFormsModule, MatInputModule, MatFormFieldModule, MatButtonModule, MatCardModule ]
 })
-export class AccountSetupComponent implements OnInit {
+export class MunicipalityDetailsComponent implements OnInit {
   accountForm: FormGroup;
 
   constructor(private fb: FormBuilder) {
