@@ -11,18 +11,21 @@
 
   <mat-step [stepControl]="proposalsOverviewFormGroup" label="Proposals">
     <form [formGroup]="proposalsOverviewFormGroup">
-        <request-overview [parentProposalsOverviewFormGroup]="proposalsOverviewFormGroup"
+      <request-overview [parentProposalsOverviewFormGroup]="proposalsOverviewFormGroup"
         (proposalOverviewData)="onProposalSectionsReceived($event)"></request-overview>
       <div>
         <button mat-button matStepperPrevious>Back</button>
-        <button mat-button matStepperNext [disabled]="!proposalsOverviewFormGroup.valid" (click)="saveSections()">Next</button>
+        <button mat-button matStepperNext [disabled]="!proposalsOverviewFormGroup.valid"
+          (click)="saveSections()">Next</button>
       </div>
     </form>
   </mat-step>
 
   <mat-step [stepControl]="requestDocumentsFormGroup" label="Documents">
     <form [formGroup]="requestDocumentsFormGroup">
-      <request-required-documents [parentDocumentsFormGroup]="requestDocumentsFormGroup" (documentsUpdated)="onDocumentsUpdated($event)"></request-required-documents>
+      <request-required-documents *ngIf="requestDocumentsFormGroup"
+        [parentDocumentsFormGroup]="requestDocumentsFormGroup"
+        (documentsData)="onDocumentsReceived($event)"></request-required-documents>
       <div>
         <button mat-button matStepperPrevious>Back</button>
         <button mat-button matStepperNext (click)="saveDocuments()">Next</button>
