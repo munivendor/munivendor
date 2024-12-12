@@ -6,7 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatButtonModule } from '@angular/material/button';
 import { Document } from '../model/document.model';
-import { IRequestDocuments } from '../../interfaces/IRequestDocuments';
+import { RequestDocument } from '../model/requestdocument.model';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin, Observable, tap } from 'rxjs';
 import { StateService } from '../services/state.service';
@@ -42,6 +42,7 @@ export class CreateRequestStepper {
   @ViewChild(BasicRequestComponent) basicRequestComponent!: BasicRequestComponent;
   @ViewChild(RequestOverviewComponent) requestOverviewComponent!: RequestOverviewComponent;
   @ViewChild(RequestRequiredDocumentsComponent) requestRequiredDocumentsComponent!: RequestRequiredDocumentsComponent;
+  @ViewChild(RequestReviewComponent) requestReviewComponent!: RequestReviewComponent;
 
   requestId!: number;
   municipalityId = 1;
@@ -58,9 +59,7 @@ export class CreateRequestStepper {
   optionalDocuments: Document[] = [];
   municipalityDocuments: Document[] = [];
 
-  finalReviewFormGroup = this.fb.group({
-    // finalReview: ['', Validators.required],
-  });
+  // requestReviewComponent! = FormGroup;
   idParam: string | null | undefined;
 
   constructor(
@@ -82,7 +81,7 @@ export class CreateRequestStepper {
     this.initializeRequestDocuments();
 
     if (this.idParam && this.requestId !== 0) {
-      this.fetchRequestById(this.requestId);
+      this.getRequestById(this.requestId);
     }
   }
 
@@ -103,7 +102,7 @@ export class CreateRequestStepper {
     });
   }
 
-  private fetchRequestById(requestId: number): void {
+  private getRequestById(requestId: number): void {
     const request$ = this.requestService.GetRequestDetailsById(requestId);
     const categories$ = this.requestService.GetCategories();
     const requestTypes$ = this.requestService.GetRequestTypes();
@@ -225,11 +224,11 @@ export class CreateRequestStepper {
   saveRequestData() {
     this.basicRequestComponent.emitRequestData();
     if (this.idParam !== null) {
-      this.fetchRequestById(this.requestId);
+      this.getRequestById(this.requestId);
       this.requestService.UpdateRequest(this.requestId, this.requestData).subscribe(
         (responseRequestId: number) => {
           console.log('Request updated successfully:', responseRequestId);
-          this.fetchRequestById(this.requestId);
+          this.getRequestById(this.requestId);
           this.stateService.setRequestId(this.requestId);
         },
         error => {
@@ -257,9 +256,9 @@ export class CreateRequestStepper {
       proposalSections: this.fb.array([])
     });
     if (!this.requestId) {
-      this.fetchRequestSectionDefaultTitle()
+      this.getRequestSectionDefaultTitle()
     } else {
-      this.fetchRequestSectionsById(this.requestId)
+      this.getRequestSectionsById(this.requestId)
     }
   }
 
@@ -267,7 +266,7 @@ export class CreateRequestStepper {
     return this.proposalsOverviewFormGroup?.get('proposalSections') as FormArray;
   }
 
-  fetchRequestSectionDefaultTitle(): void {
+  getRequestSectionDefaultTitle(): void {
     this.requestService.GetRequestSectionDefaultTitles().subscribe(
       (response) => {
         response.forEach((section: {
@@ -288,7 +287,7 @@ export class CreateRequestStepper {
     )
   }
 
-  fetchRequestSectionsById(requestId: number): void {
+  getRequestSectionsById(requestId: number): void {
     this.requestService.GetRequestSections(requestId).subscribe(
       (response) => {
         response.forEach((section: { requestId: any; requestSectionId: any; requestSectionTitle: any; requestSectionContent: any; }) => {
@@ -347,7 +346,7 @@ export class CreateRequestStepper {
       optionalMunicipalityDocuments: this.fb.array([]),
     });
     if (!this.requestId) {
-      this.fetchAllDocumentsInParallel(this.municipalityId).subscribe({
+      this.getAllDocumentTypes(this.municipalityId).subscribe({
         next: () => {
           console.log('Documents fetched and form initialized for creation.');
         },
@@ -357,7 +356,7 @@ export class CreateRequestStepper {
       });
     } else {
       forkJoin({
-        allDocuments: this.fetchAllDocumentsInParallel(this.municipalityId, this.requestId),
+        allDocuments: this.getAllDocumentTypes(this.municipalityId, this.requestId),
         requestDocuments: this.requestService.GetRequestRequiredDocumentsById(this.requestId),
       }).subscribe({
         next: ({ allDocuments, requestDocuments }) => {
@@ -382,7 +381,7 @@ export class CreateRequestStepper {
     return this.requestDocumentsFormGroup?.get('optionalMunicipalityDocuments') as FormArray;
   }
 
-  fetchAllDocumentsInParallel(municipalityId: number, requestId?: number): Observable<any> {
+  getAllDocumentTypes(municipalityId: number, requestId?: number): Observable<any> {
     if (!requestId) {
       return forkJoin({
         requiredStateDocuments: this.requestService.GetRequiredDocuments(),
@@ -404,7 +403,7 @@ export class CreateRequestStepper {
     }
   }
   
-  populateRequestDocuments(requestDocuments: any[]): void {
+  populateRequestDocuments(requestDocuments: RequestDocument[]): void {
     requestDocuments.forEach((document: any) => {
       const documentFormGroup = this.fb.group({
         documentId: [document.documentId],
@@ -427,8 +426,8 @@ export class CreateRequestStepper {
   mergeUnselectedDocuments(allDocuments: any): void {
     const { requiredStateDocuments, optionalStateDocuments, optionalMunicipalityDocuments } = allDocuments;
     // filter and merge the two data responses based on two criterias:
-    // display documents if selected are false from from fetchAllDocumentsInParallel
-    // but do not display duplicates if allDocs fetch has same documentId as fetchDocumentsByRequestId
+    // display documents if selected are false from from getAllDocumentTypes
+    // but do not display duplicates if getAllDocumentTypes has same documentId as getDocumentsByRequestId
     const filterUnselected = (documents: any[]) => 
       documents.filter((doc) => !this.isDocumentSelected(doc.documentId));
     this.populateFormArray(this.requiredStateDocuments, filterUnselected(requiredStateDocuments));
@@ -444,7 +443,7 @@ export class CreateRequestStepper {
     );
   }
 
-  fetchDocumentsByRequestId(requestId: number): void {
+  getDocumentsByRequestId(requestId: number): void {
     this.requestService.GetRequestRequiredDocumentsById(requestId).subscribe((response) => {
       response.forEach((document: { documentId: any; documentName: any; derived: any; documentRequired: any; required: any; selected: any }) => {
         const documentFormGroup = this.fb.group({
@@ -482,10 +481,10 @@ export class CreateRequestStepper {
     });
   }
 
-  onDocumentsReceived(documents: IRequestDocuments): void {
-    this.requiredDocuments = documents.required;
-    this.optionalDocuments = documents.optional;
-    this.municipalityDocuments = documents.municipality;
+  onDocumentsReceived(documents: RequestDocument): void {
+    this.requiredDocuments = documents.required!;
+    this.optionalDocuments = documents.optional!;
+    this.municipalityDocuments = documents.municipality!;
   }
 
   saveDocuments() {
