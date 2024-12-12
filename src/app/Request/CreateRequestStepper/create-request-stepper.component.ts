@@ -6,9 +6,9 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatButtonModule } from '@angular/material/button';
 import { Document } from '../model/document.model';
-import { IRequestDocuments } from '../../interfaces/IRequestDocuments';
+import { RequestDocument } from '../model/requestdocument.model';
 import { ActivatedRoute } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Observable, tap } from 'rxjs';
 import { StateService } from '../services/state.service';
 import { BasicRequestComponent } from '../request-basic.component';
 import { RequestOverviewComponent } from '../request-overview.component';
@@ -42,6 +42,7 @@ export class CreateRequestStepper {
   @ViewChild(BasicRequestComponent) basicRequestComponent!: BasicRequestComponent;
   @ViewChild(RequestOverviewComponent) requestOverviewComponent!: RequestOverviewComponent;
   @ViewChild(RequestRequiredDocumentsComponent) requestRequiredDocumentsComponent!: RequestRequiredDocumentsComponent;
+  @ViewChild(RequestReviewComponent) requestReviewComponent!: RequestReviewComponent;
 
   requestId!: number;
   municipalityId = 1;
@@ -58,9 +59,7 @@ export class CreateRequestStepper {
   optionalDocuments: Document[] = [];
   municipalityDocuments: Document[] = [];
 
-  finalReviewFormGroup = this.fb.group({
-    // finalReview: ['', Validators.required],
-  });
+  // requestReviewComponent! = FormGroup;
   idParam: string | null | undefined;
 
   constructor(
@@ -74,7 +73,6 @@ export class CreateRequestStepper {
       this.idParam = params.get('requestId');
       this.requestId = this.idParam ? +this.idParam : 0;
     });
-
   }
 
   ngOnInit() {
@@ -139,9 +137,7 @@ export class CreateRequestStepper {
           contractEndDate: request.contractEnd,
           dropdowns: this.createDropdownControls(decisionMakersMapped),
         };
-
         this.initializeForm(formData);
-
         this.basicRequestComponent.onCategoryChange({ value: formData.category } as MatSelectChange);
       },
       (error: any) => {
@@ -162,10 +158,8 @@ export class CreateRequestStepper {
         contractStartDate: data.contractStart,
         contractEndDate: data.contractEnd,
       });
-
       this.dropdowns.clear();
       data.decisionMakerSelections.forEach((decisionMaker: { decisionMakerId: any; }) => {
-
         this.createDropdownControls(decisionMaker.decisionMakerId);
       });
     });
@@ -215,7 +209,6 @@ export class CreateRequestStepper {
 
   deleteDropdownFromRequest(event: { decisionMakerId: number | null }): void {
     const { decisionMakerId } = event;
-
     if (decisionMakerId) {
       this.requestService.DeleteDecisionMaker(this.requestId, decisionMakerId).subscribe(
         () => {
@@ -262,7 +255,6 @@ export class CreateRequestStepper {
     this.proposalsOverviewFormGroup = this.fb.group({
       proposalSections: this.fb.array([])
     });
-
     if (!this.requestId) {
       this.getRequestSectionDefaultTitle()
     } else {
@@ -309,7 +301,6 @@ export class CreateRequestStepper {
               })
             );
           }
-
         });
         this.cdr.detectChanges();
       },
@@ -333,7 +324,6 @@ export class CreateRequestStepper {
           requestSectionTitle: section.requestSectionTitle,
           requestSectionContent: section.requestSectionContent
         };
-
         this.requestService.SaveRequestSections(payload, this.requestId)
           .subscribe({
             next: (response) => {
@@ -352,38 +342,158 @@ export class CreateRequestStepper {
   initializeRequestDocuments(): void {
     this.requestDocumentsFormGroup = this.fb.group({
       requiredStateDocuments: this.fb.array([]),
-      optionalDocuments: this.fb.array([]),
-      municipalityDocuments: this.fb.array([])
-    })
-
+      optionalStateDocuments: this.fb.array([]),
+      optionalMunicipalityDocuments: this.fb.array([]),
+    });
     if (!this.requestId) {
-      this.getRequestSectionDefaultTitle()
+      this.getAllDocumentTypes(this.municipalityId).subscribe({
+        next: () => {
+          console.log('Documents fetched and form initialized for creation.');
+        },
+        error: (error) => {
+          console.error('Error fetching documents for creation:', error);
+        },
+      });
     } else {
-      this.getRequestSectionsById(this.requestId)
+      forkJoin({
+        allDocuments: this.getAllDocumentTypes(this.municipalityId, this.requestId),
+        requestDocuments: this.requestService.GetRequestRequiredDocumentsById(this.requestId),
+      }).subscribe({
+        next: ({ allDocuments, requestDocuments }) => {
+          this.populateRequestDocuments(requestDocuments);
+          this.mergeUnselectedDocuments(allDocuments);
+          console.log('Documents fetched and form arrays initialized for editing.');
+        },
+        error: (error) => {
+          console.error('Error fetching documents for editing:', error);
+        },
+      });
     }
   }
 
-  getRequiredDocuments(): void {
-    this.requestService.GetRequiredDocuments().subscribe({
-      next: (requiredStateDocumentsData: any[]) => {
-        this.requiredDocuments = requiredStateDocumentsData
-      }
-    })
+  get requiredStateDocuments(): FormArray {
+    return this.requestDocumentsFormGroup?.get('requiredStateDocuments') as FormArray;
+  }
+  get optionalStateDocuments(): FormArray {
+    return this.requestDocumentsFormGroup?.get('optionalStateDocuments') as FormArray;
+  }
+  get optionalMunicipalityDocuments(): FormArray {
+    return this.requestDocumentsFormGroup?.get('optionalMunicipalityDocuments') as FormArray;
   }
 
-  onDocumentsUpdated(documents: IRequestDocuments) {
-    this.requiredDocuments = documents.required;
-    this.optionalDocuments = documents.optional;
-    this.municipalityDocuments = documents.municipality;
+  getAllDocumentTypes(municipalityId: number, requestId?: number): Observable<any> {
+    if (!requestId) {
+      return forkJoin({
+        requiredStateDocuments: this.requestService.GetRequiredDocuments(),
+        optionalStateDocuments: this.requestService.GetOptionalDocuments(),
+        optionalMunicipalityDocuments: this.requestService.GetMunicipalityDocuments(municipalityId),
+      }).pipe(
+        tap(({ requiredStateDocuments, optionalStateDocuments, optionalMunicipalityDocuments }) => {
+          this.populateFormArray(this.requiredStateDocuments, requiredStateDocuments);
+          this.populateFormArray(this.optionalStateDocuments, optionalStateDocuments);
+          this.populateFormArray(this.optionalMunicipalityDocuments, optionalMunicipalityDocuments);
+        })
+      );
+    } else {
+      return forkJoin({
+        requiredStateDocuments: this.requestService.GetRequiredDocuments(),
+        optionalStateDocuments: this.requestService.GetOptionalDocuments(),
+        optionalMunicipalityDocuments: this.requestService.GetMunicipalityDocuments(municipalityId),
+      });
+    }
+  }
+  
+  populateRequestDocuments(requestDocuments: RequestDocument[]): void {
+    requestDocuments.forEach((document: any) => {
+      const documentFormGroup = this.fb.group({
+        documentId: [document.documentId],
+        documentName: [document.documentName],
+        derived: [document.derived],
+        documentRequired: [document.documentRequired],
+        required: [document.required],
+        selected: [document.selected],
+      });
+      if (document.derived) {
+        this.optionalMunicipalityDocuments.push(documentFormGroup);
+      } else if (document.required) {
+        this.requiredStateDocuments.push(documentFormGroup);
+      } else {
+        this.optionalStateDocuments.push(documentFormGroup);
+      }
+    });
+  }
+  
+  mergeUnselectedDocuments(allDocuments: any): void {
+    const { requiredStateDocuments, optionalStateDocuments, optionalMunicipalityDocuments } = allDocuments;
+    // filter and merge the two data responses based on two criterias:
+    // display documents if selected are false from from getAllDocumentTypes
+    // but do not display duplicates if getAllDocumentTypes has same documentId as getDocumentsByRequestId
+    const filterUnselected = (documents: any[]) => 
+      documents.filter((doc) => !this.isDocumentSelected(doc.documentId));
+    this.populateFormArray(this.requiredStateDocuments, filterUnselected(requiredStateDocuments));
+    this.populateFormArray(this.optionalStateDocuments, filterUnselected(optionalStateDocuments));
+    this.populateFormArray(this.optionalMunicipalityDocuments, filterUnselected(optionalMunicipalityDocuments));
+  }
+  
+  isDocumentSelected(documentId: number): boolean {
+    return (
+      this.requiredStateDocuments.value.some((doc: any) => doc.documentId === documentId) ||
+      this.optionalStateDocuments.value.some((doc: any) => doc.documentId === documentId) ||
+      this.optionalMunicipalityDocuments.value.some((doc: any) => doc.documentId === documentId)
+    );
+  }
+
+  getDocumentsByRequestId(requestId: number): void {
+    this.requestService.GetRequestRequiredDocumentsById(requestId).subscribe((response) => {
+      response.forEach((document: { documentId: any; documentName: any; derived: any; documentRequired: any; required: any; selected: any }) => {
+        const documentFormGroup = this.fb.group({
+          documentId: [document.documentId],
+          documentName: [document.documentName],
+          derived: [document.derived],
+          documentRequired: [document.documentRequired],
+          required: [document.required],
+          selected: [document.selected]
+        });
+        if (document.derived) {
+          // Derived = true -> Municipality document
+          this.optionalMunicipalityDocuments.push(documentFormGroup);
+        } else if (document.required) {
+          // Derived = false, Required = true -> Required State document
+          this.requiredStateDocuments.push(documentFormGroup);
+        } else {
+          // Derived = false, Required = false -> Optional State document
+          this.optionalStateDocuments.push(documentFormGroup);
+        }
+      });
+    });
+  }
+  
+  populateFormArray(formArray: FormArray, documents: any[]): void {
+    documents.forEach((document) => {
+      formArray.push(
+        this.fb.group({
+          documentId: [document.documentId],
+          documentName: [document.documentName],
+          documentRequired: [document.documentRequired],
+          selected: [document.selected]
+        })
+      );
+    });
+  }
+
+  onDocumentsReceived(documents: RequestDocument): void {
+    this.requiredDocuments = documents.required!;
+    this.optionalDocuments = documents.optional!;
+    this.municipalityDocuments = documents.municipality!;
   }
 
   saveDocuments() {
+    this.requestRequiredDocumentsComponent.emitDocuments()
     const documentIds: number[] = [
       ...this.requiredDocuments,
       ...this.optionalDocuments,
       ...this.municipalityDocuments
     ].map(documentId => documentId.documentId);
-
     this.requestService.SaveRequestDocuments(this.requestId, documentIds)
       .subscribe(response => {
         console.log('Documents saved successfully:', response);
