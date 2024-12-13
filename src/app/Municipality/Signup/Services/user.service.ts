@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { User } from '../model/User';
+import { User } from '../model/user.model';
 import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
@@ -11,18 +11,23 @@ export class UserService {
 
      url = `${environment.apiUrl}users/`;
     constructor(private http: HttpClient) { }
-    SaveUser(user: User): Observable<number> {
-        const headers = { 'Content-Type': 'application/json' };
-        return this.http.post<number>(`${this.url}Users`, user, { headers });
+
+  SaveUser(user: User): Observable<number> {
+    const headers = { 'Content-Type': 'application/json' };
+    return this.http.post<number>(`${this.url}Users`, user, { headers });
   }
 
-    SendUserVerificationEmail(userId: number): Observable<boolean> {
-      const headers = { 'Content-Type': 'application/json' };
-      return this.http.post<boolean>(`${this.url}/sendveremail/1`, null, { headers });
-    }
+  getUser(userId: number): Observable<User> {
+    return this.http.get<User>(`${this.url}users/${userId}`);
+  }
 
-    ValidateEmailToken(token: string): Observable<boolean> {
-      const headers = { 'Content-Type': 'application/json' };
-      return this.http.post<boolean>(`${this.url}/validate/${token}`, null, { headers });
-    }
+  SendUserVerificationEmail(userId: number): Observable<boolean> {
+    const headers = { 'Content-Type': 'application/json' };
+    return this.http.post<boolean>(`${this.url}/sendveremail/1`, null, { headers });
+  }
+
+  ValidateEmailToken(token: string): Observable<boolean> {
+    const headers = { 'Content-Type': 'application/json' };
+    return this.http.post<boolean>(`${this.url}/validate/${token}`, null, { headers });
+  }
 }

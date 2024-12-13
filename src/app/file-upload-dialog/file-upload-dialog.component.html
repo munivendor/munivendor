@@ -4,10 +4,10 @@
       <div class="form-field-container">
         <mat-form-field>
           <mat-label>Enter Document Name</mat-label>
-          <input matInput [(ngModel)]="documentName">
+          <input matInput [(ngModel)]="documentName" placeholder = "enter document name">
         </mat-form-field>
       </div>
-      <input type="file" id="fileUpload" name="fileUpload" (change)="onFileSelected($event)">
+      <input type="file" id="fileUpload" name="fileUpload" (change)="onFileSelected($event)" placeholder="upload file">
     </div>
     
     <div mat-dialog-actions>

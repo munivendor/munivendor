@@ -9,11 +9,10 @@ import { Municipality } from '../model/municipality.model';
 })
 export class MunicipalityService {
 
-  url = `${environment.apiUrl}municipalities/`;
+  url = `${environment.apiUrl}municipalities`;
 
   constructor(private http: HttpClient) { }
 
-  // Save municipality (insert or update based on ID presence)
   saveMunicipality(municipality: Municipality): Observable<number> {
     const headers = { 'Content-Type': 'application/json' };
     return this.http.post<number>(this.url, municipality, { headers });

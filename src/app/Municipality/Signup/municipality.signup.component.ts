@@ -14,7 +14,7 @@ import { GoogleLoginProvider } from '@abacritt/angularx-social-login';
 
 import { Router } from '@angular/router';
 import { UserService } from './Services/user.service';
-import { User } from './model/User';
+import { User } from './model/user.model';
 
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
