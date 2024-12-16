@@ -66,6 +66,16 @@ export class UserSignupDetailsComponent
         );
     }
 
+    updateUser(user: User): void {
+        this.userService.updateUser(user).subscribe(() => {
+        console.log ("Success updating user")
+        },
+            (error) => {
+                console.error('Error fetching user data:', error);
+            }
+        );
+    }
+
     getDepartments(): void {
         this.departmentService.getDepartments().subscribe((departments: Department[]) => {
             this.departments = departments;
@@ -82,7 +92,7 @@ export class UserSignupDetailsComponent
 
             console.log('Selected Department ID:', this.user!.departmentId);
             const user: User = this. userSignupDetailForm.value;
-            // Add further code to save or process the user object as needed 
+            this.updateUser (user)
         }
     }
 }

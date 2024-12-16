@@ -155,7 +155,7 @@ constructor (private fb: FormBuilder, private userService: UserService, public d
   }
     */
   saveMunivendorUser(municipalityUser: User): Observable<number> {
-    const saveUserObservable = this.userService.SaveUser(municipalityUser);
+    const saveUserObservable = this.userService.createUser(municipalityUser);
     saveUserObservable.subscribe((userId: number) => {
       this.userId = userId;
     });

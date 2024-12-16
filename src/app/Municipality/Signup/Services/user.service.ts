@@ -12,9 +12,14 @@ export class UserService {
      url = `${environment.apiUrl}users/`;
     constructor(private http: HttpClient) { }
 
-  SaveUser(user: User): Observable<number> {
+  createUser(user: User): Observable<number> {
     const headers = { 'Content-Type': 'application/json' };
     return this.http.post<number>(`${this.url}Users`, user, { headers });
+  }
+
+  updateUser(user: User): Observable<number> {
+    const headers = { 'Content-Type': 'application/json' };
+    return this.http.put<number>(`${this.url}users/${user.userId}`, user, { headers });
   }
 
   getUser(userId: number): Observable<User> {
