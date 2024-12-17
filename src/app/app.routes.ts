@@ -13,6 +13,7 @@ import { TableDetailsComponent } from './Request/TableDetails/request-tabledetai
 import { CreateRequestStepper } from './Request/CreateRequestStepper/create-request-stepper.component';
 import { TokenValidationComponent } from './Municipality/Signup/token-validation.component';
 import { MunicipalityDetailsComponent } from './Municipality/Details/municipality.details.component';
+import { DesignationSelectionComponent } from './Municipality/UserDesignationSelection/municipality.user-designation-selection.component';
 
 export const routes: Routes = [
   { path: 'first-component', component: SignupComponent },
@@ -22,6 +23,7 @@ export const routes: Routes = [
   { path: 'second-component', component: SignupComponent },
   { path: 'validateuser', component: TokenValidationComponent },
   { path: 'municipality-details', component: MunicipalityDetailsComponent   },
+  { path: 'user-designation, component', component: DesignationSelectionComponent},
 
   { path: 'request-proposal-component', component: RequestProposalComponent },
   { path: 'request-overview-component', component: RequestOverviewComponent },

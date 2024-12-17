@@ -9,4 +9,5 @@ export class User {
     personalPhoneNumber?: number;
     departmentId?: number;
     userTypeId?: number;
+    DesigneeTypes?: number [];
 }

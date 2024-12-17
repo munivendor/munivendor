@@ -3,36 +3,43 @@ import { User } from '../model/user.model';
 import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
+import { Designee } from '../../UserDesignationSelection/model/designee.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class UserService {
 
-     url = `${environment.apiUrl}users/`;
-    constructor(private http: HttpClient) { }
-
+  constructor(private http: HttpClient) { }
+  
+  userApiUrl = `${environment.apiUrl}users/`;
   createUser(user: User): Observable<number> {
     const headers = { 'Content-Type': 'application/json' };
-    return this.http.post<number>(`${this.url}Users`, user, { headers });
+    return this.http.post<number>(`${this.userApiUrl}Users`, user, { headers });
   }
 
   updateUser(user: User): Observable<number> {
     const headers = { 'Content-Type': 'application/json' };
-    return this.http.put<number>(`${this.url}users/${user.userId}`, user, { headers });
+    return this.http.put<number>(`${this.userApiUrl}users/${user.userId}`, user, { headers });
   }
 
   getUser(userId: number): Observable<User> {
-    return this.http.get<User>(`${this.url}users/${userId}`);
+    return this.http.get<User>(`${this.userApiUrl}users/${userId}`);
   }
 
   SendUserVerificationEmail(userId: number): Observable<boolean> {
     const headers = { 'Content-Type': 'application/json' };
-    return this.http.post<boolean>(`${this.url}/sendveremail/1`, null, { headers });
+    return this.http.post<boolean>(`${this.userApiUrl}/sendveremail/1`, null, { headers });
   }
 
   ValidateEmailToken(token: string): Observable<boolean> {
     const headers = { 'Content-Type': 'application/json' };
-    return this.http.post<boolean>(`${this.url}/validate/${token}`, null, { headers });
+    return this.http.post<boolean>(`${this.userApiUrl}/validate/${token}`, null, { headers });
   }
+
+  designeeApiUrl = `${environment.apiUrl}designeeTypes/`;
+  getDesigneeTypes(): Observable<Designee[]> {
+    return this.http.get<Designee[]>(this.designeeApiUrl);
+  }
+
 }
