@@ -5,7 +5,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatButtonModule } from '@angular/material/button';
 import { Document } from '../model/document.model';
-import { IRequestDocuments } from '../../interfaces/IRequestDocuments';
+import { RequestDocuments } from '../../interfaces/IRequestDocuments';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
 

@@ -1,7 +1,7 @@
 <mat-card>
   <mat-card-title>Let's setup your account!</mat-card-title>
   <mat-card-content>
-    <form [formGroup]="municipalityDetailForm" (ngSubmit)="onSubmit()">
+    <form [formGroup]="municipalityDetailForm" class="full-width" (ngSubmit)="onSubmit()">
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Municipality Name</mat-label>
         <input matInput formControlName="municipalityName" required placeholder="enter Municipality">

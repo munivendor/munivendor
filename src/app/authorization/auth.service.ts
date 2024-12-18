@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+/*import { inject, Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { SocialAuthService, SocialUser, GoogleLoginProvider } from 'angularx-social-login';
 
@@ -7,7 +7,7 @@ import { SocialAuthService, SocialUser, GoogleLoginProvider } from 'angularx-soc
 })
 export class AuthService {
   
-  private authService = inject(SocialAuthService);
+  //private authService = inject(SocialAuthService);
   private router = inject(Router);
   user:SocialUser | undefined;
 
@@ -32,4 +32,4 @@ export class AuthService {
   isAuthenticated(): boolean {
     return this.user !== null;
   }
-}
+}*/
