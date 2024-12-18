@@ -3,7 +3,7 @@ import { User } from '../model/user.model';
 import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
-import { Designee } from '../../UserDesignationSelection/model/designee.model';
+import { Designation } from '../../UserDesignationSelection/model/designee.model';
 
 @Injectable({
   providedIn: 'root',
@@ -37,9 +37,9 @@ export class UserService {
     return this.http.post<boolean>(`${this.userApiUrl}/validate/${token}`, null, { headers });
   }
 
-  designeeApiUrl = `${environment.apiUrl}designeeTypes/`;
-  getDesigneeTypes(): Observable<Designee[]> {
-    return this.http.get<Designee[]>(this.designeeApiUrl);
+  designeeApiUrl = `${environment.apiUrl}designations`;
+  getDesigneeTypes(): Observable<Designation[]> {
+    return this.http.get<Designation[]>(this.designeeApiUrl);
   }
 
 }

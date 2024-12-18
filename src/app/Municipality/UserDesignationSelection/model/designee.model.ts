@@ -1,6 +1,7 @@
-export class Designee {
-    designeeTypeId?: number;            
+export class Designation {
+    designationId?: number;            
     organizationTypeId?: number;    
-    designeeTypeDesc?: string;      
+    designationDescription?: string;      
+ 
   }
   

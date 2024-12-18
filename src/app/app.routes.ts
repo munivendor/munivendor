@@ -23,7 +23,7 @@ export const routes: Routes = [
   { path: 'second-component', component: SignupComponent },
   { path: 'validateuser', component: TokenValidationComponent },
   { path: 'municipality-details', component: MunicipalityDetailsComponent   },
-  { path: 'user-designation, component', component: DesignationSelectionComponent},
+  { path: 'user-designation', component: DesignationSelectionComponent},
 
   { path: 'request-proposal-component', component: RequestProposalComponent },
   { path: 'request-overview-component', component: RequestOverviewComponent },
