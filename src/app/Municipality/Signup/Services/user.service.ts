@@ -20,11 +20,11 @@ export class UserService {
 
   updateUser(user: User): Observable<number> {
     const headers = { 'Content-Type': 'application/json' };
-    return this.http.put<number>(`${this.userApiUrl}users/${user.userId}`, user, { headers });
+    return this.http.put<number>(`${this.userApiUrl}${user.userId}`, user, { headers });
   }
 
   getUser(userId: number): Observable<User> {
-    return this.http.get<User>(`${this.userApiUrl}users/${userId}`);
+    return this.http.get<User>(`${this.userApiUrl}${userId}`);
   }
 
   SendUserVerificationEmail(userId: number): Observable<boolean> {
