@@ -22,6 +22,7 @@ import { MatSelectChange } from '@angular/material/select';
 @Component({
   selector: 'create-request-stepper',
   templateUrl: 'create-request-stepper.component.html',
+  styleUrls: ['./create-request-stepper.component.css'],
   standalone: true,
   imports: [
     MatButtonModule,
@@ -59,7 +60,8 @@ export class CreateRequestStepper {
   optionalDocuments: Document[] = [];
   municipalityDocuments: Document[] = [];
 
-  // requestReviewComponent! = FormGroup;
+  finalReviewFormGroup!: FormGroup;
+
   idParam: string | null | undefined;
 
   constructor(
@@ -68,15 +70,14 @@ export class CreateRequestStepper {
     private stateService: StateService,
     private route: ActivatedRoute,
     private cdr: ChangeDetectorRef) {
-    this.requestDocumentsFormGroup = this.fb.group({});
     this.route.paramMap.subscribe((params) => {
       this.idParam = params.get('requestId');
-      this.requestId = this.idParam ? +this.idParam : 0;
+      this.requestId = this.idParam ? + this.idParam : 0;
     });
   }
 
   ngOnInit() {
-    this.initializeForm();
+    this.initializeBasics();
     this.initializeProposalSections();
     this.initializeRequestDocuments();
 
@@ -86,7 +87,7 @@ export class CreateRequestStepper {
   }
 
   //******* Handles Request data from basics page *********/ 
-  private initializeForm(data: any = null): void {
+  private initializeBasics(data: any = null): void {
     this.basicsFormGroup = this.fb.group({
       category: [data?.category || '', Validators.required],
       subcategory: [data?.subcategory || '', Validators.required],
@@ -137,7 +138,7 @@ export class CreateRequestStepper {
           contractEndDate: request.contractEnd,
           dropdowns: this.createDropdownControls(decisionMakersMapped),
         };
-        this.initializeForm(formData);
+        this.initializeBasics(formData);
         this.basicRequestComponent.onCategoryChange({ value: formData.category } as MatSelectChange);
       },
       (error: any) => {
@@ -222,14 +223,16 @@ export class CreateRequestStepper {
   }
 
   saveRequestData() {
+    const requestIdFromStateService = this.stateService.getRequestId();
     this.basicRequestComponent.emitRequestData();
-    if (this.idParam !== null) {
+    if (this.idParam !== null || requestIdFromStateService) {
       this.getRequestById(this.requestId);
       this.requestService.UpdateRequest(this.requestId, this.requestData).subscribe(
         (responseRequestId: number) => {
           console.log('Request updated successfully:', responseRequestId);
           this.getRequestById(this.requestId);
           this.stateService.setRequestId(this.requestId);
+          this.stateService.setRequestHasBeenSaved(true);
         },
         error => {
           console.error('Error updating Request:', error);
@@ -241,6 +244,7 @@ export class CreateRequestStepper {
           console.log('Request created successfully:', responseRequestId);
           this.requestId = responseRequestId;
           this.stateService.setRequestId(responseRequestId);
+          this.stateService.setRequestHasBeenSaved(true);
         },
         error => {
           console.error('Error creating Request:', error);
@@ -327,6 +331,7 @@ export class CreateRequestStepper {
         this.requestService.SaveRequestSections(payload, this.requestId)
           .subscribe({
             next: (response) => {
+              this.stateService.setRequestHasBeenSaved(true);
               console.log(`Section ${section.requestSectionTitle} saved successfully!`);
             },
             error: (error) => {
@@ -402,7 +407,7 @@ export class CreateRequestStepper {
       });
     }
   }
-  
+
   populateRequestDocuments(requestDocuments: RequestDocument[]): void {
     requestDocuments.forEach((document: any) => {
       const documentFormGroup = this.fb.group({
@@ -422,19 +427,19 @@ export class CreateRequestStepper {
       }
     });
   }
-  
+
   mergeUnselectedDocuments(allDocuments: any): void {
     const { requiredStateDocuments, optionalStateDocuments, optionalMunicipalityDocuments } = allDocuments;
     // filter and merge the two data responses based on two criterias:
     // display documents if selected are false from from getAllDocumentTypes
     // but do not display duplicates if getAllDocumentTypes has same documentId as getDocumentsByRequestId
-    const filterUnselected = (documents: any[]) => 
+    const filterUnselected = (documents: any[]) =>
       documents.filter((doc) => !this.isDocumentSelected(doc.documentId));
     this.populateFormArray(this.requiredStateDocuments, filterUnselected(requiredStateDocuments));
     this.populateFormArray(this.optionalStateDocuments, filterUnselected(optionalStateDocuments));
     this.populateFormArray(this.optionalMunicipalityDocuments, filterUnselected(optionalMunicipalityDocuments));
   }
-  
+
   isDocumentSelected(documentId: number): boolean {
     return (
       this.requiredStateDocuments.value.some((doc: any) => doc.documentId === documentId) ||
@@ -467,7 +472,7 @@ export class CreateRequestStepper {
       });
     });
   }
-  
+
   populateFormArray(formArray: FormArray, documents: any[]): void {
     documents.forEach((document) => {
       formArray.push(
@@ -497,11 +502,18 @@ export class CreateRequestStepper {
     this.requestService.SaveRequestDocuments(this.requestId, documentIds)
       .subscribe(response => {
         console.log('Documents saved successfully:', response);
+        this.stateService.setRequestHasBeenSaved(true);
       }, error => {
         console.error('Error saving documents:', error);
       });
   }
   //*******************************************************/
 
-  // Add handling for final review page
+  //**** trigger onSubmit in request-review component ****/
+
+  updateRequestStatusToScheduled() {
+    if (this.requestReviewComponent) {
+      this.requestReviewComponent.onSubmit();
+    }
+  }
 }

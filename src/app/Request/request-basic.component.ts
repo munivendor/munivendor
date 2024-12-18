@@ -49,9 +49,6 @@ export class BasicRequestComponent implements OnInit {
 
 
   decisionMakers!: DecisionMaker[];
-  decisionMakers2!: DecisionMaker[];
-  decisionMakers3!: DecisionMaker[];
-  decisionMakers4!: DecisionMaker[];
   categories!: Category[];
   subcategories!: SubCategory[];
   requestTypes: RequestType[] | undefined;
@@ -61,15 +58,11 @@ export class BasicRequestComponent implements OnInit {
     private fb: FormBuilder,
     private requestService: RequestService) {
     this.requestService.GetCategories().subscribe((categories: Category[]) => this.categories = categories);
-    this.requestService.GetDecisionMakers().subscribe((decisionmakers: DecisionMaker[]) => this.decisionMakers = decisionmakers);;
-    this.requestService.GetDecisionMakers().subscribe((decisionmakers: DecisionMaker[]) => this.decisionMakers2 = decisionmakers);;
-    this.requestService.GetDecisionMakers().subscribe((decisionmakers: DecisionMaker[]) => this.decisionMakers3 = decisionmakers);;
-    this.requestService.GetDecisionMakers().subscribe((decisionmakers: DecisionMaker[]) => this.decisionMakers4 = decisionmakers);
+    this.requestService.GetDecisionMakers().subscribe((decisionmakers: DecisionMaker[]) => this.decisionMakers = decisionmakers);
     this.requestService.GetRequestTypes().subscribe((requestTypes: RequestType[]) => this.requestTypes = requestTypes);
   }
 
   ngOnInit(): void {
-    // Load data for dropdowns
     this.requestService.GetCategories().subscribe((categories: Category[]) => (this.categories = categories));
     this.requestService.GetDecisionMakers().subscribe((decisionmakers: DecisionMaker[]) => (this.decisionMakers = decisionmakers));
     this.requestService.GetRequestTypes().subscribe((requestTypes: RequestType[]) => (this.requestTypes = requestTypes));
@@ -101,11 +94,10 @@ export class BasicRequestComponent implements OnInit {
   onCategoryChange(event: MatSelectChange): void {
     const categoryId = event.value;
 
-    // Always get subcategories, even during initialization
     this.requestService.GetSubcategories(categoryId).subscribe((subcategories: SubCategory[]) => {
       this.subcategories = subcategories;
 
-      // Automatically set the current subcategory if it matches
+      // Set the current subcategory if it matches
       const currentSubcategoryId = this.parentFormGroup.get('subcategory')?.value;
       if (this.subcategories.some(sc => sc.subCategoryId === currentSubcategoryId)) {
         this.parentFormGroup.get('subcategory')?.setValue(currentSubcategoryId);
@@ -153,8 +145,8 @@ export class BasicRequestComponent implements OnInit {
   }
 
   combineDateTimeInUtc(inputDate: string, inputTime: string): string {
-    const dateTimeString = `${inputDate}T${inputTime}Z`; // Combine date and time with 'T' and 'Z'
-    return dateTimeString; // Return ISO string in UTC
+    const dateTimeString = `${inputDate}T${inputTime}Z`;
+    return dateTimeString;
   }
 
   extractDate(dateTime: string): string {

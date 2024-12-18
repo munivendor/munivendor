@@ -23,8 +23,7 @@
 
   <mat-step [stepControl]="requestDocumentsFormGroup" label="Documents">
     <form [formGroup]="requestDocumentsFormGroup">
-      <request-required-documents *ngIf="requestDocumentsFormGroup"
-        [parentDocumentsFormGroup]="requestDocumentsFormGroup"
+      <request-required-documents *ngIf="requestId" [parentDocumentsFormGroup]="requestDocumentsFormGroup"
         (documentsData)="onDocumentsReceived($event)"></request-required-documents>
       <div>
         <button mat-button matStepperPrevious>Back</button>
@@ -35,20 +34,12 @@
 
   <mat-step [stepControl]="finalReviewFormGroup" label="Review">
     <form [formGroup]="finalReviewFormGroup">
-      <request-review></request-review>
+      <request-review [parentFinalReviewFormGroup]="finalReviewFormGroup"
+        [paramRequestId]="requestId">></request-review>
       <div>
         <button mat-button matStepperPrevious>Back</button>
-        <button mat-button matStepperNext>Next</button>
+        <button mat-button matStepperNext (click)="updateRequestStatusToScheduled()">Submit</button>
       </div>
     </form>
-  </mat-step>
-
-  <mat-step>
-    <ng-template matStepLabel>Done</ng-template>
-    <p>You are now done.</p>
-    <div>
-      <button mat-button matStepperPrevious>Back</button>
-      <button mat-button (click)="stepper.reset()">Reset</button>
-    </div>
   </mat-step>
 </mat-stepper>
