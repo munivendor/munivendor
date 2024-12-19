@@ -5,7 +5,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatButtonModule } from '@angular/material/button';
 import { Document } from '../model/document.model';
-import { RequestDocuments } from '../../interfaces/IRequestDocuments';
+import { RequestDocument } from '../model/requestdocument.model';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
 
@@ -227,10 +227,10 @@ export class CreateRequestStepper {
   //*******************************************************/ 
 
   //*** Handles checked docs data from documents page ***/
-  onDocumentsUpdated(documents: IRequestDocuments) {
-    this.requiredDocuments = documents.required;
-    this.optionalDocuments = documents.optional;
-    this.municipalityDocuments = documents.municipality;
+  onDocumentsUpdated(documents: RequestDocument) {
+    this.requiredDocuments = documents.required!;
+    this.optionalDocuments = documents.optional!;
+    this.municipalityDocuments = documents.municipality!;
   }
 
   saveDocuments() {

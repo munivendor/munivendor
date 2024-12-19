@@ -14,6 +14,8 @@ import { CreateRequestStepper } from './Request/CreateRequestStepper/create-requ
 import { TokenValidationComponent } from './Municipality/Signup/token-validation.component';
 import { MunicipalityDetailsComponent } from './Municipality/Details/municipality.details.component';
 import { DesignationSelectionComponent } from './Municipality/UserDesignationSelection/municipality.user-designation-selection.component';
+import { PaymentPlanConfirmationComponent } from './Municipality/PaymentInformation/paymentplanconfirmation.component';
+import { PaymentInfoComponent } from './Municipality/PaymentInformation/paymentinformation.component';
 
 export const routes: Routes = [
   { path: 'first-component', component: SignupComponent },
@@ -24,7 +26,9 @@ export const routes: Routes = [
   { path: 'validateuser', component: TokenValidationComponent },
   { path: 'municipality-details', component: MunicipalityDetailsComponent   },
   { path: 'user-designation', component: DesignationSelectionComponent},
-
+  { path: 'payment-plan-confirmation', component: PaymentPlanConfirmationComponent},
+  { path: 'PaymentInfoComponent', component: PaymentInfoComponent }
+  
   { path: 'request-proposal-component', component: RequestProposalComponent },
   { path: 'request-overview-component', component: RequestOverviewComponent },
   {

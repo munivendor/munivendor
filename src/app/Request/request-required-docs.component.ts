@@ -12,7 +12,7 @@ import { FileUploadDialogComponent } from '../file-upload-dialog/file-upload-dia
 import { RequestService } from './services/request.service';
 import { Document } from './model/document.model';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { IRequestDocuments } from '../interfaces/IRequestDocuments';
+import { RequestDocument }  from './model/requestdocument.model';
 
 @Component({
   selector: 'request-required-documents',
@@ -45,7 +45,7 @@ export class RequestRequiredDocumentsComponent implements OnInit {
   selectedOptionalStateDocs: Document[] = [];
   selectedMunicipalityDocs: Document[] = [];
 
-  @Output() documentsUpdated = new EventEmitter<IRequestDocuments>();
+  @Output() documentsUpdated = new EventEmitter<RequestDocument>();
 
   emitDocuments() {
     this.documentsUpdated.emit({

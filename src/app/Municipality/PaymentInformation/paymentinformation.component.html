@@ -1,0 +1,77 @@
+<div class="payment-info-container">
+    <h1>MuniVendor</h1>
+    <h2>Payment Information</h2>
+    <p>Please choose your preferred payment option. You will not be charged until your 12 month trial is over. You will be notified 90 days before you are charged or billed.</p>
+    <form [formGroup]="paymentInformationForm" (ngSubmit)="onSubmit()">
+      <mat-radio-group formControlName="paymentType">
+        <mat-radio-button value="ACH">ACH</mat-radio-button>
+        <mat-radio-button value="CreditCard">Credit Card</mat-radio-button>
+        <mat-radio-button value="Invoice">Invoice</mat-radio-button>
+      </mat-radio-group>
+  
+      <div *ngIf="paymentForm.get('paymentType').value === 'ACH'" formGroupName="ach">
+        <mat-form-field>
+          <mat-label>Routing Number</mat-label>
+          <input matInput formControlName="routingNumber" placeholder="Enter your routing number">
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Confirm Routing Number</mat-label>
+          <input matInput formControlName="confirmRoutingNumber" placeholder="Confirm your routing number">
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Account Number</mat-label>
+          <input matInput formControlName="accountNumber" placeholder="Enter your account number">
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Confirm Account Number</mat-label>
+          <input matInput formControlName="confirmAccountNumber" placeholder="Confirm your account number">
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Account Type</mat-label>
+          <mat-select formControlName="accountType">
+            <mat-option *ngFor="let type of accountTypes" [value]="type">{{type}}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+  
+      <div *ngIf="paymentForm.get('paymentType').value === 'CreditCard'" formGroupName="creditCard">
+        <mat-form-field>
+          <mat-label>Card Number</mat-label>
+          <input matInput formControlName="cardNumber" placeholder="Enter your card number">
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Name on Card</mat-label>
+          <input matInput formControlName="nameOnCard" placeholder="Enter the name on your card">
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Expiration Date</mat-label>
+          <input matInput formControlName="expirationDate" placeholder="MM/YY">
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Security Code (CVV)</mat-label>
+          <input matInput formControlName="cvv" placeholder="Enter your CVV">
+        </mat-form-field>
+      </div>
+  
+      <div formGroupName="invoice">
+        <mat-form-field>
+          <mat-label>Municipality Name</mat-label>
+          <input matInput formControlName="municipalityName" placeholder="Enter municipality name">
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Billing Contact</mat-label>
+          <input matInput formControlName="billingContact" placeholder="Enter billing contact">
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Desired Date of Invoice</mat-label>
+          <input matInput formControlName="desiredDateOfInvoice" (focus)="picker.open()" readonly placeholder="Select desired date of invoice">
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
+      </div>
+  
+      <button mat-raised-button color="primary">Continue</button>
+      <a href="#" class="skip-step">Skip this step and continue.</a>
+    </form>
+  </div>
+  
