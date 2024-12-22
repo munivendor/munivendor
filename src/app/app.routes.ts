@@ -27,7 +27,7 @@ export const routes: Routes = [
   { path: 'municipality-details', component: MunicipalityDetailsComponent   },
   { path: 'user-designation', component: DesignationSelectionComponent},
   { path: 'payment-plan-confirmation', component: PaymentPlanConfirmationComponent},
-  { path: 'PaymentInfoComponent', component: PaymentInfoComponent }
+  { path: 'payment-info', component: PaymentInfoComponent },
   
   { path: 'request-proposal-component', component: RequestProposalComponent },
   { path: 'request-overview-component', component: RequestOverviewComponent },
