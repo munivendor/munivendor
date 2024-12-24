@@ -11,7 +11,7 @@ import { ReactiveFormsModule } from '@angular/forms'
 import { MatSelectModule } from '@angular/material/select'; 
 import { MatOptionModule } from '@angular/material/core'; 
 
-import { MunicipalityService } from "./Services/municipaliy.service"
+import { MunicipalityService } from "./services/municipality.service"
 import { Municipality } from './model/municipality.model';
 
 @Component({

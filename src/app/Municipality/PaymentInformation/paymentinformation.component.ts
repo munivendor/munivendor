@@ -6,6 +6,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { ReactiveFormsModule } from '@angular/forms';
 import { ChangeDetectorRef } from '@angular/core'; 
 import { PaymentInfoService } from './services/payment-info.service'
+import { CustomerProfileData } from './model/CustomerProfileData';
+import { Municipality } from '../Details/model/municipality.model';
 
 
 @Component({
@@ -24,7 +26,7 @@ export class PaymentInfoComponent implements OnInit {
   constructor(private fb: FormBuilder, public dialog: MatDialog, private cdr: ChangeDetectorRef, private paymentInfoService: PaymentInfoService) { }
   ngOnInit(): void {
     this.paymentInformationForm = this.fb.group({
-      paymentType: ['ACH', Validators.required, Validators.pattern('^[0-9]{13,19}$')],
+      paymentType: ['ACH', Validators.required],
       ach: this.fb.group({
         routingNumber: ['', Validators.required],
         confirmRoutingNumber: ['', Validators.required],
@@ -54,7 +56,6 @@ export class PaymentInfoComponent implements OnInit {
     this.previousPaymentType = this.paymentInformationForm!.get('paymentType')!.value;
   }
 
-  
 
   onPaymentTypeChange(): void {
     const selectedPaymentType = this.paymentInformationForm.get('paymentType')!.value;
@@ -71,16 +72,13 @@ export class PaymentInfoComponent implements OnInit {
           if (previousFormGroup) {
             previousFormGroup.reset();
           }
-          // Update to the newly selected payment type
+  
           this.paymentInformationForm.get('paymentType')!.setValue(selectedPaymentType);
-          // Manually trigger change detection
-          this.cdr.detectChanges();
-          // Update previousPaymentType
+        
+          this.cdr.detectChanges(); 
           this.previousPaymentType = selectedPaymentType;
-        } else {
-          // Revert to the previous payment type without clearing fields
+        } else {  
           this.paymentInformationForm.get('paymentType')!.setValue(this.previousPaymentType);
-          // Manually trigger change detection
           this.cdr.detectChanges();
         }
       });
@@ -127,20 +125,35 @@ export class PaymentInfoComponent implements OnInit {
     if (this.paymentInformationForm.valid) {
       const selectedPaymentType = this.paymentInformationForm.get('paymentType')!.value;
       const paymentData = this.paymentInformationForm.get(selectedPaymentType)!.value;
+     
       switch (selectedPaymentType) {
         case 'ACH': this.paymentInfoService.saveACHPaymentInfo(paymentData).subscribe(response => {
           console.log('ACH Payment Info Submitted and Saved', response);
         }, error => {
           console.error('Error saving ACH payment data', error);
-        }); break;
-        case 'CreditCard': this.paymentInfoService.saveCreditCardPaymentInfo(paymentData).subscribe(response => { console.log('Credit Card Payment Info Submitted and Saved', response); },
+        }); 
+        break;
+
+        case 'CreditCard':
+          let customerProfileData: CustomerProfileData = {Email:"testemail@gmail.com",
+            Description:"test profile",
+            MerchantCustomerId: "testprofileid"
+          }
+          let municipalityId: number = 1;
+
+          this.paymentInfoService.saveCreditCardPaymentInfo(municipalityId, customerProfileData, paymentData).subscribe(response => 
+            { console.log('Credit Card Payment Info Submitted and Saved', response);
+
+             },
           error => { console.error('Error saving Credit Card payment data', error); });
           break;
+
         case 'Invoice': this.paymentInfoService.saveInvoicePaymentInfo(paymentData).subscribe(response => {
           console.log('Invoice Payment Info Submitted and Saved', response);
         },
           error => { console.error('Error saving Invoice payment data', error); });
           break;
+
         default: console.error('Invalid payment type selected');
       }
     }

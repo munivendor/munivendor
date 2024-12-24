@@ -1,12 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { CCPaymentProfileData } from '../model/CCPaymentProfileData';
+import { CustomerProfileData } from '../model/CustomerProfileData';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PaymentInfoService {
-  private apiUrl = 'https://your-api-endpoint.com';
+   private apiUrl = '/paymentprofile'
 
   constructor(private http: HttpClient) { }
 
@@ -14,9 +16,9 @@ export class PaymentInfoService {
     return this.http.post(`${this.apiUrl}/save-ach-payment-info`, data);
   }
 
-  saveCreditCardPaymentInfo(data: any): Observable<any> {
+  /*saveCreditCardPaymentInfo(data: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/save-credit-card-payment-info`, data);
-  }
+  }*/
 
   saveInvoicePaymentInfo(data: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/save-invoice-payment-info`, data);
@@ -34,5 +36,14 @@ export class PaymentInfoService {
   getInvoicePaymentInfo(): Observable<any> {
     return this.http.get(`${this.apiUrl}/get-invoice-payment-info`);
   }
+
+  saveCreditCardPaymentInfo(municipalityId: number, customerProfileData: CustomerProfileData, paymentProfileData: CCPaymentProfileData): Observable<string> {
+    const body = {
+        customerProfileData,
+        paymentProfileData
+    };
+    return this.http.post<string>(`${this.apiUrl}/${municipalityId}`, body);
+}
+
 }
 

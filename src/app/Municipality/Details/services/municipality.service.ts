@@ -21,4 +21,8 @@ export class MunicipalityService {
   getMunicipality(municipalityId: number): Observable<Municipality> {
     return this.http.get<Municipality>(`${this.url}${municipalityId}`);
   }
+
+  getMunicipalities(): Observable<Municipality[]> {
+    return this.http.get<Municipality[]>(this.url);
+  }
 }

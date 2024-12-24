@@ -1,0 +1,59 @@
+<div class="municipality-grid-container">
+    <table mat-table [dataSource]="municipalities" class="mat-elevation-z8">
+      <ng-container matColumnDef="municipalityName">
+        <th mat-header-cell *matHeaderCellDef> Name </th>
+        <td mat-cell *matCellDef="let element">
+          <mat-form-field>
+            <input matInput [(ngModel)]="element.municipalityName" placeholder="Enter name" />
+          </mat-form-field>
+        </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="municipalityAddress">
+        <th mat-header-cell *matHeaderCellDef> Address </th>
+        <td mat-cell *matCellDef="let element">
+          <mat-form-field>
+            <input matInput [(ngModel)]="element.municipalityAddress" placeholder="Enter address" />
+          </mat-form-field>
+        </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="municipalityCity">
+        <th mat-header-cell *matHeaderCellDef> City </th>
+        <td mat-cell *matCellDef="let element">
+          <mat-form-field>
+            <input matInput [(ngModel)]="element.municipalityCity" placeholder="Enter city" />
+          </mat-form-field>
+        </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="municipalityState">
+        <th mat-header-cell *matHeaderCellDef> State </th>
+        <td mat-cell *matCellDef="let element">
+          <mat-form-field>
+            <input matInput [(ngModel)]="element.municipalityState" placeholder="Enter state" />
+          </mat-form-field>
+        </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="municipalityZip">
+        <th mat-header-cell *matHeaderCellDef> Zip </th>
+        <td mat-cell *matCellDef="let element">
+          <mat-form-field>
+            <input matInput [(ngModel)]="element.municipalityZip" placeholder="Enter ZIP code" />
+          </mat-form-field>
+        </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef> Actions </th>
+        <td mat-cell *matCellDef="let element">
+          <button mat-button color="primary" (click)="save(element)">Save</button>
+        </td>
+      </ng-container>
+  
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+  </div>
+  
