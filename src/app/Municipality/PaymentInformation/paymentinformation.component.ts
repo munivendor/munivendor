@@ -83,7 +83,7 @@ export class PaymentInfoComponent implements OnInit {
   onPaymentTypeChange(): void {
     const selectedPaymentType = this.paymentInformationForm.get('paymentType')!.value;
   
-    // Get the current form group based on the previous payment type
+    
     const currentFormGroup = this.paymentInformationForm.get(this.previousPaymentType) as FormGroup;
   
     let hasFilledFields = false;
@@ -91,13 +91,13 @@ export class PaymentInfoComponent implements OnInit {
       const control = currentFormGroup.get(field);
       if (control && control.value && control.value.trim() !== '') {
         hasFilledFields = true;
-        break;  // Exit loop as soon as we find a filled field
+        break;  
       }
     }
   
-    // Only show the confirmation dialog if there are any filled fields
+ 
     if (hasFilledFields) {
-      // Temporarily set the payment type back to the previous value to prevent immediate switch
+      
       this.paymentInformationForm.get('paymentType')!.setValue(this.previousPaymentType);
   
       const dialogRef = this.dialog.open(ConfirmationDialogComponent);
@@ -107,6 +107,7 @@ export class PaymentInfoComponent implements OnInit {
           // User confirmed the change, update the payment type and reset form fields
           this.paymentInformationForm.get('paymentType')!.setValue(selectedPaymentType);
           this.previousPaymentType = selectedPaymentType;
+          currentFormGroup.reset();
           this.cdr.detectChanges();
         } else {
           // User cancelled, revert to the previous payment type
@@ -159,7 +160,6 @@ export class PaymentInfoComponent implements OnInit {
     const selectedPaymentType = this.paymentInformationForm.get('paymentType')!.value;
     const selectedFormGroup = this.paymentInformationForm.get(selectedPaymentType) as FormGroup;
 
-    // Validate only the selected tab's form group
     if (selectedFormGroup && selectedFormGroup.valid) {
       const paymentData = selectedFormGroup.value;
 
