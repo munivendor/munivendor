@@ -164,7 +164,7 @@ export class PaymentInfoComponent implements OnInit {
       const paymentData = selectedFormGroup.value;
 
       switch (selectedPaymentType) {
-        case 'ACH':
+        case 'ach':
           this.paymentInfoService.saveACHPaymentInfo(paymentData).subscribe(
             response => {
               console.log('ACH Payment Info Submitted and Saved', response);
@@ -175,7 +175,7 @@ export class PaymentInfoComponent implements OnInit {
           );
           break;
 
-        case 'CreditCard':
+        case 'creditCard':
           let customerProfileData: CustomerProfileData = {
             Email: "testemail@gmail.com",
             Description: "test profile",
@@ -193,7 +193,7 @@ export class PaymentInfoComponent implements OnInit {
           );
           break;
 
-        case 'Invoice':
+        case 'invoice':
           this.paymentInfoService.saveInvoicePaymentInfo(paymentData).subscribe(
             response => {
               console.log('Invoice Payment Info Submitted and Saved', response);
