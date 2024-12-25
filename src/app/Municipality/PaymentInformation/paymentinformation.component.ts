@@ -41,7 +41,7 @@ export class PaymentInfoComponent implements OnInit {
       }),
       creditCard: this.fb.group({
         cardNumber: ['', [Validators.required, Validators.pattern('^[0-9]{13,19}$')]],
-        nameOnCard: ['', Validators.required],
+        nameOnCard: ['', [Validators.required, this.noMiddleNameValidator]],
         expirationDate: ['', Validators.required],
         cvv: ['', [Validators.required, this.cvvValidator.bind(this)]],
         streetAddress1: ['', Validators.required],
@@ -143,6 +143,26 @@ export class PaymentInfoComponent implements OnInit {
     return null;
   }
 
+  noMiddleNameValidator(control: AbstractControl): { [key: string]: boolean } | null {
+    const name = control.value?.trim();
+    if (name && name.split(' ').length !== 2) {
+      return { invalidNameFormat: true };
+    }
+    return null;
+  }
+
+  // Utility function to split the full name into firstName and lastName
+  splitFullName(fullName: string): { firstName: string; lastName: string } {
+    if (!fullName || fullName.trim() === '') {
+      return { firstName: '', lastName: '' };
+    }
+
+    const nameParts = fullName.trim().split(' ');
+    const firstName = nameParts[0];
+    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+
+    return { firstName, lastName };
+  }
 
   loadPaymentInfo(paymentType: string): void {
     switch (paymentType) {
@@ -161,7 +181,7 @@ export class PaymentInfoComponent implements OnInit {
     const selectedFormGroup = this.paymentInformationForm.get(selectedPaymentType) as FormGroup;
 
     if (selectedFormGroup && selectedFormGroup.valid) {
-      const paymentData = selectedFormGroup.value;
+      let paymentData = selectedFormGroup.value;
 
       switch (selectedPaymentType) {
         case 'ach':
@@ -182,6 +202,11 @@ export class PaymentInfoComponent implements OnInit {
             MerchantCustomerId: "testprofileid"
           };
           let municipalityId: number = 1;
+
+        const { firstName, lastName } = this.splitFullName(paymentData.nameOnCard);
+        paymentData = { ...paymentData, firstName, lastName }; 
+        delete paymentData.nameOnCard; // Remove nameOnCard
+
 
           this.paymentInfoService.saveCreditCardPaymentInfo(municipalityId, customerProfileData, paymentData).subscribe(
             response => {

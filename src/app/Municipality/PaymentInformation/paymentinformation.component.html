@@ -82,6 +82,9 @@
         <mat-label>Name on Card</mat-label>
         <input matInput formControlName="nameOnCard" placeholder="Enter the name on your card">
         <mat-error *ngIf="creditCardGroup.get('nameOnCard')?.hasError('required')">Name on card is required.</mat-error>
+        <mat-error *ngIf="creditCardGroup.get('nameOnCard')?.hasError('invalidNameFormat')">
+          Name must contain exactly first and last name (no middle names).
+        </mat-error>
       </mat-form-field>
       <mat-form-field>
         <mat-label>Expiration Date</mat-label>
