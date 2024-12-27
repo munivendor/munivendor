@@ -3,12 +3,14 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { CCPaymentProfileData } from '../model/CCPaymentProfileData';
 import { CustomerProfileData } from '../model/CustomerProfileData';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PaymentInfoService {
-   private apiUrl = '/paymentprofile'
+  
+   apiUrl = `${environment.apiUrl}paymentprofile`;
 
   constructor(private http: HttpClient) { }
 
