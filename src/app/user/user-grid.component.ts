@@ -1,15 +1,16 @@
-import { Component } from '@angular/core';
-import { FormControl, ReactiveFormsModule } from '@angular/forms'; // Reactive forms
+import { Component, OnInit } from '@angular/core';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTableModule } from '@angular/material/table';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { MatChipsModule } from '@angular/material/chips'; // Import MatChipsModule
+import { MatChipsModule } from '@angular/material/chips';
 import { MatDialogModule } from '@angular/material/dialog';
-import { MatChipListbox, MatChip } from '@angular/material/chips'; // Import Chip Components
 import { CommonModule } from '@angular/common';
-import { AddUserDialogComponent } from './add-user-dialog.component'; // Ensure the path is correct
+import { UserService, User } from './service/user-service'; // Import the service
+import { AddUserDialogComponent } from './add-user-dialog.component';
+import { HttpClientModule } from '@angular/common/http'; // Import HttpClientModule
 
 @Component({
   selector: 'app-user-grid',
@@ -21,15 +22,15 @@ import { AddUserDialogComponent } from './add-user-dialog.component'; // Ensure 
     MatInputModule,
     MatButtonModule,
     MatDialogModule,
-    MatChipsModule, // Explicitly declare the component
-    MatChip,
-    ReactiveFormsModule
-],
+    MatChipsModule,
+    ReactiveFormsModule,
+    HttpClientModule, // Add HttpClientModule for API calls
+  ],
   templateUrl: './user-grid.component.html',
   styleUrls: ['./user-grid.component.css'],
 })
-export class UserGridComponent {
-  searchControl = new FormControl(''); // Reactive form control
+export class UserGridComponent implements OnInit {
+  searchControl = new FormControl('');
   displayedColumns: string[] = [
     'nameEmail',
     'title',
@@ -40,37 +41,30 @@ export class UserGridComponent {
     'actions',
   ];
 
-  users = [
-    {
-      name: 'John Doe',
-      email: 'john.doe@email.com',
-      title: 'Manager',
-      role: 'Admin',
-      designee: 'QPA',
-      status: 'Active',
-      tags: ['Finance', 'Project Management'],
-    },
-    {
-      name: 'Jane Smith',
-      email: 'jane.smith@email.com',
-      title: 'Analyst',
-      role: 'User',
-      designee: 'Municipal Clerk',
-      status: 'Pending',
-      tags: ['Budget', 'Analysis'],
-    },
-  ];
+  users: User[] = [];
+  filteredUsers: User[] = [];
 
-  filteredUsers = [...this.users];
+  constructor(private userService: UserService, public dialog: MatDialog) {}
 
-  constructor(public dialog: MatDialog) {
-    // Filter results based on input in the search field
+  ngOnInit(): void {
+    // Fetch users from the API on component load
+    this.userService.getUsers().subscribe(
+      (data) => {
+        this.users = data;
+        this.filteredUsers = data;
+      },
+      (error) => {
+        console.error('Error fetching users:', error);
+      }
+    );
+
+    // Filter users dynamically based on search input
     this.searchControl.valueChanges.subscribe((searchValue) => {
       this.applyFilter(searchValue || '');
     });
   }
 
-  // Filter method
+  // Apply search filter
   applyFilter(filterValue: string) {
     const lowerCaseFilter = filterValue.toLowerCase();
     this.filteredUsers = this.users.filter(
@@ -86,8 +80,8 @@ export class UserGridComponent {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.users.push(result); // Add new user
-        this.applyFilter(this.searchControl.value || '');
+        this.users.push(result); // Add new user locally
+        this.filteredUsers = [...this.users];
       }
     });
   }
