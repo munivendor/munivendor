@@ -78,9 +78,8 @@ export class RequestService {
   }
 
   UpdateRequestStatus(requestId: number, newRequestStatusId: number): Observable<void> {
-    const body = { requestId, requestStatusId: newRequestStatusId };
     const headers = { 'Content-Type': 'application/json' };
-    return this.http.put<void>(`${this.url}RequestStatus/${requestId}`, body, { headers });
+    return this.http.put<void>(`${this.url}RequestStatus/${requestId}/${newRequestStatusId}`, { headers });
   }
 
   GetCancellationReasons(): Observable<any> {

@@ -117,9 +117,9 @@
   <br>
 
   <h2>The Bid Checklist that proposers will complete for this opportunity will include a list of the following forms. Any documents that require notarization will be digitally notarized and included in the proposer’s submission.</h2>
-  <div *ngFor="let requiredDocument of requestFinalReviewDetails.requiredDocuments">
+  <div *ngFor="let requestDocument of requestFinalReviewDetails.requestDocuments">
     <mat-checkbox [checked]="true" [disabled]="true"> {{
-      requiredDocument.documentName }}</mat-checkbox>
+      requestDocument.documentName }}</mat-checkbox>
   </div>
 
   <br />
