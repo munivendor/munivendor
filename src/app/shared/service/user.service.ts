@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { User } from '../model/user.model';
 import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../environments/environment';
-import { Designation } from '../../../shared/model/designation.model';
+import { environment } from '../../../environments/environment';
+import { Designation } from '../../UserDesignationSelection/model/designation.model';
 
 @Injectable({
   providedIn: 'root',
@@ -27,8 +27,8 @@ export class UserService {
     return this.http.get<User>(`${this.userApiUrl}${userId}`);
   }
 
-  getMunicipalityUsers(userId: number): Observable<User> {
-    return this.http.get<User>(`${this.userApiUrl}${userId}`);
+  getMunicipalityUsers(municipalityId: number): Observable<User[]> {
+    return this.http.get<User[]>(`${this.userApiUrl}${municipalityId}`);
   }
 
   SendUserVerificationEmail(userId: number): Observable<boolean> {

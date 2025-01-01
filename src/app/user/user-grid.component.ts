@@ -8,9 +8,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialogModule } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
-import { UserService, User } from './service/user-service'; // Import the service
+import { UserService } from '../shared/service/user.service'; 
+import { User } from '../shared/model/user.model'; 
 import { AddUserDialogComponent } from './add-user-dialog.component';
-import { HttpClientModule } from '@angular/common/http'; // Import HttpClientModule
+import { HttpClientModule } from '@angular/common/http'; 
 
 @Component({
   selector: 'app-user-grid',
@@ -24,7 +25,7 @@ import { HttpClientModule } from '@angular/common/http'; // Import HttpClientMod
     MatDialogModule,
     MatChipsModule,
     ReactiveFormsModule,
-    HttpClientModule, // Add HttpClientModule for API calls
+    HttpClientModule, //  ML-why is needed?
   ],
   templateUrl: './user-grid.component.html',
   styleUrls: ['./user-grid.component.css'],
@@ -47,14 +48,13 @@ export class UserGridComponent implements OnInit {
   constructor(private userService: UserService, public dialog: MatDialog) {}
 
   ngOnInit(): void {
-    // Fetch users from the API on component load
-    this.userService.getUsers().subscribe(
+    
+    this.userService.getMunicipalityUsers().subscribe(
       (data) => {
-        this.users = data;
         this.filteredUsers = data;
       },
       (error) => {
-        console.error('Error fetching users:', error);
+        console.error('Error retrieving users:', error);
       }
     );
 

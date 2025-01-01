@@ -13,7 +13,7 @@ import { MatButtonModule } from '@angular/material/button';
 
 import { UserService } from '../Signup/Services/user.service';
 import { User } from '../Signup/model/user.model';
-import { Designation as Designation } from './model/designee.model';
+import { Designation as Designation } from '../../shared/model/designation.model';
 
 
 @Component({

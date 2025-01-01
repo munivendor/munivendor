@@ -164,7 +164,7 @@ export class PaymentInfoComponent implements OnInit {
     return { firstName, lastName };
   }
 
-  loadPaymentInfo(paymentType: string): void {
+  /*loadPaymentInfo(paymentType: string): void {
     switch (paymentType) {
       case 'ACH': this.paymentInfoService.getACHPaymentInfo().subscribe(data => { this.paymentInformationForm.get('ach')!.patchValue(data); });
         break;
@@ -175,17 +175,25 @@ export class PaymentInfoComponent implements OnInit {
       default:
         console.error('Invalid payment type selected');
     }
-  }
+  }*/
   onSubmit(): void {
     const selectedPaymentType = this.paymentInformationForm.get('paymentType')!.value;
     const selectedFormGroup = this.paymentInformationForm.get(selectedPaymentType) as FormGroup;
+    
+    let customerProfileData: CustomerProfileData = {
+            Email: "testemail@gmail.com",
+            Description: "test profile",
+            MerchantCustomerId: "testprofileid"
+          };
+          let municipalityId: number = 1;
 
     if (selectedFormGroup && selectedFormGroup.valid) {
       let paymentData = selectedFormGroup.value;
 
       switch (selectedPaymentType) {
         case 'ach':
-          this.paymentInfoService.saveACHPaymentInfo(paymentData).subscribe(
+          
+          this.paymentInfoService.saveACHPaymentInfo(municipalityId, customerProfileData, paymentData).subscribe(
             response => {
               console.log('ACH Payment Info Submitted and Saved', response);
             },
@@ -196,16 +204,12 @@ export class PaymentInfoComponent implements OnInit {
           break;
 
         case 'creditCard':
-          let customerProfileData: CustomerProfileData = {
-            Email: "testemail@gmail.com",
-            Description: "test profile",
-            MerchantCustomerId: "testprofileid"
-          };
-          let municipalityId: number = 1;
+        
+       
 
         const { firstName, lastName } = this.splitFullName(paymentData.nameOnCard);
         paymentData = { ...paymentData, firstName, lastName }; 
-        delete paymentData.nameOnCard; // Remove nameOnCard
+        delete paymentData.nameOnCard; 
 
 
           this.paymentInfoService.saveCreditCardPaymentInfo(municipalityId, customerProfileData, paymentData).subscribe(
