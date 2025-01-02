@@ -1,21 +1,19 @@
 <mat-stepper [linear]="false" #stepper>
   <mat-step [stepControl]="basicsFormGroup" label="Basics" [completed]="basicsFormGroup.valid">
     <form [formGroup]="basicsFormGroup">
-      <request-basic [parentFormGroup]="basicsFormGroup" (requestData)="onRequestDataReceived($event)"
-        (deleteDropdown)="deleteDropdownFromRequest($event)"></request-basic>
+      <request-basic [parentFormGroup]="basicsFormGroup"></request-basic>
       <div>
-        <button mat-button matStepperNext [disabled]="!basicsFormGroup.valid" (click)="saveRequestData()">Next</button>
+        <button type="Submit" matStepperNext [disabled]="!basicsFormGroup.valid" (click)="saveRequest()">Next</button>
       </div>
     </form>
   </mat-step>
 
   <mat-step [stepControl]="proposalsOverviewFormGroup" label="Proposals">
     <form [formGroup]="proposalsOverviewFormGroup">
-      <request-overview [parentProposalsOverviewFormGroup]="proposalsOverviewFormGroup"
-        (proposalOverviewData)="onProposalSectionsReceived($event)"></request-overview>
+      <request-overview></request-overview>
       <div>
-        <button mat-button matStepperPrevious>Back</button>
-        <button mat-button matStepperNext [disabled]="!proposalsOverviewFormGroup.valid"
+        <button type="Submit"mat-button matStepperPrevious>Back</button>
+        <button type="Submit"mat-button matStepperNext [disabled]="!proposalsOverviewFormGroup.valid"
           (click)="saveSections()">Next</button>
       </div>
     </form>
@@ -24,10 +22,10 @@
   <mat-step [stepControl]="requestDocumentsFormGroup" label="Documents">
     <form [formGroup]="requestDocumentsFormGroup">
       <request-required-documents *ngIf="requestId" [parentDocumentsFormGroup]="requestDocumentsFormGroup"
-        (documentsData)="onDocumentsReceived($event)"></request-required-documents>
+ ></request-required-documents>
       <div>
-        <button mat-button matStepperPrevious>Back</button>
-        <button mat-button matStepperNext (click)="saveDocuments()">Next</button>
+        <button type="Submit"mat-button matStepperPrevious>Back</button>
+        <button type="Submit"mat-button matStepperNext (click)="saveDocuments()">Next</button>
       </div>
     </form>
   </mat-step>
@@ -37,8 +35,8 @@
       <request-review [parentFinalReviewFormGroup]="finalReviewFormGroup"
         [paramRequestId]="requestId">></request-review>
       <div>
-        <button mat-button matStepperPrevious>Back</button>
-        <button mat-button matStepperNext (click)="updateRequestStatusToScheduled()">Submit</button>
+        <button type="Submit"mat-button matStepperPrevious>Back</button>
+        <button type="Submit"mat-button matStepperNext (click)="updateRequestStatusToScheduled()">Submit</button>
       </div>
     </form>
   </mat-step>

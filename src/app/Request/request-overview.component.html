@@ -3,7 +3,7 @@
         <div *ngFor="let proposalSection of proposalSections.controls; let i = index" [formGroupName]="i">
             <mat-form-field class="title-width">
                 <mat-label>Enter title</mat-label>
-                <input matInput formControlName="requestSectionTitle">
+                <input matInput formControlName="requestSectionTitle" placeholder="d">
                 <mat-error
                     *ngIf="proposalSection.get('requestSectionTitle')?.hasError('required') && proposalSection.get('requestSectionTitle')?.touched">
                     Title is required.

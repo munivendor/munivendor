@@ -2,6 +2,8 @@ import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { FormGroup, FormBuilder, FormArray, ReactiveFormsModule, Validators, FormControl, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+
+import { ActivatedRoute, Router } from '@angular/router';
 import { RequestService } from './services/request.service';
 
 import { SubCategory } from './model/subcategory.model';
@@ -19,6 +21,7 @@ import { MatDatepickerInputEvent, MatDatepickerModule } from '@angular/material/
 import { MatNativeDateModule } from '@angular/material/core';
 import { NgxMatTimepickerModule } from 'ngx-mat-timepicker';
 import { MatIconModule } from '@angular/material/icon';
+import { forkJoin } from 'rxjs';
 
 
 @Component({
@@ -54,6 +57,10 @@ export class BasicRequestComponent implements OnInit {
   requestTypes: RequestType[] | undefined;
   requestName = new FormControl<string | null>(null, [Validators.required]);
 
+  basicsFormGroup!: FormGroup;
+  municipalityId = 1;
+  requestId!: number;
+
   constructor(
     private fb: FormBuilder,
     private requestService: RequestService) {
@@ -62,10 +69,81 @@ export class BasicRequestComponent implements OnInit {
     this.requestService.GetRequestTypes().subscribe((requestTypes: RequestType[]) => this.requestTypes = requestTypes);
   }
 
-  ngOnInit(): void {
+  /*ngOnInit(): void {
     this.requestService.GetCategories().subscribe((categories: Category[]) => (this.categories = categories));
     this.requestService.GetDecisionMakers().subscribe((decisionmakers: DecisionMaker[]) => (this.decisionMakers = decisionmakers));
     this.requestService.GetRequestTypes().subscribe((requestTypes: RequestType[]) => (this.requestTypes = requestTypes));
+  }*/
+
+  ngOnInit() {
+    this.initializeForm();
+
+    if (this.requestId !== 0) {
+      this.getRequestById(this.requestId);
+    }
+  }
+  private initializeForm(data: any = null): void {
+    this.basicsFormGroup = this.fb.group({
+      category: [data?.category || '', Validators.required],
+      subcategory: [data?.subcategory || '', Validators.required],
+      requestType: [data?.requestType || '', Validators.required],
+      requestName: [data?.requestName || '', Validators.required],
+      publishDate: [data?.publishDate || '', Validators.required],
+      publishTime: [data?.publishTime || '', Validators.required],
+      openDate: [data?.openDate || '', Validators.required],
+      openTime: [data?.openTime || '', Validators.required],
+      contractStartDate: [data?.contractStartDate || '', Validators.required],
+      contractEndDate: [data?.contractEndDate || '', Validators.required],
+      dropdowns: this.fb.array(data?.dropdowns || [this.createDropdownControl()]),
+    });
+
+    //this.proposalsOverview = this._formBuilder.group({});
+  }
+
+  private getRequestById(requestId: number): void {
+    const request$ = this.requestService.GetRequestDetailsById(requestId);
+    const categories$ = this.requestService.GetCategories();
+    const requestTypes$ = this.requestService.GetRequestTypes();
+    const subCategories$ = this.requestService.GetAllSubcategories();
+    const decisionMakers$ = this.requestService.GetDecisionMakers();
+  
+    forkJoin([request$, categories$, requestTypes$, subCategories$, decisionMakers$]).subscribe(
+      ([request, categories, requestTypes, subCategories, decisionMakers]) => {
+        const category = categories.find((c: { categoryId: any }) => c.categoryId === request.categoryId);
+        const requestType = requestTypes.find((r: { requestTypeId: number }) => r.requestTypeId === request.requestTypeId);
+        const subCategory = subCategories.find(
+          (sc: { subCategoryId: number }) => sc.subCategoryId === request.subCategoryId
+        );
+  
+        this.subcategories = subCategories.filter(sc => sc.categoryId === request.categoryId);
+  
+        const decisionMakersMapped = request.decisionMakerSelections.map(
+          (selection: { decisionMakerId: number }) =>
+            decisionMakers.find((dm: { decisionMakerId: number }) => dm.decisionMakerId === selection.decisionMakerId)
+        ).filter((dm: any) => dm);
+  
+        const formData = {
+          category: category?.categoryId,
+          subcategory: subCategory?.subCategoryId || '',
+          requestType: requestType?.requestTypeId,
+          requestName: request.requestName,
+          publishDate: request.publishDate,
+          publishTime: this.convertTo24HourFormat(request.publishDate),
+          openDate: request.openDate,
+          openTime: this.convertTo24HourFormat(request.openDate),
+          contractStartDate: request.contractStart,
+          contractEndDate: request.contractEnd,
+          dropdowns: this.createDecisionMakerDropdownControls(decisionMakersMapped),
+        };
+  
+        this.initializeForm(formData);
+  
+       // this.basicRequestComponent.onCategoryChange({ value: formData.category } as MatSelectChange);
+      },
+      (error: any) => {
+        console.error('Error fetching data', error);
+      }
+    );
   }
 
   get dropdowns(): FormArray {
@@ -79,6 +157,14 @@ export class BasicRequestComponent implements OnInit {
     }
   }
 
+  private createDropdownControls(decisionMakers: any[]): any[] {
+    return decisionMakers.map((decisionMaker) =>
+      this.fb.group({
+        decisionMaker: [decisionMaker?.decisionMakerId || '', Validators.required],
+      })
+    );
+  }
+  
   createDropdownControl(): FormGroup {
     return this.fb.group({
       decisionMaker: ['', Validators.required]
@@ -93,22 +179,80 @@ export class BasicRequestComponent implements OnInit {
 
   onCategoryChange(event: MatSelectChange): void {
     const categoryId = event.value;
-
     this.requestService.GetSubcategories(categoryId).subscribe((subcategories: SubCategory[]) => {
       this.subcategories = subcategories;
-
-      // Set the current subcategory if it matches
       const currentSubcategoryId = this.parentFormGroup.get('subcategory')?.value;
       if (this.subcategories.some(sc => sc.subCategoryId === currentSubcategoryId)) {
         this.parentFormGroup.get('subcategory')?.setValue(currentSubcategoryId);
       } else {
-        // Clear subcategory if it doesn't match
         this.parentFormGroup.get('subcategory')?.setValue('');
       }
     });
   }
 
-  emitRequestData(): void {
+  convertTo24HourFormat(dateTimeString: string): string {
+    if (!dateTimeString || dateTimeString.startsWith("0001-01-01")) return ''; // Handle invalid placeholder
+    
+    const date = new Date(dateTimeString);
+    if (isNaN(date.getTime())) return ''; // Handle invalid time
+    
+    return date.toISOString().split('T')[1].substring(0, 5); // Extract HH:mm
+  }
+  
+  // dropdowns is for decision makers
+  private createDecisionMakerDropdownControls(decisionMakers: any[]): any[] {
+    return decisionMakers.map((decisionMaker) =>
+      this.fb.group({
+        decisionMaker: [decisionMaker?.decisionMakerId || '', Validators.required],
+      })
+    );
+  }
+
+  saveRequest() {
+    let request = this.createRequest ();
+
+    if (this.requestData) {
+      this.requestService.CreateRequest(request).subscribe(
+        (responseRequestId: number) => {
+          console.log('Request created successfully:', responseRequestId);
+          this.requestId = responseRequestId;
+        },
+        error => {
+          console.error('Error creating request:', error);
+        }
+      );
+    }
+  }
+
+  createRequest(): Request {
+    const formValues = this.parentFormGroup.value;
+    let request = new Request();
+
+    request.categoryId = formValues.category;
+    request.subcategoryId = formValues.subcategory;
+    request.requestTypeId = formValues.requestType;
+    request.requestName = formValues.requestName;
+
+    // Handle publishDate and publishTime
+    if (formValues.publishDate && formValues.publishTime) {
+      request.publishDate = new Date(`${formValues.publishDate}T${formValues.publishTime}:00`);
+    }
+
+    // Handle openDate and openTime
+    if (formValues.openDate && formValues.openTime) {
+      request.openDate = new Date(`${formValues.openDate}T${formValues.openTime}:00`);
+    }
+
+    request.contractStart = new Date(formValues.contractStartDate);
+    request.contractEnd = new Date(formValues.contractEndDate);
+    request.decisionMakerSelections = formValues.dropdowns.map((control: any, index: number) => ({
+      decisionMakerNumber: index + 1,
+      decisionMakerId: control.decisionMaker
+    }));
+
+    return request;
+  }
+  /*emitRequestData(): void {
     if (this.parentFormGroup.valid) {
       const request = new Request();
       request.categoryId = this.parentFormGroup.controls['category'].value;
@@ -133,8 +277,29 @@ export class BasicRequestComponent implements OnInit {
 
       this.requestData.emit(request);
     }
-  }
-  
+  }*/
+
+    getRequestDetails(requestId: number): void {
+      this.requestService.GetRequestDetailsById(requestId).subscribe((data) => {
+        this.basicsFormGroup.patchValue({
+          category: data.categoryId,
+          subcategory: data.subcategoryId,
+          requestType: data.requestTypeId,
+          requestName: data.requestName,
+          publishDate: this.extractDate(data.publishDate),
+          openDate: this.extractDate(data.openDate),
+          contractStartDate: data.contractStart,
+          contractEndDate: data.contractEnd,
+        });
+        this.dropdowns.clear();
+        data.decisionMakerSelections.forEach((decisionMaker: { decisionMakerId: any; }) => {
+          this.createDropdownControls(decisionMaker.decisionMakerId);
+        });
+      });
+    }
+
+
+   
 
   formatToISO(controlName: string, event: MatDatepickerInputEvent<Date>) {
     if (event.value) {
