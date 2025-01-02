@@ -11,6 +11,11 @@ import { RequestReviewComponent } from './Request/request-review.component';
 import { RequestRequiredDocumentsComponent } from './Request/request-required-docs.component';
 import { TableDetailsComponent } from './Request/TableDetails/request-tabledetails.component';
 import { CreateRequestStepper } from './Request/CreateRequestStepper/create-request-stepper.component';
+import { TokenValidationComponent } from './Municipality/Signup/token-validation.component';
+import { MunicipalityDetailsComponent } from './Municipality/Details/municipality.details.component';
+import { DesignationSelectionComponent } from './Municipality/UserDesignationSelection/municipality.user-designation-selection.component';
+import { PaymentPlanConfirmationComponent } from './Municipality/PaymentInformation/paymentplanconfirmation.component';
+import { PaymentInfoComponent } from './Municipality/PaymentInformation/paymentinformation.component';
 
 export const routes: Routes = [
   { path: 'first-component', component: SignupComponent },
@@ -18,7 +23,12 @@ export const routes: Routes = [
     path: 'login', component: SignupComponent
   },
   { path: 'second-component', component: SignupComponent },
-
+  { path: 'validateuser', component: TokenValidationComponent },
+  { path: 'municipality-details', component: MunicipalityDetailsComponent   },
+  { path: 'user-designation', component: DesignationSelectionComponent},
+  { path: 'payment-plan-confirmation', component: PaymentPlanConfirmationComponent},
+  { path: 'payment-info', component: PaymentInfoComponent },
+  
   { path: 'request-proposal-component', component: RequestProposalComponent },
   { path: 'request-overview-component', component: RequestOverviewComponent },
   {

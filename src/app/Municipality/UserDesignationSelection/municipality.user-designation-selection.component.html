@@ -1,0 +1,15 @@
+<mat-card>
+  <mat-card-title>Check off any designations if any that apply to you</mat-card-title>
+  <mat-card-content>
+    <form [formGroup]="designeeSelectionForm" (ngSubmit)="onSubmit()">
+      <div formArrayName="selectedDesignees" class="checkbox-container">
+        <mat-checkbox *ngFor="let designation of designations; let i = index" [formControlName]="i" (change)="onCheckboxChange(i)">
+          {{ designation.designationDescription }}
+        </mat-checkbox>
+      </div>
+      <button mat-raised-button color="primary" type="submit" [disabled]="!designeeSelectionForm.valid">Continue</button>
+    </form>
+  </mat-card-content>
+</mat-card>
+
+

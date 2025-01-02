@@ -1,0 +1,18 @@
+.header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  
+  .search-box {
+    width: 300px;
+  }
+  
+  table {
+    width: 100%;
+  }
+  
+  mat-chip {
+    margin: 2px;
+  }
+  

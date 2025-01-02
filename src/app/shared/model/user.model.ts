@@ -9,4 +9,8 @@ export class User {
     personalPhoneNumber?: number;
     departmentId?: number;
     userTypeId?: number;
+    DesignationIds?: number [];
+    tagIds?: number[];
 }
+
+ 

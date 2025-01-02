@@ -1,0 +1,175 @@
+<div class="payment-info-container">
+  <h1>MuniVendor</h1>
+  <h2>Payment Information</h2>
+  <p>
+    Please choose your preferred payment option. You will not be charged until your 12-month trial is over. 
+    You will be notified 90 days before you are charged or billed.
+  </p>
+  <form [formGroup]="paymentInformationForm" (ngSubmit)="onSubmit()">
+    <mat-radio-group formControlName="paymentType" (change)="onPaymentTypeChange()">
+      <mat-radio-button value="ach">ACH</mat-radio-button>
+      <mat-radio-button value="creditCard">Credit Card</mat-radio-button>
+      <mat-radio-button value="invoice">Invoice</mat-radio-button>
+    </mat-radio-group>
+
+    <!-- ACH Section -->
+    <div *ngIf="paymentInformationForm.get('paymentType')!.value === 'ach'" formGroupName="ach">
+      <mat-form-field>
+        <mat-label>Routing Number</mat-label>
+        <input matInput formControlName="routingNumber" placeholder="Enter your routing number">
+        <mat-error *ngIf="achGroup.get('routingNumber')?.hasError('required')">Routing number is required.</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Confirm Routing Number</mat-label>
+        <input matInput formControlName="confirmRoutingNumber" placeholder="Confirm your routing number">
+        <mat-error *ngIf="achGroup.get('confirmRoutingNumber')?.hasError('required')">Confirm routing number is required.</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Account Number</mat-label>
+        <input matInput formControlName="accountNumber" placeholder="Enter your account number">
+        <mat-error *ngIf="achGroup.get('accountNumber')?.hasError('required')">Account number is required.</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Confirm Account Number</mat-label>
+        <input matInput formControlName="confirmAccountNumber" placeholder="Confirm your account number">
+        <mat-error *ngIf="achGroup.get('confirmAccountNumber')?.hasError('required')">Confirm account number is required.</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Account Type</mat-label>
+        <mat-select formControlName="accountType">
+          <mat-option *ngFor="let type of accountTypes" [value]="type">{{type}}</mat-option>
+        </mat-select>
+        <mat-error *ngIf="achGroup.get('accountType')?.hasError('required')">Account type is required.</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Street Address Line 1</mat-label>
+        <input matInput formControlName="streetAddress1" placeholder="Enter your street address">
+        <mat-error *ngIf="paymentInformationForm.get('streetAddress1')?.hasError('required')">Street address is required.</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Street Address Line 2</mat-label>
+        <input matInput formControlName="streetAddress2" placeholder="Enter your street address (optional)">
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>City</mat-label>
+        <input matInput formControlName="city" placeholder="Enter your city">
+        <mat-error *ngIf="paymentInformationForm.get('city')?.hasError('required')">City is required.</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>State</mat-label>
+        <input matInput formControlName="state" placeholder="Enter your state">
+        <mat-error *ngIf="paymentInformationForm.get('state')?.hasError('required')">State is required.</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Zip Code</mat-label>
+        <input matInput formControlName="zip" placeholder="Enter your zip code">
+        <mat-error *ngIf="paymentInformationForm.get('zip')?.hasError('required')">Zip code is required.</mat-error>
+        <mat-error *ngIf="paymentInformationForm.get('zip')?.hasError('pattern')">Invalid zip code format.</mat-error>
+      </mat-form-field>
+    </div>
+
+    <!-- Credit Card Section -->
+    <div *ngIf="paymentInformationForm.get('paymentType')!.value === 'creditCard'" formGroupName="creditCard">
+      <mat-form-field>
+        <mat-label>Card Number</mat-label>
+        <input matInput formControlName="cardNumber" placeholder="Enter your card number">
+        <mat-error *ngIf="creditCardGroup.get('cardNumber')?.hasError('required')">Card number is required.</mat-error>
+        <mat-error *ngIf="creditCardGroup.get('cardNumber')?.hasError('pattern')">
+          Card number must be between 13 and 19 digits.
+        </mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Name on Card</mat-label>
+        <input matInput formControlName="nameOnCard" placeholder="Enter the name on your card">
+        <mat-error *ngIf="creditCardGroup.get('nameOnCard')?.hasError('required')">Name on card is required.</mat-error>
+        <mat-error *ngIf="creditCardGroup.get('nameOnCard')?.hasError('invalidNameFormat')">
+          Name must contain exactly first and last name (no middle names).
+        </mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Expiration Date</mat-label>
+        <input matInput formControlName="expirationDate" placeholder="MM/YY">
+        <mat-error *ngIf="creditCardGroup.get('expirationDate')?.hasError('required')">Expiration date is required.</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Security Code (CVV)</mat-label>
+        <input matInput formControlName="cvv" placeholder="Enter your CVV">
+        <mat-error *ngIf="creditCardGroup.get('cvv')?.hasError('required')">Security code is required.</mat-error>
+        <mat-error *ngIf="creditCardGroup.get('cvv')?.hasError('invalidCVV')">Invalid CVV for the provided card number.</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Street Address Line 1</mat-label>
+        <input matInput formControlName="streetAddress1" placeholder="Enter your street address">
+        <mat-error *ngIf="paymentInformationForm.get('streetAddress1')?.hasError('required')">Street address is required.</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Street Address Line 2</mat-label>
+        <input matInput formControlName="streetAddress2" placeholder="Enter your street address (optional)">
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>City</mat-label>
+        <input matInput formControlName="city" placeholder="Enter your city">
+        <mat-error *ngIf="paymentInformationForm.get('city')?.hasError('required')">City is required.</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>State</mat-label>
+        <input matInput formControlName="state" placeholder="Enter your state">
+        <mat-error *ngIf="paymentInformationForm.get('state')?.hasError('required')">State is required.</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Zip Code</mat-label>
+        <input matInput formControlName="zip" placeholder="Enter your zip code">
+        <mat-error *ngIf="paymentInformationForm.get('zip')?.hasError('required')">Zip code is required.</mat-error>
+        <mat-error *ngIf="paymentInformationForm.get('zip')?.hasError('pattern')">Invalid zip code format.</mat-error>
+      </mat-form-field>
+    </div>
+
+    <!-- Invoice Section -->
+    <div *ngIf="paymentInformationForm.get('paymentType')!.value === 'invoice'" formGroupName="invoice">
+      <mat-form-field>
+        <mat-label>Municipality Name</mat-label>
+        <input matInput formControlName="municipalityName" placeholder="Enter municipality name">
+        <mat-error *ngIf="invoiceGroup.get('municipalityName')?.hasError('required')">Municipality name is required.</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Billing Contact</mat-label>
+        <input matInput formControlName="billingContact" placeholder="Enter billing contact">
+        <mat-error *ngIf="invoiceGroup.get('billingContact')?.hasError('required')">Billing contact is required.</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <input matInput [matDatepicker]="picker" placeholder="Choose a date" formControlName="desiredDateOfInvoice">
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+        <mat-error *ngIf="invoiceGroup.get('desiredDateOfInvoice')?.hasError('required')">Desired date is required.</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Street Address Line 1</mat-label>
+        <input matInput formControlName="streetAddress1" placeholder="Enter your street address">
+        <mat-error *ngIf="paymentInformationForm.get('streetAddress1')?.hasError('required')">Street address is required.</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Street Address Line 2</mat-label>
+        <input matInput formControlName="streetAddress2" placeholder="Enter your street address (optional)">
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>City</mat-label>
+        <input matInput formControlName="city" placeholder="Enter your city">
+        <mat-error *ngIf="paymentInformationForm.get('city')?.hasError('required')">City is required.</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>State</mat-label>
+        <input matInput formControlName="state" placeholder="Enter your state">
+        <mat-error *ngIf="paymentInformationForm.get('state')?.hasError('required')">State is required.</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Zip Code</mat-label>
+        <input matInput formControlName="zip" placeholder="Enter your zip code">
+        <mat-error *ngIf="paymentInformationForm.get('zip')?.hasError('required')">Zip code is required.</mat-error>
+        <mat-error *ngIf="paymentInformationForm.get('zip')?.hasError('pattern')">Invalid zip code format.</mat-error>
+      </mat-form-field>
+    </div>
+
+    <button mat-raised-button color="primary" type="submit">Continue</button>
+    <a href="#" class="skip-step">Skip this step and continue.</a>
+  </form>
+</div>

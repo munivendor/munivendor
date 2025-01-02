@@ -1,4 +1,10 @@
-.full-width {
+
+.checkbox-container {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .full-width {
     width: 100%;
     margin-bottom: 16px;
   }

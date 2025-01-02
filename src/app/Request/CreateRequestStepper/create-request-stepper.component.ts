@@ -487,6 +487,7 @@ export class CreateRequestStepper {
   }
 
   onDocumentsReceived(documents: RequestDocument): void {
+
     this.requiredDocuments = documents.required!;
     this.optionalDocuments = documents.optional!;
     this.municipalityDocuments = documents.municipality!;

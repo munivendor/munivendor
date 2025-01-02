@@ -14,10 +14,14 @@ import { GoogleLoginProvider } from '@abacritt/angularx-social-login';
 
 import { Router } from '@angular/router';
 import { UserService } from './Services/user.service';
-import { User } from './model/User';
+import { User } from './model/user.model';
 
 import { Observable } from 'rxjs';
-    import { map } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
+
+import { MatDialog } from '@angular/material/dialog'; 
+import { EmailVerificationDialogComponent } from './email-verification-dialog.component';
+import { open } from 'fs/promises';
 
 const CLIENT_ID =  "954795010792-oafduvq9mhtlatg68rhl4hadtcuajos6.apps.googleusercontent.com";
 
@@ -48,7 +52,7 @@ export class SignupComponent implements OnInit {
 loginForm!: FormGroup;
 userId!: number;
 
-constructor (private fb: FormBuilder, private userService: UserService) {
+constructor (private fb: FormBuilder, private userService: UserService, public dialog: MatDialog) {
 }
 
   onSubmit() {
@@ -60,8 +64,9 @@ constructor (private fb: FormBuilder, private userService: UserService) {
         lastName: this.loginForm.controls["lastname"].value,
         workEmail: this.loginForm.controls["email"].value
       };
-
+      this.sendUserEmailVerification ();
       this.createMunivendorUser (municipalityUser)
+      this.openEmailVerificationDialog ();
     }
   }
 
@@ -135,16 +140,36 @@ constructor (private fb: FormBuilder, private userService: UserService) {
     });
   }
 
+  openEmailVerificationDialog(): void { 
+    this.dialog.open(EmailVerificationDialogComponent);
+  }
     
-    saveMunivendorUser(municipalityUser: User): Observable<number> 
-    { 
-      return this.userService.SaveUser(municipalityUser).pipe(
-        map((userId: number) => {
-          this.userId = userId; 
-          return userId;
-        })
-      );
-    }
-    
+  /*saveMunivendorUser(municipalityUser: User): Observable<number> 
+  { 
+    return this.userService.SaveUser(municipalityUser).pipe(
+      map((userId: number) => {
+        this.userId = userId; 
+        return userId;
+      })
+    );
+  }
+    */
+  saveMunivendorUser(municipalityUser: User): Observable<number> {
+    const saveUserObservable = this.userService.createUser(municipalityUser);
+    saveUserObservable.subscribe((userId: number) => {
+      this.userId = userId;
+    });
+    return saveUserObservable;
+  }
+
+  sendUserEmailVerification(): Observable<boolean> {
+    const sendUserVerificationEmailObservable = this.userService.SendUserVerificationEmail(1);
+    sendUserVerificationEmailObservable.subscribe ((success: boolean) => {
+      this.openEmailVerificationDialog();
+    });
+    return sendUserVerificationEmailObservable;
+  }
+  
+  
   
 }
