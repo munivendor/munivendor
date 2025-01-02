@@ -126,7 +126,7 @@ export class TableDetailsComponent implements OnInit {
         newRequestStatusId = CANCELLED_STATUS_ID;
         newRequestStatusDesc = "Cancelled"
       } else {
-        console.warn("Unexpected request status:", statusDesc);
+        console.warn("Unexpected Request status:", statusDesc);
         return;
       }
 
@@ -148,7 +148,7 @@ export class TableDetailsComponent implements OnInit {
           this.dataSource.data = this.joinedRequestData;
         },
         (error) => {
-          console.error("Error updating request status:", error);
+          console.error("Error updating Request status:", error);
         }
       );
     }
@@ -164,25 +164,4 @@ export class TableDetailsComponent implements OnInit {
       }
     );
   }
-
-  // editRequest(request: any, action: string): void {
-  //   // Define the updated request data based on the action
-  //   let updatedData: any;
-
-  //   if (action === 'edit') {
-  //     // Example: Editing request (you can modify the fields as per your requirements)
-  //     updatedData = { ...request, requestName: 'Updated Request Name' }; // Modify requestName or other fields
-  //   }
-
-  //   this.http.put(`${this.url}/api/requests/${request.requestId}`, updatedData).subscribe(
-  //     (updatedItem) => {
-  //       console.log(`Request with ID ${request.requestId} updated successfully.`);
-  //       // Update the table with the updated request
-  //       this.joinedRequestData = this.joinedRequestData.map(i => i.requestId === request.requestId ? updatedItem : i);
-  //     },
-  //     error => {
-  //       console.error('Error updating the request:', error);
-  //     }
-  //   );
-  // }
 }

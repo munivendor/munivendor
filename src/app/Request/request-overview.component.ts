@@ -1,15 +1,12 @@
-import { Component, OnInit, ChangeDetectionStrategy, Output, EventEmitter } from '@angular/core';
-import { RouterModule } from '@angular/router';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+import { Component, Output, EventEmitter, OnInit, Input } from '@angular/core';
+import { FormArray, FormGroup, Validators, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { MatDividerModule } from '@angular/material/divider';
-import { RequestService } from './services/request.service';
 import { RequestSection } from './model/requestsection.model';
-import { ChangeDetectorRef } from '@angular/core';
+import { EditorModule } from '@tinymce/tinymce-angular';
 
 @Component({
   selector: 'request-overview',
@@ -17,66 +14,69 @@ import { ChangeDetectorRef } from '@angular/core';
   templateUrl: './request-overview.component.html',
   styleUrls: ['./request-overview.component.css'],
   imports: [
-    ReactiveFormsModule,
-    RouterModule, 
-    CommonModule,
-    FormsModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
+    CommonModule,
     MatIconModule,
-    MatDividerModule],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    ReactiveFormsModule,
+    EditorModule
+  ],
 })
 
 export class RequestOverviewComponent implements OnInit {
+  public editorConfig = {
+    selector: '#your-textarea',
+    toolbar: 'bold italic underline strikethrough | alignleft aligncenter alignright | bullist numlist outdent indent',
+    height: 300,
+    menubar: false,
+    plugins: 'lists code',
+  };
+  
+  @Input() parentProposalsOverviewFormGroup!: FormGroup;
   @Output() proposalOverviewData = new EventEmitter<RequestSection[]>();
 
-  overviewText: string = '';
-  municipalityId: number = 1;
-  isFileUploaded: boolean = false;
-  requestId: number = 1;
-  proposalSections: RequestSection[] = [];
+  constructor(private fb: FormBuilder) {}
 
-  constructor(
-    private requestService: RequestService,
-    private cdr: ChangeDetectorRef) { }
-
-  ngOnInit(): void {
-    this.fetchRequestSectionDefaultTitles();
+  get proposalSections(): FormArray {
+    return this.parentProposalsOverviewFormGroup.get("proposalSections") as FormArray;
   }
 
-  fetchRequestSections(requestId: number) {
-    this.requestService.GetRequestSections(requestId).subscribe(
-      (response) => {
-        console.log("Completed fetching request sections", response)
-      },
-      (error) => {
-        console.error('Error fetching request sections:', error);
-      }
-    );
-  }
+  ngOnInit(): void {}
 
-  fetchRequestSectionDefaultTitles() {
-    this.requestService.GetRequestSectionDefaultTitles().subscribe(
-      (response) => {
-        this.proposalSections = [...response];
-        this.proposalOverviewData.emit(this.proposalSections);
-        this.cdr.detectChanges();
-      },
-      (error) => {
-        console.error('Error fetching cancellation reasons:', error);
-      }
-    );
+  emitRequestSections(): void {
+    if (this.parentProposalsOverviewFormGroup.valid) {
+      // Process and prepare sections
+      const processedSections = this.proposalSections.controls.map((section) => {
+        const contentControl = section.get('requestSectionContent');
+        if (contentControl) {
+          const processedContent = this.getProcessedContent(contentControl.value);
+          contentControl.setValue(processedContent, { emitEvent: false });
+        }
+        return section.value;
+      });
+  
+      this.parentProposalsOverviewFormGroup.setValue({
+        proposalSections: processedSections, 
+      });
+  
+      this.proposalOverviewData.emit(this.parentProposalsOverviewFormGroup.value);
+    }
   }
 
   addSection() {
-    this.proposalSections.push({
-      requestId: this.requestId,
-      requestSectionId: null,
-      requestSectionTitle: '',
-      requestSectionContent: ''
+    const newSection = this.fb.group({
+      requestId: [0],
+      requestSectionId: [null],
+      requestSectionTitle: ['', Validators.required],
+      requestSectionContent: ['']
     });
-    this.proposalOverviewData.emit(this.proposalSections);
+    this.proposalSections.push(newSection);
+    this.proposalOverviewData.emit(this.parentProposalsOverviewFormGroup.value.proposalSections);
+  }
+
+  getProcessedContent(content: string): string {
+    // Process the TinyMCE content to replace <br> with <br/> for line breaks
+    return content.replace(/<br>/g, '<br/>');
   }
 }

@@ -20,7 +20,7 @@ export class RequestService {
     return this.http.get<any>(this.url);
   }
 
-  GetSubcategories(categoryId: any ): Observable<SubCategory[]> {
+  GetSubcategories(categoryId: any): Observable<SubCategory[]> {
     let params = this.url + 'Subcategories/' + categoryId
     return this.http.get<SubCategory[]>(params);
   }
@@ -47,6 +47,12 @@ export class RequestService {
     return this.http.post<number>(url, request, { headers });
   }
 
+  UpdateRequest(requestId: number, request: Request,): Observable<any> {
+    const headers = { 'Content-Type': 'application/json' };
+    const url = `${this.url}Requests/${requestId}`;
+    return this.http.put<number>(url, request, { headers });
+  }
+
   SaveRequiredDocuments(requestId: number, requiredDocumentTypes: DocumentType[]): Observable<boolean> {
     const body = JSON.stringify(requiredDocumentTypes);
     const headers = { 'Content-Type': 'application/json' };
@@ -58,14 +64,12 @@ export class RequestService {
   UploadMunicipalityRequestDocument(requestId: number, file: File, documentTitle?: string): Observable<any> {
     const url = `${this.url}/UploadDocument/${requestId}`;
     const formData = new FormData();
-  
-    // Append the file and optional document title
+
     formData.append('file', file, file.name);
     if (documentTitle) {
       formData.append('documentTitle', documentTitle);
     }
-  
-    // Send the request with the FormData
+
     return this.http.post(url, formData, { reportProgress: true, observe: 'events' });
   }
 
@@ -74,9 +78,8 @@ export class RequestService {
   }
 
   UpdateRequestStatus(requestId: number, newRequestStatusId: number): Observable<void> {
-    const body = { requestId, requestStatusId: newRequestStatusId };
     const headers = { 'Content-Type': 'application/json' };
-    return this.http.put<void>(`${this.url}RequestStatus/${requestId}`, body, { headers });
+    return this.http.put<void>(`${this.url}RequestStatus/${requestId}/${newRequestStatusId}`, { headers });
   }
 
   GetCancellationReasons(): Observable<any> {
@@ -109,9 +112,9 @@ export class RequestService {
     return this.http.get<any>(`${this.url}RequestSectionDefaults`);
   }
 
-  SaveRequestSections(requestSection: RequestSection): Observable<void> {
+  SaveRequestSections(requestSection: RequestSection, requestId: number): Observable<void> {
     const headers = { 'Content-Type': 'application/json' };
-    return this.http.post<void>(`${this.url}RequestSections`, requestSection, { headers });
+    return this.http.post<void>(`${this.url}RequestSections/${requestId}`, requestSection, { headers });
   }
 
   GetRequiredDocuments(): Observable<any> {
@@ -129,7 +132,7 @@ export class RequestService {
   SaveMunicipalityDocument(municipalityId: number, municipalityDocument: any): Observable<any> {
     const headers = { 'Content-Type': 'application/json' };
     const url = `${this.url}MunicipalityDocuments/${municipalityId}`;
-    return this.http.post<void>(url, municipalityDocument, {headers} )
+    return this.http.post<void>(url, municipalityDocument, { headers })
   }
 
   DeleteMunicipalityDocument(documentId: number): Observable<void> {
@@ -153,6 +156,10 @@ export class RequestService {
 
   GetRequestRequiredDocumentsById(requestId: number): Observable<any> {
     return this.http.get<void>(`${this.url}RequestDocuments/${requestId}`);
+  }
+
+  DeleteDecisionMaker(requestId: number, decisionMakerId: number): Observable<any> {
+    return this.http.delete<void>(`${this.url}DecisionMakers/${requestId}/${decisionMakerId}`);
   }
 }
 

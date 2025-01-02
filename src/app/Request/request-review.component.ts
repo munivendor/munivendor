@@ -1,14 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { FormGroup, FormBuilder, ReactiveFormsModule, FormArray } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
 import { MatCheckbox } from '@angular/material/checkbox';
 import { MatFormField } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { forkJoin } from 'rxjs';
-
 import { RequestService } from './services/request.service';
+import { StateService } from './services/state.service';
+import { Router } from '@angular/router';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'request-review',
@@ -26,18 +27,41 @@ import { RequestService } from './services/request.service';
 })
 
 export class RequestReviewComponent implements OnInit {
+  @Input() parentFinalReviewFormGroup!: FormGroup;
+  @Input() paramRequestId!: number;
+
+  requestId!: number | null;
   requestFinalReviewDetailsForm!: FormGroup;
-  requestId: number = 60;
   requestFinalReviewDetails: any = {};
   docs: any;
 
   constructor(
     private fb: FormBuilder,
-    private route: ActivatedRoute,
-    private requestService: RequestService
+    private requestService: RequestService,
+    private stateService: StateService,
+    private router: Router,
+    private snackBar: MatSnackBar
   ) { }
 
+
   ngOnInit() {
+    const requestId = this.stateService.getRequestId();
+
+    if (this.paramRequestId) {
+      this.getRequestObjDetails(this.paramRequestId);
+    }
+    // dynamically call getRequestObjDetails if any page  
+    // has been saved to receive updated request details
+    this.stateService.currentRequestHasBeenSaved$.subscribe((hasBeenSaved) => {
+      if (hasBeenSaved) {
+        if (this.paramRequestId) {
+          this.getRequestObjDetails(this.paramRequestId);
+        } else if (requestId) {
+          this.getRequestObjDetails(requestId);
+        }
+      }
+    });
+
     this.requestFinalReviewDetailsForm = this.fb.group({
       requestName: [''],
       category: [''],
@@ -49,51 +73,67 @@ export class RequestReviewComponent implements OnInit {
       contractStart: [''],
       contractEnd: [''],
       decisionMakers: this.fb.array([]),
-      requiredDocuments: this.fb.array([]) // Same for required documents
+      requestDocuments: this.fb.array([])
     });
-
-    this.getRequestObjDetails(this.requestId);
   }
 
   getRequestObjDetails(requestId: number) {
     const request$ = this.requestService.GetRequestDetailsById(requestId);
     const categories$ = this.requestService.GetCategories();
     const requestTypes$ = this.requestService.GetRequestTypes();
-    const requestStatuses$ = this.requestService.GetRequestStatuses();
     const subCategories$ = this.requestService.GetAllSubcategories();
     const decisionMakers$ = this.requestService.GetDecisionMakers();
     const requiredRequestDocuments$ = this.requestService.GetRequestRequiredDocumentsById(requestId);
 
-    forkJoin([request$, categories$, requestTypes$, requestStatuses$, subCategories$, decisionMakers$, requiredRequestDocuments$]).subscribe(
-      ([request, categories, requestTypes, requestStatuses, subCategories, decisionMakers, requiredRequestDocuments]) => {
+    forkJoin([request$, categories$, requestTypes$, subCategories$, decisionMakers$, requiredRequestDocuments$]).subscribe(
+      ([request, categories, requestTypes, subCategories, decisionMakers, requiredRequestDocuments]) => {
         const category = categories.find((c: { categoryId: any }) => c.categoryId === request.categoryId);
         const requestType = requestTypes.find((r: { requestTypeId: number }) => r.requestTypeId === request.requestTypeId);
-        const requestStatus = requestStatuses.find((rs: { requestStatusId: any }) => rs.requestStatusId === request.requestStatusId);
         const subCategory = subCategories.find((sc: { subCategoryId: number }) => sc.subCategoryId === request.subCategoryId);
 
-        // Map over decisionMakerSelections in request to match decisionMakers from API response
         const decisionMakersMapped = request.decisionMakerSelections.map((selection: { decisionMakerId: number }) =>
           decisionMakers.find((dm: { decisionMakerId: number }) => dm.decisionMakerId === selection.decisionMakerId)
         ).filter((dm: any) => dm);
 
-      // Filter documents to include only those marked as required
-      const requiredDocuments = requiredRequestDocuments;
+        const requestDocuments = requiredRequestDocuments;
+
+        const { date: publishDate, time: publishTime } = this.splitDateTime(request.publishDate);
+        const { date: openDate, time: openTime } = this.splitDateTime(request.openDate);
+        const { date: contractStart } = this.splitDateTime(request.contractStart);
+        const { date: contractEnd } = this.splitDateTime(request.contractEnd);
 
         this.requestFinalReviewDetails = {
           ...request,
           category,
           requestType,
-          requestStatus,
           subCategory,
           decisionMakers: decisionMakersMapped,
-          requiredDocuments,
-          openDate: this.formatToUSDate(request.openDate),
-          publishDate: this.formatToUSDate(request.publishDate),
-          contractStart: this.formatToUSDate(request.contractStart),
-          contractEnd: this.formatToUSDate(request.contractEnd),
-          openTime: this.formatToUSTime(request.openTime),
-          publishTime: this.formatToUSTime(request.publishTime)
+          requestDocuments,
+          openDate,
+          publishDate,
+          contractStart,
+          contractEnd,
+          openTime,
+          publishTime
         };
+
+        // Populate the form with data
+        this.requestFinalReviewDetailsForm.patchValue({
+          requestName: request.requestName,
+          category: category?.categoryName || '',
+          subcategory: subCategory?.subCategoryName || '',
+          requestType: requestType?.requestTypeDesc || '',
+          publishDate: publishDate,
+          publishTime: publishTime,
+          openDate: openDate,
+          openTime: openTime,
+          contractStart: contractStart,
+          contractEnd: contractEnd
+        });
+
+        this.populateArrayFormControls('decisionMakers', decisionMakersMapped);
+
+        this.populateArrayFormControls('requestDocuments', requiredRequestDocuments);
       },
       error => {
         console.error('Error fetching data', error);
@@ -101,39 +141,58 @@ export class RequestReviewComponent implements OnInit {
     );
   }
 
-  // Helper function to format dates to MM/DD/YYYY
-  formatToUSDate(dateString: string): string {
-    const date = new Date(dateString);
-    const options: Intl.DateTimeFormatOptions = {
+  // takes a combined date-time string, parses it
+  // returns an object containing separate date and time fields.
+  splitDateTime(dateTimeString: string): { date: string; time: string } {
+    const date = new Date(dateTimeString);
+
+    const dateOptions: Intl.DateTimeFormatOptions = {
       month: '2-digit',
       day: '2-digit',
-      year: 'numeric'
+      year: 'numeric',
     };
-    return new Intl.DateTimeFormat('en-US', options).format(date);
-  }
 
-  // Helper function to format times to HH:MM AM/PM
-  formatToUSTime(timeString: string): string {
-    const date = new Date(timeString);
-    const options: Intl.DateTimeFormatOptions = {
+    const timeOptions: Intl.DateTimeFormatOptions = {
       hour: '2-digit',
       minute: '2-digit',
-      hour12: true
+      hour12: true,
     };
-    return new Intl.DateTimeFormat('en-US', options).format(date);
+
+    return {
+      date: new Intl.DateTimeFormat('en-US', dateOptions).format(date),
+      time: new Intl.DateTimeFormat('en-US', timeOptions).format(date),
+    };
   }
 
   populateArrayFormControls(controlName: string, items: any[]) {
     const controlArray = this.requestFinalReviewDetailsForm.get(controlName) as FormArray;
     controlArray.clear();
     items?.forEach(item => {
-      controlArray.push(this.fb.control(item.name || item));  // Customize based on your data structure
+      controlArray.push(this.fb.control(item.name || item));
     });
   }
 
   onSubmit() {
-    if (this.requestFinalReviewDetailsForm.valid) {
-      console.log(this.requestFinalReviewDetailsForm.value);
+    // Determine the requestId to use
+    const requestIdToUse = this.paramRequestId ?? this.stateService.getRequestId();
+    if (!requestIdToUse) {
+      console.error('Error: No valid requestId found.');
+      return;
     }
+
+    // Update the request status to 'Scheduled' once users finalize review
+    this.requestService.UpdateRequestStatus(requestIdToUse, 2).subscribe({
+      next: (response) => {
+        console.log('Request status updated successfully:', response);
+        this.snackBar.open('Request successfully submitted!', '', {
+          duration: 5000,
+          verticalPosition: 'top'
+        });
+        this.router.navigate(['/dashboard-component/requests-view']);
+      },
+      error: (err) => {
+        console.error('Failed to update request status:', err);
+      }
+    });
   }
 }

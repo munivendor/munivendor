@@ -45,11 +45,10 @@ import { MatIconModule } from '@angular/material/icon';
 export class BasicRequestComponent implements OnInit {
   @Input() parentFormGroup!: FormGroup;
   @Output() requestData = new EventEmitter<Request>();
+  @Output() deleteDropdown = new EventEmitter<{ decisionMakerId: number | null }>();
+
 
   decisionMakers!: DecisionMaker[];
-  decisionMakers2!: DecisionMaker[];
-  decisionMakers3!: DecisionMaker[];
-  decisionMakers4!: DecisionMaker[];
   categories!: Category[];
   subcategories!: SubCategory[];
   requestTypes: RequestType[] | undefined;
@@ -59,15 +58,11 @@ export class BasicRequestComponent implements OnInit {
     private fb: FormBuilder,
     private requestService: RequestService) {
     this.requestService.GetCategories().subscribe((categories: Category[]) => this.categories = categories);
-    this.requestService.GetDecisionMakers().subscribe((decisionmakers: DecisionMaker[]) => this.decisionMakers = decisionmakers);;
-    this.requestService.GetDecisionMakers().subscribe((decisionmakers: DecisionMaker[]) => this.decisionMakers2 = decisionmakers);;
-    this.requestService.GetDecisionMakers().subscribe((decisionmakers: DecisionMaker[]) => this.decisionMakers3 = decisionmakers);;
-    this.requestService.GetDecisionMakers().subscribe((decisionmakers: DecisionMaker[]) => this.decisionMakers4 = decisionmakers);
+    this.requestService.GetDecisionMakers().subscribe((decisionmakers: DecisionMaker[]) => this.decisionMakers = decisionmakers);
     this.requestService.GetRequestTypes().subscribe((requestTypes: RequestType[]) => this.requestTypes = requestTypes);
   }
 
   ngOnInit(): void {
-    // Load data for dropdowns
     this.requestService.GetCategories().subscribe((categories: Category[]) => (this.categories = categories));
     this.requestService.GetDecisionMakers().subscribe((decisionmakers: DecisionMaker[]) => (this.decisionMakers = decisionmakers));
     this.requestService.GetRequestTypes().subscribe((requestTypes: RequestType[]) => (this.requestTypes = requestTypes));
@@ -91,17 +86,18 @@ export class BasicRequestComponent implements OnInit {
   }
 
   removeDropdown(index: number): void {
+    const decisionMakerId = this.dropdowns.at(index).get('decisionMaker')?.value;
     this.dropdowns.removeAt(index);
+    this.deleteDropdown.emit({ decisionMakerId });
   }
 
   onCategoryChange(event: MatSelectChange): void {
     const categoryId = event.value;
 
-    // Always fetch subcategories, even during initialization
     this.requestService.GetSubcategories(categoryId).subscribe((subcategories: SubCategory[]) => {
       this.subcategories = subcategories;
 
-      // Automatically set the current subcategory if it matches
+      // Set the current subcategory if it matches
       const currentSubcategoryId = this.parentFormGroup.get('subcategory')?.value;
       if (this.subcategories.some(sc => sc.subCategoryId === currentSubcategoryId)) {
         this.parentFormGroup.get('subcategory')?.setValue(currentSubcategoryId);
@@ -114,37 +110,31 @@ export class BasicRequestComponent implements OnInit {
 
   emitRequestData(): void {
     if (this.parentFormGroup.valid) {
-      let request = new Request();
-
+      const request = new Request();
       request.categoryId = this.parentFormGroup.controls['category'].value;
       request.subcategoryId = this.parentFormGroup.controls['subcategory'].value;
       request.requestTypeId = this.parentFormGroup.controls['requestType'].value;
       request.requestName = this.parentFormGroup.controls['requestName'].value;
-
-      // Handle publishDate and publishTime
+  
       const publishDate = this.parentFormGroup.controls['publishDate'].value;
       const publishTime = this.parentFormGroup.controls['publishTime'].value;
-      if (publishDate && publishTime) {
-        request.publishDate = new Date(`${publishDate}T${publishTime}:00`);
-      }
-
-      // Handle openDate and openTime
-      const openDate = this.parentFormGroup.controls['openDate'].value; 
+      request.publishDate = new Date(this.combineDateTimeInUtc(this.extractDate(publishDate), publishTime));
+  
+      const openDate = this.parentFormGroup.controls['openDate'].value;
       const openTime = this.parentFormGroup.controls['openTime'].value;
-      if (openDate && openTime) {
-        request.openDate = new Date(`${openDate}T${openTime}:00`);
-      }
+      request.openDate = new Date(this.combineDateTimeInUtc(this.extractDate(openDate), openTime));
 
       request.contractStart = new Date(this.parentFormGroup.controls['contractStartDate'].value);
       request.contractEnd = new Date(this.parentFormGroup.controls['contractEndDate'].value);
+  
       request.decisionMakerSelections = this.dropdowns.controls.map((control, index) => ({
-        decisionMakerNumber: index + 1,
-        decisionMakerId: control.value.decisionMaker
+        decisionMakerId: control.value.decisionMaker,
       }));
 
       this.requestData.emit(request);
     }
   }
+  
 
   formatToISO(controlName: string, event: MatDatepickerInputEvent<Date>) {
     if (event.value) {
@@ -153,4 +143,28 @@ export class BasicRequestComponent implements OnInit {
       this.parentFormGroup.get(controlName)?.setValue(formattedDate);
     }
   }
+
+  combineDateTimeInUtc(inputDate: string, inputTime: string): string {
+    const dateTimeString = `${inputDate}T${inputTime}Z`;
+    return dateTimeString;
+  }
+
+  extractDate(dateTime: string): string {
+    if (dateTime.includes('T')) {
+      return new Date(dateTime).toISOString().split('T')[0];
+    }
+    return dateTime;
+  }
+
+  getFilteredDecisionMakers(index: number) {
+    const selectedDecisionMakerIds = this.dropdowns.controls
+        .map((control, i) => (i !== index ? control.get('decisionMaker')?.value : null))
+        .filter((value) => value !== null);
+    if (!this.decisionMakers || this.decisionMakers.length === 0) {
+        return [];
+    }
+    return this.decisionMakers.filter(
+        (decisionMaker) => !selectedDecisionMakerIds.includes(decisionMaker.decisionMakerId)
+    );
+}
 }
