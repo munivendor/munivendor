@@ -6,7 +6,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
-import { UserService } from '../Signup/Services/user.service';
+import { UserService } from '../../shared/service/user.service';
 import { User } from '../Signup/model/user.model';
 import { Department } from './model/department.model';
 import { DepartmentService } from './service/department.service';

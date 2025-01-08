@@ -2,13 +2,13 @@
     <div *ngFor="let proposalSection of proposalSections">
         <mat-form-field class="title-width">
             <mat-label>Enter title</mat-label>
-            <input matInput [(ngModel)]="proposalSection.requestSectionTitle">
+            <input matInput [(ngModel)]="proposalSection.requestSectionTitle" placeholder="Enter Title">
         </mat-form-field>
 
         <mat-form-field class="full-width">
             <mat-label>Enter content</mat-label>
             <textarea matInput id="overview" name="w3review" rows="4"
-                [(ngModel)]="proposalSection.requestSectionContent">
+                [(ngModel)]="proposalSection.requestSectionContent" placeholder="Enter Content">
         </textarea>
         </mat-form-field>
 

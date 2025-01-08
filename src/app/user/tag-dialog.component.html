@@ -1,0 +1,23 @@
+<h1 mat-dialog-title>Select Tags</h1>
+<div mat-dialog-content>
+  <h2>Tags associated with user:</h2>
+  <mat-selection-list>
+    <mat-list-option *ngFor="let tag of userTags">
+      {{ tag.tagName }}
+      <button mat-icon-button (click)="deleteTag(tag.tagId)">
+        <mat-icon>cancel</mat-icon>
+      </button>
+    </mat-list-option>
+  </mat-selection-list>
+
+  <h2>Available tags:</h2>
+  <mat-selection-list [(ngModel)]="selectedTags">
+    <mat-list-option *ngFor="let tag of availableTags" [value]="tag.tagId">
+      {{ tag.tagName }}
+    </mat-list-option>
+  </mat-selection-list>
+</div>
+<div mat-dialog-actions>
+  <button mat-button (click)="onNoClick()">Cancel</button>
+  <button mat-button (click)="save()">Add Tags</button>
+</div>

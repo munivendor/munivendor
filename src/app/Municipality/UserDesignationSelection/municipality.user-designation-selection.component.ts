@@ -11,7 +11,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
 
-import { UserService } from '../Signup/Services/user.service';
+import { UserService } from '../../shared/service/user.service';
 import { User } from '../Signup/model/user.model';
 import { Designation as Designation } from '../../shared/model/designation.model';
 
@@ -36,7 +36,7 @@ export class DesignationSelectionComponent implements OnInit {
       });
    
  
-    this.userService.getDesigneeTypes().subscribe(
+    this.userService.getDesignationTypes().subscribe(
       (designations: Designation[]) => {
         this.designations = designations;
         this.updateSelectedDesigneesFormArray();
