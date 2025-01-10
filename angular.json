@@ -43,7 +43,6 @@
             "outputPath": "dist/munivendor",
             "index": "src/index.html",
             "browser": "src/main.ts",
-           
             "polyfills": [
               "zone.js"
             ],
@@ -121,7 +120,12 @@
             "tsConfig": "tsconfig.spec.json",
             "assets": [
               "src/favicon.ico",
-              "src/assets"
+              "src/assets",
+              {
+                "glob": "**/*",
+                "input": "node_modules/tinymce",
+                "output": "/tinymce/"
+              }
             ],
             "styles": [
               "@angular/material/prebuilt-themes/indigo-pink.css",

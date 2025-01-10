@@ -14,7 +14,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule } from '@angular/material/dialog';
 import { TooltipDialogComponent } from './tooltip-dialog.component';
 
-import { UserService } from '../shared/user.service'
+import { UserService } from '../shared/service/user.service'
+ 
 
 @Component({
   selector: 'app-user-form',
