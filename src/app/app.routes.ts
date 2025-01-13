@@ -17,6 +17,7 @@ import { DesignationSelectionComponent } from './Municipality/UserDesignationSel
 import { PaymentPlanConfirmationComponent } from './Municipality/PaymentInformation/paymentplanconfirmation.component';
 import { PaymentInfoComponent } from './Municipality/PaymentInformation/paymentinformation.component';
 import { UserFormComponent } from './user/user-form.component';
+import { UserGridComponent } from './user/user-grid.component';
 
 export const routes: Routes = [
   { path: 'first-component', component: SignupComponent },
@@ -30,6 +31,7 @@ export const routes: Routes = [
   { path: 'payment-plan-confirmation', component: PaymentPlanConfirmationComponent},
   { path: 'payment-info', component: PaymentInfoComponent },
   { path: 'user', component: UserFormComponent },
+  { path: 'user-list', component: UserGridComponent },
   
   { path: 'request-proposal-component', component: RequestProposalComponent },
   { path: 'request-overview-component', component: RequestOverviewComponent },
