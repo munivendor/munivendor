@@ -213,7 +213,7 @@ export class CreateRequestStepper {
         requestSectionTitle: section.requestSectionTitle,
         requestSectionContent: section.requestSectionContent
       };
-      this.requestService.SaveRequestSections(payload)
+      this.requestService.SaveRequestSections(section, this.requestId)
         .subscribe({
           next: (response) => {
             console.log(`Section ${section.requestSectionTitle} saved successfully!`);
