@@ -1,0 +1,26 @@
+/* src/app/components/category-manager/category-manager.component.scss */
+.category-manager {
+    margin: 20px;
+  }
+  
+  .category-actions {
+    margin-bottom: 15px;
+  
+    button {
+      margin-right: 10px;
+    }
+  }
+  
+  .category-tree {
+    max-width: 600px;
+  }
+  
+  .node-content {
+    display: flex;
+    align-items: center;
+  }
+  
+  .selected {
+    background-color: rgba(0, 0, 255, 0.1);
+  }
+  
