@@ -1,16 +1,15 @@
-<div [formGroup]="parentProposalsOverviewFormGroup">
+<div [formGroup]="proposalsOverviewFormGroup">
     <div style="margin-top: 8px;" formArrayName="proposalSections">
         <div *ngFor="let proposalSection of proposalSections.controls; let i = index" [formGroupName]="i">
             <mat-form-field class="title-width">
                 <mat-label>Enter title</mat-label>
-                <input matInput formControlName="requestSectionTitle" placeholder="d">
+                <input matInput formControlName="requestSectionTitle">
                 <mat-error
                     *ngIf="proposalSection.get('requestSectionTitle')?.hasError('required') && proposalSection.get('requestSectionTitle')?.touched">
                     Title is required.
                 </mat-error>
             </mat-form-field>
             <editor [init]="editorConfig" formControlName="requestSectionContent"></editor>
-
             <ul
                 *ngIf="proposalSection.get('requestSectionTitle')?.value === 'Technical Proposal Standard Requirements'">
                 <li>Note: N.J.S.A 52:32-44 provides that municipalities may not enter into a contract for goods or

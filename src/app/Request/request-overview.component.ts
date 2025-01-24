@@ -1,13 +1,13 @@
-import { Component, Output, EventEmitter, OnInit, Input, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, Input, ChangeDetectorRef, Output, EventEmitter } from '@angular/core';
 import { FormArray, FormGroup, Validators, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { RequestSection } from './model/requestsection.model';
-//import { EditorModule } from '@tinymce/tinymce-angular';
+import { EditorModule } from '@tinymce/tinymce-angular';
 import { RequestService } from './services/request.service';
+import { StateService } from './services/state.service';
 
 @Component({
   selector: 'request-overview',
@@ -21,11 +21,14 @@ import { RequestService } from './services/request.service';
     CommonModule,
     MatIconModule,
     ReactiveFormsModule,
-   // EditorModule
+    EditorModule
   ],
 })
 
 export class RequestOverviewComponent implements OnInit {
+  @Input() idParam?: string | null | undefined;
+  @Output() formValidityChange = new EventEmitter<boolean>();
+
   public editorConfig = {
     selector: '#your-textarea',
     toolbar: 'bold italic underline strikethrough | alignleft aligncenter alignright | bullist numlist outdent indent',
@@ -33,67 +36,52 @@ export class RequestOverviewComponent implements OnInit {
     menubar: false,
     plugins: 'lists code',
   };
-  
-  /*@Input() parentProposalsOverviewFormGroup!: FormGroup;
-  @Output() proposalOverviewData = new EventEmitter<RequestSection[]>();
-*/
 
-   parentProposalsOverviewFormGroup!: FormGroup;
-
-  constructor(private fb: FormBuilder, private requestService: RequestService,
-    private cdr: ChangeDetectorRef) {}
-
-  get proposalSectionsFormArray(): FormArray {
-    return this.parentProposalsOverviewFormGroup.get("proposalSections") as FormArray;
-  }
- // @Output() proposalOverviewData = new EventEmitter<RequestSection[]>();
-
+  proposalsOverviewFormGroup!: FormGroup;
+  requestId!: number | null;
   overviewText: string = '';
   municipalityId: number = 1;
   isFileUploaded: boolean = false;
-  //requestId: number = 1;
-  defaultProposalSections: RequestSection[] = [];
+
+  constructor(
+    private fb: FormBuilder,
+    private requestService: RequestService,
+    private cdr: ChangeDetectorRef,
+    private stateService: StateService,
+  ) { }
 
   ngOnInit(): void {
-    this.getRequestSectionDefaultTitles();
+    this.initializeProposalSections();
   }
 
-  /*emitRequestSections(): void {
-    if (this.parentProposalsOverviewFormGroup.valid) {
-      // Process and prepare sections
-      const processedSections = this.proposalSections.controls.map((section) => {
-        const contentControl = section.get('requestSectionContent');
-        if (contentControl) {
-          const processedContent = this.getProcessedContent(contentControl.value);
-          contentControl.setValue(processedContent, { emitEvent: false });
-        }
-        return section.value;
-      });
-  
-      this.parentProposalsOverviewFormGroup.setValue({
-        proposalSections: processedSections, 
-      });
-  
-      //this.proposalOverviewData.emit(this.parentProposalsOverviewFormGroup.value);
-    }
-  }*/
+  initializeProposalSections(): void {
+    this.proposalsOverviewFormGroup = this.fb.group({
+      proposalSections: this.fb.array([])
+    });
 
-  addSection(requestSectionTitle?: string) {
+    if (!this.idParam && !this.requestId) {
+      this.getRequestSectionDefaultTitle()
+    } else {
+      this.getRequestSectionsById(Number(this.idParam))
+    }
+
+    this.proposalsOverviewFormGroup.statusChanges.subscribe(() => {
+      this.formValidityChange.emit(this.proposalsOverviewFormGroup.valid);
+    });
+  }
+
+  get proposalSections(): FormArray {
+    return this.proposalsOverviewFormGroup?.get('proposalSections') as FormArray;
+  }
+
+  addSection() {
     const newSection = this.fb.group({
       requestId: [0],
       requestSectionId: [null],
-      requestSectionTitle: [requestSectionTitle, Validators.required],
+      requestSectionTitle: ['', Validators.required],
       requestSectionContent: ['']
     });
-    this.proposalSectionsFormArray.push(newSection);
-   // this.proposalOverviewData.emit(this.parentProposalsOverviewFormGroup.value.proposalSections);
-  }
-
-  addDefaultSections ()
-  {
-    this.defaultProposalSections.forEach ((section)=> {
-      this.addSection (section.requestSectionTitle);
-    });
+    this.proposalSections.push(newSection);
   }
 
   getProcessedContent(content: string): string {
@@ -101,47 +89,96 @@ export class RequestOverviewComponent implements OnInit {
     return content.replace(/<br>/g, '<br/>');
   }
 
-  getRequestSectionDefaultTitles() {
+  getRequestSectionDefaultTitle(): void {
     this.requestService.GetRequestSectionDefaultTitles().subscribe(
       (response) => {
-        this.defaultProposalSections = [...response];
-        this.addDefaultSections ();
-       // this.proposalOverviewData.emit(this.proposalSections);
-        //this.cdr.detectChanges();
+        response.forEach((section: {
+          requestId: number;
+          requestSectionId: number;
+          requestSectionTitle: string;
+          requestSectionContent: string;
+        }) => {
+          this.proposalSections.push(
+            this.fb.group({
+              requestId: [section.requestId],
+              requestSectionId: [section.requestSectionId],
+              requestSectionTitle: [section.requestSectionTitle, Validators.required],
+              requestSectionContent: [section.requestSectionContent]
+            }));
+        })
+      }
+    )
+  }
+
+  getRequestSectionsById(requestId: number): void {
+    this.requestService.GetRequestSections(requestId).subscribe(
+      (response) => {
+        response.forEach((section: { requestId: any; requestSectionId: any; requestSectionTitle: any; requestSectionContent: any; }) => {
+          if (section.requestSectionTitle) {
+            this.proposalSections.push(
+              this.fb.group({
+                requestId: [section.requestId],
+                requestSectionId: [section.requestSectionId],
+                requestSectionTitle: [section.requestSectionTitle, Validators.required],
+                requestSectionContent: [section.requestSectionContent],
+              })
+            );
+          }
+        });
+        this.cdr.detectChanges();
       },
       (error) => {
-        console.error('Error fetching cancellation reasons:', error);
+        console.error('Error fetching request sections', error);
       }
     );
   }
 
-  /*addSection() {
-    this.proposalSections.push({
-      requestId: this.requestId,
-      requestSectionId: null,
-      requestSectionTitle: '',
-      requestSectionContent: ''
-    });
-    //this.proposalOverviewData.emit(this.proposalSections);
-  }*/
+  saveSections(): void {
+    this.requestId = this.stateService.getRequestId();
 
-  saveSections(requestId: number): void {
-    this.defaultProposalSections.forEach((section) => {
-      const requestSection = {
-        requestId: requestId,
-        requestSectionId: section.requestSectionId,
-        requestSectionTitle: section.requestSectionTitle,
-        requestSectionContent: section.requestSectionContent
-      };
-      this.requestService.SaveRequestSections(requestSection, requestId)
-        .subscribe({
-          next: (response) => {
-            console.log(`Section ${section.requestSectionTitle} saved successfully!`);
-          },
-          error: (error) => {
-            console.error(`Error saving section ${section.requestSectionTitle}`, error);
-          }
-        });
+    const processedSections = this.proposalSections.controls
+      .map((section) => {
+        const contentControl = section.get('requestSectionContent');
+        if (contentControl) {
+          const processedContent = this.getProcessedContent(contentControl.value ?? '');
+          contentControl.setValue(processedContent, { emitEvent: false });
+        }
+        return section.value;
+      });
+
+    this.proposalsOverviewFormGroup.setValue({
+      proposalSections: processedSections,
     });
+
+    if (this.proposalsOverviewFormGroup.valid && this.requestId) {
+      this.proposalsOverviewFormGroup.value.proposalSections.forEach((section: { requestSectionId: any; requestSectionTitle: any; requestSectionContent: any; }) => {
+        const payload = {
+          requestId: this.requestId,
+          requestSectionId: section.requestSectionId,
+          requestSectionTitle: section.requestSectionTitle,
+          requestSectionContent: section.requestSectionContent
+        };
+        this.requestService.SaveRequestSections(payload, this.requestId ?? 0)
+          .subscribe({
+            next: (response) => {
+              console.log(`Section ${section.requestSectionTitle} saved successfully!`);
+              if (response.success) {
+                const index = this.proposalSections.controls.findIndex((control) => control.get('requestSectionTitle')?.value === section.requestSectionTitle);
+                if (index !== -1) {
+                  // update original data with request section ids returned from API response so that database does not duplicate rows
+                  const proposalSection = this.proposalSections.at(index) as FormGroup;
+                  proposalSection.patchValue({ requestSectionId: response.requestSectionId });
+                }
+                section.requestSectionId = response.requestSectionId;
+              } else {
+                console.warn(`Section ${section.requestSectionTitle} not saved successfully.`);
+              }
+            },
+            error: (error) => {
+              console.error(`Error saving section ${section.requestSectionTitle}`, error);
+            }
+          });
+      });
+    }
   }
 }

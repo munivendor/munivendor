@@ -51,7 +51,7 @@
     <div class="inline-field">
       <p>Publish Time:</p>
       <mat-form-field appearance="fill" class="input-width">
-        <input matInput formControlName="publishTime" readonly placeholder="Chosen Publish Time"
+        <input matInput type="time" formControlName="publishTime" readonly placeholder="Chosen Publish Time"
           value={{requestFinalReviewDetails.publishTime}}>
       </mat-form-field>
     </div>
@@ -69,7 +69,7 @@
     <div class="inline-field">
       <p>Open Time:</p>
       <mat-form-field appearance="fill" class="input-width">
-        <input matInput formControlName="openTime" readonly placeholder="Chosen Open Time"
+        <input matInput type="time" formControlName="openTime" readonly placeholder="Chosen Open Time"
           value={{requestFinalReviewDetails.openTime}}>
       </mat-form-field>
     </div>
@@ -124,8 +124,8 @@
 
   <br />
 
-  <!-- this note displays ONLY if user has not uploaded any documents for municipality -->
-  <p>Note: You have not uploaded/selected any additional documents.</p>
+  <!-- display ONLY if user has not uploaded any documents for municipality -->
+  <p *ngIf="requestFinalReviewDetails.requestDocuments === null">Note: You have not uploaded/selected any additional documents.</p>
 
   <h2>You have uploaded the following request:</h2>
   <!-- the PDF of the proposals step (all sections that have been filled out by user compiled into a PDF) -->

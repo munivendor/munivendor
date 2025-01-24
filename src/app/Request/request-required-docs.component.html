@@ -1,4 +1,4 @@
-<form [formGroup]="parentDocumentsFormGroup">
+<form [formGroup]="requestDocumentsFormGroup">
   <p>Please check off which documents you want to be required for this request</p>
   <h2>Required forms from the State of NJ</h2>
   <div formArrayName="requiredStateDocuments">
@@ -12,15 +12,13 @@
   <br />
 
   <h2>Optional forms from the State of NJ</h2>
-  <div *ngIf="optionalStateDocuments.controls.length > 0;">
-    <div formArrayName="optionalStateDocuments">
-      <div *ngFor="let optionalStateDocument of optionalStateDocuments.controls; let i = index">
-        <mat-checkbox color="primary" formControlName="optionalStateDocuments"
-          [checked]="optionalStateDocument.get('selected')?.value"
-          (change)="onCheckboxChange(optionalStateDocuments, i, $event.checked)">
-          {{ optionalStateDocument.get('documentName')?.value }}
-        </mat-checkbox>
-      </div>
+  <div formArrayName="optionalStateDocuments">
+    <div *ngFor="let optionalStateDocument of optionalStateDocuments.controls; let i = index">
+      <mat-checkbox color="primary" formControlName="optionalStateDocuments"
+        [checked]="optionalStateDocument.get('selected')?.value"
+        (change)="onCheckboxChange(optionalStateDocuments, i, $event.checked)">
+        {{ optionalStateDocument.get('documentName')?.value }}
+      </mat-checkbox>
     </div>
   </div>
   <br />
@@ -28,20 +26,18 @@
   <h2>Optional forms from [Municipality]</h2>
   <p>Upload documents you would like to be required</p>
   <div formArrayName="optionalMunicipalityDocuments">
-    <div *ngIf="optionalMunicipalityDocuments.controls.length > 0">
-      <div *ngFor="let municipalityDocument of optionalMunicipalityDocuments.controls; let i = index"
-        class="document-item">
-        <button mat-icon-button aria-label="delete" type="button" color="warn"
-          (click)="deleteMunicipalityDocument(municipalityDocument?.get('documentId')?.value)" class="delete-button">
-          <mat-icon>delete</mat-icon>
-        </button>
-        <mat-checkbox color="primary" formControlName="optionalMunicipalityDocuments"
-          [checked]="municipalityDocument.get('selected')?.value"
-          (change)="onCheckboxChange(optionalMunicipalityDocuments, i, $event.checked)">
-          {{ municipalityDocument?.get('documentName')?.value || 'Unnamed Document'
-          }}
-        </mat-checkbox>
-      </div>
+    <div *ngFor="let municipalityDocument of optionalMunicipalityDocuments.controls; let i = index"
+      class="document-item">
+      <button mat-icon-button aria-label="delete" type="button" color="warn"
+        (click)="deleteMunicipalityDocument(municipalityDocument?.get('documentId')?.value)" class="delete-button">
+        <mat-icon>delete</mat-icon>
+      </button>
+      <mat-checkbox color="primary" formControlName="optionalMunicipalityDocuments"
+        [checked]="municipalityDocument.get('selected')?.value"
+        (change)="onCheckboxChange(optionalMunicipalityDocuments, i, $event.checked)">
+        {{ municipalityDocument?.get('documentName')?.value || 'Unnamed Document'
+        }}
+      </mat-checkbox>
     </div>
   </div>
   <button mat-raised-button type="button" (click)="openFileUploadDialog(municipalityId)">Add</button>
