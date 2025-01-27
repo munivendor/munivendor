@@ -18,6 +18,7 @@ import { PaymentPlanConfirmationComponent } from './Municipality/PaymentInformat
 import { PaymentInfoComponent } from './Municipality/PaymentInformation/paymentinformation.component';
 import { UserFormComponent } from './user/user-form.component';
 import { UserGridComponent } from './user/user-grid.component';
+import {  TreeChecklistExample } from './category/category-manager.component';
 
 export const routes: Routes = [
   { path: 'first-component', component: SignupComponent },
@@ -32,6 +33,8 @@ export const routes: Routes = [
   { path: 'payment-info', component: PaymentInfoComponent },
   { path: 'user', component: UserFormComponent },
   { path: 'user-list', component: UserGridComponent },
+  { path: 'category', component: TreeChecklistExample },
+  
   
   { path: 'request-proposal-component', component: RequestProposalComponent },
   { path: 'request-overview-component', component: RequestOverviewComponent },

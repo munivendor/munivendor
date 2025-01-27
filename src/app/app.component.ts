@@ -1,8 +1,7 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router'
  
-
+//import { CommonModule } from '@angular/common';
 
 @Component({
     selector: 'app-root',
@@ -45,7 +44,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router'
       background-color: #04AA6D;
       color: white;
     }`,
-    imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive]
+    imports: [/*CommonModule,*/ RouterOutlet, RouterLink, RouterLinkActive]
 })
 export class AppComponent {
   title = 'munivendor';
