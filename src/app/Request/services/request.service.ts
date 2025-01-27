@@ -61,16 +61,9 @@ export class RequestService {
     return this.http.post<boolean>(url, body, options);
   }
 
-  UploadMunicipalityRequestDocument(requestId: number, file: File, documentTitle?: string): Observable<any> {
-    const url = `${this.url}/UploadDocument/${requestId}`;
-    const formData = new FormData();
-
-    formData.append('file', file, file.name);
-    if (documentTitle) {
-      formData.append('documentTitle', documentTitle);
-    }
-
-    return this.http.post(url, formData, { reportProgress: true, observe: 'events' });
+  UploadDocument(documentId: number, formData: FormData): Observable<any> {
+    const url = `${this.url}Documents/${documentId}`;
+    return this.http.post<void>(url, formData);
   }
 
   DeleteRequest(requestId: number): Observable<void> {
@@ -112,9 +105,9 @@ export class RequestService {
     return this.http.get<any>(`${this.url}RequestSectionDefaults`);
   }
 
-  SaveRequestSections(requestSection: RequestSection, requestId: number): Observable<void> {
+  SaveRequestSections(requestSection: RequestSection, requestId: number): Observable<{ success: boolean; requestSectionId: number | null }> {
     const headers = { 'Content-Type': 'application/json' };
-    return this.http.post<void>(`${this.url}RequestSections/${requestId}`, requestSection, { headers });
+    return this.http.post<{ success: boolean; requestSectionId: number | null }>(`${this.url}RequestSections/${requestId}`, requestSection, { headers });
   }
 
   GetRequiredDocuments(): Observable<any> {
@@ -139,10 +132,7 @@ export class RequestService {
     return this.http.delete<void>(`${this.url}MunicipalityDocuments/${documentId}`)
   }
 
-  UploadDocument(documentId: number, formData: FormData): Observable<any> {
-    const url = `${this.url}Documents/${documentId}`;
-    return this.http.post<void>(url, formData);
-  }
+ 
 
   SaveRequestDocuments(requestId: number, documentIds: number[]): Observable<any> {
     const headers = { 'Content-Type': 'application/json' };
@@ -155,7 +145,7 @@ export class RequestService {
   }
 
   GetRequestRequiredDocumentsById(requestId: number): Observable<any> {
-    return this.http.get<void>(`${this.url}RequestDocuments/${requestId}`);
+    return this.http.get<any>(`${this.url}RequestDocuments/${requestId}`);
   }
 
   DeleteDecisionMaker(requestId: number, decisionMakerId: number): Observable<any> {

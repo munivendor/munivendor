@@ -27,8 +27,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 })
 
 export class RequestReviewComponent implements OnInit {
-  @Input() parentFinalReviewFormGroup!: FormGroup;
-  @Input() paramRequestId!: number;
+  @Input() paramRequestId?: number;
 
   requestId!: number | null;
   requestFinalReviewDetailsForm!: FormGroup;
@@ -43,21 +42,19 @@ export class RequestReviewComponent implements OnInit {
     private snackBar: MatSnackBar
   ) { }
 
-
   ngOnInit() {
-    const requestId = this.stateService.getRequestId();
-
     if (this.paramRequestId) {
       this.getRequestObjDetails(this.paramRequestId);
     }
     // dynamically call getRequestObjDetails if any page  
     // has been saved to receive updated request details
     this.stateService.currentRequestHasBeenSaved$.subscribe((hasBeenSaved) => {
-      if (hasBeenSaved) {
+      this.requestId = this.stateService.getRequestId();
+      if (hasBeenSaved && this.requestId) {
         if (this.paramRequestId) {
           this.getRequestObjDetails(this.paramRequestId);
-        } else if (requestId) {
-          this.getRequestObjDetails(requestId);
+        } else if (this.requestId) {
+          this.getRequestObjDetails(this.requestId);
         }
       }
     });
@@ -95,7 +92,7 @@ export class RequestReviewComponent implements OnInit {
           decisionMakers.find((dm: { decisionMakerId: number }) => dm.decisionMakerId === selection.decisionMakerId)
         ).filter((dm: any) => dm);
 
-        const requestDocuments = requiredRequestDocuments;
+        const requestDocuments = requiredRequestDocuments.documents;
 
         const { date: publishDate, time: publishTime } = this.splitDateTime(request.publishDate);
         const { date: openDate, time: openTime } = this.splitDateTime(request.openDate);
@@ -132,7 +129,6 @@ export class RequestReviewComponent implements OnInit {
         });
 
         this.populateArrayFormControls('decisionMakers', decisionMakersMapped);
-
         this.populateArrayFormControls('requestDocuments', requiredRequestDocuments);
       },
       error => {
@@ -144,23 +140,24 @@ export class RequestReviewComponent implements OnInit {
   // takes a combined date-time string, parses it
   // returns an object containing separate date and time fields.
   splitDateTime(dateTimeString: string): { date: string; time: string } {
-    const date = new Date(dateTimeString);
-
+    // Parse the UTC date-time string as UTC
+    const utcDate = new Date(dateTimeString + 'Z'); // Ensure it's treated as UTC by appending 'Z'
+  
     const dateOptions: Intl.DateTimeFormatOptions = {
       month: '2-digit',
       day: '2-digit',
       year: 'numeric',
     };
-
+  
     const timeOptions: Intl.DateTimeFormatOptions = {
       hour: '2-digit',
       minute: '2-digit',
-      hour12: true,
+      hour12: false
     };
-
+   
     return {
-      date: new Intl.DateTimeFormat('en-US', dateOptions).format(date),
-      time: new Intl.DateTimeFormat('en-US', timeOptions).format(date),
+      date: new Intl.DateTimeFormat('en-US', dateOptions).format(utcDate),
+      time: utcDate.toLocaleTimeString(undefined, timeOptions), // Convert to local time
     };
   }
 
@@ -174,7 +171,7 @@ export class RequestReviewComponent implements OnInit {
 
   onSubmit() {
     // Determine the requestId to use
-    const requestIdToUse = this.paramRequestId ?? this.stateService.getRequestId();
+    const requestIdToUse = this.stateService.getRequestId();
     if (!requestIdToUse) {
       console.error('Error: No valid requestId found.');
       return;

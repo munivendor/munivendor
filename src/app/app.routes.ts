@@ -3,7 +3,7 @@ import { Routes } from '@angular/router';
 import { SignupComponent } from './Municipality/Signup/municipality.signup.component';
 //import { SignupPasswordComponent } from './Signup_toremove/signup-password.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
-import { RequestProposalComponent } from './Request/request-proposal.component';
+//import { RequestProposalComponent } from './Request/request-proposal.componentts';
 import { RequestOverviewComponent } from './Request/request-overview.component';
 import { BasicRequestComponent } from './Request/request-basic.component';
 import { RequestOutFrameComponent } from './Request/request-outframe.component';
@@ -29,7 +29,7 @@ export const routes: Routes = [
   { path: 'payment-plan-confirmation', component: PaymentPlanConfirmationComponent},
   { path: 'payment-info', component: PaymentInfoComponent },
   
-  { path: 'request-proposal-component', component: RequestProposalComponent },
+  //{ path: 'request-proposal-component', component: RequestProposalComponent },
   { path: 'request-overview-component', component: RequestOverviewComponent },
   {
     path: 'dashboard-component', component: DashboardComponent,
