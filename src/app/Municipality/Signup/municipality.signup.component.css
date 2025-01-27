@@ -1,0 +1,39 @@
+
+.full-width {
+  width: 100%;
+  max-width: 400px; /* Optional: restrict max width */
+}
+
+.form-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center horizontally */
+}
+
+.center-text {
+  text-align: center;
+}
+
+mat-card {
+  max-width: 600px;
+  margin: 2rem auto;
+}
+
+mat-card-title {
+  font-size: 1.5rem;
+}
+
+mat-card-header {
+  display: flex;
+  justify-content: center;
+}
+
+mat-card-title {
+  text-align: center;
+  width: 100%; /* Optional: ensures the title takes up the full width */
+}
+
+mat-card-actions > * {
+  margin-bottom: 10px; /* Optional: Add space between elements */
+}
+

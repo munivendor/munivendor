@@ -26,7 +26,6 @@ export interface DialogData {
   reasonNote: string;
 }
 
-/** Error when invalid control is dirty, touched, or submitted. */
 export class MyErrorStateMatcher implements ErrorStateMatcher {
   isErrorState(control: FormControl | null, form: FormGroupDirective | NgForm | null): boolean {
     const isSubmitted = form && form.submitted;
@@ -52,12 +51,11 @@ export class MyErrorStateMatcher implements ErrorStateMatcher {
     CommonModule
   ],
 })
-export class CancellationReasonDialog implements OnInit  {
+export class CancellationReasonDialog implements OnInit {
   cancellationReasonId = new FormControl<number | null>(null, [Validators.required]);
   cancellationReasonNote = new FormControl({ value: '', disabled: true }); // Initially disabled
   requestCancellationReasons: CancellationReasons[] = [];
 
-  // Error matcher
   matcher = new MyErrorStateMatcher();
 
   @Output() cancelConfirmed = new EventEmitter<{ request: any, action: string, reasonId: number, reasonNote: string }>();
@@ -67,10 +65,10 @@ export class CancellationReasonDialog implements OnInit  {
     public dialogRef: MatDialogRef<CancellationReasonDialog>,
     @Inject(MAT_DIALOG_DATA) public data: DialogData,
     private requestService: RequestService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
-    this.fetchCancellationReasons();
+    this.getCancellationReasons();
     this.cancellationReasonId.valueChanges.subscribe((value) => {
       this.toggleReasonNoteValidation(value);
     });
@@ -78,7 +76,7 @@ export class CancellationReasonDialog implements OnInit  {
 
   toggleReasonNoteValidation(reasonId: any): void {
     // "Other" has requestCancellationReasonId === 10.
-    if (reasonId === 10) {  
+    if (reasonId === 10) {
       this.cancellationReasonNote.setValidators([Validators.required]);
       this.cancellationReasonNote.enable();
     } else {
@@ -90,7 +88,7 @@ export class CancellationReasonDialog implements OnInit  {
     this.cancellationReasonNote.updateValueAndValidity();
   }
 
-  fetchCancellationReasons(): void {
+  getCancellationReasons(): void {
     this.requestService.GetCancellationReasons().subscribe(
       (response) => {
         this.requestCancellationReasons = response;
@@ -105,12 +103,9 @@ export class CancellationReasonDialog implements OnInit  {
     this.dialogRef.close(false);
   }
 
-  confirm(request: any, action: string, value: any, reasonNote: string): void {
+  onConfirmCancelRequest(request: any, action: string, value: any, reasonNote: string): void {
     const reasonId = Number(value);
-    if (this.cancellationReasonId.valid && (!this.cancellationReasonNote.disabled || this.cancellationReasonNote.valid)) {
-      console.log("this.cancellationReasonId.valid", this.cancellationReasonId.valid)
-      this.cancelConfirmed.emit({ request, action, reasonId, reasonNote });
-      this.dialogRef.close(true);
-    }
+    this.cancelConfirmed.emit({ request, action, reasonId, reasonNote });
+    this.dialogRef.close(true);
   }
 }

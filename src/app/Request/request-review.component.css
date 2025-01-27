@@ -1,24 +1,16 @@
-input[type=date], input[type=time], input[type=text], select {
-    width: 50%;
-    padding: 12px 20px;
-    margin: 8px 0;
-    display: inline-block;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
-  }
-  
-  button {
-    background-color: #ddd;
-    border: none;
-    color: black;
-    padding: 10px 20px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    margin: 4px 2px;
-    cursor: pointer;
-    border-radius: 16px;
+  .field-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 16px;
   }
 
- 
+  .inline-field {
+    flex: 1 1 300px;
+    min-width: 300px;
+    max-width: 500px;
+  }
+
+  .input-width {
+    width: 80%;
+  }

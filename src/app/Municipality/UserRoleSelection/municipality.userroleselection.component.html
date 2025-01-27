@@ -1,6 +1,0 @@
-
-<form [formGroup]="userRoleSelectionForm" (ngSubmit)="onSubmit()">
-<span *ngFor="let userRole of userRoles; let i=index" formArrayName="userRoles">
-  <input type="checkbox" [formControlName] = "i" /><span>{{userRole}}</span>
-</span>
-</form>

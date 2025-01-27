@@ -1,26 +1,37 @@
-
-    <p>Overview</p>
-    
-    <textarea id="overview" name="w3review" rows="14" cols="70" [(ngModel)]="overviewText" (ngModelChange)="isTextareaEmpty()" [disabled]="isFileUploaded"></textarea>
-    <p *ngIf="isTextareaEmpty()">Upload your own project overview file</p>
-    <single-file-upload *ngIf="isTextareaEmpty()" (fileUploaded)="onFileUploaded($event)" [data]="requestId"></single-file-upload>
-
-   
-    <p>Goals</p>
-    <textarea id="overview" name="w3review1" rows="14" cols="70"></textarea>
-    <p *ngIf="isTextareaEmpty()">You can also upload your own project goals file</p>
-    <single-file-upload *ngIf="isTextareaEmpty()" (fileUploaded)="onFileUploaded($event)" [data]="requestId"></single-file-upload>
-    
-    <p>Scope</p>
-    <textarea id="scope" name="w3review2" rows="14" cols="70"></textarea>
-    <p *ngIf="isTextareaEmpty()">You can also upload your own project scope file</p>
-    <single-file-upload *ngIf="isTextareaEmpty()" (fileUploaded)="onFileUploaded($event)" [data]="requestId"></single-file-upload>
-   
-   <p>Requirements</p>
-    <textarea id="project overview" name="w3review3" rows="14" cols="70"></textarea>
-    <p *ngIf="isTextareaEmpty()">You can also pload your own requirements file</p>
-    <single-file-upload *ngIf="isTextareaEmpty()" (fileUploaded)="onFileUploaded($event)" [data]="requestId"></single-file-upload>
-   
-    <p > Upload your Request by clicking on the add request button or press continue </p>
-    <single-file-upload [data]="requestId"></single-file-upload>
-    
+<div [formGroup]="proposalsOverviewFormGroup">
+    <div style="margin-top: 8px;" formArrayName="proposalSections">
+        <div *ngFor="let proposalSection of proposalSections.controls; let i = index" [formGroupName]="i">
+            <mat-form-field class="title-width">
+                <mat-label>Enter title</mat-label>
+                <input matInput formControlName="requestSectionTitle">
+                <mat-error
+                    *ngIf="proposalSection.get('requestSectionTitle')?.hasError('required') && proposalSection.get('requestSectionTitle')?.touched">
+                    Title is required.
+                </mat-error>
+            </mat-form-field>
+            <editor [init]="editorConfig" formControlName="requestSectionContent"></editor>
+            <ul
+                *ngIf="proposalSection.get('requestSectionTitle')?.value === 'Technical Proposal Standard Requirements'">
+                <li>Note: N.J.S.A 52:32-44 provides that municipalities may not enter into a contract for goods or
+                    services
+                    unless the other party to the contract provides a copy of its business registration certificate
+                    and
+                    the
+                    business registration certificate of any subcontractors at the time that it submits its
+                    proposal.
+                    MuniVendor automatically inserts your business registration certificate from your MuniVendor
+                    vendor
+                    profile. If you plan to utilize subcontractors, then please include copies of those
+                    subcontractor’s
+                    business registration certificates in your technical proposal upload. The contracting party must
+                    also
+                    collect the state use tax where applicable.</li>
+            </ul>
+            <hr class="propsal-divider" style="margin-top: 20px;" />
+        </div>
+    </div>
+</div>
+<button mat-fab color="primary" style="margin-bottom: 16px;" extended (click)="addSection()">
+    <mat-icon>add</mat-icon>
+    Add Section
+</button>

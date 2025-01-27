@@ -6,15 +6,23 @@ import { ConfirmationDialog } from '../RequestConfirmationDialog/confirmation-di
 import { RequestService } from '../services/request.service';
 import { Request } from '../model/request.model';
 
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+
 @Component({
   selector: 'request-tabledetails',
   standalone: true,
   templateUrl: './request-tabledetails.component.html',
   styleUrls: ['./request-tabledetails.component.css'],
-  imports: [CommonModule, ConfirmationDialog]
+  imports: [
+    CommonModule,
+    MatTableModule
+  ]
 })
 export class TableDetailsComponent implements OnInit {
   joinedRequestData: Request[] = [];
+
+  displayedColumns: string[] = ['actions', 'emptyColumn', 'requestName', 'requestType', 'category', 'publishDate', 'requestStatus',];
+  dataSource = new MatTableDataSource<any>();
 
   constructor(public dialog: MatDialog, private requestService: RequestService) { }
 
@@ -44,6 +52,7 @@ export class TableDetailsComponent implements OnInit {
           });
         });
         this.joinedRequestData.push(...combinedData);
+        this.dataSource = new MatTableDataSource(this.joinedRequestData);
       },
       error => {
         console.error('Error fetching data', error);
@@ -75,7 +84,7 @@ export class TableDetailsComponent implements OnInit {
       this.onCancelUpdateRequestCancelReason(cancelData.request, cancelData.reasonId, cancelData.reasonNote);
       this.onCancelUpdateRequestStatus(cancelData.request, cancelData.action);
     });
-  
+
 
     dialogRef.afterClosed().subscribe(result => {
       if (result && action === "delete") {
@@ -93,6 +102,7 @@ export class TableDetailsComponent implements OnInit {
       () => {
         console.log(`Request with ID ${request.requestId} deleted successfully.`);
         this.joinedRequestData = this.joinedRequestData.filter(i => i.requestId !== request.requestId);
+        this.dataSource.data = this.joinedRequestData;
       },
       error => {
         console.error('Error deleting the request:', error);
@@ -116,29 +126,29 @@ export class TableDetailsComponent implements OnInit {
         newRequestStatusId = CANCELLED_STATUS_ID;
         newRequestStatusDesc = "Cancelled"
       } else {
-        console.warn("Unexpected request status:", statusDesc);
+        console.warn("Unexpected Request status:", statusDesc);
         return;
       }
 
       this.requestService.UpdateRequestStatus(request.requestId, newRequestStatusId).subscribe(
         () => {
-          console.log("Request status updated successfully");
           this.joinedRequestData = this.joinedRequestData.map((i) => {
             if (i.requestId === request.requestId) {
-                return {
-                    ...i,
-                    requestStatus: {
-                        ...i.requestStatus,
-                        requestStatusId: newRequestStatusId,
-                        requestStatusDesc: newRequestStatusDesc,
-                    },
-                };
+              return {
+                ...i,
+                requestStatus: {
+                  ...i.requestStatus,
+                  requestStatusId: newRequestStatusId,
+                  requestStatusDesc: newRequestStatusDesc,
+                },
+              };
             }
             return i;
-        });
+          });
+          this.dataSource.data = this.joinedRequestData;
         },
         (error) => {
-          console.error("Error updating request status:", error);
+          console.error("Error updating Request status:", error);
         }
       );
     }
@@ -154,25 +164,4 @@ export class TableDetailsComponent implements OnInit {
       }
     );
   }
-
-  // editRequest(request: any, action: string): void {
-  //   // Define the updated request data based on the action
-  //   let updatedData: any;
-
-  //   if (action === 'edit') {
-  //     // Example: Editing request (you can modify the fields as per your requirements)
-  //     updatedData = { ...request, requestName: 'Updated Request Name' }; // Modify requestName or other fields
-  //   }
-
-  //   this.http.put(`${this.url}/api/requests/${request.requestId}`, updatedData).subscribe(
-  //     (updatedItem) => {
-  //       console.log(`Request with ID ${request.requestId} updated successfully.`);
-  //       // Update the table with the updated request
-  //       this.joinedRequestData = this.joinedRequestData.map(i => i.requestId === request.requestId ? updatedItem : i);
-  //     },
-  //     error => {
-  //       console.error('Error updating the request:', error);
-  //     }
-  //   );
-  // }
 }

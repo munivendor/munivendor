@@ -1,17 +1,18 @@
 <div class="form-container">
-    <h1 mat-dialog-title>Add Document</h1>
-    <div mat-dialog-content>
-      <div class="form-field-container">
-        <mat-form-field>
-          <mat-label>Enter Document Name</mat-label>
-          <input matInput [(ngModel)]="text">
-        </mat-form-field>
-      </div>
-      <input type="file" id="fileUpload" name="fileUpload" (change)="onFileSelected($event)">
+  <h1 mat-dialog-title>Add Document</h1>
+  <div mat-dialog-content>
+    <div class="form-field-container">
+      <mat-form-field>
+        <mat-label>Enter Document Name</mat-label>
+        <input matInput [(ngModel)]="documentName">
+      </mat-form-field>
     </div>
-    
-    <div mat-dialog-actions>
-      <button mat-button (click)="onNoClick()">Cancel</button>
-      <button mat-button (click)="onUpload()">Upload</button>
-    </div>
- </div>
+    <input type="file" id="fileUpload" name="fileUpload" (change)="onFileSelected($event)">
+  </div>
+
+  <div mat-dialog-actions>
+    <button mat-button (click)="onNoClick()">Cancel</button>
+    <button mat-button (click)="onUpload(this.data.municipalityId)"
+      [disabled]="!documentName || !selectedFile">Upload</button>
+  </div>
+</div>
