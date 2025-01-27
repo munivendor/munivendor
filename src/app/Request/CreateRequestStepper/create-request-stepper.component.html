@@ -1,42 +1,37 @@
-<mat-stepper [linear]="true" #stepper>
-  <mat-step [stepControl]="basicsFormGroup" label="Basics" [completed]="basicsFormGroup.valid">
-    <form [formGroup]="basicsFormGroup">
-      <request-basic [parentFormGroup]="basicsFormGroup" (requestData)="onRequestDataReceived($event)"></request-basic>
-      <div>
-        <button mat-button matStepperNext [disabled]="!basicsFormGroup.valid" (click)="saveRequestData()">Next</button>
-      </div>
-    </form>
+
+<mat-stepper [linear]="false" #stepper>
+  <mat-step label="Basics">
+    <request-basic #step1 [requestId]="requestId" [idParam]="idParam" (formValidityChange)="isStepValid = $event"></request-basic>
+    <div>
+      <button mat-button (click)="saveRequest()" matStepperNext [disabled]="!isStepValid">Next</button>
+    </div>
   </mat-step>
   
+  <mat-step label="Proposals">
+    <request-overview #step2 [idParam]="idParam" (formValidityChange)="isStepValid = $event"></request-overview>
+    <div>
+      <button type="Submit" mat-button matStepperPrevious>Back</button>
+      <button type="Submit" mat-button matStepperNext (click)="saveSections()" [disabled]="!isStepValid"
+       >Next</button>
+    </div>
 
-  <mat-step [stepControl]="proposalsOverviewFormGroup" label="Proposals">
-    <form [formGroup]="proposalsOverviewFormGroup">
-      <request-overview (proposalOverviewData)="handleProposalData($event)"></request-overview>
-      <div>
-        <button mat-button matStepperPrevious>Back</button>
-        <button mat-button matStepperNext (click)="saveSections()">Next</button>
-      </div>
-    </form>
   </mat-step>
 
-  <mat-step [stepControl]="requestDocumentsFormGroup" label="Documents">
-    <form [formGroup]="requestDocumentsFormGroup">
-      <request-required-documents (documentsUpdated)="onDocumentsUpdated($event)"></request-required-documents>
-      <div>
-        <button mat-button matStepperPrevious>Back</button>
-        <button mat-button matStepperNext (click)="saveDocuments()">Next</button>
-      </div>
-    </form>
+  <mat-step label="Documents">
+    <request-required-documents [idParam]="idParam"></request-required-documents>
+    <div>
+      <button type="Submit" mat-button matStepperPrevious>Back</button>
+      <button type="Submit" mat-button matStepperNext (click)="saveDocuments()">Next</button>
+    </div>
+
   </mat-step>
 
-  <mat-step [stepControl]="finalReviewFormGroup" label="Review">
-    <form [formGroup]="finalReviewFormGroup">
-      <request-review></request-review>
-      <div>
-        <button mat-button matStepperPrevious>Back</button>
-        <button mat-button matStepperNext>Next</button>
-      </div>
-    </form>
+  <mat-step label="Review">
+    <request-review [paramRequestId]="requestId"></request-review>
+    <div>
+      <button type="Submit" mat-button matStepperPrevious>Back</button>
+      <button type="Submit" mat-button matStepperNext (click)="updateRequestStatusToScheduled()">Submit</button>
+    </div>
   </mat-step>
 
   <mat-step>

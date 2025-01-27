@@ -57,8 +57,8 @@ export class FileUploadDialogComponent {
       documentId: null,
     };
     this.requestService.SaveMunicipalityDocument(municipalityId, documentPayload).subscribe(
-      (responseDocumentId) => {
-        const documentId = responseDocumentId;
+      (response) => {
+        const documentId = response.documentId;
         this.uploadFile(documentId);
         console.log('Document saved successfully with documentId:', documentId);
         this.dialogRef.close(documentId);
@@ -85,7 +85,7 @@ export class FileUploadDialogComponent {
         };
         this.municipalityDocuments.push(newDocument);
         this.cdr.detectChanges();
-        this.dialogRef.close(response);
+        this.dialogRef.close(response.isSuccess);
       },
       (error) => {
         console.error('Error uploading file', error);
