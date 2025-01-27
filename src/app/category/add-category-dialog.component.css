@@ -1,0 +1,29 @@
+/* src/app/components/add-category-dialog/add-category-dialog.component.scss */
+
+.full-width {
+    width: 100%;
+  }
+  
+  .mat-form-field {
+    margin-top: 16px;
+    margin-bottom: 8px;
+  }
+  
+  .mat-dialog-content {
+    overflow: hidden;
+  }
+  
+  .mat-dialog-title {
+    font-size: 24px;
+    font-weight: 500;
+  }
+  
+  .mat-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .mat-checkbox {
+    margin-top: 12px;
+  }
+  

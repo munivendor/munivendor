@@ -27,7 +27,7 @@ import { StateService } from '../services/state.service';
 export class DragAndDropUploaderComponent {
     ngOnInit(): void {
         // Subscribe to requestId changes from StateService
-        // getRequestSections will be needed in 'create template/previous request'
+        // fetchRequestSections will be needed in 'create template/previous request'
         this.stateService.currentRequestId$.subscribe((id: number | null) => {
             this.requestId = id;
         });

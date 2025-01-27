@@ -1,13 +1,16 @@
+
 import { Component, OnInit, Input, ChangeDetectorRef, Output, EventEmitter } from '@angular/core';
 import { FormArray, FormGroup, Validators, FormBuilder, ReactiveFormsModule } from '@angular/forms';
+
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
+
 import { EditorModule } from '@tinymce/tinymce-angular';
 import { RequestService } from './services/request.service';
 import { StateService } from './services/state.service';
+
 
 @Component({
   selector: 'request-overview',
@@ -15,17 +18,20 @@ import { StateService } from './services/state.service';
   templateUrl: './request-overview.component.html',
   styleUrls: ['./request-overview.component.css'],
   imports: [
+    ReactiveFormsModule,
+    RouterModule, 
+    CommonModule,
+    FormsModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
-    CommonModule,
     MatIconModule,
-    ReactiveFormsModule,
-    EditorModule
-  ],
+    MatDividerModule],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 
 export class RequestOverviewComponent implements OnInit {
+
   @Input() idParam?: string | null | undefined;
   @Output() formValidityChange = new EventEmitter<boolean>();
 
@@ -72,21 +78,24 @@ export class RequestOverviewComponent implements OnInit {
 
   get proposalSections(): FormArray {
     return this.proposalsOverviewFormGroup?.get('proposalSections') as FormArray;
+
   }
 
   addSection() {
-    const newSection = this.fb.group({
-      requestId: [0],
-      requestSectionId: [null],
-      requestSectionTitle: ['', Validators.required],
-      requestSectionContent: ['']
+    this.proposalSections.push({
+      requestId: this.requestId,
+      requestSectionId: null,
+      requestSectionTitle: '',
+      requestSectionContent: ''
     });
+
     this.proposalSections.push(newSection);
   }
 
   getProcessedContent(content: string): string {
     // Process the TinyMCE content to replace <br> with <br/> for line breaks
     return content.replace(/<br>/g, '<br/>');
+
   }
 
   getRequestSectionDefaultTitle(): void {

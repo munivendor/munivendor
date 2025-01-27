@@ -1,18 +1,24 @@
+
 import { Component, OnInit, Input } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { FormGroup, ReactiveFormsModule, FormArray, FormBuilder } from '@angular/forms';
+
 import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+// to be added as future update
+// import { DragAndDropUploaderComponent } from './DragAndDrop/drag-and-drop.component';
 import { FileUploadDialogComponent } from '../file-upload-dialog/file-upload-dialog.component';
 import { RequestService } from './services/request.service';
 import { Document } from './model/document.model';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+
 import { RequestDocument } from './model/requestdocument.model';
 import { catchError, forkJoin, Observable, of, tap } from 'rxjs';
 import { StateService } from './services/state.service';
+
 
 @Component({
   selector: 'request-required-documents',
@@ -20,23 +26,28 @@ import { StateService } from './services/state.service';
   templateUrl: './request-required-docs.component.html',
   styleUrls: ['./request-required-docs.component.css'],
   imports: [
-    ReactiveFormsModule,
-    RouterModule,
-    CommonModule,
-    MatButtonModule,
-    MatIconModule,
-    MatCheckboxModule,
+    ReactiveFormsModule, 
+    RouterModule, 
+    CommonModule, 
+    MatButtonModule, 
+    MatIconModule, 
+    MatCheckboxModule, 
+    // DragAndDropUploaderComponent, 
     MatProgressSpinnerModule]
 })
 export class RequestRequiredDocumentsComponent implements OnInit {
+
   @Input() idParam?: string | null | undefined;
 
   requestDocumentsFormGroup!: FormGroup;
+
   optionalRequestDocuments: Document[] = [];
   municipalityRequestDocuments: Document[] = [];
   files: File[] = [];
 
   municipalityId = 1;
+  requiredStateDocuments: Document[] = [];
+  optionalStateDocuments: Document[] = [];
   municipalityDocuments: Document[] = [];
   documentId!: number;
 
@@ -44,13 +55,16 @@ export class RequestRequiredDocumentsComponent implements OnInit {
   selectedMunicipalityDocs: Document[] = [];
   requestId: any;
 
+
   constructor(
     private fb: FormBuilder,
+
     private requestService: RequestService,
     private stateService: StateService,
     public dialog: MatDialog) { }
 
   ngOnInit(): void {
+
       this.initializeRequestDocuments();
   }
 
@@ -186,12 +200,14 @@ export class RequestRequiredDocumentsComponent implements OnInit {
         })
       );
     });
+
   }
 
   openFileUploadDialog(municipalityId: number): void {
     const dialogRef = this.dialog.open(FileUploadDialogComponent, {
       width: '400px',
       height: 'auto',
+
       data: {
         municipalityId,
         municipalityDocuments: this.optionalMunicipalityDocuments
@@ -201,29 +217,32 @@ export class RequestRequiredDocumentsComponent implements OnInit {
       if (response) {
         console.log('File uploaded successfully:', response);
       }
+
     });
-  }
+
 
   onCheckboxChange(formArray: FormArray, idx: number, isChecked: boolean) {
     const documentControl = formArray.at(idx) as FormGroup;
     documentControl.patchValue({ selected: isChecked });
   }
 
+
   deleteMunicipalityDocument(documentId: number): void {
     this.requestService.DeleteMunicipalityDocument(documentId).subscribe(
       () => {
-        const formArray = this.optionalMunicipalityDocuments;
-        const indexToDelete = formArray.controls.findIndex(
-          (control) => control.get('documentId')?.value === documentId
+        this.municipalityDocuments = this.municipalityDocuments.filter(
+          document => document.documentId !== documentId
         );
+
 
         if (indexToDelete > -1) {
           formArray.removeAt(indexToDelete);
           console.log(`Optional municipality document id ${documentId} deleted successfully`);
+
         }
       },
-      (error) => {
-        console.error('Error deleting optional municipality document:', error);
+      error => {
+        console.error('Error deleting document:', error);
       }
     );
   }
@@ -256,4 +275,5 @@ export class RequestRequiredDocumentsComponent implements OnInit {
         console.error('Error saving documents:', error);
       });
   }
+
 }

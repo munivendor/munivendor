@@ -12,13 +12,13 @@ import { RequestOverviewComponent } from '../request-overview.component';
 import { RequestRequiredDocumentsComponent } from '../request-required-docs.component';
 import { RequestReviewComponent } from '../request-review.component';
 import { Request } from '../model/request.model';
+import { RequestSection } from '../model/requestsection.model';
 import { SubCategory } from '../model/subcategory.model';
 import { RequestSection } from '../model/requestsection.model';
 
 @Component({
   selector: 'create-request-stepper',
   templateUrl: 'create-request-stepper.component.html',
-  styleUrls: ['./create-request-stepper.component.css'],
   standalone: true,
   imports: [
     MatButtonModule,
@@ -31,12 +31,16 @@ import { RequestSection } from '../model/requestsection.model';
     RequestOverviewComponent,
     RequestRequiredDocumentsComponent,
     RequestReviewComponent,
-    CommonModule
   ],
 })
 
+// comments are WIP for when validation is required before users
+// are able to move onto the next step
+// can save data for each step
+// submit the final request data to database
 export class CreateRequestStepper {
   @ViewChild(BasicRequestComponent) basicRequestComponent!: BasicRequestComponent;
+
   @ViewChild(RequestOverviewComponent) requestOverViewComponent!: RequestOverviewComponent;
   @ViewChild(RequestRequiredDocumentsComponent) requestRequiredDocumentsComponent!: RequestRequiredDocumentsComponent;
   @ViewChild(RequestReviewComponent) requestReviewComponent!: RequestReviewComponent;
@@ -48,6 +52,7 @@ export class CreateRequestStepper {
   proposalsOverview!: FormGroup;
   requestDocumentsFormGroup!: FormGroup;
   municipalityId = 1;
+
   requestId?: number;
   proposalsOverviewFormGroup!: FormGroup;
   requiredDocuments: Document[] = [];
@@ -60,11 +65,13 @@ export class CreateRequestStepper {
   constructor(
     private route: ActivatedRoute,
   ) {
+ 
     this.route.paramMap.subscribe((params) => {
-      this.idParam = params.get('requestId');
-      this.requestId = this.idParam ? + this.idParam : 0;
+      const idParam = params.get('requestId'); 
+      this.requestId = idParam ? +idParam : 0; 
     });
   }
+
 
   saveRequest() {
     this.basicRequestComponent.saveRequest();
@@ -82,8 +89,4 @@ export class CreateRequestStepper {
     this.requestReviewComponent.onSubmit();
   }
 }
-
-
-
-
 

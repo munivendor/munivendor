@@ -1,3 +1,4 @@
+
 <div [formGroup]="proposalsOverviewFormGroup">
     <div style="margin-top: 8px;" formArrayName="proposalSections">
         <div *ngFor="let proposalSection of proposalSections.controls; let i = index" [formGroupName]="i">
@@ -29,6 +30,7 @@
             </ul>
             <hr class="propsal-divider" style="margin-top: 20px;" />
         </div>
+
     </div>
 </div>
 <button mat-fab color="primary" style="margin-bottom: 16px;" extended (click)="addSection()">

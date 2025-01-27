@@ -1,17 +1,19 @@
+
 <form [formGroup]="requestDocumentsFormGroup">
+
   <p>Please check off which documents you want to be required for this request</p>
   <h2>Required forms from the State of NJ</h2>
-  <div formArrayName="requiredStateDocuments">
-    <div *ngFor="let requiredStateDocument of requiredStateDocuments.controls; let i = index">
-      <mat-checkbox color="primary" formControlName="requiredStateDocuments"
-        [checked]="requiredStateDocument.get('selected')?.value" [disabled]="true"
-        (change)="onCheckboxChange(requiredStateDocuments, i, $event.checked)">{{
-        requiredStateDocument.get('documentName')?.value }}</mat-checkbox>
+  <div formArrayName="requiredRequestDocumentItems">
+    <div *ngFor="let requiredStateDocument of requiredStateDocuments; let i = index">
+      <mat-checkbox color="primary" [formControlName]="i" [checked]="true" [disabled]="true"> {{
+        requiredStateDocument.documentDescription }}</mat-checkbox>
     </div>
   </div>
+
   <br />
 
   <h2>Optional forms from the State of NJ</h2>
+
   <div formArrayName="optionalStateDocuments">
     <div *ngFor="let optionalStateDocument of optionalStateDocuments.controls; let i = index">
       <mat-checkbox color="primary" formControlName="optionalStateDocuments"
@@ -19,12 +21,15 @@
         (change)="onCheckboxChange(optionalStateDocuments, i, $event.checked)">
         {{ optionalStateDocument.get('documentName')?.value }}
       </mat-checkbox>
+
     </div>
   </div>
+
   <br />
 
   <h2>Optional forms from [Municipality]</h2>
   <p>Upload documents you would like to be required</p>
+
   <div formArrayName="optionalMunicipalityDocuments">
     <div *ngFor="let municipalityDocument of optionalMunicipalityDocuments.controls; let i = index"
       class="document-item">
@@ -38,13 +43,20 @@
         {{ municipalityDocument?.get('documentName')?.value || 'Unnamed Document'
         }}
       </mat-checkbox>
+
     </div>
   </div>
+
+  <!-- commented out for future feature ehancement -->
+  <!-- <app-drag-and-drop (filesDropped)="handleFilesDropped($event)"></app-drag-and-drop> -->
+
   <button mat-raised-button type="button" (click)="openFileUploadDialog(municipalityId)">Add</button>
+
   <br />
   <br />
 
   <h3>What is the notarization type you would like to use for this proposal?</h3>
+
   <mat-checkbox [checked]="true" [disabled]="true">Digital Notarization (Our platform enables proposers to
     notarize required documents using our platform digitally
     with one of our certified notaries.) You will receive
@@ -52,4 +64,4 @@
     notary’s contact information.
   </mat-checkbox>
 </form>
-<br />
+<br/>

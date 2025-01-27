@@ -1,3 +1,4 @@
+
 <mat-stepper [linear]="false" #stepper>
   <mat-step label="Basics">
     <request-basic #step1 [requestId]="requestId" [idParam]="idParam" (formValidityChange)="isStepValid = $event"></request-basic>
@@ -5,7 +6,7 @@
       <button mat-button (click)="saveRequest()" matStepperNext [disabled]="!isStepValid">Next</button>
     </div>
   </mat-step>
-
+  
   <mat-step label="Proposals">
     <request-overview #step2 [idParam]="idParam" (formValidityChange)="isStepValid = $event"></request-overview>
     <div>
@@ -30,6 +31,15 @@
     <div>
       <button type="Submit" mat-button matStepperPrevious>Back</button>
       <button type="Submit" mat-button matStepperNext (click)="updateRequestStatusToScheduled()">Submit</button>
+    </div>
+  </mat-step>
+
+  <mat-step>
+    <ng-template matStepLabel>Done</ng-template>
+    <p>You are now done.</p>
+    <div>
+      <button mat-button matStepperPrevious>Back</button>
+      <button mat-button (click)="stepper.reset()">Reset</button>
     </div>
   </mat-step>
 </mat-stepper>

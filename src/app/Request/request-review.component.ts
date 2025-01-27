@@ -1,15 +1,14 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { FormGroup, FormBuilder, ReactiveFormsModule, FormArray } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 import { MatCheckbox } from '@angular/material/checkbox';
 import { MatFormField } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { forkJoin } from 'rxjs';
+
 import { RequestService } from './services/request.service';
-import { StateService } from './services/state.service';
-import { Router } from '@angular/router';
-import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'request-review',
@@ -27,22 +26,24 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 })
 
 export class RequestReviewComponent implements OnInit {
+
   @Input() paramRequestId?: number;
 
   requestId!: number | null;
+
   requestFinalReviewDetailsForm!: FormGroup;
+  requestId: number = 60;
   requestFinalReviewDetails: any = {};
   docs: any;
 
   constructor(
     private fb: FormBuilder,
-    private requestService: RequestService,
-    private stateService: StateService,
-    private router: Router,
-    private snackBar: MatSnackBar
+    private route: ActivatedRoute,
+    private requestService: RequestService
   ) { }
 
   ngOnInit() {
+
     if (this.paramRequestId) {
       this.getRequestObjDetails(this.paramRequestId);
     }
@@ -59,6 +60,7 @@ export class RequestReviewComponent implements OnInit {
       }
     });
 
+
     this.requestFinalReviewDetailsForm = this.fb.group({
       requestName: [''],
       category: [''],
@@ -70,24 +72,29 @@ export class RequestReviewComponent implements OnInit {
       contractStart: [''],
       contractEnd: [''],
       decisionMakers: this.fb.array([]),
-      requestDocuments: this.fb.array([])
+      requiredDocuments: this.fb.array([]) // Same for required documents
     });
+
+    this.getRequestObjDetails(this.requestId);
   }
 
   getRequestObjDetails(requestId: number) {
     const request$ = this.requestService.GetRequestDetailsById(requestId);
     const categories$ = this.requestService.GetCategories();
     const requestTypes$ = this.requestService.GetRequestTypes();
+    const requestStatuses$ = this.requestService.GetRequestStatuses();
     const subCategories$ = this.requestService.GetAllSubcategories();
     const decisionMakers$ = this.requestService.GetDecisionMakers();
     const requiredRequestDocuments$ = this.requestService.GetRequestRequiredDocumentsById(requestId);
 
-    forkJoin([request$, categories$, requestTypes$, subCategories$, decisionMakers$, requiredRequestDocuments$]).subscribe(
-      ([request, categories, requestTypes, subCategories, decisionMakers, requiredRequestDocuments]) => {
+    forkJoin([request$, categories$, requestTypes$, requestStatuses$, subCategories$, decisionMakers$, requiredRequestDocuments$]).subscribe(
+      ([request, categories, requestTypes, requestStatuses, subCategories, decisionMakers, requiredRequestDocuments]) => {
         const category = categories.find((c: { categoryId: any }) => c.categoryId === request.categoryId);
         const requestType = requestTypes.find((r: { requestTypeId: number }) => r.requestTypeId === request.requestTypeId);
+        const requestStatus = requestStatuses.find((rs: { requestStatusId: any }) => rs.requestStatusId === request.requestStatusId);
         const subCategory = subCategories.find((sc: { subCategoryId: number }) => sc.subCategoryId === request.subCategoryId);
 
+        // Map over decisionMakerSelections in request to match decisionMakers from API response
         const decisionMakersMapped = request.decisionMakerSelections.map((selection: { decisionMakerId: number }) =>
           decisionMakers.find((dm: { decisionMakerId: number }) => dm.decisionMakerId === selection.decisionMakerId)
         ).filter((dm: any) => dm);
@@ -103,16 +110,18 @@ export class RequestReviewComponent implements OnInit {
           ...request,
           category,
           requestType,
+          requestStatus,
           subCategory,
           decisionMakers: decisionMakersMapped,
-          requestDocuments,
-          openDate,
-          publishDate,
-          contractStart,
-          contractEnd,
-          openTime,
-          publishTime
+          requiredDocuments,
+          openDate: this.formatToUSDate(request.openDate),
+          publishDate: this.formatToUSDate(request.publishDate),
+          contractStart: this.formatToUSDate(request.contractStart),
+          contractEnd: this.formatToUSDate(request.contractEnd),
+          openTime: this.formatToUSTime(request.openTime),
+          publishTime: this.formatToUSTime(request.publishTime)
         };
+
 
         // Populate the form with data
         this.requestFinalReviewDetailsForm.patchValue({
@@ -130,12 +139,14 @@ export class RequestReviewComponent implements OnInit {
 
         this.populateArrayFormControls('decisionMakers', decisionMakersMapped);
         this.populateArrayFormControls('requestDocuments', requiredRequestDocuments);
+
       },
       error => {
         console.error('Error fetching data', error);
       }
     );
   }
+
 
   // takes a combined date-time string, parses it
   // returns an object containing separate date and time fields.
@@ -146,8 +157,9 @@ export class RequestReviewComponent implements OnInit {
     const dateOptions: Intl.DateTimeFormatOptions = {
       month: '2-digit',
       day: '2-digit',
-      year: 'numeric',
+      year: 'numeric'
     };
+
   
     const timeOptions: Intl.DateTimeFormatOptions = {
       hour: '2-digit',
@@ -158,6 +170,7 @@ export class RequestReviewComponent implements OnInit {
     return {
       date: new Intl.DateTimeFormat('en-US', dateOptions).format(utcDate),
       time: utcDate.toLocaleTimeString(undefined, timeOptions), // Convert to local time
+ 
     };
   }
 
@@ -165,31 +178,17 @@ export class RequestReviewComponent implements OnInit {
     const controlArray = this.requestFinalReviewDetailsForm.get(controlName) as FormArray;
     controlArray.clear();
     items?.forEach(item => {
-      controlArray.push(this.fb.control(item.name || item));
+      controlArray.push(this.fb.control(item.name || item));  // Customize based on your data structure
     });
   }
 
   onSubmit() {
+
     // Determine the requestId to use
     const requestIdToUse = this.stateService.getRequestId();
     if (!requestIdToUse) {
       console.error('Error: No valid requestId found.');
       return;
     }
-
-    // Update the request status to 'Scheduled' once users finalize review
-    this.requestService.UpdateRequestStatus(requestIdToUse, 2).subscribe({
-      next: (response) => {
-        console.log('Request status updated successfully:', response);
-        this.snackBar.open('Request successfully submitted!', '', {
-          duration: 5000,
-          verticalPosition: 'top'
-        });
-        this.router.navigate(['/dashboard-component/requests-view']);
-      },
-      error: (err) => {
-        console.error('Failed to update request status:', err);
-      }
-    });
   }
 }

@@ -1,0 +1,85 @@
+<form [formGroup]="userForm" (ngSubmit)="onSave()" class="user-form">
+  
+  <h2 class="center-text">User Information</h2>
+  
+  <!-- Name Field -->
+  <mat-form-field appearance="fill">
+    <mat-label>Name</mat-label>
+    <input matInput formControlName="name" required maxlength="50" placeholder="name">
+    <mat-error *ngIf="userForm.get('name')?.hasError('required')">
+      Name is required
+    </mat-error>
+    <mat-error *ngIf="userForm.get('name')?.hasError('maxlength')">
+      Maximum length is 50 characters
+    </mat-error>
+  </mat-form-field>
+
+  <!-- Email Field -->
+  <mat-form-field appearance="fill">
+    <mat-label>Email</mat-label>
+    <input matInput formControlName="email" required placeholder="email">
+    <mat-error *ngIf="userForm.get('email')?.hasError('required')">
+      Email is required
+    </mat-error>
+    <mat-error *ngIf="userForm.get('email')?.hasError('email')">
+      Please enter a valid email
+    </mat-error>
+  </mat-form-field>
+
+  <!-- Title Field -->
+  <mat-form-field appearance="fill">
+    <mat-label>Title</mat-label>
+    <input matInput formControlName="title" required maxlength="100" placeholder="title">
+    <mat-error *ngIf="userForm.get('title')?.hasError('required')">
+      Title is required
+    </mat-error>
+    <mat-error *ngIf="userForm.get('title')?.hasError('maxlength')">
+      Maximum length is 100 characters
+    </mat-error>
+  </mat-form-field>
+
+  <!-- Role Field -->
+  <div class="role-container">
+    <mat-form-field appearance="fill">
+      <mat-label>Role</mat-label>
+      <mat-select formControlName="role" required>
+        <mat-option *ngFor="let roleOption of roles" [value]="roleOption">
+          {{ roleOption }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="userForm.get('role')?.hasError('required')">
+        Role is required
+      </mat-error>
+    </mat-form-field>
+    <mat-icon (click)="openDialog()" class="clickable-icon">
+      help_outline
+    </mat-icon>
+  </div>
+
+  <!-- Designation Field -->
+  <mat-form-field appearance="fill">
+    <mat-label>Designation</mat-label>
+    <mat-select formControlName="designation" required>
+      <mat-option *ngFor="let designationOption of designations" [value]="designationOption">
+        {{ designationOption }}
+      </mat-option>
+    </mat-select>
+    <mat-error *ngIf="userForm.get('designation')?.hasError('required')">
+      Designation is required
+    </mat-error>
+  </mat-form-field>
+
+  <!-- Manage Tags Button -->
+  <div class="button-container-left">
+    <button mat-raised-button color="accent" type="button">
+      Manage Tags
+    </button>
+  </div>
+
+  <!-- Save Button -->
+  <div class="button-container">
+    <button mat-raised-button color="primary" type="submit">
+      Save
+    </button>
+  </div>
+</form>

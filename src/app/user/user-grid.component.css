@@ -1,18 +1,19 @@
-.header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 10px;
-  }
-  
-  .search-box {
-    width: 300px;
-  }
-  
-  table {
-    width: 100%;
-  }
-  
-  mat-chip {
-    margin: 2px;
-  }
-  
+.user-grid-container {
+  padding: 16px;
+}
+
+.header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+mat-form-field {
+  width: 300px;
+}
+
+::ng-deep .tooltip-content {
+  white-space: pre-line;
+}
+

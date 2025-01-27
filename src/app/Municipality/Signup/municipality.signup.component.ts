@@ -13,7 +13,7 @@ import {  GoogleSigninButtonModule, SocialAuthService, SocialAuthServiceConfig, 
 import { GoogleLoginProvider } from '@abacritt/angularx-social-login';
 
 import { Router } from '@angular/router';
-import { UserService } from './Services/user.service';
+import { UserService } from '../../shared/service/user.service';
 import { User } from './model/user.model';
 
 import { Observable } from 'rxjs';
@@ -64,9 +64,9 @@ constructor (private fb: FormBuilder, private userService: UserService, public d
         lastName: this.loginForm.controls["lastname"].value,
         workEmail: this.loginForm.controls["email"].value
       };
-      this.sendUserEmailVerification ();
+   
       this.createMunivendorUser (municipalityUser)
-      this.openEmailVerificationDialog ();
+
     }
   }
 
@@ -89,7 +89,7 @@ constructor (private fb: FormBuilder, private userService: UserService, public d
             workEmail: user.email
           };
     
-        this.createMunivendorUser(user);
+        this.createMunivendorUser(municipalityUser);
       }
       else {
         console.log('User is not logged in');
@@ -107,13 +107,11 @@ constructor (private fb: FormBuilder, private userService: UserService, public d
 
   private createMunivendorUser(user: User) {
 
-  
-    /*this.saveUser(municipalityUser, municipalityId);
-    console.log('User is logged in:', this.user);*/
-
     this.saveMunivendorUser(user).subscribe(
       (userId: number) => {
         console.log('User ID:', userId);
+        this.sendUserEmailVerification (userId);
+        this.openEmailVerificationDialog ();
       },
       (error) => {
         console.error('Error saving user', error);
@@ -125,7 +123,7 @@ constructor (private fb: FormBuilder, private userService: UserService, public d
   signInWithGoogle(): void {
     this.authService.signIn(GoogleLoginProvider.PROVIDER_ID).then(user => {
      
-     
+
       console.log(user);
     }).catch(error => {
       console.error(error);
@@ -162,7 +160,7 @@ constructor (private fb: FormBuilder, private userService: UserService, public d
     return saveUserObservable;
   }
 
-  sendUserEmailVerification(): Observable<boolean> {
+  sendUserEmailVerification(userId: number): Observable<boolean> {
     const sendUserVerificationEmailObservable = this.userService.SendUserVerificationEmail(1);
     sendUserVerificationEmailObservable.subscribe ((success: boolean) => {
       this.openEmailVerificationDialog();

@@ -42,6 +42,7 @@ import { forkJoin } from 'rxjs';
 })
 
 export class BasicRequestComponent implements OnInit {
+
   @Input() requestId?: number;
   @Input() idParam?: string | null | undefined;
   @Output() deleteDropdown = new EventEmitter<{ decisionMakerId: number | null }>();
@@ -49,6 +50,7 @@ export class BasicRequestComponent implements OnInit {
 
   decisionMakers!: DecisionMaker[];
   categories: Category[] = [];
+
   subcategories!: SubCategory[];
   requestTypes: RequestType[] | undefined;
   requestName = new FormControl<string | null>(null, [Validators.required]);
@@ -57,6 +59,7 @@ export class BasicRequestComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
+
     private requestService: RequestService,
     private stateService: StateService,
     private cdr: ChangeDetectorRef) { }
@@ -164,6 +167,7 @@ export class BasicRequestComponent implements OnInit {
         console.error('Error fetching data', error);
       }
     );
+
   }
 
   get dropdowns(): FormArray {
@@ -189,6 +193,7 @@ export class BasicRequestComponent implements OnInit {
   }
 
   removeDropdown(index: number): void {
+
     const decisionMakerId = this.dropdowns.at(index).get('decisionMaker')?.value;
     if (decisionMakerId) {
       this.requestService.DeleteDecisionMaker(this.requestId ? this.requestId : Number(this.idParam), decisionMakerId).subscribe({
@@ -217,14 +222,17 @@ export class BasicRequestComponent implements OnInit {
           (decisionMaker) => !selectedDecisionMakerIds.includes(decisionMaker.decisionMakerId)
         )
       : [];
+
   }
   
 
   onCategoryChange(event: MatSelectChange): void {
     const categoryId = event.value;
+
     this.requestService.GetSubcategories(categoryId).subscribe((subcategories: SubCategory[]) => {
       this.subcategories = subcategories;
       const currentSubcategoryId = this.basicsFormGroup.get('subcategory')?.value;
+
       if (this.subcategories.some(sc => sc.subCategoryId === currentSubcategoryId)) {
         this.basicsFormGroup.get('subcategory')?.setValue(currentSubcategoryId);
       } else {
@@ -232,6 +240,7 @@ export class BasicRequestComponent implements OnInit {
       }
     });
   }
+
 
   saveRequest() {
     let request = this.createRequest();
@@ -250,6 +259,7 @@ export class BasicRequestComponent implements OnInit {
         }
       );
     }
+
 
     else if (!this.idParam || !requestIdFromStateService) {
       this.requestService.CreateRequest(request).subscribe(
@@ -335,8 +345,10 @@ export class BasicRequestComponent implements OnInit {
     }
   }
 
+
   combineDateTimeInUtc(inputDate: string, inputTime: string): string {
     const dateTimeString = `${inputDate}T${inputTime}Z`;
     return dateTimeString;
   }
+
 }

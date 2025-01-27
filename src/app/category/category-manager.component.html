@@ -1,0 +1,39 @@
+<mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
+
+  <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle matTreeNodePadding>
+    <div style="display: flex; align-items: center;">
+      <button mat-icon-button disabled></button>
+      <span>{{ node.item }}</span>
+    
+      <button mat-icon-button (click)="addNewItem(node)"><mat-icon>add_circle</mat-icon></button>
+      <button mat-icon-button color="warn" (click)="deleteCategory(node)"><mat-icon>delete</mat-icon></button>
+    </div>
+  </mat-tree-node>
+  
+  <mat-tree-node *matTreeNodeDef="let node; when: hasNoContent" matTreeNodePadding>
+    <div style="display: flex; align-items: center;">
+      <button mat-icon-button disabled></button>
+      <mat-form-field>
+        <input matInput #itemValue placeholder="New item...">
+      </mat-form-field>
+      <button mat-button (click)="saveNode(node, itemValue.value)">Save</button>
+      <button mat-icon-button color="warn" (click)="deleteCategory(node)"><mat-icon>delete</mat-icon></button>
+    </div>
+  </mat-tree-node>
+  
+  <mat-tree-node *matTreeNodeDef="let node; when: hasChild" matTreeNodePadding>
+    <div style="display: flex; align-items: center;">
+      <button mat-icon-button matTreeNodeToggle [attr.aria-label]="'toggle ' + node.filename">
+        <mat-icon class="mat-icon-rtl-mirror">
+          {{ treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right' }}
+        </mat-icon>
+      </button>
+      <span>{{ node.item }}</span>
+      <button mat-icon-button (click)="addNewItem(node)"><mat-icon>add</mat-icon></button>
+  
+      <button mat-icon-button color="warn" (click)="deleteCategory(node)"><mat-icon>delete</mat-icon></button>
+    </div>
+  </mat-tree-node>
+  
+  </mat-tree>
+  

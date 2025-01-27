@@ -1,0 +1,82 @@
+/* src/app/components/category-manager/category-manager.component.scss */
+.category-manager {
+    margin: 20px;
+  }
+  
+  .category-actions {
+    margin-bottom: 15px;
+  
+    button {
+      margin-right: 10px;
+    }
+  }
+  
+  .category-tree {
+    max-width: 600px;
+  }
+  
+  .node-content {
+    display: flex;
+    align-items: center;
+  }
+  
+  .selected {
+    background-color: rgba(0, 0, 255, 0.1);
+  }
+  
+
+  /* src/app/components/category-manager/category-manager.component.scss */
+
+.category-manager {
+  margin: 0 auto; /* Centers the container horizontally */
+  max-width: 800px; /* Sets a maximum width for the container */
+  padding: 20px; /* Adds padding inside the container */
+  border: 1px solid #ccc; /* Adds a light gray border around the container */
+  border-radius: 8px; /* Rounds the corners of the border */
+  background-color: #f9f9f9; /* Subtle background color for contrast */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Adds a slight shadow for depth */
+}
+
+.category-actions {
+  margin-bottom: 15px;
+
+  button {
+    margin-right: 10px;
+  }
+}
+
+.category-tree {
+  max-height: 600px; /* Sets a maximum height for the tree container */
+  overflow-y: auto; /* Adds a scrollbar if content exceeds max height */
+  background-color: #fff; /* White background for the tree area */
+  padding: 10px; /* Adds padding inside the tree container */
+  border: 1px solid #e0e0e0; /* Border around the tree container */
+  border-radius: 4px; /* Slight rounding of the corners */
+}
+
+.node-content {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 4px;
+
+  &:hover {
+    background-color: rgba(63, 81, 181, 0.1); /* Indigo hover effect */
+  }
+}
+
+.selected .node-content {
+  background-color: rgba(63, 81, 181, 0.2); /* Darker background when selected */
+}
+
+.mat-icon-button {
+  margin-right: 5px;
+}
+
+h1 {
+  text-align: center; /* Centers the title text */
+  font-size: 28px;
+  margin-bottom: 20px;
+  color: #3f51b5; /* Indigo color for the title */
+}

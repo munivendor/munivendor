@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { UserService } from './Services/user.service';
+import { UserService } from '../../shared/service/user.service';
 
 @Component({
   selector: 'token-validation',
