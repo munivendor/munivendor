@@ -97,8 +97,7 @@ export class DesignationSelectionComponent implements OnInit {
       .filter(value => value !== null) as number[];
 
       user.DesignationIds = selectedDesignationIds;
-      //console.log('Selected Designation:', selectedDesignation);
-
+      
       this.userService.updateUser(user).subscribe(response => {
         console.log('Designation saved successfully:', response);
       });
