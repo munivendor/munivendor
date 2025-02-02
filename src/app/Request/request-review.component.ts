@@ -26,6 +26,11 @@ import { RequestService } from './services/request.service';
 })
 
 export class RequestReviewComponent implements OnInit {
+
+  @Input() paramRequestId?: number;
+
+  requestId!: number | null;
+
   requestFinalReviewDetailsForm!: FormGroup;
   requestId: number = 60;
   requestFinalReviewDetails: any = {};
@@ -38,6 +43,24 @@ export class RequestReviewComponent implements OnInit {
   ) { }
 
   ngOnInit() {
+
+    if (this.paramRequestId) {
+      this.getRequestObjDetails(this.paramRequestId);
+    }
+    // dynamically call getRequestObjDetails if any page  
+    // has been saved to receive updated request details
+    this.stateService.currentRequestHasBeenSaved$.subscribe((hasBeenSaved) => {
+      this.requestId = this.stateService.getRequestId();
+      if (hasBeenSaved && this.requestId) {
+        if (this.paramRequestId) {
+          this.getRequestObjDetails(this.paramRequestId);
+        } else if (this.requestId) {
+          this.getRequestObjDetails(this.requestId);
+        }
+      }
+    });
+
+
     this.requestFinalReviewDetailsForm = this.fb.group({
       requestName: [''],
       category: [''],
@@ -76,8 +99,12 @@ export class RequestReviewComponent implements OnInit {
           decisionMakers.find((dm: { decisionMakerId: number }) => dm.decisionMakerId === selection.decisionMakerId)
         ).filter((dm: any) => dm);
 
-      // Filter documents to include only those marked as required
-      const requiredDocuments = requiredRequestDocuments;
+        const requestDocuments = requiredRequestDocuments.documents;
+
+        const { date: publishDate, time: publishTime } = this.splitDateTime(request.publishDate);
+        const { date: openDate, time: openTime } = this.splitDateTime(request.openDate);
+        const { date: contractStart } = this.splitDateTime(request.contractStart);
+        const { date: contractEnd } = this.splitDateTime(request.contractEnd);
 
         this.requestFinalReviewDetails = {
           ...request,
@@ -94,6 +121,25 @@ export class RequestReviewComponent implements OnInit {
           openTime: this.formatToUSTime(request.openTime),
           publishTime: this.formatToUSTime(request.publishTime)
         };
+
+
+        // Populate the form with data
+        this.requestFinalReviewDetailsForm.patchValue({
+          requestName: request.requestName,
+          category: category?.categoryName || '',
+          subcategory: subCategory?.subCategoryName || '',
+          requestType: requestType?.requestTypeDesc || '',
+          publishDate: publishDate,
+          publishTime: publishTime,
+          openDate: openDate,
+          openTime: openTime,
+          contractStart: contractStart,
+          contractEnd: contractEnd
+        });
+
+        this.populateArrayFormControls('decisionMakers', decisionMakersMapped);
+        this.populateArrayFormControls('requestDocuments', requiredRequestDocuments);
+
       },
       error => {
         console.error('Error fetching data', error);
@@ -101,26 +147,31 @@ export class RequestReviewComponent implements OnInit {
     );
   }
 
-  // Helper function to format dates to MM/DD/YYYY
-  formatToUSDate(dateString: string): string {
-    const date = new Date(dateString);
-    const options: Intl.DateTimeFormatOptions = {
+
+  // takes a combined date-time string, parses it
+  // returns an object containing separate date and time fields.
+  splitDateTime(dateTimeString: string): { date: string; time: string } {
+    // Parse the UTC date-time string as UTC
+    const utcDate = new Date(dateTimeString + 'Z'); // Ensure it's treated as UTC by appending 'Z'
+  
+    const dateOptions: Intl.DateTimeFormatOptions = {
       month: '2-digit',
       day: '2-digit',
       year: 'numeric'
     };
-    return new Intl.DateTimeFormat('en-US', options).format(date);
-  }
 
-  // Helper function to format times to HH:MM AM/PM
-  formatToUSTime(timeString: string): string {
-    const date = new Date(timeString);
-    const options: Intl.DateTimeFormatOptions = {
+  
+    const timeOptions: Intl.DateTimeFormatOptions = {
       hour: '2-digit',
       minute: '2-digit',
-      hour12: true
+      hour12: false
     };
-    return new Intl.DateTimeFormat('en-US', options).format(date);
+   
+    return {
+      date: new Intl.DateTimeFormat('en-US', dateOptions).format(utcDate),
+      time: utcDate.toLocaleTimeString(undefined, timeOptions), // Convert to local time
+ 
+    };
   }
 
   populateArrayFormControls(controlName: string, items: any[]) {
@@ -132,8 +183,12 @@ export class RequestReviewComponent implements OnInit {
   }
 
   onSubmit() {
-    if (this.requestFinalReviewDetailsForm.valid) {
-      console.log(this.requestFinalReviewDetailsForm.value);
+
+    // Determine the requestId to use
+    const requestIdToUse = this.stateService.getRequestId();
+    if (!requestIdToUse) {
+      console.error('Error: No valid requestId found.');
+      return;
     }
   }
 }

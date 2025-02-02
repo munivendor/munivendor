@@ -1,6 +1,8 @@
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+
+import { Component, OnInit, Input } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { FormGroup, FormBuilder, ReactiveFormsModule, FormArray, FormControl } from '@angular/forms';
+import { FormGroup, ReactiveFormsModule, FormArray, FormBuilder } from '@angular/forms';
+
 import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
@@ -12,7 +14,11 @@ import { FileUploadDialogComponent } from '../file-upload-dialog/file-upload-dia
 import { RequestService } from './services/request.service';
 import { Document } from './model/document.model';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { RequestDocument }  from './model/requestdocument.model';
+
+import { RequestDocument } from './model/requestdocument.model';
+import { catchError, forkJoin, Observable, of, tap } from 'rxjs';
+import { StateService } from './services/state.service';
+
 
 @Component({
   selector: 'request-required-documents',
@@ -30,8 +36,11 @@ import { RequestDocument }  from './model/requestdocument.model';
     MatProgressSpinnerModule]
 })
 export class RequestRequiredDocumentsComponent implements OnInit {
-  requestDocumentsForm!: FormGroup;
-  requiredRequestDocuments!: Document[];
+
+  @Input() idParam?: string | null | undefined;
+
+  requestDocumentsFormGroup!: FormGroup;
+
   optionalRequestDocuments: Document[] = [];
   municipalityRequestDocuments: Document[] = [];
   files: File[] = [];
@@ -44,126 +53,179 @@ export class RequestRequiredDocumentsComponent implements OnInit {
 
   selectedOptionalStateDocs: Document[] = [];
   selectedMunicipalityDocs: Document[] = [];
+  requestId: any;
 
-  @Output() documentsUpdated = new EventEmitter<RequestDocument>();
 
-  emitDocuments() {
-    this.documentsUpdated.emit({
-      required: this.requiredStateDocuments,
-      optional: this.selectedOptionalStateDocs,
-      municipality: this.municipalityDocuments
-    });
-  }
+  constructor(
+    private fb: FormBuilder,
 
-  constructor(private fb: FormBuilder,
     private requestService: RequestService,
+    private stateService: StateService,
     public dialog: MatDialog) { }
 
   ngOnInit(): void {
 
-    this.requestDocumentsForm = this.fb.group({
-      requireRequestDocumentItems: this.fb.array([]),
-      optionalRequestDocumentItems: this.fb.array([]),
-      municipalityRequestDocumentItems: this.fb.array([]),
+      this.initializeRequestDocuments();
+  }
+
+  get requiredStateDocuments(): FormArray {
+    return this.requestDocumentsFormGroup.get('requiredStateDocuments') as FormArray;
+  }
+  get optionalStateDocuments(): FormArray {
+    return this.requestDocumentsFormGroup.get('optionalStateDocuments') as FormArray;
+  }
+  get optionalMunicipalityDocuments(): FormArray {
+    return this.requestDocumentsFormGroup.get('optionalMunicipalityDocuments') as FormArray;
+  }
+
+  initializeRequestDocuments(): void {
+    this.requestDocumentsFormGroup = this.fb.group({
       requiredStateDocuments: this.fb.array([]),
       optionalStateDocuments: this.fb.array([]),
-      municipalityDocuments: this.fb.array([])
+      optionalMunicipalityDocuments: this.fb.array([]),
+    });
+    if (!this.requestId && !this.idParam) {
+      this.getAllDocumentTypes(this.municipalityId).subscribe({
+        next: () => {
+          console.log('Documents fetched and form initialized for creation.');
+
+        },
+        error: (error) => {
+          console.error('Error fetching documents for creation:', error);
+        },
+      });
+    } else if (this.idParam) {
+      forkJoin({
+        allDocuments: this.getAllDocumentTypes(this.municipalityId, Number(this.idParam)).pipe(
+          catchError((error) => {
+            console.error('Error in getAllDocumentTypes:', error);
+            return of([]); // Return an empty array if this observable fails
+          })
+        ),
+        requestDocuments: this.requestService.GetRequestRequiredDocumentsById(Number(this.idParam)).pipe(
+          catchError((error) => {
+            console.error('Error in GetRequestRequiredDocumentsById:', error);
+            return of({ isSuccess: false, documents: [] }); // Return a fallback response if this observable fails
+          })
+        ),
+      }).subscribe({
+        next: ({ allDocuments, requestDocuments }) => {
+          if (requestDocuments.isSuccess) {
+            this.populateRequestDocuments(requestDocuments.documents);
+          }
+          this.mergeUnselectedDocuments(allDocuments);
+          console.log('Documents fetched and form arrays initialized for editing.');
+        },
+        error: (error) => {
+          console.error('Error fetching documents for editing:', error);
+        },
+      });
+    }
+  }
+
+  getAllDocumentTypes(municipalityId: number, requestId?: number): Observable<any> {
+    if (!requestId) {
+      return forkJoin({
+        requiredStateDocuments: this.requestService.GetRequiredDocuments(),
+        optionalStateDocuments: this.requestService.GetOptionalDocuments(),
+        optionalMunicipalityDocuments: this.requestService.GetMunicipalityDocuments(municipalityId),
+      }).pipe(
+        tap(({ requiredStateDocuments, optionalStateDocuments, optionalMunicipalityDocuments }) => {
+          this.populateFormArray(this.requiredStateDocuments, requiredStateDocuments);
+          this.populateFormArray(this.optionalStateDocuments, optionalStateDocuments);
+          this.populateFormArray(this.optionalMunicipalityDocuments, optionalMunicipalityDocuments);
+        })
+      );
+    } else {
+      return forkJoin({
+        requiredStateDocuments: this.requestService.GetRequiredDocuments(),
+        optionalStateDocuments: this.requestService.GetOptionalDocuments(),
+        optionalMunicipalityDocuments: this.requestService.GetMunicipalityDocuments(municipalityId),
+      });
+    }
+  }
+
+  populateRequestDocuments(requestDocuments: RequestDocument[]): void {
+    requestDocuments.forEach((document: any) => {
+      const documentFormGroup = this.fb.group({
+        documentId: [document.documentId],
+        documentName: [document.documentName],
+        derived: [document.derived],
+        documentRequired: [document.documentRequired],
+        required: [document.required],
+        selected: [document.selected],
+      });
+      if (document.derived) {
+        // Derived = true -> Municipality document
+        this.optionalMunicipalityDocuments.push(documentFormGroup);
+      } else if (document.required) {
+        // Derived = false, Required = true -> Required State document
+        this.requiredStateDocuments.push(documentFormGroup);
+      } else {
+        // Derived = false, Required = false -> Optional State document
+        this.optionalStateDocuments.push(documentFormGroup);
+      }
+    });
+  }
+
+  mergeUnselectedDocuments(allDocuments: any): void {
+    const { requiredStateDocuments, optionalStateDocuments, optionalMunicipalityDocuments } = allDocuments;
+    // filter and merge the two data responses based on two criterias:
+    // display documents if selected are false from from getAllDocumentTypes
+    // but do not display duplicates if getAllDocumentTypes has same documentId as GetRequestRequiredDocumentsById
+    const filterUnselected = (documents: any[]) =>
+      documents.filter((doc) => !this.isDocumentSelected(doc.documentId));
+
+    this.populateFormArray(this.requiredStateDocuments, filterUnselected(requiredStateDocuments));
+    this.populateFormArray(this.optionalStateDocuments, filterUnselected(optionalStateDocuments));
+    this.populateFormArray(this.optionalMunicipalityDocuments, filterUnselected(optionalMunicipalityDocuments));
+  }
+
+  isDocumentSelected(documentId: number): boolean {
+    return (
+      this.requiredStateDocuments.value.some((doc: any) => doc.documentId === documentId) ||
+      this.optionalStateDocuments.value.some((doc: any) => doc.documentId === documentId) ||
+      this.optionalMunicipalityDocuments.value.some((doc: any) => doc.documentId === documentId)
+    );
+  }
+
+  populateFormArray(formArray: FormArray, documents: any[]): void {
+    documents.forEach((document) => {
+      formArray.push(
+        this.fb.group({
+          documentId: [document.documentId],
+          documentName: [document.documentName],
+          documentRequired: [document.documentRequired],
+          selected: [document.selected]
+        })
+      );
     });
 
-      this.fetchRequiredDocuments();
-      this.fetchOptionalDocuments();
-      this.fetchMunicipalityDocuments(this.municipalityId)
-  }
-
-  fetchRequiredDocuments(): void {
-    this.requestService.GetRequiredDocuments().subscribe({
-      next: (requiredStateDocumentsArr: any[]) => {
-        this.requiredStateDocuments = requiredStateDocumentsArr;
-      },
-      error: (error) => {
-        console.error('Error fetching required documents:', error);
-      },
-      complete: () => {
-        console.log('Required document fetching completed');
-      }
-    })
-
-  }
-
-  fetchOptionalDocuments(): void {
-    this.requestService.GetOptionalDocuments().subscribe({
-      next: (optionalStateDocumentsArr: any[]) => {
-        this.optionalStateDocuments = optionalStateDocumentsArr;
-      },
-      error: (error) => {
-        console.error('Error fetching optional documents:', error);
-      },
-      complete: () => {
-        console.log('Optional document fetching completed');
-      }
-    })
-  }
-
-  fetchMunicipalityDocuments(municipalityId: number): void {
-    this.requestService.GetMunicipalityDocuments(municipalityId).subscribe({
-      next: (municipalityDocumentsArr: any[]) => {
-        this.municipalityDocuments = municipalityDocumentsArr;
-      },
-      error: (error) => {
-        console.error('Error fetching municipality documents:', error);
-      },
-      complete: () => {
-        console.log('Municipality document fetching completed');
-        this.selectedMunicipalityDocs = this.municipalityDocuments;
-      }
-    })
   }
 
   openFileUploadDialog(municipalityId: number): void {
     const dialogRef = this.dialog.open(FileUploadDialogComponent, {
       width: '400px',
       height: 'auto',
-      data: { municipalityId,  municipalityDocuments: this.municipalityDocuments }
+
+      data: {
+        municipalityId,
+        municipalityDocuments: this.optionalMunicipalityDocuments
+      }
+    });
+    dialogRef.afterClosed().subscribe((response) => {
+      if (response) {
+        console.log('File uploaded successfully:', response);
+      }
+
     });
 
-  dialogRef.afterClosed().subscribe((documentId) => {
-    if (documentId) {
-      this.documentId = documentId
-    }
-  });
+
+  onCheckboxChange(formArray: FormArray, idx: number, isChecked: boolean) {
+    const documentControl = formArray.at(idx) as FormGroup;
+    documentControl.patchValue({ selected: isChecked });
   }
 
-
-  onOptionalStateDocsCheckboxChange(idx: number, event: any) {
-    const isChecked = event.checked;
-
-    // box just checked and needs to be added to list of selected
-    if (isChecked) {
-      const toBeAddedDoc = this.optionalStateDocuments[idx];
-      if (toBeAddedDoc != null && this.selectedOptionalStateDocs.every(sd => sd.documentId !== toBeAddedDoc.documentId)) {
-        this.selectedOptionalStateDocs.push(toBeAddedDoc);
-      }
-    }
-    // box just unchecked and needs to be removed from list of selected 
-    else {
-      const toBeRemovedDoc = this.optionalStateDocuments[idx];
-      if (toBeRemovedDoc != null) {
-        const idxToRemove = this.selectedOptionalStateDocs.findIndex(sd => sd.documentId === toBeRemovedDoc.documentId);
-        if (idxToRemove > -1) {
-          this.selectedOptionalStateDocs.splice(idxToRemove, 1);
-        }
-      }
-    }
-
-    this.emitDocuments();
-  }
-
-  
-  addNewMunicipalityRequestDocument(newDocument: Document): void {
-    this.municipalityRequestDocuments.push(newDocument);
-    const control = new FormControl(false);
-    (this.requestDocumentsForm.get('additionalRequestDocumentItems') as FormArray).push(control);
-  }
 
   deleteMunicipalityDocument(documentId: number): void {
     this.requestService.DeleteMunicipalityDocument(documentId).subscribe(
@@ -171,10 +233,12 @@ export class RequestRequiredDocumentsComponent implements OnInit {
         this.municipalityDocuments = this.municipalityDocuments.filter(
           document => document.documentId !== documentId
         );
-        console.log('Document deleted successfully');
-        const toBeDeletedIdx = this.selectedMunicipalityDocs.findIndex(d => d.documentId === documentId);
-        if (toBeDeletedIdx > -1) {
-          this.selectedMunicipalityDocs.splice(toBeDeletedIdx, 1);
+
+
+        if (indexToDelete > -1) {
+          formArray.removeAt(indexToDelete);
+          console.log(`Optional municipality document id ${documentId} deleted successfully`);
+
         }
       },
       error => {
@@ -182,4 +246,34 @@ export class RequestRequiredDocumentsComponent implements OnInit {
       }
     );
   }
+
+  saveDocuments() {
+    this.requestId = this.stateService.getRequestId();
+    const updatedRequiredStateDocuments = this.requiredStateDocuments.controls
+      .filter((control) => control.value.selected)
+      .map((control) => control.value);
+
+    const updatedOptionalStateDocuments = this.optionalStateDocuments.controls
+      .filter((control) => control.value.selected)
+      .map((control) => control.value);
+
+    const updatedOptionalMunicipalityDocuments = this.optionalMunicipalityDocuments.controls
+      .filter((control) => control.value.selected)
+      .map((control) => control.value);
+
+    const documentIds: number[] = [
+      ...updatedRequiredStateDocuments,
+      ...updatedOptionalStateDocuments,
+      ...updatedOptionalMunicipalityDocuments
+    ].map(documentId => documentId.documentId);
+
+    this.requestService.SaveRequestDocuments(this.requestId, documentIds)
+      .subscribe(response => {
+        console.log('Documents saved successfully:', response);
+        this.stateService.setRequestHasBeenSaved(true);
+      }, error => {
+        console.error('Error saving documents:', error);
+      });
+  }
+
 }
