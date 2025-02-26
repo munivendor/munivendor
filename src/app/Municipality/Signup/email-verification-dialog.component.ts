@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { MatDialogModule } from '@angular/material/dialog';
+import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
  import { MatButtonModule } from '@angular/material/button';
 
 @Component({
@@ -8,5 +8,11 @@ import { MatDialogModule } from '@angular/material/dialog';
   standalone: true,
   imports: [MatDialogModule, MatButtonModule]
 })
-export class EmailVerificationDialogComponent {}
+export class EmailVerificationDialogComponent {
+  constructor(private dialogRef: MatDialogRef<EmailVerificationDialogComponent>) {}
+
+  closeDialog(): void {
+    this.dialogRef.close();
+  }
+}
 

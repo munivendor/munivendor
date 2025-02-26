@@ -1,55 +1,66 @@
-<form [formGroup]=" userSignupDetailForm" (ngSubmit)="onSubmit()">
-    <p>Your information below as it relates to the municipality</p>
-    
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Email</mat-label>
-      <input matInput formControlName="email" placeholder="Enter your email">
-      <mat-error *ngIf="contactForm.get('email')?.hasError('required')">Email is required.</mat-error>
-      <mat-error *ngIf="contactForm.get('email')?.hasError('email')">Invalid email format.</mat-error>
-    </mat-form-field>
-  
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>First Name</mat-label>
-      <input matInput formControlName="firstName" placeholder="Enter your first name">
-      <mat-error *ngIf="contactForm.get('firstName')?.hasError('required')">First name is required.</mat-error>
-    </mat-form-field>
-  
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Last Name</mat-label>
-      <input matInput formControlName="lastName" placeholder="Enter your last name">
-      <mat-error *ngIf="contactForm.get('lastName')?.hasError('required')">Last name is required.</mat-error>
-    </mat-form-field>
-  
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Title</mat-label>
-      <input matInput formControlName="title" placeholder="Enter your title">
-      <mat-error *ngIf="contactForm.get('title')?.hasError('required')">Title is required.</mat-error>
-    </mat-form-field>
-  
-    <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Department</mat-label>
-        <mat-select formControlName="department">
-          <mat-option *ngFor="let department of departments" [value]="department.departmentId">
-            {{ department.departmentName }}
-          </mat-option>
-        </mat-select>
-        <mat-error *ngIf="contactForm.get('department')?.hasError('required')">Department is required.</mat-error>
+<mat-card>
+  <mat-card-title>User Details</mat-card-title>
+  <mat-card-content>
+    <p>Your information below as it relates to the LGO.</p>
+    <br/>
+    <form [formGroup]="userSignupDetailForm" (ngSubmit)="onSubmit()" *ngIf="userSignupDetailForm">
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Email</mat-label>
+        <input matInput formControlName="email" placeholder="Enter your email">
+        <mat-error *ngIf="userSignupDetailForm.get('email')?.hasError('required')">Email is required.</mat-error>
+        <mat-error *ngIf="userSignupDetailForm.get('email')?.hasError('email')">Invalid email format.</mat-error>
       </mat-form-field>
-      
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Work Phone Number</mat-label>
-      <input matInput formControlName="workPhoneNumber" placeholder="Enter your work phone number">
-      <mat-error *ngIf="contactForm.get('workPhoneNumber')?.hasError('required')">Work phone number is required.</mat-error>
-      <mat-error *ngIf="contactForm.get('workPhoneNumber')?.hasError('pattern')">Invalid phone number format.</mat-error>
-    </mat-form-field>
-  
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Mobile Number</mat-label>
-      <input matInput formControlName="mobileNumber" placeholder="Enter your mobile number">
-      <mat-error *ngIf="contactForm.get('mobileNumber')?.hasError('required')">Mobile number is required.</mat-error>
-      <mat-error *ngIf="contactForm.get('mobileNumber')?.hasError('pattern')">Invalid phone number format.</mat-error>
-    </mat-form-field>
-  
-    <button mat-raised-button color="primary" type="submit" [disabled]="!userSignupDetailForm.valid">Submit</button>
-  </form>
-  
+
+      <div class="field-container">
+        <div class="inline-field">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>First Name</mat-label>
+            <input matInput formControlName="firstName" placeholder="Enter your first name">
+            <mat-error *ngIf="userSignupDetailForm.get('firstName')?.hasError('required')">First name is
+              required.</mat-error>
+          </mat-form-field>
+        </div>
+        <div class="inline-field">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Last Name</mat-label>
+            <input matInput formControlName="lastName" placeholder="Enter your last name">
+            <mat-error *ngIf="userSignupDetailForm.get('lastName')?.hasError('required')">Last name is
+              required.</mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Title</mat-label>
+        <input matInput formControlName="title" placeholder="Enter your title">
+        <mat-error *ngIf="userSignupDetailForm.get('title')?.hasError('required')">Title is required.</mat-error>
+        <mat-error *ngIf="userSignupDetailForm.get('title')?.hasError('pattern')">Title can only have 10 characters max.</mat-error>
+      </mat-form-field>
+
+      <div class="field-container">
+        <div class="inline-field">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Work Phone Number</mat-label>
+            <input matInput formControlName="workPhoneNumber" placeholder="Enter your work phone number">
+            <mat-error *ngIf="userSignupDetailForm.get('workPhoneNumber')?.hasError('required')">Work phone number is
+              required.</mat-error>
+            <mat-error *ngIf="userSignupDetailForm.get('workPhoneNumber')?.hasError('pattern')">Invalid phone number
+              format.</mat-error>
+          </mat-form-field>
+        </div>
+        <div class="inline-field">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Mobile Number</mat-label>
+            <input matInput formControlName="personalPhoneNumber" placeholder="Enter your mobile number">
+            <mat-error *ngIf="userSignupDetailForm.get('personalPhoneNumber')?.hasError('required')">Mobile number is
+              required.</mat-error>
+            <mat-error *ngIf="userSignupDetailForm.get('personalPhoneNumber')?.hasError('pattern')">Invalid phone number
+              format.</mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+      <button mat-raised-button color="primary" type="submit" [disabled]="!userSignupDetailForm.valid">Continue</button>
+    </form>
+  </mat-card-content>
+</mat-card>

@@ -1,18 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
-
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
-
-import { UserService } from '../Signup/Services/user.service';
-import { User } from '../Signup/model/user.model';
+import { UserService } from '../../shared/service/user.service';
+import { User } from '../../shared/model/user.model';
 import { Designation as Designation } from '../../shared/model/designation.model';
 
 
@@ -21,21 +18,31 @@ import { Designation as Designation } from '../../shared/model/designation.model
   templateUrl: './municipality.user-designation-selection.component.html',
   styleUrls: ['./municipality.user-designation-selection.component.css'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatCardModule, MatFormFieldModule, MatInputModule, MatCheckboxModule, MatButtonModule]
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatCheckboxModule,
+    MatButtonModule
+  ]
 })
 export class DesignationSelectionComponent implements OnInit {
   designeeSelectionForm: FormGroup;
   designations!: Designation[];
   noneSelected = false;
 
-  constructor(private fb: FormBuilder, private userService: UserService) {
+  constructor(
+    private fb: FormBuilder,
+    private userService: UserService,
+    private router: Router) {
     this.designeeSelectionForm = this.fb.group(
-      { 
-        selectedDesignees: this.fb.array([], this.minSelectedCheckboxes(1)) 
+      {
+        selectedDesignees: this.fb.array([], this.minSelectedCheckboxes(1))
 
       });
-   
- 
+
     this.userService.getDesigneeTypes().subscribe(
       (designations: Designation[]) => {
         this.designations = designations;
@@ -60,6 +67,7 @@ export class DesignationSelectionComponent implements OnInit {
   get selectedDesignees(): FormArray {
     return this.designeeSelectionForm.get('selectedDesignees') as FormArray;
   }
+
   onCheckboxChange(index: number): void {
     const noneOfTheAboveIndex = this.designations.length - 1;
     if (index === noneOfTheAboveIndex) {
@@ -92,15 +100,15 @@ export class DesignationSelectionComponent implements OnInit {
     if (this.designeeSelectionForm.valid) {
       let user: User = { userId: 1 };
 
-      const selectedDesignationIds = (this.designeeSelectionForm.get('selectedDesignees') as FormArray).controls 
-      .map((control, i) => (control.value ? this.designations[i].designationId : null)) 
-      .filter(value => value !== null) as number[];
+      const selectedDesignationIds = (this.designeeSelectionForm.get('selectedDesignees') as FormArray).controls
+        .map((control, i) => (control.value ? this.designations[i].designationId : null))
+        .filter(value => value !== null) as number[];
 
       user.DesignationIds = selectedDesignationIds;
-      //console.log('Selected Designation:', selectedDesignation);
 
       this.userService.updateUser(user).subscribe(response => {
         console.log('Designation saved successfully:', response);
+        this.router.navigate(['/payment-plan-confirmation']);
       });
     }
   }

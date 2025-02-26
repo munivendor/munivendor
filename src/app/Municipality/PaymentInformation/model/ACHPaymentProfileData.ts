@@ -1,4 +1,4 @@
-export class AchProfileData {
+export class ACHPaymentProfileData {
     CustomerProfileId!: string;
     RoutingNumber!: string;
     AccountNumber!: string; 

@@ -1,245 +1,227 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
-import { ConfirmationDialogComponent } from './confirmation-dialog.component';
+import { FormBuilder, FormGroup, Validators, AbstractControl, ValidatorFn } from '@angular/forms';
 import { MaterialModule } from '../shared/material.module';
 import { MatDialog } from '@angular/material/dialog';
 import { ReactiveFormsModule } from '@angular/forms';
 import { ChangeDetectorRef } from '@angular/core';
 import { PaymentInfoService } from './services/payment-info.service'
 import { CustomerProfileData } from './model/CustomerProfileData';
-import { Municipality } from '../Details/model/municipality.model';
-
+import { MatIconModule } from '@angular/material/icon';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatTabChangeEvent } from '@angular/material/tabs';
 
 @Component({
   selector: 'app-payment-form',
   templateUrl: './paymentinformation.component.html',
   styleUrls: ['./paymentinformation.component.css'],
   standalone: true,
-  imports: [MaterialModule, ReactiveFormsModule],
+  imports: [MaterialModule, ReactiveFormsModule, MatIconModule, MatTabsModule],
   providers: [PaymentInfoService]
 })
+
 export class PaymentInfoComponent implements OnInit {
   paymentInformationForm!: FormGroup;
   accountTypes = ['Checking', 'Savings'];
-  previousPaymentType!: string;
+  selectedPaymentType: string = 'ACH';
+  cardType: string | null = null;
 
-  constructor(private fb: FormBuilder, public dialog: MatDialog, private cdr: ChangeDetectorRef, private paymentInfoService: PaymentInfoService) { }
+  states = [
+    { value: 'AL', viewValue: 'Alabama' },
+    { value: 'AK', viewValue: 'Alaska' },
+    { value: 'AZ', viewValue: 'Arizona' },
+    { value: 'AR', viewValue: 'Arkansas' },
+    { value: 'CA', viewValue: 'California' },
+    { value: 'CO', viewValue: 'Colorado' },
+    { value: 'CT', viewValue: 'Connecticut' },
+    { value: 'DE', viewValue: 'Delaware' },
+    { value: 'FL', viewValue: 'Florida' },
+    { value: 'GA', viewValue: 'Georgia' },
+    { value: 'HI', viewValue: 'Hawaii' },
+    { value: 'ID', viewValue: 'Idaho' },
+    { value: 'IL', viewValue: 'Illinois' },
+    { value: 'IN', viewValue: 'Indiana' },
+    { value: 'IA', viewValue: 'Iowa' },
+    { value: 'KS', viewValue: 'Kansas' },
+    { value: 'KY', viewValue: 'Kentucky' },
+    { value: 'LA', viewValue: 'Louisiana' },
+    { value: 'ME', viewValue: 'Maine' },
+    { value: 'MD', viewValue: 'Maryland' },
+    { value: 'MA', viewValue: 'Massachusetts' },
+    { value: 'MI', viewValue: 'Michigan' },
+    { value: 'MN', viewValue: 'Minnesota' },
+    { value: 'MS', viewValue: 'Mississippi' },
+    { value: 'MO', viewValue: 'Missouri' },
+    { value: 'MT', viewValue: 'Montana' },
+    { value: 'NE', viewValue: 'Nebraska' },
+    { value: 'NV', viewValue: 'Nevada' },
+    { value: 'NH', viewValue: 'New Hampshire' },
+    { value: 'NJ', viewValue: 'New Jersey' },
+    { value: 'NM', viewValue: 'New Mexico' },
+    { value: 'NY', viewValue: 'New York' },
+    { value: 'NC', viewValue: 'North Carolina' },
+    { value: 'ND', viewValue: 'North Dakota' },
+    { value: 'OH', viewValue: 'Ohio' },
+    { value: 'OK', viewValue: 'Oklahoma' },
+    { value: 'OR', viewValue: 'Oregon' },
+    { value: 'PA', viewValue: 'Pennsylvania' },
+    { value: 'RI', viewValue: 'Rhode Island' },
+    { value: 'SC', viewValue: 'South Carolina' },
+    { value: 'SD', viewValue: 'South Dakota' },
+    { value: 'TN', viewValue: 'Tennessee' },
+    { value: 'TX', viewValue: 'Texas' },
+    { value: 'UT', viewValue: 'Utah' },
+    { value: 'VT', viewValue: 'Vermont' },
+    { value: 'VA', viewValue: 'Virginia' },
+    { value: 'WA', viewValue: 'Washington' },
+    { value: 'WV', viewValue: 'West Virginia' },
+    { value: 'WI', viewValue: 'Wisconsin' },
+    { value: 'WY', viewValue: 'Wyoming' }
+  ];
+
+  constructor(
+    private fb: FormBuilder,
+    public dialog: MatDialog,
+    private cdr: ChangeDetectorRef,
+    private paymentInfoService: PaymentInfoService
+  ) { }
+
   ngOnInit(): void {
     this.paymentInformationForm = this.fb.group({
-      paymentType: ['ach', Validators.required],
-      ach: this.fb.group({
-        routingNumber: ['', Validators.required],
-        confirmRoutingNumber: ['', Validators.required],
-        accountNumber: ['', Validators.required],
-        confirmAccountNumber: ['', Validators.required],
-        accountType: ['', Validators.required],
-        streetAddress1: ['', Validators.required],
-        streetAddress2: [''],
-        city: ['', Validators.required],
-        state: ['', Validators.required],
-        zip: ['', [Validators.required, Validators.pattern('^[0-9]{5}(?:-[0-9]{4})?$')]]
-      }),
-      creditCard: this.fb.group({
-        cardNumber: ['', [Validators.required, Validators.pattern('^[0-9]{13,19}$')]],
-        nameOnCard: ['', [Validators.required, this.noMiddleNameValidator]],
-        expirationDate: ['', Validators.required],
-        cvv: ['', [Validators.required, this.cvvValidator.bind(this)]],
-        streetAddress1: ['', Validators.required],
-        streetAddress2: [''],
-        city: ['', Validators.required],
-        state: ['', Validators.required],
-        zip: ['', [Validators.required, Validators.pattern('^[0-9]{5}(?:-[0-9]{4})?$')]]
-      }),
-      invoice: this.fb.group({
-        municipalityName: ['', Validators.required],
-        billingContact: ['', Validators.required],
-        desiredDateOfInvoice: ['', Validators.required],
-        streetAddress1: ['', Validators.required],
-        streetAddress2: [''],
-        city: ['', Validators.required],
-        state: ['', Validators.required],
-        zip: ['', [Validators.required, Validators.pattern('^[0-9]{5}(?:-[0-9]{4})?$')]]
-      })
+      paymentType: ['', Validators.required],
+      address: this.createAddressGroup(),
+      ACH: this.createAchGroup(),
+      CC: this.createCreditCardGroup(),
+      invoice: this.createInvoiceGroup(),
     });
-
-
-    // Initialize previousPaymentType
-    this.previousPaymentType = this.paymentInformationForm!.get('paymentType')!.value;
   }
 
-  get achGroup(): FormGroup {
-    return this.paymentInformationForm.get('ach') as FormGroup;
+  private createAddressGroup(): FormGroup {
+    return this.fb.group({
+      streetAddress1: ['', [Validators.required, Validators.maxLength(60)]],
+      streetAddress2: ['', Validators.maxLength(60)],
+      city: ['', [Validators.required, Validators.pattern(/^[a-zA-Z\s\-]{1,40}$/)]],
+      state: ['', [Validators.required]],
+      zip: ['', [Validators.required, Validators.pattern(/^\d{5}(-\d{4})?$/)]]
+    }, { updateOn: 'blur' });
   }
 
-  get creditCardGroup(): FormGroup {
-    return this.paymentInformationForm.get('creditCard') as FormGroup;
+  private createAchGroup(): FormGroup {
+    return this.fb.group({
+      routingNumber: ['', [Validators.required, Validators.pattern(/^\d{9}$/)]],
+      confirmRoutingNumber: ['', [Validators.required, Validators.pattern(/^\d{9}$/)]],
+      accountNumber: ['', [Validators.required, Validators.pattern(/^\d{6,17}$/)]],
+      confirmAccountNumber: ['', [Validators.required, Validators.pattern(/^\d{6,17}$/)]],
+      accountType: ['', Validators.required]
+    });
   }
 
-  get invoiceGroup(): FormGroup {
-    return this.paymentInformationForm.get('invoice') as FormGroup;
+  private createCreditCardGroup(): FormGroup {
+    return this.fb.group({
+      cardNumber: ['', [Validators.required, Validators.pattern('^[0-9]{13,19}$')]],
+      nameOnCard: ['', [Validators.required, this.nameOnCardValidator]],
+      expirationDate: ['', Validators.required],
+      cvv: ['', [Validators.required,
+      this.cvvValidator.bind(this)
+      ]]
+    });
   }
 
+  private createInvoiceGroup(): FormGroup {
+    return this.fb.group({
+      municipalityName: ['', Validators.required],
+      billingContact: ['', Validators.required],
+      desiredDateOfInvoice: ['', Validators.required]
+    }, { updateOn: 'blur' });
+  }
 
-  onPaymentTypeChange(): void {
-    const selectedPaymentType = this.paymentInformationForm.get('paymentType')!.value;
-  
-    
-    const currentFormGroup = this.paymentInformationForm.get(this.previousPaymentType) as FormGroup;
-  
-    let hasFilledFields = false;
-    for (const field in currentFormGroup.controls) {
-      const control = currentFormGroup.get(field);
-      if (control && control.value && control.value.trim() !== '') {
-        hasFilledFields = true;
-        break;  
-      }
-    }
-  
- 
-    if (hasFilledFields) {
-      
-      this.paymentInformationForm.get('paymentType')!.setValue(this.previousPaymentType);
-  
-      const dialogRef = this.dialog.open(ConfirmationDialogComponent);
-  
-      dialogRef.afterClosed().subscribe(result => {
-        if (result) {
-          // User confirmed the change, update the payment type and reset form fields
-          this.paymentInformationForm.get('paymentType')!.setValue(selectedPaymentType);
-          this.previousPaymentType = selectedPaymentType;
-          currentFormGroup.reset();
-          this.cdr.detectChanges();
-        } else {
-          // User cancelled, revert to the previous payment type
-          this.paymentInformationForm.get('paymentType')!.setValue(this.previousPaymentType);
-          this.cdr.detectChanges();
-        }
-      });
-    } else {
-      // If no fields are filled or the form is not dirty, simply switch to the new payment type
-      this.paymentInformationForm.get('paymentType')!.setValue(selectedPaymentType);
-      this.previousPaymentType = selectedPaymentType;
-      this.cdr.detectChanges();
+  get selectedFormGroup(): FormGroup {
+    return this.paymentInformationForm.get(this.selectedPaymentType) as FormGroup;
+  }
+
+  onTabChange(event: MatTabChangeEvent): void {
+    this.clearAddressErrors();
+    const paymentTypes = ['ACH', 'CC', 'invoice'];
+    this.selectedPaymentType = paymentTypes[event.index] || 'ACH';
+  }
+
+  clearAddressErrors() {
+    const addressGroup = this.paymentInformationForm.get('address');
+    if (addressGroup) {
+      addressGroup.reset(addressGroup.value); // Reset errors but keep values
+      addressGroup.markAsPristine();
+      addressGroup.markAsUntouched();
     }
   }
-  
 
-
-
-  cvvValidator(control: AbstractControl): { [key: string]: boolean } | null {
-    const cardNumberControl = control.root.get('creditCard.cardNumber');
-    if (!cardNumberControl) {
-      return null;
-    }
-    const cardNumber = cardNumberControl.value;
-    const cvv = control.value;
-    if (cardNumber) {
-      if (cardNumber.startsWith('3') && cvv.length !== 4) {
-        return { 'invalidCVV': true };
-      } else if ((cardNumber.startsWith('4') || cardNumber.startsWith('5') || cardNumber.startsWith('6')) && cvv.length !== 3) {
-        return { 'invalidCVV': true };
-      }
-    }
-    return null;
-  }
-
-  noMiddleNameValidator(control: AbstractControl): { [key: string]: boolean } | null {
-    const name = control.value?.trim();
-    if (name && name.split(' ').length !== 2) {
-      return { invalidNameFormat: true };
-    }
-    return null;
-  }
-
-  // Utility function to split the full name into firstName and lastName
-  splitFullName(fullName: string): { firstName: string; lastName: string } {
-    if (!fullName || fullName.trim() === '') {
-      return { firstName: '', lastName: '' };
-    }
-
-    const nameParts = fullName.trim().split(' ');
-    const firstName = nameParts[0];
-    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
-
-    return { firstName, lastName };
-  }
-
-  /*loadPaymentInfo(paymentType: string): void {
-    switch (paymentType) {
-      case 'ACH': this.paymentInfoService.getACHPaymentInfo().subscribe(data => { this.paymentInformationForm.get('ach')!.patchValue(data); });
-        break;
-      case 'CreditCard': this.paymentInfoService.getCreditCardPaymentInfo().subscribe(data => { this.paymentInformationForm.get('creditCard')!.patchValue(data); });
-        break;
-      case 'Invoice': this.paymentInfoService.getInvoicePaymentInfo().subscribe(data => { this.paymentInformationForm.get('invoice')!.patchValue(data); });
-        break;
-      default:
-        console.error('Invalid payment type selected');
-    }
-  }*/
   onSubmit(): void {
-    const selectedPaymentType = this.paymentInformationForm.get('paymentType')!.value;
-    const selectedFormGroup = this.paymentInformationForm.get(selectedPaymentType) as FormGroup;
-    
-    let customerProfileData: CustomerProfileData = {
-            Email: "testemail@gmail.com",
-            Description: "test profile",
-            MerchantCustomerId: "testprofileid"
-          };
-          let municipalityId: number = 1;
-
-    if (selectedFormGroup && selectedFormGroup.valid) {
-      let paymentData = selectedFormGroup.value;
-
-      switch (selectedPaymentType) {
-        case 'ach':
-          
-          this.paymentInfoService.saveACHPaymentInfo(municipalityId, customerProfileData, paymentData).subscribe(
-            response => {
-              console.log('ACH Payment Info Submitted and Saved', response);
-            },
-            error => {
-              console.error('Error saving ACH payment data', error);
-            }
-          );
-          break;
-
-        case 'creditCard':
-        
-       
-
-        const { firstName, lastName } = this.splitFullName(paymentData.nameOnCard);
-        paymentData = { ...paymentData, firstName, lastName }; 
-        delete paymentData.nameOnCard; 
-
-
-          this.paymentInfoService.saveCreditCardPaymentInfo(municipalityId, customerProfileData, paymentData).subscribe(
-            response => {
-              console.log('Credit Card Payment Info Submitted and Saved', response);
-            },
-            error => {
-              console.error('Error saving Credit Card payment data', error);
-            }
-          );
-          break;
-
-        case 'invoice':
-          this.paymentInfoService.saveInvoicePaymentInfo(paymentData).subscribe(
-            response => {
-              console.log('Invoice Payment Info Submitted and Saved', response);
-            },
-            error => {
-              console.error('Error saving Invoice payment data', error);
-            }
-          );
-          break;
-
-        default:
-          console.error('Invalid payment type selected');
-      }
-    } else {
-      // Mark the selected form group as touched to display validation errors
-      selectedFormGroup?.markAllAsTouched();
-      console.error(`Form in ${selectedPaymentType} tab is invalid.`);
+    if (!this.selectedFormGroup.valid) {
+      this.selectedFormGroup.markAllAsTouched();
+      console.error(`Form in ${this.selectedPaymentType} tab is invalid.`);
+      return;
     }
+
+    let customerProfileData: CustomerProfileData = { Email: "testemail1111@gmail.com", UserId: 10, MerchantCustomerId: "10" };
+    let municipalityId = 1;
+    let paymentData = { ...this.selectedFormGroup.value };
+
+    if (this.selectedPaymentType === 'CC') {
+      const { firstName, lastName } = this.splitFullName(paymentData.nameOnCard);
+      paymentData = { ...paymentData, firstName, lastName };
+      delete paymentData.nameOnCard;
+    }
+
+    this.savePaymentInfo(municipalityId, customerProfileData, paymentData, this.selectedPaymentType);
+  }
+
+  private savePaymentInfo(municipalityId: number, customerProfileData: CustomerProfileData, paymentData: any, selectedPaymentType: string) {
+    const saveMethods = {
+      ACH: () => this.paymentInfoService.saveACHPaymentInfo(municipalityId, customerProfileData, paymentData, selectedPaymentType),
+      CC: () => this.paymentInfoService.saveCreditCardPaymentInfo(municipalityId, customerProfileData, paymentData, selectedPaymentType),
+      invoice: () => this.paymentInfoService.saveInvoicePaymentInfo(paymentData)
+    };
+
+    saveMethods[this.selectedPaymentType as keyof typeof saveMethods]?.()
+      .subscribe(
+        response => console.log(`${this.selectedPaymentType} Payment Info Submitted and Saved`, response),
+        error => console.error(`Error saving ${this.selectedPaymentType} payment data`, error)
+      );
+  }
+
+  private splitFullName(fullName: string): { firstName: string; lastName: string } {
+    const nameParts = fullName.trim().split(' ');
+    return { firstName: nameParts[0], lastName: nameParts.slice(1).join(' ') || '' };
+  }
+
+  detectCardType(cardNumber: string = ''): string | null {
+    // Ensure cardNumber is a string
+    cardNumber = cardNumber.replace(/\D/g, '');
+
+    if (/^4/.test(cardNumber)) return 'visa';
+    if (/^5[1-5]/.test(cardNumber) || /^2[2-7]/.test(cardNumber)) return 'mastercard';
+    if (/^3[47]/.test(cardNumber)) return 'amex';
+    if (/^6(?:011|5)/.test(cardNumber)) return 'discover';
+    return null; // Reset if no match
+  }
+
+  private cvvValidator(control: AbstractControl): { [key: string]: boolean } | null {
+    const cvv = control.value;
+    if (!cvv) return null;
+
+    // Ensure card number is a string (handle undefined case)
+    const cardNumber = this.paymentInformationForm?.get('CC.cardNumber')?.value || '';
+    const cardType = this.detectCardType(cardNumber); // No more type error
+    console.log("cardType", cardType)
+
+    const cvvPattern = cardType === 'amex' ? /^\d{4}$/ : /^\d{3}$/;
+    console.log("cvvPattern", cvvPattern)
+    return cvvPattern.test(cvv) ? null : { invalidCvv: true };
+  }
+
+  nameOnCardValidator(control: AbstractControl): { [key: string]: boolean } | null {
+    if (!control.value) return null;
+    // Regex: Only letters, spaces, hyphens, and apostrophes (2-50 characters)
+    const validNamePattern = /^[A-Za-z\s'-]{2,50}$/;
+
+    return validNamePattern.test(control.value.trim()) ? null : { invalidName: true };
   }
 }
