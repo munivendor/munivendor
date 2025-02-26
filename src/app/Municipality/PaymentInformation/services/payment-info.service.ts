@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { CCPaymentProfileData } from '../model/CCPaymentProfileData';
+import { ACHPaymentProfileData } from '../model/ACHPaymentProfileData';
 import { CustomerProfileData } from '../model/CustomerProfileData';
 import { environment } from '../../../../environments/environment';
 
@@ -9,31 +10,32 @@ import { environment } from '../../../../environments/environment';
   providedIn: 'root'
 })
 export class PaymentInfoService {
-  
-   apiUrl = `${environment.apiUrl}paymentprofile`;
+
+  apiUrl = `${environment.apiUrl}paymentprofile`;
 
   constructor(private http: HttpClient) { }
-  saveCreditCardPaymentInfo(municipalityId: number, customerProfileData: CustomerProfileData, paymentProfileData: CCPaymentProfileData): Observable<string> {
+  saveCreditCardPaymentInfo(municipalityId: number, customerProfileData: CustomerProfileData, CCPaymentProfileData: CCPaymentProfileData, selectedPaymentType: string): Observable<string> {
     const body = {
-        customerProfileData,
-        paymentProfileData
+      selectedPaymentType,
+      customerProfileData,
+      CCPaymentProfileData
     };
     return this.http.post<string>(`${this.apiUrl}/${municipalityId}`, body);
-}
+  }
 
-saveACHPaymentInfo(municipalityId: number, customerProfileData: CustomerProfileData, paymentProfileData: CCPaymentProfileData): Observable<string> {
-  const body = {
+  saveACHPaymentInfo(municipalityId: number, customerProfileData: CustomerProfileData, ACHPaymentProfileData: ACHPaymentProfileData, selectedPaymentType: string): Observable<string> {
+    const body = {
+      selectedPaymentType,
       customerProfileData,
-      paymentProfileData
-  };
-  return this.http.post<string>(`${this.apiUrl}/${municipalityId}`, body);
-}
-  
+      ACHPaymentProfileData
+    };
+    return this.http.post<string>(`${this.apiUrl}/${municipalityId}`, body);
+  }
+
   saveInvoicePaymentInfo(data: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/save-invoice-payment-info`, data);
   }
 
-  // Add methods to fetch current payment information
   getACHPaymentInfo(): Observable<any> {
     return this.http.get(`${this.apiUrl}/get-ach-payment-info`);
   }
@@ -45,8 +47,5 @@ saveACHPaymentInfo(municipalityId: number, customerProfileData: CustomerProfileD
   getInvoicePaymentInfo(): Observable<any> {
     return this.http.get(`${this.apiUrl}/get-invoice-payment-info`);
   }
-
- 
-
 }
 

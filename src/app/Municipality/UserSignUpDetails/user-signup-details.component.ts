@@ -1,65 +1,68 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
-
+import { CommonModule } from '@angular/common';
 import { MatInputModule } from '@angular/material/input';
+import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
-import { UserService } from '../Signup/Services/user.service';
-import { User } from '../Signup/model/user.model';
-import { Department } from './model/department.model';
-import { DepartmentService } from './service/department.service';
+import { User } from '../../shared/model/user.model';
+import { UserService } from '../../shared/service/user.service';
+import { Router } from '@angular/router';
 
 @Component({
-  selector: 'app-contact-form',
-  templateUrl: './user-signup-details.component.html',
-  standalone: true,
-  imports: [ReactiveFormsModule, MatInputModule, MatFormFieldModule, MatSelectModule, MatButtonModule]
+    selector: 'app-contact-form',
+    templateUrl: './user-signup-details.component.html',
+    standalone: true,
+    styleUrls: ['./user-signup-details.component.css'],
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        MatInputModule,
+        MatFormFieldModule,
+        MatSelectModule,
+        MatButtonModule,
+        MatCardModule]
 })
-export class UserSignupDetailsComponent
- implements OnInit {
-  userSignupDetailForm: FormGroup;
-  /*departments: string[] = [
-    'City Clerk',
-    'Legal',
-    'Purchasing',
-    'Construction Code',
-    'Court',
-    'Engineering',
-    'Mayor’s Complex',
-    'Parks and Recreation',
-    'Personnel',
-    'Public Works',
-    'Social Services',
-    'Tax Assessor',
-    'Tax Collector',
-    'Treasury'
-  ];*/
-
+export class UserSignUpDetails
+    implements OnInit {
+    userSignupDetailForm: FormGroup;
     user: User | undefined;
-    departments: Department[] | undefined;
 
-    constructor(private fb: FormBuilder, private departmentService: DepartmentService, private userService: UserService) {
-        this.getUser (1);
-        this. userSignupDetailForm = this.fb.group({
-            email: [this.user?.workEmail, [Validators.required, Validators.email]],
-            firstName: [this.user?.firstName, Validators.required],
-            lastName: [this.user?.lastName, Validators.required],
-            title: ['', Validators.required],
-            department: ['', Validators.required],
-            workPhoneNumber: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
-            personalMobileNumber: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
-            mobileNumber: ['', [Validators.required, Validators.pattern('^[0-9]+$')]]
+    constructor(
+        private fb: FormBuilder,
+        private userService: UserService,
+        private router: Router
+    ) {
+        this.userSignupDetailForm = this.fb.group({
+            email: [{ value: '', disabled: true }, [Validators.required,]],
+            firstName: [{ value: '', disabled: true }, Validators.required],
+            lastName: [{ value: '', disabled: true }, Validators.required],
+            title: ['', [Validators.required, Validators.pattern(/^.{1,10}$/)]],
+            workPhoneNumber: ['', [Validators.required, Validators.pattern(/^(1?\d{10})$/)
+            ]],
+            personalPhoneNumber: ['', [Validators.required, Validators.pattern(/^(1?\d{10})$/)
+            ]],
         });
     }
 
-    ngOnInit(): void { }
+    ngOnInit(): void {
+        this.getUser(1);
+    }
 
     getUser(userId: number): void {
-        this.userService.getUser(userId).subscribe((user: User) => {
-            this.user = user;
-        },
+        this.userService.getUser(userId).subscribe(
+            (user: User) => {
+                this.user = user;
+
+                this.userSignupDetailForm.patchValue({
+                    email: user.workEmail,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                });
+                this.userSignupDetailForm.updateValueAndValidity({ onlySelf: true });
+            },
             (error) => {
                 console.error('Error fetching user data:', error);
             }
@@ -68,7 +71,7 @@ export class UserSignupDetailsComponent
 
     updateUser(user: User): void {
         this.userService.updateUser(user).subscribe(() => {
-        console.log ("Success updating user")
+            console.log("Success updating user")
         },
             (error) => {
                 console.error('Error fetching user data:', error);
@@ -76,23 +79,13 @@ export class UserSignupDetailsComponent
         );
     }
 
-    getDepartments(): void {
-        this.departmentService.getDepartments().subscribe((departments: Department[]) => {
-            this.departments = departments;
-        },
-            (error) => {
-                console.error('Error fetching department data:', error);
-            }
-        );
-    }
-
     onSubmit(): void {
-        if (this. userSignupDetailForm.valid) {
-            //this.user!.departmentId = this.contactForm.get('department')?.value;
-
-            console.log('Selected Department ID:', this.user!.departmentId);
-            const user: User = this. userSignupDetailForm.value;
-            this.updateUser (user)
+        if (this.userSignupDetailForm.valid) {
+            const updatedUser: User = { ...this.user, ...this.userSignupDetailForm.value };
+            this.updateUser(updatedUser);
+            this.router.navigate(['/user-designation'])
+        } else {
+            console.error('Form is invalid or user data is not loaded yet.');
         }
     }
 }

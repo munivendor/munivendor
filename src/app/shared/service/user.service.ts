@@ -3,7 +3,7 @@ import { User } from '../model/user.model';
 import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { Designation } from '../../UserDesignationSelection/model/designation.model';
+import { Designation } from '../model/designation.model';
 
 @Injectable({
   providedIn: 'root',
@@ -15,7 +15,7 @@ export class UserService {
   userApiUrl = `${environment.apiUrl}users/`;
   createUser(user: User): Observable<number> {
     const headers = { 'Content-Type': 'application/json' };
-    return this.http.post<number>(`${this.userApiUrl}Users`, user, { headers });
+    return this.http.post<number>(`${this.userApiUrl}`, user, { headers });
   }
 
   updateUser(user: User): Observable<number> {
@@ -33,12 +33,12 @@ export class UserService {
 
   SendUserVerificationEmail(userId: number): Observable<boolean> {
     const headers = { 'Content-Type': 'application/json' };
-    return this.http.post<boolean>(`${this.userApiUrl}/sendveremail/1`, null, { headers });
+    return this.http.post<boolean>(`${this.userApiUrl}sendveremail/${userId}`, null, { headers });
   }
 
   ValidateEmailToken(token: string): Observable<boolean> {
     const headers = { 'Content-Type': 'application/json' };
-    return this.http.post<boolean>(`${this.userApiUrl}/validate/${token}`, null, { headers });
+    return this.http.post<boolean>(`${this.userApiUrl}validate/${token}`, null, { headers });
   }
 
   designeeApiUrl = `${environment.apiUrl}designations`;

@@ -1,36 +1,48 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 
 @Component({
-  selector: 'app-user-type-selection',
-  template: './user-type-selection.component.html',
-  styleUrls: ['./role-verification.component.css']
+  selector: 'role-verification',
+  templateUrl: './role-verification.component.html',
+  styleUrls: ['./role-verification.component.css'],
+  standalone: true,
+  imports: [
+    ReactiveFormsModule,
+    MatButtonModule,
+    CommonModule
+  ]
 })
-export class UserTypeSelectionComponent implements OnInit {
-  userTypeForm: FormGroup;
+export class RoleVerificationComponent implements OnInit {
+  roleVerificationForm!: FormGroup;
 
-  constructor(private fb: FormBuilder) {
-    this.userTypeForm = this.fb.group({
-      userType: ['']  // Initialize the form control
+  constructor(
+    private fb: FormBuilder,
+    private router: Router) {
+    this.roleVerificationForm = this.fb.group({
+      userType: ['']
     });
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
-  
-  onSubmit(event: Event): void {
+  onSubmit(event: SubmitEvent): void {
     event.preventDefault();
-    const target = event.target as HTMLButtonElement;
-    const buttonName = target.name;
+    
+    const submitter = event.submitter as HTMLButtonElement;
+    const buttonName = submitter?.name;
+  
     if (buttonName === 'municipality') {
-      this.userTypeForm.get('userType')?.setValue('municipality');
-      // navigate to 
-
-    }
-    else if (buttonName === 'vendor') 
-    { 
-      this.userTypeForm.get('userType')?.setValue('vendor');
+      this.roleVerificationForm.get('userType')?.setValue('municipality');
+      this.router.navigate(['/municipality-details']);
+    } 
+    else if (buttonName === 'vendor') {
+      this.roleVerificationForm.get('userType')?.setValue('vendor');
+      // TODO: Navigate to vendor related page
     }
   }
+  
 }
- 
+
