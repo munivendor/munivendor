@@ -1,5 +1,6 @@
 export class CustomerProfileData {
     Email!: string;
-    Description!: string;
+    UserId!: number;
+    // Description!: string;
     MerchantCustomerId!: string;
 }

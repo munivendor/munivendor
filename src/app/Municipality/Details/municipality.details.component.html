@@ -1,21 +1,25 @@
+<h3 style="max-width: 600px;">
+  Thank you for verifying your email! Let's setup your account! We will need additional information before moving onto
+  the next step.
+</h3>
 <mat-card>
-  <mat-card-title>Let's setup your account!</mat-card-title>
+    <mat-card-title>LGO Details</mat-card-title>
   <mat-card-content>
     <form [formGroup]="municipalityDetailForm" class="full-width" (ngSubmit)="onSubmit()">
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Municipality Name</mat-label>
-        <input matInput formControlName="municipalityName" required placeholder="enter Municipality">
+        <mat-label>Name</mat-label>
+        <input matInput formControlName="municipalityName" required placeholder="Enter LGO Ex. Linden">
         <mat-error *ngIf="municipalityDetailForm.get('municipalityName')?.hasError('required')">
-          Municipality Name is required.
+          LGO Name is required.
         </mat-error>
         <mat-error *ngIf="municipalityDetailForm.get('municipalityName')?.hasError('minlength')">
-          Municipality Name must be at least 3 characters long.
+          LGO Name must be at least 3 characters long.
         </mat-error>
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Address</mat-label>
-        <input matInput formControlName="municipalityAddress" required placeholder="enter Address">
+        <input matInput formControlName="municipalityAddress" required placeholder="Enter Address">
         <mat-error *ngIf="municipalityDetailForm.get('address')?.hasError('required')">
           Address is required.
         </mat-error>
@@ -26,7 +30,7 @@
 
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>City</mat-label>
-        <input matInput formControlName="municipalityCity" required placeholder="enter City">
+        <input matInput formControlName="municipalityCity" required placeholder="Enter City">
         <mat-error *ngIf="municipalityDetailForm.get('municipalityCity')?.hasError('required')">
           City is required.
         </mat-error>
@@ -48,18 +52,18 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>ZipCode</mat-label>
-        <input matInput formControlName="municipalityZipCode" required placeholder="enter ZipCode">
+        <mat-label>Zip Code</mat-label>
+        <input matInput formControlName="municipalityZipCode" required placeholder="Enter Zip Code">
         <mat-error *ngIf="municipalityDetailForm.get('municipalityZipCode')?.hasError('required')">
-          ZipCode is required.
+          Zip Code is required.
         </mat-error>
-        <mat-error *ngIf="municipalityDetailForm.get('municipalityZipCode')?.hasError('minlength')">
-         Zip must be at least 5 characters long.
+        <mat-error *ngIf="municipalityDetailForm.get('municipalityZipCode')?.hasError('pattern')">
+          Enter a valid 5-digit ZIP code or ZIP+4 format (e.g., 12345 or 12345-6789).
         </mat-error>
       </mat-form-field>
-      
 
-      <button mat-raised-button color="primary" type="submit" [disabled]="!municipalityDetailForm.valid">Submit</button>
+      <button mat-raised-button color="primary" type="submit"
+        [disabled]="!municipalityDetailForm.valid">Continue</button>
     </form>
   </mat-card-content>
 </mat-card>

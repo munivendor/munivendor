@@ -1,10 +1,13 @@
-<div class="container">
-    <h1>Are you a Vendor or Municipality?</h1>
-    <form [formGroup]="userTypeForm" (ngSubmit)="onSubmit($event)">
-      <div class="button-group">
-        <button mat-raised-button color="primary" name="municipality" type="submit">Municipality</button> 
-        <button mat-raised-button color="primary" name="vendor" type="submit">Vendor
+<div>
+  <h1>Are you a Vendor or LGO?</h1>
+  <form [formGroup]="roleVerificationForm" (ngSubmit)="onSubmit($event)">
+    <div class="button-container">
+      <div>
+        <button mat-raised-button color="primary" name="vendor" type="submit">Vendor</button>
       </div>
-    </form>
-  </div>
-  
+      <div>
+        <button mat-raised-button color="primary" name="municipality" type="submit">LGO</button>
+      </div>
+    </div>
+  </form>
+</div>

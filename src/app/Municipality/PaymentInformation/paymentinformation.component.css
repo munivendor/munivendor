@@ -14,10 +14,11 @@
   }
   
   .skip-link {
-    display: block;
-    text-align: center;
-    margin-top: 15px;
-    text-decoration: underline;
-    color: #1976d2;
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
   }
-  
+
+  .tab-icon {
+    margin-right: 8px;
+  }

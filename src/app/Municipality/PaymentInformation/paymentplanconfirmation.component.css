@@ -4,12 +4,17 @@
   }
   
   mat-card {
-    max-width: 600px;
+    max-width: 400px;
     margin: 20px auto;
     padding: 20px;
   }
   
   button {
     margin-top: 20px;
+  }
+
+  .container ul {
+    display: inline-block;
+    text-align: left;
   }
   
