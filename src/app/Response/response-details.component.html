@@ -1,0 +1,12 @@
+<div class="header">
+  <div class="header">
+    <button mat-button class="download-button" (click)="downloadPDF()">Download PDF</button>
+</div>
+  <div class="content">
+    <div *ngFor="let section of requestSections">
+      <h2>{{ section.requestSectionTitle }}</h2>
+      <p>{{ section.requestSectionContent }}</p>
+    </div>
+    <button mat-raised-button color="primary" class="continue-button">Continue</button>
+  </div>
+  

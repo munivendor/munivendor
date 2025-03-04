@@ -57,19 +57,11 @@ export class SignupComponent implements OnInit {
     this.authService.user$.subscribe((user) => {
       if (user) {
         console.log("Google Authenticated User:", user);
-
-        this.signupForm.patchValue({
-          firstname: user.firstName || '',
-          lastname: user.lastName || '',
-          email: user.email || '',
-          organization: user.organization || '',
-        });
-
         const municipalityUser: User = {
           firstName: user.firstName,
           lastName: user.lastName,
           workEmail: user.email,
-          organization: user.organization
+  
         };
 
         this.createGoogleMunivendorUser(municipalityUser)
