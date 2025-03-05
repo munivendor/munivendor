@@ -30,7 +30,7 @@ export const routes: Routes = [
   { path: 'role-verification', component: RoleVerificationComponent },
   { path: 'login', component: LoginComponent },
   { path: 'forgot-password', component: ForgotPasswordComponent },
-  { path: 'municipality-verification', component: MunicipalityVerificationComponent },
+  { path: 'email-verification', component: MunicipalityVerificationComponent },
 
   { path: 'validateuser', component: TokenValidationComponent, canActivate: [AuthGuard] },
   { path: 'municipality-details', component: MunicipalityDetailsComponent, canActivate: [AuthGuard] },

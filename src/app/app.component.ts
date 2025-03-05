@@ -15,7 +15,7 @@ import { Observable } from 'rxjs';
       <a routerLink="/signup" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="!(user$ | async)">Sign Up</a>
       <a routerLink="/login" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="!(user$ | async)">Log In</a>
       <a routerLink="/forgot-password" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="!(user$ | async)">Forgot Password</a>
-      <a routerLink="/municipality-verification" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="!(user$ | async)">Email Verificaiton</a>
+      <a routerLink="/email-verification" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="!(user$ | async)">Email Verificaiton</a>
 
       <a routerLink="/role-verification" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="user$ | async">Role Verification</a>
       <a routerLink="/municipality-details" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="user$ | async">LGO Details</a>
@@ -47,7 +47,6 @@ export class AppComponent {
   }
 
   onLogOut(): void {
-    console.log("Logging out...");
     this.authService.logout();
   }
 }

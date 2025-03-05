@@ -64,8 +64,8 @@ export class LoginComponent implements OnInit {
 
   private loginWithGoogle(userLogin: UserLogin) {
     this.authService.setGoogleSignIn(true);
-    this.authService.login(userLogin).subscribe({
-      next: () => this.router.navigate(['/municipality-details']),
+    this.authService.login(userLogin, 'login').subscribe({
+      next: () => this.router.navigate(['/role-verification']),
       error: (error) => console.error('Google Login failed:', error)
     });
   }

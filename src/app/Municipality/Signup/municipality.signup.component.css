@@ -1,23 +1,16 @@
-
 .full-width {
   width: 100%;
-  max-width: 400px; 
 }
 
 .form-container {
+  width: 45%;
+  margin: 0 auto;
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  justify-content: center;
 }
 
 .center-text {
   text-align: center;
-}
-
-.center-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
 mat-card {
