@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { SocialAuthService, SocialUser } from '@abacritt/angularx-social-login';
-import { BehaviorSubject, distinctUntilChanged, Observable, tap } from 'rxjs';
+import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { Router } from '@angular/router';
 import { UserLogin } from '../shared/model/user-login.model';
 import { HttpClient } from '@angular/common/http';
@@ -15,7 +15,6 @@ export class AuthService {
   user$: Observable<SocialUser | null> = this.userSubject.asObservable();
   private authState = new BehaviorSubject<boolean>(false);
   isAuthenticated$ = this.authState.asObservable();
-  private isGoogleSignIn = false;
 
   constructor(
     private http: HttpClient,
@@ -26,18 +25,15 @@ export class AuthService {
   }
 
   private initializeAuthListener(): void {
-    this.socialAuthService.authState.pipe(
-      distinctUntilChanged((prev, curr) => prev?.id === curr?.id) // Prevent duplicate emissions
-    ).subscribe({
+    this.socialAuthService.authState.subscribe({
       next: (user) => {
         console.log("Google Auth State Changed:", user);
 
         if (user) {
           this.userSubject.next(user);
           this.authState.next(true);
-          this.isGoogleSignIn = true;
         } else {
-          this.safeResetAuthState(); // Ensure reset happens only once
+          this.safeResetAuthState();
         }
       },
       error: (error) => {
@@ -47,31 +43,14 @@ export class AuthService {
     });
   }
 
-  setGoogleSignIn(isGoogle: boolean): void {
-    this.isGoogleSignIn = isGoogle;
-  }
-
-  getGoogleSignIn(): boolean {
-    return this.isGoogleSignIn;
-  }
-
-  // added context because both your signup and login flows are using the same authentication service method,
-  // but expecting different navigation outcomes
-  login(userLogin: UserLogin, context: 'signup' | 'login' = 'login'): Observable<any> {
+  login(userLogin: UserLogin): Observable<any> {
     return this.http.post<{ UserId: number; Token: string }>(
       `${this.url}login`, userLogin, { withCredentials: true }
     ).pipe(
       tap(response => {
         if (response) {
-          console.log(`${context} successful:`, response);
           this.authState.next(true);
-
-          const userWithContext = {
-            ...response,
-            authContext: context
-          };
-
-          this.userSubject.next(userWithContext as any);
+          this.userSubject.next(response as any);
         }
       })
     );
@@ -111,7 +90,6 @@ export class AuthService {
     console.log('Resetting Auth State');
     this.userSubject.next(null);
     this.authState.next(false);
-    this.isGoogleSignIn = false;
 
     if (this.router.url !== '/login') {
       this.router.navigate(['/login']);

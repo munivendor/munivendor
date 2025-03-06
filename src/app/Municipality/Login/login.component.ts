@@ -36,14 +36,6 @@ export class LoginComponent implements OnInit {
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required]],
     });
-  
-    this.authService.user$.subscribe((user) => {
-      if (user && this.authService.getGoogleSignIn()) {
-        console.log("Google Authenticated User:", user);
-        const googleUserLogin: UserLogin = { userIdentity: user.id };
-        this.loginWithGoogle(googleUserLogin);
-      }
-    });
   }
 
   onSubmit() {
@@ -53,20 +45,10 @@ export class LoginComponent implements OnInit {
         password: this.loginForm.controls["password"].value
       };
   
-      this.authService.setGoogleSignIn(false);
-  
       this.authService.login(userLogin).subscribe({
         next: () => this.router.navigate(['/municipality-details']),
         error: (error) => console.error('Login failed:', error)
       });
     }
-  }
-
-  private loginWithGoogle(userLogin: UserLogin) {
-    this.authService.setGoogleSignIn(true);
-    this.authService.login(userLogin, 'login').subscribe({
-      next: () => this.router.navigate(['/role-verification']),
-      error: (error) => console.error('Google Login failed:', error)
-    });
   }
 }

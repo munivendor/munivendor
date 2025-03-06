@@ -13,7 +13,7 @@ import { Router } from '@angular/router';
 import { UserService } from '../../shared/service/user.service';
 import { User } from '../../shared/model/user.model';
 import { UserLogin } from '../../shared/model/user-login.model';
-import { catchError, distinctUntilChanged, filter, finalize, Subject, switchMap, takeUntil, tap, throwError } from 'rxjs';
+import { catchError, filter, finalize, Subject, switchMap, takeUntil, tap, throwError } from 'rxjs';
 import { AuthService } from '../../authorization/auth.service';
 
 @Component({
@@ -52,21 +52,11 @@ export class SignupComponent implements OnInit, OnDestroy {
     this.authService.user$
     .pipe(
       takeUntil(this.destroy$),
-      // Prevent duplicate emissions based on user ID
-      distinctUntilChanged((prev, curr) => prev?.id === curr?.id),
       // Only proceed if user exists and no creation is in progress
       filter(user => !!user && !this.userCreationInProgress),
       // Tap for side effects like form population
       tap(user => {
         console.log("Google Authenticated User:", user);
-
-        this.signupForm.patchValue({
-          firstname: user.firstName || '',
-          lastname: user.lastName || '',
-          email: user.email || '',
-          userIdentity: user.id || ''
-        });
-
         // Set flag to prevent multiple concurrent creations
         this.userCreationInProgress = true;
       })
@@ -203,7 +193,7 @@ export class SignupComponent implements OnInit, OnDestroy {
           userIdentity: user.userIdentity, 
           username: user.username 
         };
-        return this.authService.login(googleUserLogin, 'signup');
+        return this.authService.login(googleUserLogin);
       }),
       catchError((error) => {
         this.userCreationInProgress = false;
