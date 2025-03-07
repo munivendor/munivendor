@@ -6,6 +6,7 @@ import { SignupComponent } from './Municipality/Signup/municipality.signup.compo
 import { RoleVerificationComponent } from './Municipality/RoleVerification/role-verification.component';
 import { LoginComponent } from './Municipality/Login/login.component';
 import { ForgotPasswordComponent } from './Municipality/ForgotPassword/forgot-password.component';
+
 import { MunicipalityVerificationComponent } from './Municipality/Verification/municipality.verification.component';
 import { TokenValidationComponent } from './Municipality/Signup/token-validation.component';
 import { MunicipalityDetailsComponent } from './Municipality/Details/municipality.details.component';
@@ -24,20 +25,19 @@ import { RequestRequiredDocumentsComponent } from './Request/request-required-do
 import { TableDetailsComponent } from './Request/TableDetails/request-tabledetails.component';
 import { CreateRequestStepper } from './Request/CreateRequestStepper/create-request-stepper.component';
 
-
-
 export const routes: Routes = [
   { path: 'signup', component: SignupComponent },
-  { path: 'role-verification', component: RoleVerificationComponent },
   { path: 'login', component: LoginComponent },
   { path: 'forgot-password', component: ForgotPasswordComponent },
-  { path: 'municipality-verification', component: MunicipalityVerificationComponent },
-  { path: 'validateuser', component: TokenValidationComponent },
-  { path: 'municipality-details', component: MunicipalityDetailsComponent },
-  { path: 'user-details', component: UserSignUpDetails },
-  { path: 'user-designation', component: DesignationSelectionComponent },
-  { path: 'payment-plan-confirmation', component: PaymentPlanConfirmationComponent },
-  { path: 'payment-information', component: PaymentInfoComponent },
+  { path: 'email-verification', component: MunicipalityVerificationComponent },
+
+  { path: 'role-verification', component: RoleVerificationComponent, canActivate: [AuthGuard] },
+  { path: 'validateuser', component: TokenValidationComponent, canActivate: [AuthGuard] },
+  { path: 'municipality-details', component: MunicipalityDetailsComponent, canActivate: [AuthGuard] },
+  { path: 'user-details', component: UserSignUpDetails, canActivate: [AuthGuard] },
+  { path: 'user-designation', component: DesignationSelectionComponent, canActivate: [AuthGuard] },
+  { path: 'payment-plan-confirmation', component: PaymentPlanConfirmationComponent, canActivate: [AuthGuard] },
+  { path: 'payment-information', component: PaymentInfoComponent, canActivate: [AuthGuard] },
 
   {
     path: 'dashboard-component', component: DashboardComponent,

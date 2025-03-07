@@ -1,4 +1,4 @@
-import { RouterLink, RouterModule } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { FormGroup, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,9 +8,9 @@ import { MatCardModule } from '@angular/material/card';
 import { Component, OnInit } from '@angular/core';
 import { GoogleSigninButtonModule} from '@abacritt/angularx-social-login';
 import { Router } from '@angular/router';
-import { User } from '../../shared/model/user.model';
 import { MatDialog } from '@angular/material/dialog';
 import { AuthService } from '../../authorization/auth.service';
+import { UserLogin } from '../../shared/model/user-login.model';
 
 @Component({
   selector: 'login',
@@ -31,32 +31,24 @@ export class LoginComponent implements OnInit {
     private router: Router
   ) {}
 
-  onSubmit() {
-    if (this.loginForm.valid) {
-      console.log(this.loginForm.value);
-
-      let municipalityUser: User = {
-        workEmail: this.loginForm.controls["email"].value
-      };
-    }
-  }
-
   ngOnInit() {
-    const user = this.authService.getUser();
-    if (user) {  
-         let municipalityUser = user
-     }
-
     this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)]],
+      email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required]],
     });
   }
 
+  onSubmit() {
+    if (this.loginForm.valid) {
+      const userLogin: UserLogin = {
+        username: this.loginForm.controls["email"].value,
+        password: this.loginForm.controls["password"].value
+      };
   
-
-
-
-
-  
+      this.authService.login(userLogin).subscribe({
+        next: () => this.router.navigate(['/municipality-details']),
+        error: (error) => console.error('Login failed:', error)
+      });
+    }
+  }
 }

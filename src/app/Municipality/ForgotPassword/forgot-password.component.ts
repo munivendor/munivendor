@@ -46,11 +46,6 @@ export class ForgotPasswordComponent implements OnInit {
     }
 
     ngOnInit() {
-        const user = this.authService.getUser();
-        if (user) {
-            let municipalityUser = user
-        }
-
         this.forgotPasswordForm = this.fb.group({
             email: ['', [Validators.required, Validators.email, Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)]],
         });

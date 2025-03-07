@@ -14,10 +14,10 @@
                     </div>
 
                     <mat-form-field class="full-width">
-                        <mat-label>Email</mat-label>
-                        <input matInput type="text" formControlName="email" placeholder="Enter your email">
+                        <mat-label>Work Email/Username</mat-label>
+                        <input matInput type="text" formControlName="email" placeholder="Enter your work email/username">
                         <mat-error *ngIf="loginForm.get('email')?.hasError('required')">
-                            Email is required.
+                            Work Email/Username is required.
                         </mat-error>
                         <mat-error *ngIf="loginForm.get('email')?.hasError('email')">
                             Invalid email format.
@@ -29,7 +29,7 @@
 
                     <mat-form-field class="full-width">
                         <mat-label>Password</mat-label>
-                        <input matInput type="text" formControlName="password" placeholder="Enter your password">
+                        <input matInput type="password" formControlName="password" placeholder="Enter your password">
                         <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
                             Password is required.
                         </mat-error>
@@ -42,7 +42,7 @@
                 </div>
 
                 <button style="margin-top: 1rem; margin-bottom: 1rem;" class="full-width" mat-raised-button
-                    color="accent" type="submit" [disabled]="loginForm.invalid">Log In</button>
+                    color="primary" type="submit" [disabled]="loginForm.invalid">Log In</button>
 
                 <span>New to MuniVendor? Click here to <a [routerLink]="['/signup']">sign up</a>.</span>
             </mat-card-content>

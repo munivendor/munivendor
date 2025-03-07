@@ -18,6 +18,20 @@ export class UserService {
     return this.http.post<number>(`${this.userApiUrl}`, user, { headers });
   }
 
+  loginUser(username: string, password: string): Observable<{ userId: number }> {
+    const headers = { 'Content-Type': 'application/json' };
+    const loginPayload = { username, password };
+  
+    return this.http.post<{ userId: number }>(
+      `${environment.apiUrl}login`,
+      loginPayload,
+      {
+        headers,
+        withCredentials: true,
+      }
+    );
+  }
+  
   updateUser(user: User): Observable<number> {
     const headers = { 'Content-Type': 'application/json' };
     return this.http.put<number>(`${this.userApiUrl}${user.userId}`, user, { headers });
@@ -45,5 +59,4 @@ export class UserService {
   getDesigneeTypes(): Observable<Designation[]> {
     return this.http.get<Designation[]>(this.designeeApiUrl);
   }
-
 }
