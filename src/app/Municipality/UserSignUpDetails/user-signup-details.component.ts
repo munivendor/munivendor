@@ -10,6 +10,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { User } from '../../shared/model/user.model';
 import { UserService } from '../../shared/service/user.service';
 import { Router } from '@angular/router';
+import { Subject, takeUntil  } from 'rxjs';
+import { AuthService } from '../../authorization/auth.service';
 
 @Component({
     selector: 'app-contact-form',
@@ -29,11 +31,13 @@ export class UserSignUpDetails
     implements OnInit {
     userSignupDetailForm: FormGroup;
     user: User | undefined;
+    private destroy$ = new Subject<void>();
 
     constructor(
         private fb: FormBuilder,
         private userService: UserService,
-        private router: Router
+        private router: Router,
+        private authService: AuthService
     ) {
         this.userSignupDetailForm = this.fb.group({
             email: [{ value: '', disabled: true }, [Validators.required,]],
@@ -48,10 +52,23 @@ export class UserSignUpDetails
     }
 
     ngOnInit(): void {
-        this.getUser(1);
+        this.authService.user$.pipe(
+            takeUntil(this.destroy$)
+        ).subscribe(user => {
+            if (user) {
+                const userId = user.userId
+                if (userId) {
+                    this.getUserDetails(userId);
+                } else {
+                    console.error('No user ID available in authentication state');
+                }
+            } else {
+                this.router.navigate(['/login']);
+            }
+        });
     }
 
-    getUser(userId: number): void {
+    getUserDetails(userId: number): void {
         this.userService.getUser(userId).subscribe(
             (user: User) => {
                 this.user = user;
@@ -87,5 +104,10 @@ export class UserSignUpDetails
         } else {
             console.error('Form is invalid or user data is not loaded yet.');
         }
+    }
+
+    ngOnDestroy(): void {
+        this.destroy$.next();
+        this.destroy$.complete();
     }
 }

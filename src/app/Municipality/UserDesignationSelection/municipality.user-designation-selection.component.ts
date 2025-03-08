@@ -11,6 +11,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { UserService } from '../../shared/service/user.service';
 import { User } from '../../shared/model/user.model';
 import { Designation as Designation } from '../../shared/model/designation.model';
+import { Subject } from 'rxjs';
 
 
 @Component({
@@ -32,6 +33,7 @@ export class DesignationSelectionComponent implements OnInit {
   designeeSelectionForm: FormGroup;
   designations!: Designation[];
   noneSelected = false;
+  private destroy$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
@@ -111,5 +113,10 @@ export class DesignationSelectionComponent implements OnInit {
         this.router.navigate(['/payment-plan-confirmation']);
       });
     }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }
