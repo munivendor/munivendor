@@ -1,35 +1,34 @@
 <mat-stepper [linear]="false" #stepper>
   <mat-step label="Basics">
-    <request-basic #step1 [requestId]="requestId" [idParam]="idParam" (formValidityChange)="isStepValid = $event"></request-basic>
+    <response-basic #step1 [requestId]="requestId" [idParam]="idParam" (formValidityChange)="isStepValid = $event"></response-basic>
     <div>
-      <button mat-button (click)="saveRequest()" matStepperNext [disabled]="!isStepValid">Next</button>
+      <button mat-button (click)="save()" matStepperNext [disabled]="!isStepValid">Next</button>
     </div>
   </mat-step>
 
-  <mat-step label="Proposals">
-    <request-overview #step2 [idParam]="idParam" (formValidityChange)="isStepValid = $event"></request-overview>
+  <mat-step label="Details">
+    <response-details #step2 [requestId]="requestId" (formValidityChange)="isStepValid = $event"></response-details>
     <div>
       <button type="Submit" mat-button matStepperPrevious>Back</button>
-      <button type="Submit" mat-button matStepperNext (click)="saveSections()" [disabled]="!isStepValid"
-       >Next</button>
+      <button type="Submit" mat-button matStepperNext>Next</button>
     </div>
 
   </mat-step>
 
   <mat-step label="Documents">
-    <request-required-documents [idParam]="idParam"></request-required-documents>
+    <response-documents [requestId]="requestId"></response-documents>
     <div>
       <button type="Submit" mat-button matStepperPrevious>Back</button>
-      <button type="Submit" mat-button matStepperNext (click)="saveDocuments()">Next</button>
+      <button type="Submit" mat-button matStepperNext (click)="save()">Next</button>
     </div>
 
   </mat-step>
 
-  <mat-step label="Review">
-    <request-review [paramRequestId]="requestId"></request-review>
+<!--   <mat-step label="Review">
+    <request-review [requestId]="requestId"></request-review>
     <div>
       <button type="Submit" mat-button matStepperPrevious>Back</button>
       <button type="Submit" mat-button matStepperNext (click)="updateRequestStatusToScheduled()">Submit</button>
     </div>
-  </mat-step>
+  </mat-step> -->
 </mat-stepper>

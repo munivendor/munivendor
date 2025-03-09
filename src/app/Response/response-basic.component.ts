@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { RequestService } from '../Request/services/request.service';
@@ -12,7 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import {Request}  from '../Request/model/request.model'
 
 @Component({
-  selector: 'app-vendor-info',
+  selector: 'response-basic',
   templateUrl: './response-basic.component.html',
   styleUrls: ['./response-basic.component.css'],
   standalone: true, 
@@ -28,6 +28,10 @@ import {Request}  from '../Request/model/request.model'
   providers: [RequestService]
 })
 export class ResponseBasicComponent implements OnInit {
+  @Input() idParam?: string | null | undefined;
+  @Input() requestId?: number;
+  @Output() formValidityChange = new EventEmitter<boolean>();
+  
   request: Request | undefined
   responseForm: FormGroup;
 
@@ -55,10 +59,16 @@ export class ResponseBasicComponent implements OnInit {
             };
           });
         });
+
+        this.responseForm.statusChanges.subscribe(() => {
+          this.formValidityChange.emit(this.responseForm.valid);
+        });
     }
   }
 
-  onContinue(): void {
+  
+
+  save(): void {
     if (this.responseForm.invalid) {
       return; 
     }

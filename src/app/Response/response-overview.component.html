@@ -1,0 +1,48 @@
+<mat-toolbar color="primary">
+  Vendor Proposal Application
+</mat-toolbar>
+<div class="container">
+  <!-- Cover Page -->
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Title of Response</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <p>Name of Prospective Vendor: {{ vendorName }}</p>
+      <p>Current Date: {{ currentDate | date }}</p>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Technical Proposal -->
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Technical Proposal</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <iframe [src]="getPdfUrl('TechnicalProposal.pdf')" width="100%" height="500px" title="Embedded example content">  </iframe>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Vendor Checklist -->
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Vendor Checklist</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <mat-checkbox *ngFor="let item of checklistItems">{{ item }}</mat-checkbox>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Document Viewer -->
+  <mat-card *ngFor="let document of documents">
+    <mat-card-header>
+      <mat-card-title>{{ document }}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <iframe [src]="getPdfUrl(document)" width="100%" height="500px" title="Embedded example content"></iframe>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Submit Button -->
+  <button mat-raised-button color="primary" (click)="onSubmit()">Submit</button>
+</div>

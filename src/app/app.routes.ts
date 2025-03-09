@@ -26,6 +26,7 @@ import { CreateRequestStepper } from './Request/CreateRequestStepper/create-requ
 import { ResponseBasicComponent } from './Response/response-basic.component';
 import { ResponseDetailsComponent } from './Response/response-details.component';
 import { ResponseDocumentsComponent } from './Response/response-documents.component';
+import { ResponseOverviewComponent } from './Response/response-overview.component';
 
 
 
@@ -44,6 +45,7 @@ export const routes: Routes = [
   { path: 'response-basic/:id', component: ResponseBasicComponent},
   { path: 'response-details/:id', component: ResponseDetailsComponent},
   { path: 'response-documents/:id', component: ResponseDocumentsComponent},
+  { path: 'response-overview/:id', component: ResponseOverviewComponent},
   
 
   {

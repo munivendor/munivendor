@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { RequestService } from '../Request/services/request.service';
@@ -13,7 +13,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { DocumentService } from '../shared/service/document.service';
 
 @Component({
-  selector: 'app-response-details',
+  selector: 'response-details',
   templateUrl: './response-details.component.html',
   styleUrls: ['./response-details.component.css'],
   standalone: true, // Mark as standalone
@@ -29,6 +29,9 @@ import { DocumentService } from '../shared/service/document.service';
   
 })
 export class ResponseDetailsComponent implements OnInit {
+    @Input() requestId?: number;
+      @Output() formValidityChange = new EventEmitter<boolean>();
+
   requestSections: RequestSection[] = [];
   responseForm: FormGroup;
 
@@ -51,7 +54,10 @@ export class ResponseDetailsComponent implements OnInit {
         .subscribe((data) => {
           this.requestSections = data;
         });
-    }
+      }
+      this.responseForm.statusChanges.subscribe(() => {
+        this.formValidityChange.emit(this.responseForm.valid);
+      });
   }
 
   downloadPDF() {

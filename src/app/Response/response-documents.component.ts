@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatCardModule } from '@angular/material/card';
@@ -12,7 +12,7 @@ import { RequestService } from '../Request/services/request.service';
 import { DocumentInstance } from '../Request/model/documentinstance.model';
 
 @Component({
-  selector: 'app-forms-grid',
+  selector: 'response-documents',
   standalone: true,
   imports: [
     CommonModule,
@@ -27,6 +27,7 @@ import { DocumentInstance } from '../Request/model/documentinstance.model';
   styleUrls: ['./response-documents.component.css'],
 })
 export class ResponseDocumentsComponent implements OnInit {
+  @Input() requestId?: number;
   displayedColumns: string[] = [
     'formName',
     'notarizationRequired',
@@ -73,5 +74,10 @@ export class ResponseDocumentsComponent implements OnInit {
   continue(formId: number): void {
     // Implement continue logic
     console.log('Continuing with form:', formId);
+  }
+  
+  save()
+  {
+
   }
 }
