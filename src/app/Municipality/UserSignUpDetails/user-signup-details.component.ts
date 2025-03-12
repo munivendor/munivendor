@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -10,8 +10,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { User } from '../../shared/model/user.model';
 import { UserService } from '../../shared/service/user.service';
 import { Router } from '@angular/router';
-import { Subject, takeUntil  } from 'rxjs';
-import { AuthService } from '../../authorization/auth.service';
+import { catchError, Observable, Subject, takeUntil, tap, throwError } from 'rxjs';
+import { StateService } from '../../Request/services/state.service';
 
 @Component({
     selector: 'app-contact-form',
@@ -28,7 +28,7 @@ import { AuthService } from '../../authorization/auth.service';
         MatCardModule]
 })
 export class UserSignUpDetails
-    implements OnInit {
+    implements OnInit, OnDestroy {
     userSignupDetailForm: FormGroup;
     user: User | undefined;
     private destroy$ = new Subject<void>();
@@ -37,7 +37,7 @@ export class UserSignUpDetails
         private fb: FormBuilder,
         private userService: UserService,
         private router: Router,
-        private authService: AuthService
+        private stateService: StateService
     ) {
         this.userSignupDetailForm = this.fb.group({
             email: [{ value: '', disabled: true }, [Validators.required,]],
@@ -52,37 +52,38 @@ export class UserSignUpDetails
     }
 
     ngOnInit(): void {
-        this.authService.user$.pipe(
-            takeUntil(this.destroy$)
-        ).subscribe(user => {
-            if (user) {
-                const userId = user.userId
-                if (userId) {
-                    this.getUserDetails(userId);
-                } else {
-                    console.error('No user ID available in authentication state');
-                }
-            } else {
-                this.router.navigate(['/login']);
-            }
-        });
+        const userId = this.stateService.getUserId();
+
+        if (userId) {
+            this.getUserDetails(userId).pipe(
+                takeUntil(this.destroy$)
+            ).subscribe({
+                next: (userData) => {
+                    this.user = userData;
+                    console.log('User details loaded successfully');
+                },
+                error: err => console.error('Error loading user details:', err)
+            });
+        } else {
+            console.error('No user ID available in StateService, redirecting to login.');
+            this.router.navigate(['/login']);
+        }
     }
 
-    getUserDetails(userId: number): void {
-        this.userService.getUser(userId).subscribe(
-            (user: User) => {
+    getUserDetails(userId: number): Observable<User> {
+        return this.userService.getUser(userId).pipe(
+            tap((user: User) => {
                 this.user = user;
-
                 this.userSignupDetailForm.patchValue({
                     email: user.workEmail,
                     firstName: user.firstName,
                     lastName: user.lastName,
                 });
-                this.userSignupDetailForm.updateValueAndValidity({ onlySelf: true });
-            },
-            (error) => {
+            }),
+            catchError(error => {
                 console.error('Error fetching user data:', error);
-            }
+                return throwError(() => error);
+            })
         );
     }
 

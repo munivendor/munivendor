@@ -1,22 +1,18 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { ReactiveFormsModule } from '@angular/forms'
-
 import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
-
 import { StateService } from '../../Request/services/state.service';
 import { MunicipalityService } from "./services/municipality.service"
 import { Municipality } from './model/municipality.model';
-import { Subject } from 'rxjs';
-import { takeUntil, tap, catchError } from 'rxjs/operators';
+import { Subject, takeUntil, tap, catchError } from 'rxjs';
 
 @Component({
   selector: 'app-municipality-details',
@@ -32,9 +28,8 @@ import { takeUntil, tap, catchError } from 'rxjs/operators';
     MatSelectModule,
     MatOptionModule,
     CommonModule],
-
 })
-export class MunicipalityDetailsComponent implements OnInit {
+export class MunicipalityDetailsComponent implements OnInit, OnDestroy {
   municipalityDetailForm!: FormGroup;
   states: string[] = ['Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming'];
   private destroy$ = new Subject<void>();
@@ -46,7 +41,9 @@ export class MunicipalityDetailsComponent implements OnInit {
     private stateService: StateService) {
   }
 
-  ngOnInit(): void { this.initializeForm(); }
+  ngOnInit(): void {
+    this.initializeForm();
+  }
 
   private initializeForm(): void {
     this.municipalityDetailForm = this.fb.group({
@@ -59,12 +56,8 @@ export class MunicipalityDetailsComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.municipalityDetailForm.invalid) {
-      return;
-    }
-  
     const municipality: Municipality = this.municipalityDetailForm.value;
-  
+
     this.municipalityService.saveMunicipality(municipality)
       .pipe(
         tap((municipalityId: number) => {

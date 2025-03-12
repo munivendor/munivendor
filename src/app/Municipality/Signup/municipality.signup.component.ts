@@ -15,6 +15,7 @@ import { User } from '../../shared/model/user.model';
 import { UserLogin } from '../../shared/model/user-login.model';
 import { catchError, filter, finalize, Subject, switchMap, takeUntil, tap, throwError } from 'rxjs';
 import { AuthService } from '../../authorization/auth.service';
+import { StateService } from '../../Request/services/state.service';
 
 @Component({
   selector: 'signup',
@@ -44,7 +45,8 @@ export class SignupComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private authService: AuthService,
     private userService: UserService,
-    private router: Router
+    private router: Router,
+    private stateService: StateService
   ) {}
 
   ngOnInit(): void {  
@@ -188,7 +190,11 @@ export class SignupComponent implements OnInit, OnDestroy {
 
   private createUserByGoogle(user: User) {
     this.userService.createUser(user).pipe(
-      switchMap(() => {
+      tap((userId: number) => {
+        this.stateService.setUserId(userId);
+        console.log(`Google user created with ID: ${userId}`);
+      }),
+      switchMap((userId: number) => {
         const googleUserLogin: UserLogin = { 
           userIdentity: user.userIdentity, 
           username: user.username 
@@ -210,9 +216,12 @@ export class SignupComponent implements OnInit, OnDestroy {
     });
   }
 
-  private createUserByEmail(user: User) {
+private createUserByEmail(user: User) {
     this.userService.createUser(user).pipe(
-      tap((userId: number) => console.log(`User created with ID: ${userId}`)),
+      tap((userId: number) => {
+        this.stateService.setUserId(userId);
+        console.log(`Email user created with ID: ${userId}`);
+      }),
       switchMap((userId: number) => 
         this.userService.SendUserVerificationEmail(userId).pipe(
           tap(() => {
