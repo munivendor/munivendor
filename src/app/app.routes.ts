@@ -17,11 +17,6 @@ import { PaymentInfoComponent } from './Municipality/PaymentInformation/paymenti
 
 // Authorized pages
 import { DashboardComponent } from './dashboard/dashboard.component';
-import { RequestOverviewComponent } from './Request/request-overview.component';
-import { BasicRequestComponent } from './Request/request-basic.component';
-import { RequestOutFrameComponent } from './Request/request-outframe.component';
-import { RequestReviewComponent } from './Request/request-review.component';
-import { RequestRequiredDocumentsComponent } from './Request/request-required-docs.component';
 import { TableDetailsComponent } from './Request/TableDetails/request-tabledetails.component';
 import { CreateRequestStepper } from './Request/CreateRequestStepper/create-request-stepper.component';
 
@@ -51,17 +46,6 @@ export const routes: Routes = [
       {
         path: 'edit-request-view/:requestId', component: CreateRequestStepper
       },
-
-      {
-        path: 'request-outframe-component', component: RequestOutFrameComponent,
-        children: [
-          { path: 'request-basic-component', component: BasicRequestComponent },
-          { path: 'request-overview-component', component: RequestOverviewComponent },
-          { path: 'request-requireddocuments-component', component: RequestRequiredDocumentsComponent },
-          { path: 'request-review-component', component: RequestReviewComponent },
-
-        ]
-      }
     ],
     canActivate: [AuthGuard]
   }

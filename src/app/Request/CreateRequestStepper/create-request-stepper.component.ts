@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormGroup } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
@@ -14,6 +14,7 @@ import { RequestReviewComponent } from '../request-review.component';
 import { Request } from '../model/request.model';
 import { SubCategory } from '../model/subcategory.model';
 import { RequestSection } from '../model/requestsection.model';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'create-request-stepper',
@@ -34,13 +35,14 @@ import { RequestSection } from '../model/requestsection.model';
     CommonModule
   ],
 })
-
-export class CreateRequestStepper {
+export class CreateRequestStepper implements OnDestroy {
   @ViewChild(BasicRequestComponent) basicRequestComponent!: BasicRequestComponent;
   @ViewChild(RequestOverviewComponent) requestOverViewComponent!: RequestOverviewComponent;
   @ViewChild(RequestRequiredDocumentsComponent) requestRequiredDocumentsComponent!: RequestRequiredDocumentsComponent;
   @ViewChild(RequestReviewComponent) requestReviewComponent!: RequestReviewComponent;
 
+  private destroy$ = new Subject<void>();
+  
   receivedProposalSections: RequestSection[] = [];
   requestData!: Request;
   basicsFormGroup!: FormGroup;
@@ -55,15 +57,22 @@ export class CreateRequestStepper {
   municipalityDocuments: Document[] = [];
   finalReviewFormGroup!: FormGroup;
   idParam?: string | undefined | null;
-  isStepValid = false;
+  isStepValid = true;
 
   constructor(
     private route: ActivatedRoute,
   ) {
-    this.route.paramMap.subscribe((params) => {
-      this.idParam = params.get('requestId');
-      this.requestId = this.idParam ? + this.idParam : 0;
-    });
+    this.route.paramMap
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((params) => {
+        this.idParam = params.get('requestId');
+        this.requestId = this.idParam ? + this.idParam : 0;
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   saveRequest() {
@@ -82,8 +91,3 @@ export class CreateRequestStepper {
     this.requestReviewComponent.onSubmit();
   }
 }
-
-
-
-
-

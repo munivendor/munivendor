@@ -7,6 +7,9 @@ import { BehaviorSubject } from 'rxjs';
 export class StateService {
   private myComponentState: any;
 
+  private userIdSource = new BehaviorSubject<number | null>(null);
+  currentUserId$ = this.userIdSource.asObservable();
+
   private requestIdSource = new BehaviorSubject<number | null>(null);
   currentRequestId$ = this.requestIdSource.asObservable();
     
@@ -22,6 +25,14 @@ export class StateService {
 
   getState() {
     return this.myComponentState;
+  }
+
+  setUserId(userId: number) {
+    this.userIdSource.next(userId);
+  }
+
+  getUserId(): number | null {
+    return this.userIdSource.getValue();
   }
 
   setRequestId(requestId: number) {

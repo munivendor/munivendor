@@ -20,7 +20,7 @@
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Address</mat-label>
         <input matInput formControlName="municipalityAddress" required placeholder="Enter Address">
-        <mat-error *ngIf="municipalityDetailForm.get('address')?.hasError('required')">
+        <mat-error *ngIf="municipalityDetailForm.get('municipalityAddress')?.hasError('required')">
           Address is required.
         </mat-error>
         <mat-error *ngIf="municipalityDetailForm.get('municipalityAddress')?.hasError('minlength')">
