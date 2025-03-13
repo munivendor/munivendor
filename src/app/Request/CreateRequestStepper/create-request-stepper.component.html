@@ -1,4 +1,4 @@
-<mat-stepper [linear]="false" #stepper>
+<mat-stepper [linear]="true" #stepper>
   <mat-step label="Basics">
     <request-basic #step1 [requestId]="requestId" [idParam]="idParam" (formValidityChange)="isStepValid = $event"></request-basic>
     <div>

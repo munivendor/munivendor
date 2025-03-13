@@ -1,20 +1,15 @@
-
-import { RouterLink, RouterModule } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { FormGroup, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatCardModule } from '@angular/material/card';
-
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
-
-import { Router } from '@angular/router';
 import { User } from '../../shared/model/user.model';
-
 import { MatDialog } from '@angular/material/dialog';
-import { AuthService } from '../../authorization/auth.service';
+import { Subject } from 'rxjs';
 
 @Component({
     selector: 'forgot-password',
@@ -23,16 +18,14 @@ import { AuthService } from '../../authorization/auth.service';
     styleUrls: ['./forgot-password.component.css'],
     imports: [ReactiveFormsModule, RouterModule, CommonModule, MatButtonModule, MatInputModule, MatCardModule, MatSelectModule, GoogleSigninButtonModule],
 })
-
-export class ForgotPasswordComponent implements OnInit {
+export class ForgotPasswordComponent implements OnInit, OnDestroy {
+    private destroy$ = new Subject<void>();
     forgotPasswordForm!: FormGroup;
     userId!: number;
 
     constructor(
         private fb: FormBuilder,
         public dialog: MatDialog,
-        private authService: AuthService,
-        private router: Router
     ) { }
 
     onSubmit() {
@@ -49,5 +42,10 @@ export class ForgotPasswordComponent implements OnInit {
         this.forgotPasswordForm = this.fb.group({
             email: ['', [Validators.required, Validators.email, Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)]],
         });
+    }
+
+    ngOnDestroy() {
+        this.destroy$.next();
+        this.destroy$.complete();
     }
 }

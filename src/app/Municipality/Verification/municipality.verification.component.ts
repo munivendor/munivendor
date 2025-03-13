@@ -1,6 +1,6 @@
-
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router'
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
     selector: 'municipality-verification',
@@ -8,15 +8,22 @@ import { ActivatedRoute } from '@angular/router'
     templateUrl: './municipality.verification.component.html',
     styleUrls: ['./municipality.verification.component.css'],
 })
-
-export class MunicipalityVerificationComponent implements OnInit {
+export class MunicipalityVerificationComponent implements OnInit, OnDestroy {
+    private destroy$ = new Subject<void>();
     email: string | null = null;
 
     constructor(private route: ActivatedRoute) {}
 
     ngOnInit() {
-      this.route.queryParams.subscribe(params => {
-        this.email = params['email'] || 'your email';
-      });
+      this.route.queryParams
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(params => {
+          this.email = params['email'] || 'your email';
+        });
+    }
+
+    ngOnDestroy() {
+        this.destroy$.next();
+        this.destroy$.complete();
     }
 }

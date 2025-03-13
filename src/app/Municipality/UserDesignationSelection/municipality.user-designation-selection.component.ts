@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -11,7 +11,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { UserService } from '../../shared/service/user.service';
 import { User } from '../../shared/model/user.model';
 import { Designation as Designation } from '../../shared/model/designation.model';
-import { Subject } from 'rxjs';
+import { Subject, filter, takeUntil } from 'rxjs';
+import { AuthService } from '../../authorization/auth.service';
 
 
 @Component({
@@ -29,7 +30,7 @@ import { Subject } from 'rxjs';
     MatButtonModule
   ]
 })
-export class DesignationSelectionComponent implements OnInit {
+export class DesignationSelectionComponent implements OnInit, OnDestroy {
   designeeSelectionForm: FormGroup;
   designations!: Designation[];
   noneSelected = false;
@@ -38,32 +39,32 @@ export class DesignationSelectionComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private userService: UserService,
-    private router: Router) {
+    private router: Router,
+    private authService: AuthService) {
     this.designeeSelectionForm = this.fb.group(
       {
         selectedDesignees: this.fb.array([], this.minSelectedCheckboxes(1))
-
-      });
-
-    this.userService.getDesigneeTypes().subscribe(
-      (designations: Designation[]) => {
-        this.designations = designations;
-        this.updateSelectedDesigneesFormArray();
-      },
-      (error) => {
-        console.error('Error fetching designations:', error);
       });
   }
 
   ngOnInit(): void {
-
+    this.userService.getDesigneeTypes()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (designations: Designation[]) => {
+          this.designations = designations;
+          this.updateSelectedDesigneesFormArray();
+        },
+        error: (error) => {
+          console.error('Error fetching designations:', error);
+        }
+      });
   }
 
   updateSelectedDesigneesFormArray(): void {
     const selectedDesignationsArray = this.designeeSelectionForm.get('selectedDesignees') as FormArray;
     selectedDesignationsArray.clear();
     this.designations!.forEach(() => selectedDesignationsArray.push(this.fb.control(false)));
-
   }
 
   get selectedDesignees(): FormArray {
@@ -100,17 +101,34 @@ export class DesignationSelectionComponent implements OnInit {
 
   onSubmit(): void {
     if (this.designeeSelectionForm.valid) {
-      let user: User = { userId: 1 };
-
       const selectedDesignationIds = (this.designeeSelectionForm.get('selectedDesignees') as FormArray).controls
         .map((control, i) => (control.value ? this.designations[i].designationId : null))
         .filter(value => value !== null) as number[];
+      this.authService.user$.pipe(
+        filter(user => !!user),
+        takeUntil(this.destroy$)
+      ).subscribe({
+        next: currentUser => {
+          const user: User = {
+            userId: currentUser.userId,
+            DesignationIds: selectedDesignationIds
+          };
 
-      user.DesignationIds = selectedDesignationIds;
-
-      this.userService.updateUser(user).subscribe(response => {
-        console.log('Designation saved successfully:', response);
-        this.router.navigate(['/payment-plan-confirmation']);
+          this.userService.updateUser(user)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+              next: response => {
+                console.log('Designation saved successfully:', response);
+                this.router.navigate(['/payment-plan-confirmation']);
+              },
+              error: error => {
+                console.error('Error updating user:', error);
+              }
+            });
+        },
+        error: error => {
+          console.error('Error getting current user:', error);
+        }
       });
     }
   }

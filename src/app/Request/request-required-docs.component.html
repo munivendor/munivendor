@@ -28,7 +28,7 @@
   <div formArrayName="optionalMunicipalityDocuments">
     <div *ngFor="let municipalityDocument of optionalMunicipalityDocuments.controls; let i = index"
       class="document-item">
-      <button mat-icon-button aria-label="delete" type="button" color="warn"
+      <button mat-icon-button aria-label="delete" type="button" color="warn" style="margin-top: 5px;"
         (click)="deleteMunicipalityDocument(municipalityDocument?.get('documentId')?.value)" class="delete-button">
         <mat-icon>delete</mat-icon>
       </button>
