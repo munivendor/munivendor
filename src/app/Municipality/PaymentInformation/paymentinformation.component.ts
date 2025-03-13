@@ -1,14 +1,14 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, AbstractControl, ValidatorFn } from '@angular/forms';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { MaterialModule } from '../shared/material.module';
 import { MatDialog } from '@angular/material/dialog';
 import { ReactiveFormsModule } from '@angular/forms';
-import { ChangeDetectorRef } from '@angular/core';
 import { PaymentInfoService } from './services/payment-info.service'
 import { CustomerProfileData } from './model/CustomerProfileData';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTabChangeEvent } from '@angular/material/tabs';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-payment-form',
@@ -19,11 +19,12 @@ import { MatTabChangeEvent } from '@angular/material/tabs';
   providers: [PaymentInfoService]
 })
 
-export class PaymentInfoComponent implements OnInit {
+export class PaymentInfoComponent implements OnInit, OnDestroy {
   paymentInformationForm!: FormGroup;
   accountTypes = ['Checking', 'Savings'];
   selectedPaymentType: string = 'ACH';
   cardType: string | null = null;
+  private destroy$ = new Subject<void>();
 
   states = [
     { value: 'AL', viewValue: 'Alabama' },
@@ -81,7 +82,6 @@ export class PaymentInfoComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     public dialog: MatDialog,
-    private cdr: ChangeDetectorRef,
     private paymentInfoService: PaymentInfoService
   ) { }
 
@@ -147,7 +147,7 @@ export class PaymentInfoComponent implements OnInit {
   clearAddressErrors() {
     const addressGroup = this.paymentInformationForm.get('address');
     if (addressGroup) {
-      addressGroup.reset(addressGroup.value); // Reset errors but keep values
+      addressGroup.reset(addressGroup.value);
       addressGroup.markAsPristine();
       addressGroup.markAsUntouched();
     }
@@ -181,10 +181,11 @@ export class PaymentInfoComponent implements OnInit {
     };
 
     saveMethods[this.selectedPaymentType as keyof typeof saveMethods]?.()
-      .subscribe(
-        response => console.log(`${this.selectedPaymentType} Payment Info Submitted and Saved`, response),
-        error => console.error(`Error saving ${this.selectedPaymentType} payment data`, error)
-      );
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: response => console.log(`${this.selectedPaymentType} Payment Info Submitted and Saved`, response),
+        error: error => console.error(`Error saving ${this.selectedPaymentType} payment data`, error)
+      });
   }
 
   private splitFullName(fullName: string): { firstName: string; lastName: string } {
@@ -193,21 +194,19 @@ export class PaymentInfoComponent implements OnInit {
   }
 
   detectCardType(cardNumber: string = ''): string | null {
-    // Ensure cardNumber is a string
     cardNumber = cardNumber.replace(/\D/g, '');
 
     if (/^4/.test(cardNumber)) return 'visa';
     if (/^5[1-5]/.test(cardNumber) || /^2[2-7]/.test(cardNumber)) return 'mastercard';
     if (/^3[47]/.test(cardNumber)) return 'amex';
     if (/^6(?:011|5)/.test(cardNumber)) return 'discover';
-    return null; // Reset if no match
+    return null;
   }
 
   private cvvValidator(control: AbstractControl): { [key: string]: boolean } | null {
     const cvv = control.value;
     if (!cvv) return null;
 
-    // Ensure card number is a string (handle undefined case)
     const cardNumber = this.paymentInformationForm?.get('CC.cardNumber')?.value || '';
     const cardType = this.detectCardType(cardNumber); // No more type error
     console.log("cardType", cardType)
@@ -223,5 +222,10 @@ export class PaymentInfoComponent implements OnInit {
     const validNamePattern = /^[A-Za-z\s'-]{2,50}$/;
 
     return validNamePattern.test(control.value.trim()) ? null : { invalidName: true };
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { FormGroup, FormBuilder, FormArray, ReactiveFormsModule, Validators, FormControl, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -18,7 +18,7 @@ import { MatDatepickerInputEvent, MatDatepickerModule } from '@angular/material/
 import { MatNativeDateModule } from '@angular/material/core';
 import { NgxMatTimepickerModule } from 'ngx-mat-timepicker';
 import { MatIconModule } from '@angular/material/icon';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'request-basic',
@@ -41,11 +41,13 @@ import { forkJoin } from 'rxjs';
   ]
 })
 
-export class BasicRequestComponent implements OnInit {
+export class BasicRequestComponent implements OnInit, OnDestroy {
   @Input() requestId?: number;
   @Input() idParam?: string | null | undefined;
   @Output() deleteDropdown = new EventEmitter<{ decisionMakerId: number | null }>();
   @Output() formValidityChange = new EventEmitter<boolean>();
+
+  private destroy$ = new Subject<void>();
 
   decisionMakers!: DecisionMaker[];
   categories: Category[] = [];
@@ -84,40 +86,48 @@ export class BasicRequestComponent implements OnInit {
       dropdowns: this.fb.array(data?.dropdowns || [this.createDropdownControl()]),
     });
 
-    this.basicsFormGroup.statusChanges.subscribe(() => {
-      this.formValidityChange.emit(this.basicsFormGroup.valid);
-    });
+    this.basicsFormGroup.statusChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.formValidityChange.emit(this.basicsFormGroup.valid);
+      });
 
     this.fetchInitialData();
   }
 
   private fetchInitialData(): void {
-    this.requestService.GetCategories().subscribe({
-      next: (categories: Category[]) => {
-        this.categories = categories;
-      },
-      error: (err) => {
-        console.error('Error fetching categories:', err);
-      },
-    });
+    this.requestService.GetCategories()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (categories: Category[]) => {
+          this.categories = categories;
+        },
+        error: (err) => {
+          console.error('Error fetching categories:', err);
+        },
+      });
 
-    this.requestService.GetDecisionMakers().subscribe({
-      next: (decisionMakers: DecisionMaker[]) => {
-        this.decisionMakers = decisionMakers;
-      },
-      error: (err) => {
-        console.error('Error fetching decision makers:', err);
-      },
-    });
+    this.requestService.GetDecisionMakers()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (decisionMakers: DecisionMaker[]) => {
+          this.decisionMakers = decisionMakers;
+        },
+        error: (err) => {
+          console.error('Error fetching decision makers:', err);
+        },
+      });
 
-    this.requestService.GetRequestTypes().subscribe({
-      next: (requestTypes: RequestType[]) => {
-        this.requestTypes = requestTypes;
-      },
-      error: (err) => {
-        console.error('Error fetching request types:', err);
-      },
-    });
+    this.requestService.GetRequestTypes()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (requestTypes: RequestType[]) => {
+          this.requestTypes = requestTypes;
+        },
+        error: (err) => {
+          console.error('Error fetching request types:', err);
+        },
+      });
   }
 
   private getRequestById(requestId: number): void {
@@ -127,43 +137,45 @@ export class BasicRequestComponent implements OnInit {
     const subCategories$ = this.requestService.GetAllSubcategories();
     const decisionMakers$ = this.requestService.GetDecisionMakers();
 
-    forkJoin([request$, categories$, requestTypes$, subCategories$, decisionMakers$]).subscribe(
-      ([request, categories, requestTypes, subCategories, decisionMakers]) => {
-        const category = categories.find((c: { categoryId: any }) => c.categoryId === request.categoryId);
-        const requestType = requestTypes.find((r: { requestTypeId: number }) => r.requestTypeId === request.requestTypeId);
-        const subCategory = subCategories.find(
-          (sc: { subCategoryId: number }) => sc.subCategoryId === request.subCategoryId
-        );
+    forkJoin([request$, categories$, requestTypes$, subCategories$, decisionMakers$])
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(
+        ([request, categories, requestTypes, subCategories, decisionMakers]) => {
+          const category = categories.find((c: { categoryId: any }) => c.categoryId === request.categoryId);
+          const requestType = requestTypes.find((r: { requestTypeId: number }) => r.requestTypeId === request.requestTypeId);
+          const subCategory = subCategories.find(
+            (sc: { subCategoryId: number }) => sc.subCategoryId === request.subCategoryId
+          );
 
-        this.subcategories = subCategories.filter(sc => sc.categoryId === request.categoryId);
+          this.subcategories = subCategories.filter(sc => sc.categoryId === request.categoryId);
 
-        const decisionMakersMapped = request.decisionMakerSelections.map(
-          (selection: { decisionMakerId: number }) =>
-            decisionMakers.find((dm: { decisionMakerId: number }) => dm.decisionMakerId === selection.decisionMakerId)
-        ).filter((dm: any) => dm);
+          const decisionMakersMapped = request.decisionMakerSelections.map(
+            (selection: { decisionMakerId: number }) =>
+              decisionMakers.find((dm: { decisionMakerId: number }) => dm.decisionMakerId === selection.decisionMakerId)
+          ).filter((dm: any) => dm);
 
-        const formData = {
-          category: category?.categoryId || '',
-          subcategory: subCategory?.subCategoryId || '',
-          requestType: requestType?.requestTypeId,
-          requestName: request.requestName,
-          publishDate: request.publishDate,
-          publishTime: this.convertUtcToLocalTimeOnly(request.publishDate),
-          openDate: request.openDate,
-          openTime: this.convertUtcToLocalTimeOnly(request.openDate),
-          contractStartDate: request.contractStart,
-          contractEndDate: request.contractEnd,
-          dropdowns: this.createDecisionMakerDropdownControls(decisionMakersMapped),
-        };
+          const formData = {
+            category: category?.categoryId || '',
+            subcategory: subCategory?.subCategoryId || '',
+            requestType: requestType?.requestTypeId,
+            requestName: request.requestName,
+            publishDate: request.publishDate,
+            publishTime: this.convertUtcToLocalTimeOnly(request.publishDate),
+            openDate: request.openDate,
+            openTime: this.convertUtcToLocalTimeOnly(request.openDate),
+            contractStartDate: request.contractStart,
+            contractEndDate: request.contractEnd,
+            dropdowns: this.createDecisionMakerDropdownControls(decisionMakersMapped),
+          };
 
-        this.initializeForm(formData);
+          this.initializeForm(formData);
 
-        this.formValidityChange.emit(this.basicsFormGroup.valid);
-      },
-      (error: any) => {
-        console.error('Error fetching data', error);
-      }
-    );
+          this.formValidityChange.emit(this.basicsFormGroup.valid);
+        },
+        (error: any) => {
+          console.error('Error fetching data', error);
+        }
+      );
   }
 
   get dropdowns(): FormArray {
@@ -189,48 +201,48 @@ export class BasicRequestComponent implements OnInit {
   }
 
   removeDropdown(index: number): void {
-    const decisionMakerId = this.dropdowns.at(index).get('decisionMaker')?.value;
-    if (decisionMakerId) {
-      this.requestService.DeleteDecisionMaker(this.requestId ? this.requestId : Number(this.idParam), decisionMakerId).subscribe({
-        next: () => {
-          this.dropdowns.removeAt(index);
-          console.log(`Decision Maker with ID ${decisionMakerId} removed successfully.`);
-        },
-        error: (error) => {
-          console.error(`Error removing Decision Maker with ID ${decisionMakerId}:`, error);
-        },
-      });
+    const dropdownControl = this.dropdowns.at(index);
+    const decisionMakerId = dropdownControl.get('decisionMaker')?.value;
+
+    if (decisionMakerId && (this.requestId || this.idParam)) {
+      this.requestService.DeleteDecisionMaker(this.requestId ?? Number(this.idParam), decisionMakerId)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.dropdowns.removeAt(index);
+            console.log(`Decision Maker with ID ${decisionMakerId} removed successfully.`);
+          },
+          error: (error) => console.error(`Error removing Decision Maker with ID ${decisionMakerId}:`, error),
+        });
     } else {
-      // No value selected but remove dropdown
       this.dropdowns.removeAt(index);
     }
   }
 
   getFilteredDecisionMakers(index: number): DecisionMaker[] {
-    const selectedDecisionMakerIds = this.dropdowns.controls
-      .map((control, i) => (i !== index ? control.get('decisionMaker')?.value : null))
-      .filter((value) => value !== null); // Ensure we filter out null values
-  
-    // Ensure decisionMakers is defined and return a filtered array
-    return this.decisionMakers
-      ? this.decisionMakers.filter(
-          (decisionMaker) => !selectedDecisionMakerIds.includes(decisionMaker.decisionMakerId)
-        )
-      : [];
+    const selectedDecisionMakerIds = new Set(
+      this.dropdowns.controls
+        .filter((_, i) => i !== index)
+        .map(control => control.get('decisionMaker')?.value)
+        .filter(value => value !== null)
+    );
+
+    return this.decisionMakers?.filter(dm => !selectedDecisionMakerIds.has(dm.decisionMakerId)) ?? [];
   }
-  
 
   onCategoryChange(event: MatSelectChange): void {
     const categoryId = event.value;
-    this.requestService.GetSubcategories(categoryId).subscribe((subcategories: SubCategory[]) => {
-      this.subcategories = subcategories;
-      const currentSubcategoryId = this.basicsFormGroup.get('subcategory')?.value;
-      if (this.subcategories.some(sc => sc.subCategoryId === currentSubcategoryId)) {
-        this.basicsFormGroup.get('subcategory')?.setValue(currentSubcategoryId);
-      } else {
-        this.basicsFormGroup.get('subcategory')?.setValue('');
-      }
-    });
+    this.requestService.GetSubcategories(categoryId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((subcategories: SubCategory[]) => {
+        this.subcategories = subcategories;
+        const currentSubcategoryId = this.basicsFormGroup.get('subcategory')?.value;
+        if (this.subcategories.some(sc => sc.subCategoryId === currentSubcategoryId)) {
+          this.basicsFormGroup.get('subcategory')?.setValue(currentSubcategoryId);
+        } else {
+          this.basicsFormGroup.get('subcategory')?.setValue('');
+        }
+      });
   }
 
   saveRequest() {
@@ -238,31 +250,34 @@ export class BasicRequestComponent implements OnInit {
     const requestIdFromStateService = this.stateService.getRequestId();
 
     if (this.idParam || requestIdFromStateService) {
-      this.requestService.UpdateRequest(Number(this.idParam), request).subscribe(
-        (responseRequestId: number) => {
-          console.log('Request updated successfully:', responseRequestId);
-          this.getRequestById(responseRequestId);
-          this.stateService.setRequestId(responseRequestId);
-          this.stateService.setRequestHasBeenSaved(true);
-        },
-        error => {
-          console.error('Error updating Request:', error);
-        }
-      );
+      this.requestService.UpdateRequest(Number(this.idParam), request)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(
+          (responseRequestId: number) => {
+            console.log('Request updated successfully:', responseRequestId);
+            this.getRequestById(responseRequestId);
+            this.stateService.setRequestId(responseRequestId);
+            this.stateService.setRequestHasBeenSaved(true);
+          },
+          error => {
+            console.error('Error updating Request:', error);
+          }
+        );
     }
-
     else if (!this.idParam || !requestIdFromStateService) {
-      this.requestService.CreateRequest(request).subscribe(
-        (responseRequestId: number) => {
-          console.log('Request created successfully:', responseRequestId);
-          this.requestId = responseRequestId;
-          this.stateService.setRequestId(responseRequestId)
-          this.cdr.detectChanges();
-        },
-        error => {
-          console.error('Error creating request:', error);
-        }
-      );
+      this.requestService.CreateRequest(request)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(
+          (responseRequestId: number) => {
+            console.log('Request created successfully:', responseRequestId);
+            this.requestId = responseRequestId;
+            this.stateService.setRequestId(responseRequestId)
+            this.cdr.detectChanges();
+          },
+          error => {
+            console.error('Error creating request:', error);
+          }
+        );
     }
   }
 
@@ -294,31 +309,21 @@ export class BasicRequestComponent implements OnInit {
   }
 
   private combineDateAndTime(date: Date, timeString: string) {
-    // Split the time string into hours and minutes
     const [hours, minutes] = timeString.split(':').map(Number);
-
-    // Create a new Date object with the same date
     const combinedDate = new Date(date);
-
-    // Set the hours and minutes on the new Date object
-    combinedDate.setHours(hours, minutes, 0, 0); // Set seconds and milliseconds to 0
+    combinedDate.setHours(hours, minutes, 0, 0);
     return combinedDate;
   }
 
   private convertUtcToLocalTimeOnly(utcDateTime: string): string {
     if (!utcDateTime) return '';
-
-    // Parse the UTC date-time string
-    const utcDate = new Date(utcDateTime + 'Z'); // Ensure it's treated as UTC by appending 'Z'
-    if (isNaN(utcDate.getTime())) return ''; // Handle invalid date
-
-    // Convert the UTC time to local time in 24-hour format
+    const utcDate = new Date(utcDateTime + 'Z');
+    if (isNaN(utcDate.getTime())) return '';
     const localTime = utcDate.toLocaleTimeString(undefined, {
       hour: '2-digit',
       minute: '2-digit',
       hour12: false
     });
-
     return localTime;
   }
 
@@ -338,5 +343,10 @@ export class BasicRequestComponent implements OnInit {
   combineDateTimeInUtc(inputDate: string, inputTime: string): string {
     const dateTimeString = `${inputDate}T${inputTime}Z`;
     return dateTimeString;
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }
