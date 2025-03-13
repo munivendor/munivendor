@@ -1,51 +1,49 @@
-<div class="center-container">
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-        <mat-card>
-            <mat-card-header>
-                <mat-card-title>Welcome back to Munivendor</mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-                <div class="form-container">
-                    <asl-google-signin-button type='standard' size='medium' text='continue_with'
-                        theme='filled_blue'></asl-google-signin-button>
+<form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+    <mat-card>
+        <mat-card-header>
+            <mat-card-title>Welcome back to Munivendor</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
 
-                    <div class="separator">
-                        <span>OR</span>
-                    </div>
+            <asl-google-signin-button type='standard' size='medium' text='continue_with'
+                theme='filled_blue'></asl-google-signin-button>
 
-                    <mat-form-field class="full-width">
-                        <mat-label>Work Email/Username</mat-label>
-                        <input matInput type="text" formControlName="email" placeholder="Enter your work email/username">
-                        <mat-error *ngIf="loginForm.get('email')?.hasError('required')">
-                            Work Email/Username is required.
-                        </mat-error>
-                        <mat-error *ngIf="loginForm.get('email')?.hasError('email')">
-                            Invalid email format.
-                        </mat-error>
-                        <mat-error *ngIf="loginForm.get('email')?.hasError('pattern')">
-                            Please enter a valid email address.
-                        </mat-error>
-                    </mat-form-field>
+            <div class="separator">
+                <span>OR</span>
+            </div>
 
-                    <mat-form-field class="full-width">
-                        <mat-label>Password</mat-label>
-                        <input matInput type="password" formControlName="password" placeholder="Enter your password">
-                        <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
-                            Password is required.
-                        </mat-error>
-                    </mat-form-field>
-                </div>
+            <mat-form-field class="full-width">
+                <mat-label>Work Email/Username</mat-label>
+                <input matInput type="text" formControlName="email" placeholder="Enter your work email/username">
+                <mat-error *ngIf="loginForm.get('email')?.hasError('required')">
+                    Work Email/Username is required.
+                </mat-error>
+                <mat-error *ngIf="loginForm.get('email')?.hasError('email')">
+                    Invalid email format.
+                </mat-error>
+                <mat-error *ngIf="loginForm.get('email')?.hasError('pattern')">
+                    Please enter a valid email address.
+                </mat-error>
+            </mat-form-field>
 
-                <div style="display: flex; flex-direction: row; justify-content: space-between; ">
-                    <div>Remember me</div>
-                    <a [routerLink]="['/forgot-password']">Forgot password?</a>
-                </div>
+            <mat-form-field class="full-width">
+                <mat-label>Password</mat-label>
+                <input matInput type="password" formControlName="password" placeholder="Enter your password">
+                <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
+                    Password is required.
+                </mat-error>
+            </mat-form-field>
 
-                <button style="margin-top: 1rem; margin-bottom: 1rem;" class="full-width" mat-raised-button
-                    color="primary" type="submit" [disabled]="loginForm.invalid">Log In</button>
+            <div style="display: flex; flex-direction: row; justify-content: space-between; ">
+                <div>Remember me</div>
+                <a [routerLink]="['/forgot-password']">Forgot password?</a>
+            </div>
 
-                <span>New to MuniVendor? Click here to <a [routerLink]="['/signup']">sign up</a>.</span>
-            </mat-card-content>
-        </mat-card>
-    </form>
-</div>
+            <button style="margin-top: 1rem; margin-bottom: 1rem;" class="full-width" mat-raised-button color="primary"
+                type="submit" [disabled]="loginForm.invalid">Log In</button>
+
+            <span>New to MuniVendor? Click here to <a [routerLink]="['/signup']">sign up</a>.</span>
+
+        </mat-card-content>
+    </mat-card>
+</form>

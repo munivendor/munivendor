@@ -7,6 +7,15 @@ import { BehaviorSubject } from 'rxjs';
 export class StateService {
   private myComponentState: any;
 
+  private requestIdSource = new BehaviorSubject<number | null>(null);
+  currentRequestId$ = this.requestIdSource.asObservable();
+    
+  private requestHasBeenSaved = new BehaviorSubject<boolean>(false);
+  currentRequestHasBeenSaved$ = this.requestHasBeenSaved.asObservable();
+
+  private municipalityIdSource = new BehaviorSubject<number | null>(null);
+  currentMunicipalityId$ = this.municipalityIdSource.asObservable();
+
   saveState(state: any) {
     this.myComponentState = state;
   }
@@ -14,13 +23,6 @@ export class StateService {
   getState() {
     return this.myComponentState;
   }
-
-
-  private requestIdSource = new BehaviorSubject<number | null>(null);
-  currentRequestId$ = this.requestIdSource.asObservable();
-    
-  private requestHasBeenSaved = new BehaviorSubject<boolean>(false);
-  currentRequestHasBeenSaved$ = this.requestHasBeenSaved.asObservable();
 
   setRequestId(requestId: number) {
     this.requestIdSource.next(requestId);
@@ -38,4 +40,11 @@ export class StateService {
     return this.requestHasBeenSaved.getValue();
   }
   
+  setMunicipalityId(municipalityId: number) {
+    this.municipalityIdSource.next(municipalityId);
+  }
+
+  getMunicipalityId(): number | null {
+    return this.municipalityIdSource.getValue();
+  }
 }
