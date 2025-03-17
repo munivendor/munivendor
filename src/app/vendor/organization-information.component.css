@@ -1,0 +1,5 @@
+mat-card-content p {
+    margin-bottom: 20px; /* Adds space below the paragraph */
+    font-size: 14px; /* Adjust font size */
+    color: #555; /* Adjust text color */
+  }

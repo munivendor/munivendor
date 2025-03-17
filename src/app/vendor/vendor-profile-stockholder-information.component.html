@@ -1,0 +1,91 @@
+<form [formGroup]="stockholderForm" (ngSubmit)="onSubmit()">
+    <mat-card>
+      <mat-card-title>Stockholder Information</mat-card-title>
+      <mat-card-content>
+        <!-- Are there stockholders holding 10% or more? -->
+        <mat-form-field class="full-width" appearance="fill">
+          <mat-label>Are there stockholders holding 10% or more?</mat-label>
+          <mat-select formControlName="hasStockholders" required>
+            <mat-option *ngFor="let option of yesNoOptions" [value]="option.value">
+              {{ option.label }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+  
+        <!-- Dynamic Stockholder List -->
+        <div formArrayName="stockholders">
+          <div
+            *ngFor="let stockholder of stockholders.controls; let i = index"
+            [formGroupName]="i"
+            class="stockholder-item"
+          >
+            <!-- Stockholder Type -->
+            <mat-form-field class="full-width" appearance="fill">
+              <mat-label>Stockholder Type</mat-label>
+              <mat-select formControlName="type" required>
+                <mat-option value="person">Person</mat-option>
+                <mat-option value="organization">Organization</mat-option>
+              </mat-select>
+            </mat-form-field>
+  
+            <!-- Name Fields -->
+            <div *ngIf="stockholder.get('type').value === 'person'" class="flex-row">
+              <mat-form-field class="half-width" appearance="fill">
+                <mat-label>First Name</mat-label>
+                <input matInput formControlName="firstName" />
+              </mat-form-field>
+              <mat-form-field class="half-width" appearance="fill">
+                <mat-label>Last Name</mat-label>
+                <input matInput formControlName="lastName" />
+              </mat-form-field>
+            </div>
+            <mat-form-field
+              class="full-width"
+              appearance="fill"
+              *ngIf="stockholder.get('type').value === 'organization'"
+            >
+              <mat-label>Organization Name</mat-label>
+              <input matInput formControlName="organizationName" />
+            </mat-form-field>
+  
+            <!-- Publicly Traded Dropdown -->
+            <mat-form-field
+              class="full-width"
+              appearance="fill"
+              *ngIf="stockholder.get('type').value === 'organization'"
+            >
+              <mat-label>Publicly Traded?</mat-label>
+              <mat-select formControlName="isPubliclyTraded" required>
+                <mat-option value="" disabled>Select One of the Options Below</mat-option>
+                <mat-option value="yes">Yes</mat-option>
+                <mat-option value="no">No</mat-option>
+              </mat-select>
+            </mat-form-field>
+  
+            <!-- Address -->
+            <mat-form-field class="full-width" appearance="fill">
+              <mat-label>Address</mat-label>
+              <input matInput formControlName="address" placeholder="Enter the address" />
+            </mat-form-field>
+  
+            <!-- Remove Stockholder -->
+            <button
+              mat-icon-button
+              color="warn"
+              (click)="removeStockholder(i)"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </div>
+  
+        <!-- Add Stockholder -->
+        <button mat-raised-button color="primary" (click)="addStockholder()">Add Stockholder</button>
+      </mat-card-content>
+    </mat-card>
+  
+    <button mat-raised-button color="accent" type="submit" [disabled]="stockholderForm.invalid">
+      Save
+    </button>
+  </form>
+  

@@ -1,0 +1,45 @@
+<form [formGroup]="organizationInformationForm">
+  <mat-card>
+    <mat-card-title>Vendor Profile</mat-card-title>
+    <mat-card-content>
+      <p>
+        MuniVendor auto-fills the forms required by the local government organization to ensure that there are no errors or omissions in your submission packets. Please ensure that all the information filled out in your Vendor Profile is accurate and up to date, because MuniVendor utilizes the information you fill out below to accomplish this. If you have any questions about how to correctly fill out your Vendor Profile, please call a MuniVendor representative between 9am and 5pm EST at <strong>732 354 XXXX</strong> or email us at <strong>vendorprofilesupport@munivendor.com</strong> requesting support.
+      </p>
+      <!-- Organization Name -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Organization Name</mat-label>
+        <input matInput formControlName="organizationName" required title="Organization Name"/>
+        <mat-error *ngIf="organizationInformationForm.get('organizationName')?.invalid">
+          Organization Name is required.
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Organization Address -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Street Address</mat-label>
+        <input matInput formControlName="streetAddress" required title="Street Address" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>City</mat-label>
+        <input matInput formControlName="city" required title = "city" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>State</mat-label>
+        <mat-select formControlName="state" required>
+          <mat-option *ngFor="let state of states" [value]="state">
+            {{ state }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" type="submit" [disabled]="organizationInformationForm.invalid">
+        Save
+      </button>
+    </mat-card-content>
+  </mat-card>
+</form>
+
+
+
