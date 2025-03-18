@@ -6,7 +6,7 @@
         <div class="flex-row">
           <mat-form-field class="half-width" appearance="fill">
             <mat-label>First Name</mat-label>
-            <input matInput formControlName="firstName" required />
+            <input matInput formControlName="firstName" required placeholder="firstName"/>
             <mat-error *ngIf="contactForm.get('firstName')?.invalid">
               First name is required.
             </mat-error>
@@ -14,7 +14,7 @@
   
           <mat-form-field class="half-width" appearance="fill">
             <mat-label>Last Name</mat-label>
-            <input matInput formControlName="lastName" required />
+            <input matInput formControlName="lastName" required placeholder="lastName"/>
             <mat-error *ngIf="contactForm.get('lastName')?.invalid">
               Last name is required.
             </mat-error>
@@ -24,7 +24,7 @@
         <!-- Title -->
         <mat-form-field class="full-width" appearance="fill">
           <mat-label>Title</mat-label>
-          <input matInput formControlName="title" />
+          <input matInput formControlName="title" placeholder="title"/>
         </mat-form-field>
   
         <!-- County -->
@@ -44,13 +44,13 @@
         <!-- Address -->
         <mat-form-field class="full-width" appearance="fill">
           <mat-label>Street Address</mat-label>
-          <input matInput formControlName="streetAddress" />
+          <input matInput formControlName="streetAddress" placeholder="streetAddress" />
         </mat-form-field>
   
         <div class="flex-row">
           <mat-form-field class="half-width" appearance="fill">
             <mat-label>City</mat-label>
-            <input matInput formControlName="city" />
+            <input matInput formControlName="city" placeholder="city"/>
           </mat-form-field>
   
           <mat-form-field class="half-width" appearance="fill">
@@ -64,14 +64,14 @@
   
         <mat-form-field class="full-width" appearance="fill">
           <mat-label>ZIP Code</mat-label>
-          <input matInput formControlName="zipCode" />
+          <input matInput formControlName="zipCode" placeholder="zipCode" />
         </mat-form-field>
   
         <!-- Email -->
         <div class="flex-row">
           <mat-form-field class="half-width" appearance="fill">
             <mat-label>Email Address</mat-label>
-            <input matInput type="email" formControlName="email" required />
+            <input matInput type="email" formControlName="email" required placeholder="emial" />
             <mat-error *ngIf="contactForm.get('email')?.invalid">
               A valid email is required.
             </mat-error>
@@ -79,7 +79,7 @@
   
           <mat-form-field class="half-width" appearance="fill">
             <mat-label>Confirm Email</mat-label>
-            <input matInput type="email" formControlName="confirmEmail" required />
+            <input matInput type="email" formControlName="confirmEmail" required placeholder="confirmEmail" />
             <mat-error *ngIf="contactForm.get('confirmEmail')?.invalid">
               Please confirm your email.
             </mat-error>
@@ -89,7 +89,7 @@
         <!-- Phone -->
         <mat-form-field class="full-width" appearance="fill">
           <mat-label>Phone Number</mat-label>
-          <input matInput type="tel" formControlName="phone" required />
+          <input matInput type="tel" formControlName="phone" required placeholder="phone"/>
           <mat-error *ngIf="contactForm.get('phone')?.invalid">
             Phone number is required.
           </mat-error>

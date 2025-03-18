@@ -23,4 +23,15 @@ export class VendorProfileService {
     const url = `${this.apiUrl}/VendorProfiles/${organizationId}`;
     return this.http.get<{ isSuccess: boolean, organization?: Organization, message: string }>(url);
   }
+
+ 
+    getOrganizationTypes(): Observable<Option[]> {
+      return this.http.get<Option[]>('/api/organization-types');
+    }
+  
+    getStates(): Observable<Option[]> {
+      return this.http.get<Option[]>('/api/states');
+    }
+  
+  }
 }

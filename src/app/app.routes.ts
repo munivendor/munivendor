@@ -47,7 +47,14 @@ export const routes: Routes = [
   { path: 'response-details/:id', component: ResponseDetailsComponent},
   { path: 'response-documents/:id', component: ResponseDocumentsComponent},
   { path: 'response-overview/:id', component: ResponseOverviewComponent},
-  { path: 'vendor-profile-organization-information/:id', component: OrganizationInformationComponent},
+  {
+    path: 'organization-information', 
+    component: OrganizationInformationComponent
+  },
+  {
+    path: 'organization-information/:organizationId', 
+    component: OrganizationInformationComponent
+  },
 
   {
     path: 'dashboard-component', component: DashboardComponent,
