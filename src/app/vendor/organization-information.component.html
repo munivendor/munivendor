@@ -1,45 +1,112 @@
-<form [formGroup]="organizationInformationForm">
+<mat-card>
+  <p>
+    MuniVendor auto-fills the forms required by the local government organization to ensure that there are no errors or omissions in your submission packets. Please ensure that all the information filled out in your Vendor Profile is accurate and up to date, because MuniVendor utilizes the information you fill out below to accomplish this. If you have any questions about how to correctly fill out your Vendor Profile, please call a MuniVendor representative between 9am and 5pm EST at 732 354 XXXX or email us at vendorprofilesupport&#64;munivendor.com requesting support.
+  </p>
+</mat-card>
+
+<form [formGroup]="organizationInformationForm" (ngSubmit)="onSubmit()">
   <mat-card>
-    <mat-card-title>Vendor Profile</mat-card-title>
-    <mat-card-content>
-      <p>
-        MuniVendor auto-fills the forms required by the local government organization to ensure that there are no errors or omissions in your submission packets. Please ensure that all the information filled out in your Vendor Profile is accurate and up to date, because MuniVendor utilizes the information you fill out below to accomplish this. If you have any questions about how to correctly fill out your Vendor Profile, please call a MuniVendor representative between 9am and 5pm EST at <strong>732 354 XXXX</strong> or email us at <strong>vendorprofilesupport@munivendor.com</strong> requesting support.
-      </p>
-      <!-- Organization Name -->
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Organization Name</mat-label>
-        <input matInput formControlName="organizationName" required title="Organization Name"/>
-        <mat-error *ngIf="organizationInformationForm.get('organizationName')?.invalid">
-          Organization Name is required.
+    
+    <!-- Organization Name -->
+    <mat-form-field appearance="fill">
+      <mat-label>Organization Name</mat-label>
+      <input matInput formControlName="organizationName" title="organizationName"/>
+      <mat-error *ngIf="organizationInformationForm.get('organizationName')?.invalid">
+        Organization Name is required.
+      </mat-error>
+    </mat-form-field>
+
+      <legend>Address</legend>
+      <mat-form-field appearance="fill">
+        <mat-label>Address</mat-label>
+        <input matInput formControlName="address" title="address"/>
+        <mat-error *ngIf="organizationInformationForm.get('address')?.invalid">
+          Street is required.
         </mat-error>
       </mat-form-field>
-
-      <!-- Organization Address -->
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Street Address</mat-label>
-        <input matInput formControlName="streetAddress" required title="Street Address" />
+      <mat-form-field appearance="fill">
+        <mat-label>Address Line 2</mat-label>
+        <input matInput formControlName="address2" title = "address2"/>
       </mat-form-field>
-
-      <mat-form-field appearance="outline" class="full-width">
+      <mat-form-field appearance="fill">
         <mat-label>City</mat-label>
-        <input matInput formControlName="city" required title = "city" />
+        <input matInput formControlName="city" title="city"/>
+        <mat-error *ngIf="organizationInformationForm.get('city')?.invalid">
+          City is required.
+        </mat-error>
       </mat-form-field>
-
-      <mat-form-field appearance="outline" class="full-width">
+      <mat-form-field appearance="fill">
         <mat-label>State</mat-label>
-        <mat-select formControlName="state" required>
-          <mat-option *ngFor="let state of states" [value]="state">
-            {{ state }}
-          </mat-option>
-        </mat-select>
+        <input matInput formControlName="state" title="state"/>
+        <mat-error *ngIf="organizationInformationForm.get('state')?.invalid">
+          State is required.
+        </mat-error>
       </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>ZIP Code</mat-label>
+        <input matInput formControlName="zipCode" title="zipCode"/>
+        <mat-error *ngIf="organizationInformationForm.get('zipCode')?.invalid">
+          A valid ZIP code is required.
+        </mat-error>
+      </mat-form-field>
+   
 
-      <button mat-raised-button color="primary" type="submit" [disabled]="organizationInformationForm.invalid">
-        Save
-      </button>
-    </mat-card-content>
+    <!-- Date of Incorporation -->
+    <mat-form-field appearance="fill">
+      <mat-label>Date of Incorporation</mat-label>
+      <input matInput type="date" formControlName="dateOfIncorporation" title="dateOfIncorporation"/>
+      <mat-error *ngIf="organizationInformationForm.get('dateOfIncorporation')?.invalid">
+        Date of Incorporation is required.
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Organization Type -->
+    <mat-form-field appearance="fill">
+      <mat-label>Organization Type</mat-label>
+      <input matInput formControlName="organizationTypeId" title="organizationType"/>
+      <mat-error *ngIf="organizationInformationForm.get('organizationType')?.invalid">
+        Organization Type is required.
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Current Business Name & Address -->
+    <!-- <mat-form-field appearance="fill">
+      <mat-label>Current Business Name & Address</mat-label>
+      <input matInput formControlName="currentBusinessNameAddress" title="currentBusinessNameAddress"/>
+      <mat-error *ngIf="organizationInformationForm.get('currentBusinessNameAddress')?.invalid">
+        This field is required.
+      </mat-error>
+    </mat-form-field> -->
+
+    <!-- Tax ID Number -->
+    <mat-form-field appearance="fill">
+      <mat-label>Tax ID Number (FEIN)</mat-label>
+      <input matInput formControlName="taxId" title="taxId"/>
+      <mat-error *ngIf="organizationInformationForm.get('taxId')?.invalid">
+        This field is required. Visit the
+        <a href="https://www.irs.gov/businesses/small-businesses-self-employed/get-an-employer-identification-number"
+           target="_blank" rel="noopener">IRS website</a> to obtain your FEIN.
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Phone Number -->
+    <mat-form-field appearance="fill">
+      <mat-label>Phone Number</mat-label>
+      <input matInput formControlName="phone" title="phone"/>
+      <mat-error *ngIf="organizationInformationForm.get('phone')?.invalid">
+        Enter a valid 10-digit phone number.
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Fax Number -->
+    <mat-form-field appearance="fill">
+      <mat-label>Fax Number</mat-label>
+      <input matInput formControlName="fax" title="fax"/>
+    </mat-form-field>
+
+
+    <button mat-raised-button color="primary" type="submit" [disabled]="organizationInformationForm.invalid">
+      Submit
+    </button>
   </mat-card>
 </form>
-
-
-

@@ -27,6 +27,7 @@ import { ResponseBasicComponent } from './Response/response-basic.component';
 import { ResponseDetailsComponent } from './Response/response-details.component';
 import { ResponseDocumentsComponent } from './Response/response-documents.component';
 import { ResponseOverviewComponent } from './Response/response-overview.component';
+import { OrganizationInformationComponent } from './vendor/organization-information.component';
 
 
 
@@ -46,7 +47,7 @@ export const routes: Routes = [
   { path: 'response-details/:id', component: ResponseDetailsComponent},
   { path: 'response-documents/:id', component: ResponseDocumentsComponent},
   { path: 'response-overview/:id', component: ResponseOverviewComponent},
-  
+  { path: 'vendor-profile-organization-information/:id', component: OrganizationInformationComponent},
 
   {
     path: 'dashboard-component', component: DashboardComponent,
