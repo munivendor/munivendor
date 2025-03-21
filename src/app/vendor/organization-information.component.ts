@@ -88,7 +88,7 @@ export class OrganizationInformationComponent implements OnInit {
         if (this.hasUnsavedChanges) {
           const validChangedFields = this.getValidChangedFields();
           if (Object.keys(validChangedFields).length > 0) {
-            this.saveOrganization(validChangedFields);
+            this.vendorProfileService.saveOrganization(validChangedFields);
           }
         }
       });

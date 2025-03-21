@@ -1,21 +1,24 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
+import { Subject } from 'rxjs';
+import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
-import { BrowserModule } from '@angular/platform-browser';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
+import { CommonModule } from '@angular/common';
+import { VendorProfileService } from '../service/vendor-profile.service'; // Updated service name
 
 @Component({
   selector: 'app-contact-information',
   templateUrl: './contact-information.component.html',
-  //styleUrls: ['./contact-information.component.scss'],
   standalone: true,
   imports: [
-    ReactiveFormsModule, 
+    CommonModule,
+    ReactiveFormsModule,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
@@ -23,39 +26,21 @@ import { MatButtonModule } from '@angular/material/button';
     MatButtonModule,
   ],
 })
-export class ContactInformationComponent implements OnInit {
+export class ContactInformationComponent implements OnInit, OnDestroy {
   contactForm!: FormGroup;
-  counties: string[] = [
-    'Atlantic County',
-    'Bergen County',
-    'Burlington County',
-    'Camden County',
-    'Cape May County',
-    'Cumberland County',
-    'Essex County',
-    'Gloucester County',
-    'Hudson County',
-    'Hunterdon County',
-    'Mercer County',
-    'Middlesex County',
-    'Monmouth County',
-    'Morris County',
-    'Ocean County',
-    'Passaic County',
-    'Salem County',
-    'Somerset County',
-    'Sussex County',
-    'Union County',
-    'Warren County',
-  ];
-  states: string[] = ['New Jersey', 'California', 'New York', 'Florida'];
-  times: string[] = [
-    'Morning (9:00 AM - 12:00 PM)',
-    'Afternoon (12:00 PM - 3:00 PM)',
-    'Evening (3:00 PM - 6:00 PM)',
-  ];
+  counties: string[] = []; // Initialize as empty array
+  states: string[] = []; // Initialize as empty array
+  times: string[] = []; // Initialize as empty array
 
-  constructor(private fb: FormBuilder) {}
+  private originalContactInformation: any = null;
+  private hasUnsavedChanges: boolean = false;
+  private destroy$ = new Subject<void>();
+
+  constructor(
+    private fb: FormBuilder,
+    private vendorProfileService: VendorProfileService, // Updated service name
+    private route: ActivatedRoute
+  ) {}
 
   ngOnInit(): void {
     this.contactForm = this.fb.group({
@@ -64,6 +49,7 @@ export class ContactInformationComponent implements OnInit {
       title: [''],
       county: ['', Validators.required],
       streetAddress: [''],
+      streetAddress2: [''],
       city: [''],
       state: [''],
       zipCode: [''],
@@ -72,11 +58,149 @@ export class ContactInformationComponent implements OnInit {
       phone: ['', Validators.required],
       bestTimeToCall: [''],
     });
+
+ 
+    this.getCounties();
+    this.getStates();
+    this.getTimes();
+
+    // Load contact information if editing
+    this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
+      const id = params.get('contactId');
+      if (id) {
+        this.loadContactInformation(+id); // Updated method name
+      }
+    });
+
+    // Auto-save logic
+    this.contactForm.valueChanges
+      .pipe(
+        debounceTime(1000),
+        distinctUntilChanged(),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((formValue) => {
+        if (this.contactForm.valid) {
+          this.hasUnsavedChanges = true;
+          const validChangedFields = this.getValidChangedFields();
+          if (Object.keys(validChangedFields).length > 0) {
+            this.vendorProfileService.saveContactInformation(validChangedFields).subscribe({
+              next: (response) => {
+                console.log('Auto-saved contact information:', response);
+              },
+              error: (error) => {
+                console.error('Error auto-saving contact information:', error);
+              },
+            });
+          }
+        }
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private fetchCounties(): void {
+    this.vendorProfileService.getCounties().subscribe({
+      next: (response) => {
+        if (response.isSuccess && response.counties) {
+          this.counties = response.counties; // Populate counties array
+        }
+      },
+      error: (error) => {
+        console.error('Error fetching counties:', error);
+      },
+    });
+  }
+
+  private getStates(): void {
+    this.vendorProfileService.getStates().subscribe({
+      next: (response) => {
+        if (response.isSuccess && response.states) {
+          this.states = response.states; // Populate states array
+        }
+      },
+      error: (error) => {
+        console.error('Error fetching states:', error);
+      },
+    });
+  }
+
+  private getTimes(): void {
+    this.vendorProfileService.getTimes().subscribe({
+      next: (response) => {
+        if (response.isSuccess && response.times) {
+          this.times = response.times; // Populate times array
+        }
+      },
+      error: (error) => {
+        console.error('Error fetching times:', error);
+      },
+    });
+  }
+
+  private loadContactInformation(contactId: number): void {
+    this.vendorProfileService.getContactInformation(contactId).subscribe({
+      next: (response) => {
+        if (response.isSuccess && response.contactInformation) {
+          this.originalContactInformation = response.contactInformation;
+          this.populateForm(response.contactInformation);
+        }
+      },
+      error: (error) => {
+        console.error('Error loading contact information:', error);
+      },
+    });
+  }
+
+  private populateForm(contactInformation: any): void {
+    this.contactForm.patchValue({
+      firstName: contactInformation.firstName,
+      lastName: contactInformation.lastName,
+      title: contactInformation.title,
+      county: contactInformation.county,
+      streetAddress: contactInformation.streetAddress,
+      streetAddress2: contactInformation.streetAddress2,
+      city: contactInformation.city,
+      state: contactInformation.state,
+      zipCode: contactInformation.zipCode,
+      email: contactInformation.email,
+      confirmEmail: contactInformation.confirmEmail,
+      phone: contactInformation.phone,
+      bestTimeToCall: contactInformation.bestTimeToCall,
+    });
   }
 
   onSubmit(): void {
     if (this.contactForm.valid) {
-      console.log('Contact Information Submitted:', this.contactForm.value);
+      const formValue = this.contactForm.value;
+      this.vendorProfileService.saveContactInformation(formValue).subscribe({
+        next: (response) => {
+          console.log('Contact information saved successfully:', response);
+        },
+        error: (error) => {
+          console.error('Error saving contact information:', error);
+        },
+      });
     }
+  }
+
+  private getValidChangedFields(): any {
+    const validChangedFields: any = {};
+    const formValue = this.contactForm.value;
+
+    for (const key in formValue) {
+      if (
+        this.contactForm.get(key)?.valid &&
+        this.originalContactInformation &&
+        formValue[key] !== this.originalContactInformation[key]
+      ) {
+        validChangedFields[key] = formValue[key];
+      }
+    }
+
+    return validChangedFields;
   }
 }
