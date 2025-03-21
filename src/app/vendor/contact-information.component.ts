@@ -102,7 +102,7 @@ export class ContactInformationComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private fetchCounties(): void {
+  private getCounties(): void {
     this.vendorProfileService.getCounties().subscribe({
       next: (response) => {
         if (response.isSuccess && response.counties) {
