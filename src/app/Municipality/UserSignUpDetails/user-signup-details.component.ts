@@ -56,7 +56,7 @@ export class UserSignUpDetails
             takeUntil(this.destroy$)
         ).subscribe(user => {
             if (user) {
-                const userId = user.userId
+                const userId = user
                 if (userId) {
                     this.getUserDetails(userId);
                 } else {

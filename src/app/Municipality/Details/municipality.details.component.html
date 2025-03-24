@@ -3,17 +3,17 @@
   the next step.
 </h3>
 <mat-card>
-    <mat-card-title>LGO Details</mat-card-title>
+    <mat-card-title>Local Government Organization Details</mat-card-title>
   <mat-card-content>
     <form [formGroup]="municipalityDetailForm" class="full-width" (ngSubmit)="onSubmit()">
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Name</mat-label>
-        <input matInput formControlName="municipalityName" required placeholder="Enter LGO Ex. Linden">
+        <input matInput formControlName="municipalityName" required placeholder="Enter Local Government Organization Name Ex. Linden">
         <mat-error *ngIf="municipalityDetailForm.get('municipalityName')?.hasError('required')">
-          LGO Name is required.
+          Local Government Organization Name is required.
         </mat-error>
         <mat-error *ngIf="municipalityDetailForm.get('municipalityName')?.hasError('minlength')">
-          LGO Name must be at least 3 characters long.
+          Local Government Organization Name must be at least 3 characters long.
         </mat-error>
       </mat-form-field>
 

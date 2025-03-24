@@ -110,10 +110,9 @@ export class DesignationSelectionComponent implements OnInit, OnDestroy {
       ).subscribe({
         next: currentUser => {
           const user: User = {
-            userId: currentUser.userId,
+            userId: currentUser,
             DesignationIds: selectedDesignationIds
           };
-
           this.userService.updateUser(user)
             .pipe(takeUntil(this.destroy$))
             .subscribe({
