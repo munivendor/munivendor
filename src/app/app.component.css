@@ -1,25 +1,17 @@
 .topnav {
-    width: 100%;
-    background-color: #3f51b5 ;
-    padding: 10px;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1000;
-}
-
-.main-content {
-    flex-grow: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding-top: 60px;
+  width: 100%;
+  background-color: #3f51b5;
+  padding: 10px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
 }
 
 .topnav a.active {
-    background-color: #04AA6D;
-    color: white;
-  }
+  background-color: #04AA6D;
+  color: white;
+}
 
 .topnav a {
   color: white;
@@ -34,11 +26,22 @@
   color: black;
 }
 
-.container {
-  flex: 1;
+.main-content {
+  margin-top: 60px; 
+  padding: 20px;
+  overflow-y: auto;
+  height: calc(100vh - 100px);
+  transition: width 0.3s ease-in-out; 
+}
+
+.sidenav-hidden {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 20px;
-  text-align: center;
+}
+
+.sidenav {
+  margin-top: 60px;
+  width: 250px;
+  background-color: #f5f5f5;
 }
