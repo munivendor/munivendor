@@ -9,6 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTabChangeEvent } from '@angular/material/tabs';
 import { Subject, takeUntil } from 'rxjs';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-payment-form',
@@ -82,7 +83,8 @@ export class PaymentInfoComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     public dialog: MatDialog,
-    private paymentInfoService: PaymentInfoService
+    private paymentInfoService: PaymentInfoService,
+    private router: Router
   ) { }
 
   ngOnInit(): void {
@@ -183,8 +185,8 @@ export class PaymentInfoComponent implements OnInit, OnDestroy {
     saveMethods[this.selectedPaymentType as keyof typeof saveMethods]?.()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: response => console.log(`${this.selectedPaymentType} Payment Info Submitted and Saved`, response),
-        error: error => console.error(`Error saving ${this.selectedPaymentType} payment data`, error)
+        next: response => { console.log(`${this.selectedPaymentType} Payment Info Submitted and Saved`, response); this.router.navigate(['/dashboard-component']); },
+        error: error => { console.error(`Error saving ${this.selectedPaymentType} payment data`, error); this.router.navigate(['/dashboard-component']); }
       });
   }
 

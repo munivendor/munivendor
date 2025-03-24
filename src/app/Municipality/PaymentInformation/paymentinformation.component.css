@@ -1,5 +1,5 @@
 .payment-info-container {
-    max-width: 600px;
+    max-width: 800px;
     margin: 0 auto;
     padding: 20px;
   }
@@ -21,4 +21,10 @@
 
   .tab-icon {
     margin-right: 8px;
+  }
+
+  .inline-field {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
   }

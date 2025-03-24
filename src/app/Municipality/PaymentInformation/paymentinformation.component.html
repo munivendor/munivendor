@@ -13,37 +13,46 @@
         </ng-template>
         <br />
         <div formGroupName="ACH">
-          <mat-form-field>
-            <mat-label>Routing Number</mat-label>
-            <input matInput formControlName="routingNumber" placeholder="Enter your routing number">
-            <mat-error *ngIf="paymentInformationForm.get('ACH.routingNumber')?.hasError('required')">Routing number is required.</mat-error>
-            <mat-error *ngIf="paymentInformationForm.get('ACH.routingNumber')?.hasError('pattern')">Routing number must be exactly 9 digits.</mat-error>
-          </mat-form-field>
-          <mat-form-field>
-            <mat-label>Confirm Routing Number</mat-label>
-            <input matInput formControlName="confirmRoutingNumber" placeholder="Confirm your routing number">
-            <mat-error *ngIf="paymentInformationForm.get('ACH.confirmRoutingNumber')?.hasError('required')">Confirm
-              routing number is
-              required.</mat-error>
+          <div class="inline-field">
+            <mat-form-field>
+              <mat-label>Routing Number</mat-label>
+              <input matInput formControlName="routingNumber" placeholder="Enter your routing number">
+              <mat-error *ngIf="paymentInformationForm.get('ACH.routingNumber')?.hasError('required')">Routing number is
+                required.</mat-error>
+              <mat-error *ngIf="paymentInformationForm.get('ACH.routingNumber')?.hasError('pattern')">Routing number
+                must be exactly 9 digits.</mat-error>
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Confirm Routing Number</mat-label>
+              <input matInput formControlName="confirmRoutingNumber" placeholder="Confirm your routing number">
+              <mat-error *ngIf="paymentInformationForm.get('ACH.confirmRoutingNumber')?.hasError('required')">Confirm
+                routing number is
+                required.</mat-error>
               <mat-error *ngIf="paymentInformationForm.get('ACH.confirmRoutingNumber')?.hasError('pattern')">Confirm
                 routing number must be exactly 9 digits.</mat-error>
-          </mat-form-field>
-          <mat-form-field>
-            <mat-label>Account Number</mat-label>
-            <input matInput formControlName="accountNumber" placeholder="Enter your account number">
-            <mat-error *ngIf="paymentInformationForm.get('ACH.accountNumber')?.hasError('required')">Account number is
-              required.</mat-error>
-              <mat-error *ngIf="paymentInformationForm.get('ACH.accountNumber')?.hasError('pattern')">Account number must be between 6-17 digits.</mat-error>
-          </mat-form-field>
-          <mat-form-field>
-            <mat-label>Confirm Account Number</mat-label>
-            <input matInput formControlName="confirmAccountNumber" placeholder="Confirm your account number">
-            <mat-error *ngIf="paymentInformationForm.get('ACH.confirmAccountNumber')?.hasError('required')">Confirm
-              account number is
-              required.</mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="inline-field">
+            <mat-form-field>
+              <mat-label>Account Number</mat-label>
+              <input matInput formControlName="accountNumber" placeholder="Enter your account number">
+              <mat-error *ngIf="paymentInformationForm.get('ACH.accountNumber')?.hasError('required')">Account number is
+                required.</mat-error>
+              <mat-error *ngIf="paymentInformationForm.get('ACH.accountNumber')?.hasError('pattern')">Account number
+                must be between 6-17 digits.</mat-error>
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Confirm Account Number</mat-label>
+              <input matInput formControlName="confirmAccountNumber" placeholder="Confirm your account number">
+              <mat-error *ngIf="paymentInformationForm.get('ACH.confirmAccountNumber')?.hasError('required')">Confirm
+                account number is
+                required.</mat-error>
               <mat-error *ngIf="paymentInformationForm.get('ACH.confirmAccountNumber')?.hasError('pattern')">Confirm
                 account number must be between 6-17 digits.</mat-error>
-          </mat-form-field>
+            </mat-form-field>
+          </div>
+
           <mat-form-field>
             <mat-label>Account Type</mat-label>
             <mat-select formControlName="accountType">
@@ -64,7 +73,8 @@
         <div formGroupName="CC">
           <mat-form-field>
             <mat-label>Card Number</mat-label>
-            <input matInput formControlName="cardNumber" placeholder="Enter your card number" (input)="detectCardType()">
+            <input matInput formControlName="cardNumber" placeholder="Enter your card number"
+              (input)="detectCardType()">
             <mat-error *ngIf="paymentInformationForm.get('CC.cardNumber')?.hasError('required')">Card
               number is required.</mat-error>
             <mat-error *ngIf="paymentInformationForm.get('CC.cardNumber')?.hasError('pattern')">
@@ -76,16 +86,15 @@
             <input matInput formControlName="nameOnCard" placeholder="Enter the name on your card">
             <mat-error *ngIf="paymentInformationForm.get('CC.nameOnCard')?.hasError('required')">Name on
               card is required.</mat-error>
-              <mat-error *ngIf="paymentInformationForm.get('CC.nameOnCard')?.hasError('invalidName')">
-                Enter a valid cardholder name (letters, spaces, hyphens, and apostrophes only).
-              </mat-error>
+            <mat-error *ngIf="paymentInformationForm.get('CC.nameOnCard')?.hasError('invalidName')">
+              Enter a valid cardholder name (letters, spaces, hyphens, and apostrophes only).
+            </mat-error>
 
           </mat-form-field>
           <mat-form-field>
             <mat-label>Expiration Date</mat-label>
             <input matInput formControlName="expirationDate" placeholder="MM/YY">
-            <mat-error
-              *ngIf="paymentInformationForm.get('CC.expirationDate')?.hasError('required')">Expiration date
+            <mat-error *ngIf="paymentInformationForm.get('CC.expirationDate')?.hasError('required')">Expiration date
               is
               required.</mat-error>
           </mat-form-field>
@@ -94,9 +103,9 @@
             <input matInput formControlName="cvv" placeholder="Enter your CVV">
             <mat-error *ngIf="paymentInformationForm.get('CC.cvv')?.hasError('required')">Security code is
               required.</mat-error>
-              <mat-error *ngIf="paymentInformationForm.get('CC.cvv')?.hasError('invalidCvv')">
-                Invalid CVV. Enter 3 digits for Visa, Mastercard, Discover; 4 digits for AMEX.
-              </mat-error>
+            <mat-error *ngIf="paymentInformationForm.get('CC.cvv')?.hasError('invalidCvv')">
+              Invalid CVV. Enter 3 digits for Visa, Mastercard, Discover; 4 digits for AMEX.
+            </mat-error>
           </mat-form-field>
         </div>
       </mat-tab>
@@ -111,8 +120,7 @@
           <mat-form-field>
             <mat-label>Municipality Name</mat-label>
             <input matInput formControlName="municipalityName" placeholder="Enter municipality name">
-            <mat-error
-              *ngIf="paymentInformationForm.get('invoice.municipalityName')?.hasError('required')">Municipality
+            <mat-error *ngIf="paymentInformationForm.get('invoice.municipalityName')?.hasError('required')">Municipality
               name is
               required.</mat-error>
           </mat-form-field>
@@ -125,7 +133,8 @@
           </mat-form-field>
           <mat-form-field>
             <mat-label>Preferred Invoice Date</mat-label>
-            <input matInput [matDatepicker]="picker" placeholder="Choose your preferred invoice date" formControlName="desiredDateOfInvoice">
+            <input matInput [matDatepicker]="picker" placeholder="Choose your preferred invoice date"
+              formControlName="desiredDateOfInvoice">
             <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
             <mat-datepicker #picker></mat-datepicker>
             <mat-error *ngIf="paymentInformationForm.get('invoice.desiredDateOfInvoice')?.hasError('required')">
@@ -139,11 +148,13 @@
     <div formGroupName="address">
       <mat-form-field>
         <mat-label>Street Address Line 1</mat-label>
-        <input matInput formControlName="streetAddress1"  placeholder="Enter your street address">
-        <mat-error *ngIf="paymentInformationForm.get('address.streetAddress1')?.hasError('required') && paymentInformationForm.get('address.streetAddress1')?.touched">
+        <input matInput formControlName="streetAddress1" placeholder="Enter your street address">
+        <mat-error
+          *ngIf="paymentInformationForm.get('address.streetAddress1')?.hasError('required') && paymentInformationForm.get('address.streetAddress1')?.touched">
           Street Address is required.
         </mat-error>
-        <mat-error *ngIf="paymentInformationForm.get('address.streetAddress1')?.hasError('maxlength') && paymentInformationForm.get('address.streetAddress1')?.touched">
+        <mat-error
+          *ngIf="paymentInformationForm.get('address.streetAddress1')?.hasError('maxlength') && paymentInformationForm.get('address.streetAddress1')?.touched">
           Maximum 60 characters allowed.
         </mat-error>
       </mat-form-field>
@@ -151,41 +162,48 @@
       <mat-form-field>
         <mat-label>Street Address Line 2</mat-label>
         <input matInput formControlName="streetAddress2" placeholder="Enter your street address (optional)">
-        <mat-error *ngIf="paymentInformationForm.get('address.streetAddress2')?.hasError('maxlength') && paymentInformationForm.get('address.streetAddress2')?.touched">
+        <mat-error
+          *ngIf="paymentInformationForm.get('address.streetAddress2')?.hasError('maxlength') && paymentInformationForm.get('address.streetAddress2')?.touched">
           Maximum 60 characters allowed.
         </mat-error>
       </mat-form-field>
-    
-      <mat-form-field>
-        <mat-label>City</mat-label>
-        <input matInput formControlName="city" placeholder="Enter your city">
-        <mat-error *ngIf="paymentInformationForm.get('address.city')?.touched && paymentInformationForm.get('address.city')?.hasError('required')">
-          City is required.
-        </mat-error>
-        <mat-error *ngIf="paymentInformationForm.get('address.city')?.touched && paymentInformationForm.get('address.city')?.hasError('pattern')">
-          City must only contain letters, spaces, or hyphens and maximum of 40 characters allowed.
-        </mat-error>
-      </mat-form-field>
 
-      <mat-form-field>
-        <mat-label>State</mat-label>
-        <mat-select formControlName="state" placeholder="Select your state" required>
-          <mat-option *ngFor="let state of states" [value]="state.value">
-            {{ state.viewValue }}
-          </mat-option>
-        </mat-select>
-        <mat-error *ngIf="paymentInformationForm.get('address.state')?.touched && paymentInformationForm.get('address.state')?.hasError('required')">
-          State is required.
-        </mat-error>
-      </mat-form-field>
-    
-      <mat-form-field>
-        <mat-label>Zip Code</mat-label>
-        <input matInput formControlName="zip" placeholder="Enter your zip code">
-        <mat-error *ngIf="paymentInformationForm.get('address.zip')?.touched && paymentInformationForm.get('address.zip')?.hasError('required')">
-          Zip code is required.
-        </mat-error>
-      </mat-form-field>
+      <div class="inline-field">
+        <mat-form-field>
+          <mat-label>City</mat-label>
+          <input matInput formControlName="city" placeholder="Enter your city">
+          <mat-error
+            *ngIf="paymentInformationForm.get('address.city')?.touched && paymentInformationForm.get('address.city')?.hasError('required')">
+            City is required.
+          </mat-error>
+          <mat-error
+            *ngIf="paymentInformationForm.get('address.city')?.touched && paymentInformationForm.get('address.city')?.hasError('pattern')">
+            City must only contain letters, spaces, or hyphens and maximum of 40 characters allowed.
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>State</mat-label>
+          <mat-select formControlName="state" placeholder="Select your state" required>
+            <mat-option *ngFor="let state of states" [value]="state.value">
+              {{ state.viewValue }}
+            </mat-option>
+          </mat-select>
+          <mat-error
+            *ngIf="paymentInformationForm.get('address.state')?.touched && paymentInformationForm.get('address.state')?.hasError('required')">
+            State is required.
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>Zip Code</mat-label>
+          <input matInput formControlName="zip" placeholder="Enter your zip code">
+          <mat-error
+            *ngIf="paymentInformationForm.get('address.zip')?.touched && paymentInformationForm.get('address.zip')?.hasError('required')">
+            Zip code is required.
+          </mat-error>
+        </mat-form-field>
+      </div>
     </div>
 
     <button mat-raised-button color="primary" type="submit">Continue</button>

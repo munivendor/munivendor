@@ -1,53 +1,59 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router'
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router'
 import { SocialUser } from '@abacritt/angularx-social-login';
 import { AuthService } from './authorization/auth.service';
-import { Observable } from 'rxjs';
+import { filter, Observable } from 'rxjs';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatListModule } from '@angular/material/list';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   styleUrls: ['./app.component.css'],
-  template: `
-     <div class="topnav">
-      <!-- Non-authorized -->
-      <a routerLink="/signup" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="!(user$ | async)">Sign Up</a>
-      <a routerLink="/login" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="!(user$ | async)">Log In</a>
-      <a routerLink="/forgot-password" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="!(user$ | async)">Forgot Password</a>
-      <a routerLink="/email-verification" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="!(user$ | async)">Email Verificaiton</a>
-
-      <a routerLink="/role-verification" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="user$ | async">Role Verification</a>
-      <a routerLink="/municipality-details" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="user$ | async">LGO Details</a>
-      <a routerLink="/user-details" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="user$ | async">User Details</a>
-      <a routerLink="/user-designation" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="user$ | async">User Designation</a>
-      <a routerLink="/payment-plan-confirmation" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="user$ | async">Payment Plan</a>
-      <a routerLink="/payment-information" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="user$ | async">Payment Information</a>
-
-      <!-- Authorized -->
-      <a routerLink="/dashboard-component" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="user$ | async">Dashboard</a>
-      <a routerLink="/request-outframe-component" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="user$ | async">Basic Request</a>
-      <a routerLink="/request-proposal-component" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="user$ | async">Proposal</a>
-      <a routerLink="/request-overview-component" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="user$ | async">Overview</a>
-      <a (click)="onLogOut()" *ngIf="user$ | async">Sign Out</a>
-    </div>
-
-    <div class="main-content">
-    <router-outlet></router-outlet>
-    </div>
-  `,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  templateUrl: './app.component.html',
+  imports: [
+    CommonModule, 
+    RouterOutlet, 
+    RouterLink, 
+    RouterLinkActive, 
+    MatSidenavModule, 
+    MatToolbarModule, 
+    MatListModule
+  ],
 })
 export class AppComponent {
   title = 'munivendor';
   user$: Observable<SocialUser | null>;
+  showSidenav: boolean = true;
 
-  constructor(private authService: AuthService) {
+  constructor(private authService: AuthService, private router: Router) {
     this.user$ = this.authService.user$;
+     // Monitor route changes to decide whether to show or hide the sidenav
+     this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe(() => {
+      this.toggleSidenav();
+    });
+  }
+
+   toggleSidenav() {
+    const currentRoute = this.router.url;
+    const routesToHideSidenav = [
+      '/role-verification',
+      '/validateuser',
+      '/municipality-details',
+      '/user-details',
+      '/user-designation',
+      '/payment-plan-confirmation',
+      '/payment-information'
+    ];
+
+    this.showSidenav = !routesToHideSidenav.some(route => currentRoute.includes(route));
   }
 
   onLogOut(): void {
     this.authService.logout();
   }
 }
-

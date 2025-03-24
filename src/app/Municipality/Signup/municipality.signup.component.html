@@ -70,7 +70,7 @@
         <mat-form-field class="full-width">
           <mat-label>Organization</mat-label>
           <mat-select formControlName="organization" placeholder="Select your organization" [disabled]="isLGO">
-            <mat-option value="LGO">LGO</mat-option>
+            <mat-option value="LGO">Local Government Organization</mat-option>
             <mat-option value="Vendor">Vendor</mat-option>
           </mat-select>
           <mat-error *ngIf="signupForm.get('organization')?.hasError('required')">

@@ -95,4 +95,9 @@ export class AuthService {
       this.router.navigate(['/login']);
     }
   }
+
+  setAuthenticated(isAuthenticated: boolean, userData: any = null): void {
+    this.authState.next(isAuthenticated);
+    this.userSubject.next(userData);
+  }
 }

@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UserService } from '../../shared/service/user.service';
 import { Subject, takeUntil } from 'rxjs';
+import { AuthService } from '../../authorization/auth.service';
 
 @Component({
   selector: 'token-validation',
@@ -16,7 +17,8 @@ export class TokenValidationComponent implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private userService: UserService,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) { }
 
   ngOnInit() {
@@ -37,12 +39,15 @@ export class TokenValidationComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: response => {
-          this.verificationStatus = 'Verification successful! Redirecting...';
-          setTimeout(() => this.router.navigate(['/municipality-details']), 5000);
-        },
-        error: error => {
-          console.error('Validation error:', error);
-          this.verificationStatus = 'Verification failed. Invalid or expired token.';
+          if (response === true) {
+            const userData = { emailVerified: true };
+            this.authService.setAuthenticated(true, userData);
+            this.verificationStatus = 'Verification successful! Redirecting...';
+            setTimeout(() => this.router.navigate(['/municipality-details']), 5000);
+          } else {
+            this.verificationStatus = 'Verification failed. Invalid or expired token. Redirecting...';
+            setTimeout(() => this.router.navigate(['/signup']), 5000);
+          }
         }
       });
   }
