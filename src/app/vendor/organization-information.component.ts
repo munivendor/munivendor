@@ -64,13 +64,13 @@ export class OrganizationInformationComponent implements OnInit {
 
   ngOnInit() {
     // Fetch Organization Types and States from the API
-    this.vendorProfileService.getOrganizationTypes().subscribe((types) => {
+  /*  this.vendorProfileService.getOrganizationTypes().subscribe((types) => {
       this.organizationTypes = types;
     });
 
     this.vendorProfileService.getStates().subscribe((states) => {
       this.states = states;
-    });
+    });*/
 
     // Load organization data if editing
     this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {

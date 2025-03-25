@@ -21,27 +21,30 @@
 
     <!-- Conditional fields based on selection -->
     <div *ngIf="isSelectedDocument(DOCUMENT_TYPES.FEDERAL_APPROVAL)">
-      <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Letter of Federal Affirmative Action Plan Approval</mat-label>
-        <input matInput type="file" formControlName="federalApprovalLetter" placeholder="Upload approval letter (PDF, JPG, or PNG)">
+      <div class="file-upload-container">
+        <label>Letter of Federal Affirmative Action Plan Approval</label>
+        <input type="file" formControlName="federalApprovalLetter"  placeholder="federalApprovalLetter"
+               (change)="onFileChange($event, 'federalApprovalLetter')">
         <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
-      </mat-form-field>
+      </div>
     </div>
 
     <div *ngIf="isSelectedDocument(DOCUMENT_TYPES.EMPLOYEE_INFO_CERTIFICATE)">
-      <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Certificate of Employee Information Report</mat-label>
-        <input matInput type="file" formControlName="employeeInfoCertificate" placeholder="Upload certificate (PDF, JPG, or PNG)">
+      <div class="file-upload-container">
+        <label>Certificate of Employee Information Report</label>
+        <input type="file" formControlName="employeeInfoCertificate" placeholder="employeeInfoCertificate"
+               (change)="onFileChange($event, 'employeeInfoCertificate')">
         <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
-      </mat-form-field>
+      </div>
     </div>
 
     <div *ngIf="isSelectedDocument(DOCUMENT_TYPES.AA302_FORM)">
-      <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Employee Information Report Form AA-302</mat-label>
-        <input matInput type="file" formControlName="aa302Form" placeholder="Upload completed AA-302 form (PDF, JPG, or PNG)">
+      <div class="file-upload-container">
+        <label>Employee Information Report Form AA-302</label>
+        <input type="file" formControlName="aa302Form" placeholder="aa302Form"
+               (change)="onFileChange($event, 'aa302Form')">
         <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
-      </mat-form-field>
+      </div>
     </div>
 
     <mat-divider></mat-divider>
@@ -52,26 +55,29 @@
       The files below are required by the overwhelming majority of local government organizations.
     </p>
 
-    <mat-form-field appearance="fill" class="full-width">
-      <mat-label>Business Registration Certificate</mat-label>
-      <input matInput type="file" formControlName="businessRegistration" required placeholder="Upload business registration certificate (PDF, JPG, or PNG)">
+    <div class="file-upload-container">
+      <label>Business Registration Certificate <span class="required">*</span></label>
+      <input type="file" formControlName="businessRegistration" required placeholder="file"
+             (change)="onFileChange($event, 'businessRegistration')">
       <mat-hint>
         Pursuant to N.J.S.A. 52:32-44, local government organizations are prohibited from entering into a contract with an entity unless the bidder/proposer/contractor has a valid Business Registration Certificate.
         Accepted file types: jpg, png, pdf, Max. file size: 50 MB.
       </mat-hint>
-    </mat-form-field>
+    </div>
 
-    <mat-form-field appearance="fill" class="full-width">
-      <mat-label>W9</mat-label>
-      <input matInput type="file" formControlName="w9Form" required placeholder="Upload completed W9 form (PDF, JPG, or PNG)">
+    <div class="file-upload-container">
+      <label>W9 <span class="required">*</span></label>
+      <input type="file" formControlName="w9Form" required placeholder="file"
+             (change)="onFileChange($event, 'w9Form')">
       <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
-    </mat-form-field>
+    </div>
 
-    <mat-form-field appearance="fill" class="full-width">
-      <mat-label>Insurance Policies</mat-label>
-      <input matInput type="file" formControlName="insurancePolicies" multiple placeholder="Upload insurance documents (PDF, JPG, or PNG)">
+    <div class="file-upload-container">
+      <label>Insurance Policies</label>
+      <input type="file" formControlName="insurancePolicies" multiple placeholder="file"
+             (change)="onFileChange($event, 'insurancePolicies')">
       <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
-    </mat-form-field>
+    </div>
 
     <button mat-raised-button color="primary" type="submit" [disabled]="!complianceForm.valid">
       Submit Compliance Documents

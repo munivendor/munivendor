@@ -27,7 +27,7 @@ export interface ComplianceFormType {
     MatDividerModule
   ],
   templateUrl: './required-compliance-forms.component.html',
-  styleUrls: ['./required-compliance-forms.component.scss']
+  styleUrls: ['./required-compliance-forms.component.css']
 })
 export class ComplianceFormsComponent implements OnInit {
   complianceForm: FormGroup;
@@ -77,6 +77,13 @@ export class ComplianceFormsComponent implements OnInit {
   isSelectedDocument(documentId: number): boolean {
     const selectedValue = this.complianceForm.get('eeoLanguage')?.value;
     return selectedValue && selectedValue.documentId === documentId;
+  }
+
+  onFileChange(event: Event, controlName: string) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.complianceForm.get(controlName)?.setValue(input.files[0]);
+    }
   }
 
   onSubmit() {
