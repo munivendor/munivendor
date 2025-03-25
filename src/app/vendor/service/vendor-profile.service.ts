@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { Organization } from '../model/organization.model';
 //import { VendorLegalInformation } from '../model/vendor-legal-information.model';
 import { environment } from '../../../environments/environment';
+import { ComplianceFormType } from '../model/complianceformtype.model';
 
 @Injectable({
   providedIn: 'root'
@@ -100,12 +101,11 @@ export class VendorProfileService {
     return this.http.post(this.apiUrl, data);
   }
 
-  // Add to VendorProfileService
 
 // Get Compliance Form Types
-getComplianceFormTypes(): Observable<{ isSuccess: boolean, complianceFormTypes?: string[] }> {
-  const url = `${this.apiUrl}/ComplianceFormTypes`;
-  return this.http.get<{ isSuccess: boolean, complianceFormTypes?: string[] }>(url);
+getComplianceFormTypes(): Observable<{ isSuccess: boolean, complianceFormTypes: ComplianceFormType[] }> {
+  const url = `${this.apiUrl}/VendorDocuments/RCF`;
+  return this.http.get<{ isSuccess: boolean, complianceFormTypes: ComplianceFormType[] }>(url);
 }
 
 // Get Compliance Data by ID

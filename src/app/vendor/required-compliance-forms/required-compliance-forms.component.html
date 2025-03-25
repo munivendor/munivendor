@@ -1,73 +1,80 @@
-<form [formGroup]="complianceForm" (ngSubmit)="onSubmit()">
-  <mat-card>
-    <mat-card-title>Required Compliance Forms</mat-card-title>
-    <mat-card-content>
-      <!-- Loading indicator -->
-      <div *ngIf="isLoading" class="loading-spinner">
-        <mat-spinner diameter="50"></mat-spinner>
-        <span>Loading form data...</span>
-      </div>
+<div class="compliance-forms-container">
+  <h3 class="section-title">Required Compliance Forms</h3>
+  
+  <form [formGroup]="complianceForm" (ngSubmit)="onSubmit()">
+    <!-- Mandatory Equal Employment Opportunity Language -->
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Mandatory Equal Employment Opportunity Language</mat-label>
+      <mat-select formControlName="eeoLanguage" required placeholder="Select your EEO compliance document">
+        <mat-option value="">Select One</mat-option>
+        <mat-option *ngFor="let option of eeoOptions" [value]="option">
+          {{ option.documentName }}
+        </mat-option>
+      </mat-select>
+      <mat-hint>
+        N.J.S.A. 10:5-31 et seq. (P.L.1975, c.127) and N.J.A.C. 17:27 et seq. 
+        Selected contractors must submit one of the documents listed below to the public agency. 
+        Please confirm which of the following your organization will submit when responding to opportunities. 
+        Form AA-302 can be downloaded at http://www.state.nj.us/treasury/contract_compliance
+      </mat-hint>
+    </mat-form-field>
 
-      <!-- Compliance Form Selection -->
-      <mat-form-field class="full-width" appearance="fill">
-        <mat-label>Compliance Form Type</mat-label>
-        <mat-select formControlName="complianceFormType" required [disabled]="isLoading">
-          <mat-option value="">Select One</mat-option>
-          <mat-option *ngFor="let form of complianceFormTypes" [value]="form.id">
-            {{ form.name }}
-          </mat-option>
-        </mat-select>
-        <mat-error *ngIf="complianceForm.get('complianceFormType')?.hasError('required')">
-          Form type selection is required.
-        </mat-error>
+    <!-- Conditional fields based on selection -->
+    <div *ngIf="isSelectedDocument(DOCUMENT_TYPES.FEDERAL_APPROVAL)">
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Letter of Federal Affirmative Action Plan Approval</mat-label>
+        <input matInput type="file" formControlName="federalApprovalLetter" placeholder="Upload approval letter (PDF, JPG, or PNG)">
+        <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
       </mat-form-field>
+    </div>
 
-      <!-- Dynamic File Upload Fields -->
-      <ng-container *ngIf="selectedFormType">
-        <div class="file-upload-section">
-          <h3>Upload Requirements for {{ selectedFormType.name }}</h3>
-          <p *ngIf="selectedFormType.description" class="form-description">
-            {{ selectedFormType.description }}
-          </p>
-          
-          <div *ngFor="let requirement of selectedFormType.requirements">
-            <mat-form-field class="full-width file-upload-field">
-              <mat-label>{{ requirement.label }}</mat-label>
-              <input matInput 
-                     type="file" 
-                     (change)="onFileUpload($event, requirement.fieldName)" 
-                     [accept]="requirement.acceptedFileTypes?.join(',') || '.pdf,.jpg,.png,.jpeg'"
-                     [multiple]="requirement.allowMultiple || false" />
-              <mat-hint *ngIf="requirement.hint">{{ requirement.hint }}</mat-hint>
-              <mat-error *ngIf="fileErrors[requirement.fieldName]">
-                {{ fileErrors[requirement.fieldName] }}
-              </mat-error>
-            </mat-form-field>
-          </div>
-        </div>
-      </ng-container>
+    <div *ngIf="isSelectedDocument(DOCUMENT_TYPES.EMPLOYEE_INFO_CERTIFICATE)">
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Certificate of Employee Information Report</mat-label>
+        <input matInput type="file" formControlName="employeeInfoCertificate" placeholder="Upload certificate (PDF, JPG, or PNG)">
+        <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
+      </mat-form-field>
+    </div>
 
-      <!-- Display loaded files if editing -->
-      <div *ngIf="uploadedFiles?.length" class="uploaded-files">
-        <h4>Previously Uploaded Files</h4>
-        <ul>
-          <li *ngFor="let file of uploadedFiles">
-            <a href="{{ file.url }}" target="_blank">{{ file.name }}</a>
-            <button mat-icon-button color="warn" (click)="removeFile(file.id)">
-              <mat-icon>delete</mat-icon>
-            </button>
-          </li>
-        </ul>
-      </div>
-    </mat-card-content>
+    <div *ngIf="isSelectedDocument(DOCUMENT_TYPES.AA302_FORM)">
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Employee Information Report Form AA-302</mat-label>
+        <input matInput type="file" formControlName="aa302Form" placeholder="Upload completed AA-302 form (PDF, JPG, or PNG)">
+        <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
+      </mat-form-field>
+    </div>
 
-    <mat-card-actions>
-      <button mat-raised-button 
-              color="primary" 
-              type="submit" 
-              [disabled]="complianceForm.invalid || isLoading">
-        {{ isEditing ? 'Update' : 'Submit' }}
-      </button>
-    </mat-card-actions>
-  </mat-card>
-</form>
+    <mat-divider></mat-divider>
+
+    <!-- Required Files Section -->
+    <h3 class="section-title">Required Files</h3>
+    <p class="section-description">
+      The files below are required by the overwhelming majority of local government organizations.
+    </p>
+
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Business Registration Certificate</mat-label>
+      <input matInput type="file" formControlName="businessRegistration" required placeholder="Upload business registration certificate (PDF, JPG, or PNG)">
+      <mat-hint>
+        Pursuant to N.J.S.A. 52:32-44, local government organizations are prohibited from entering into a contract with an entity unless the bidder/proposer/contractor has a valid Business Registration Certificate.
+        Accepted file types: jpg, png, pdf, Max. file size: 50 MB.
+      </mat-hint>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>W9</mat-label>
+      <input matInput type="file" formControlName="w9Form" required placeholder="Upload completed W9 form (PDF, JPG, or PNG)">
+      <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Insurance Policies</mat-label>
+      <input matInput type="file" formControlName="insurancePolicies" multiple placeholder="Upload insurance documents (PDF, JPG, or PNG)">
+      <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
+    </mat-form-field>
+
+    <button mat-raised-button color="primary" type="submit" [disabled]="!complianceForm.valid">
+      Submit Compliance Documents
+    </button>
+  </form>
+</div>
