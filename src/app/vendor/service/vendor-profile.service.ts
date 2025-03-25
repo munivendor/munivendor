@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Organization } from '../model/organization.model';
-import { VendorLegalInformation } from '../model/vendor-legal-information.model';
+//import { VendorLegalInformation } from '../model/vendor-legal-information.model';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
@@ -25,6 +25,7 @@ export class VendorProfileService {
     return this.http.get<{ isSuccess: boolean, organization?: Organization, message: string }>(url);
   }
 
+  /*
   // Get all Organizations (optional filtering by OrganizationTypeId)
   getOrganizations(organizationTypeId?: number): Observable<{ isSuccess: boolean, organizations?: Organization[], message: string }> {
     const url = `${this.apiUrl}/VendorProfiles`;
@@ -59,6 +60,7 @@ export class VendorProfileService {
   getStates(): Observable<Option[]> {
     return this.http.get<Option[]>('/api/states');
   }
+    
 
   // Save Stockholder Information (insert or update)
   saveStockholderInformation(stockholderInformation: StockholderInformation, stockholderId?: number): Observable<{ isSuccess: boolean; stockholderId?: number; message: string }> {
@@ -83,7 +85,7 @@ export class VendorProfileService {
     const url = `${this.apiUrl}/Counties`; // Adjust the API endpoint as needed
     return this.http.get<{ isSuccess: boolean, counties?: string[], message: string }>(url);
   }
-
+*/
   // Get Times
   getTimes(): Observable<{ isSuccess: boolean, times?: string[], message: string }> {
     const url = `${this.apiUrl}/Times`; // Adjust the API endpoint as needed
@@ -97,4 +99,24 @@ export class VendorProfileService {
   saveContactInformation(data: any): Observable<any> {
     return this.http.post(this.apiUrl, data);
   }
+
+  // Add to VendorProfileService
+
+// Get Compliance Form Types
+getComplianceFormTypes(): Observable<{ isSuccess: boolean, complianceFormTypes?: string[] }> {
+  const url = `${this.apiUrl}/ComplianceFormTypes`;
+  return this.http.get<{ isSuccess: boolean, complianceFormTypes?: string[] }>(url);
+}
+
+// Get Compliance Data by ID
+getComplianceData(id: number): Observable<{ isSuccess: boolean, complianceData?: any }> {
+  const url = `${this.apiUrl}/ComplianceData/${id}`;
+  return this.http.get<{ isSuccess: boolean, complianceData?: any }>(url);
+}
+
+// Save Compliance Data
+saveComplianceData(data: any): Observable<{ isSuccess: boolean }> {
+  const url = `${this.apiUrl}/ComplianceData`;
+  return this.http.post<{ isSuccess: boolean }>(url, data);
+}
 }

@@ -10,7 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
-import { VendorProfileService } from '../service/vendor-profile.service'; // Updated service name
+import { VendorProfileService } from './service/vendor-profile.service'; // Updated service name
 
 @Component({
   selector: 'app-contact-information',
@@ -28,9 +28,9 @@ import { VendorProfileService } from '../service/vendor-profile.service'; // Upd
 })
 export class ContactInformationComponent implements OnInit, OnDestroy {
   contactForm!: FormGroup;
-  counties: string[] = []; // Initialize as empty array
-  states: string[] = []; // Initialize as empty array
-  times: string[] = []; // Initialize as empty array
+  counties: string[] = []; 
+  states: string[] = []; 
+  times: string[] = []; 
 
   private originalContactInformation: any = null;
   private hasUnsavedChanges: boolean = false;
@@ -38,7 +38,7 @@ export class ContactInformationComponent implements OnInit, OnDestroy {
 
   constructor(
     private fb: FormBuilder,
-    private vendorProfileService: VendorProfileService, // Updated service name
+    private vendorProfileService: VendorProfileService, 
     private route: ActivatedRoute
   ) {}
 
@@ -60,8 +60,8 @@ export class ContactInformationComponent implements OnInit, OnDestroy {
     });
 
  
-    this.getCounties();
-    this.getStates();
+    //this.getCounties();
+    //this.getStates();
     this.getTimes();
 
     // Load contact information if editing
@@ -85,10 +85,10 @@ export class ContactInformationComponent implements OnInit, OnDestroy {
           const validChangedFields = this.getValidChangedFields();
           if (Object.keys(validChangedFields).length > 0) {
             this.vendorProfileService.saveContactInformation(validChangedFields).subscribe({
-              next: (response) => {
+              next: (response: any) => {
                 console.log('Auto-saved contact information:', response);
               },
-              error: (error) => {
+              error: (error: any) => {
                 console.error('Error auto-saving contact information:', error);
               },
             });
@@ -102,14 +102,14 @@ export class ContactInformationComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private getCounties(): void {
+ /* private getCounties(): void {
     this.vendorProfileService.getCounties().subscribe({
-      next: (response) => {
+      next: (response: { isSuccess: boolean; counties?: any[] }) => {
         if (response.isSuccess && response.counties) {
-          this.counties = response.counties; // Populate counties array
+          this.counties = response.counties;
         }
       },
-      error: (error) => {
+      error: (error: Error) => {
         console.error('Error fetching counties:', error);
       },
     });
@@ -117,25 +117,25 @@ export class ContactInformationComponent implements OnInit, OnDestroy {
 
   private getStates(): void {
     this.vendorProfileService.getStates().subscribe({
-      next: (response) => {
+      next: (response: { isSuccess: boolean; states?: any[] }) => {
         if (response.isSuccess && response.states) {
           this.states = response.states; // Populate states array
         }
       },
-      error: (error) => {
+      error: (error: Error) => {
         console.error('Error fetching states:', error);
       },
     });
-  }
+  }*/
 
   private getTimes(): void {
     this.vendorProfileService.getTimes().subscribe({
-      next: (response) => {
+      next: (response: { isSuccess: boolean; times?: any[] }) => {
         if (response.isSuccess && response.times) {
           this.times = response.times; // Populate times array
         }
       },
-      error: (error) => {
+      error: (error: Error) => {
         console.error('Error fetching times:', error);
       },
     });
@@ -143,13 +143,13 @@ export class ContactInformationComponent implements OnInit, OnDestroy {
 
   private loadContactInformation(contactId: number): void {
     this.vendorProfileService.getContactInformation(contactId).subscribe({
-      next: (response) => {
+      next: (response: { isSuccess: boolean; contactInformation?: any[] }) => {
         if (response.isSuccess && response.contactInformation) {
           this.originalContactInformation = response.contactInformation;
           this.populateForm(response.contactInformation);
         }
       },
-      error: (error) => {
+      error: (error: Error) => {
         console.error('Error loading contact information:', error);
       },
     });
@@ -177,10 +177,10 @@ export class ContactInformationComponent implements OnInit, OnDestroy {
     if (this.contactForm.valid) {
       const formValue = this.contactForm.value;
       this.vendorProfileService.saveContactInformation(formValue).subscribe({
-        next: (response) => {
+        next: (response: any) => {
           console.log('Contact information saved successfully:', response);
         },
-        error: (error) => {
+        error: (error: any) => {
           console.error('Error saving contact information:', error);
         },
       });

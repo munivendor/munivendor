@@ -1,0 +1,73 @@
+<form [formGroup]="complianceForm" (ngSubmit)="onSubmit()">
+  <mat-card>
+    <mat-card-title>Required Compliance Forms</mat-card-title>
+    <mat-card-content>
+      <!-- Loading indicator -->
+      <div *ngIf="isLoading" class="loading-spinner">
+        <mat-spinner diameter="50"></mat-spinner>
+        <span>Loading form data...</span>
+      </div>
+
+      <!-- Compliance Form Selection -->
+      <mat-form-field class="full-width" appearance="fill">
+        <mat-label>Compliance Form Type</mat-label>
+        <mat-select formControlName="complianceFormType" required [disabled]="isLoading">
+          <mat-option value="">Select One</mat-option>
+          <mat-option *ngFor="let form of complianceFormTypes" [value]="form.id">
+            {{ form.name }}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="complianceForm.get('complianceFormType')?.hasError('required')">
+          Form type selection is required.
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Dynamic File Upload Fields -->
+      <ng-container *ngIf="selectedFormType">
+        <div class="file-upload-section">
+          <h3>Upload Requirements for {{ selectedFormType.name }}</h3>
+          <p *ngIf="selectedFormType.description" class="form-description">
+            {{ selectedFormType.description }}
+          </p>
+          
+          <div *ngFor="let requirement of selectedFormType.requirements">
+            <mat-form-field class="full-width file-upload-field">
+              <mat-label>{{ requirement.label }}</mat-label>
+              <input matInput 
+                     type="file" 
+                     (change)="onFileUpload($event, requirement.fieldName)" 
+                     [accept]="requirement.acceptedFileTypes?.join(',') || '.pdf,.jpg,.png,.jpeg'"
+                     [multiple]="requirement.allowMultiple || false" />
+              <mat-hint *ngIf="requirement.hint">{{ requirement.hint }}</mat-hint>
+              <mat-error *ngIf="fileErrors[requirement.fieldName]">
+                {{ fileErrors[requirement.fieldName] }}
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Display loaded files if editing -->
+      <div *ngIf="uploadedFiles?.length" class="uploaded-files">
+        <h4>Previously Uploaded Files</h4>
+        <ul>
+          <li *ngFor="let file of uploadedFiles">
+            <a href="{{ file.url }}" target="_blank">{{ file.name }}</a>
+            <button mat-icon-button color="warn" (click)="removeFile(file.id)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </li>
+        </ul>
+      </div>
+    </mat-card-content>
+
+    <mat-card-actions>
+      <button mat-raised-button 
+              color="primary" 
+              type="submit" 
+              [disabled]="complianceForm.invalid || isLoading">
+        {{ isEditing ? 'Update' : 'Submit' }}
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</form>
