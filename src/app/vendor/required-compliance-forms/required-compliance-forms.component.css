@@ -64,3 +64,15 @@ button[type="submit"] {
 .full-width {
   width: 100%;
 }
+
+.custom-hint {
+  margin: 0; /* Removes any default margins */
+  padding: 0; /* Removes any default padding */
+  font-size: 12px; /* Matches Material Design standards */
+  color: rgba(0, 0, 0, 0.6); /* Consistent with Mat-Hint text color */
+  line-height: 1.4; /* Adjusts line height to prevent large gaps */
+}
+.spacer {
+  height: 12px; /* Adds a space between the hint and mat-select */
+}
+

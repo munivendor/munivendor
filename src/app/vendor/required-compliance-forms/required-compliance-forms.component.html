@@ -5,18 +5,20 @@
     <!-- Mandatory Equal Employment Opportunity Language -->
     <mat-form-field appearance="fill" class="full-width">
       <mat-label>Mandatory Equal Employment Opportunity Language</mat-label>
+      <div class="custom-hint">
+        N.J.S.A. 10:5-31 et seq. (P.L.1975, c.127) and N.J.A.C. 17:27 et seq.
+        Selected contractors must submit one of the documents listed below to the public agency. 
+        Please confirm which of the following your organization will submit when responding to opportunities. 
+        Form AA-302 can be downloaded at  <a href="http://www.state.nj.us/treasury/contract_compliance" target="_blank" rel="noopener">this link</a>.
+      </div>
+      <div class="spacer"></div>
       <mat-select formControlName="eeoLanguage" required placeholder="Select your EEO compliance document">
         <mat-option value="">Select One</mat-option>
         <mat-option *ngFor="let option of eeoOptions" [value]="option">
           {{ option.documentName }}
         </mat-option>
       </mat-select>
-      <mat-hint>
-        N.J.S.A. 10:5-31 et seq. (P.L.1975, c.127) and N.J.A.C. 17:27 et seq. 
-        Selected contractors must submit one of the documents listed below to the public agency. 
-        Please confirm which of the following your organization will submit when responding to opportunities. 
-        Form AA-302 can be downloaded at http://www.state.nj.us/treasury/contract_compliance
-      </mat-hint>
+      
     </mat-form-field>
 
     <!-- Conditional fields based on selection -->
