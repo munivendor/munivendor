@@ -3,18 +3,19 @@
   
   <form [formGroup]="complianceForm" (ngSubmit)="onSubmit()">
     <!-- Mandatory Equal Employment Opportunity Language -->
+    <label>Mandatory Equal Employment Opportunity Language</label>
+    <p>
+       N.J.S.A. 10:5-31 et seq. (P.L.1975, c.127) and N.J.A.C. 17:27 et seq.
+       Selected contractors must submit one of the documents listed below to the public agency. 
+       Please confirm which of the following your organization will submit when responding to opportunities. 
+       Form AA-302 can be downloaded at  <a href="http://www.state.nj.us/treasury/contract_compliance" target="_blank" rel="noopener">this link</a>.
+    </p>
     <mat-form-field appearance="fill" class="full-width">
-      <mat-label>Mandatory Equal Employment Opportunity Language</mat-label>
-      <div class="custom-hint">
-        N.J.S.A. 10:5-31 et seq. (P.L.1975, c.127) and N.J.A.C. 17:27 et seq.
-        Selected contractors must submit one of the documents listed below to the public agency. 
-        Please confirm which of the following your organization will submit when responding to opportunities. 
-        Form AA-302 can be downloaded at  <a href="http://www.state.nj.us/treasury/contract_compliance" target="_blank" rel="noopener">this link</a>.
-      </div>
+      
       <div class="spacer"></div>
       <mat-select formControlName="eeoLanguage" required placeholder="Select your EEO compliance document">
         <mat-option value="">Select One</mat-option>
-        <mat-option *ngFor="let option of eeoOptions" [value]="option">
+        <mat-option *ngFor="let option of eeoOptions" [value]="option.documentId">
           {{ option.documentName }}
         </mat-option>
       </mat-select>
@@ -34,6 +35,7 @@
     <div *ngIf="isSelectedDocument(DOCUMENT_TYPES.EMPLOYEE_INFO_CERTIFICATE)">
       <div class="file-upload-container">
         <label>Certificate of Employee Information Report</label>
+        <p>Please upload your organization's Employee Information Report Form AA-302</p>
         <input type="file" formControlName="employeeInfoCertificate" placeholder="employeeInfoCertificate"
                (change)="onFileChange($event, 'employeeInfoCertificate')">
         <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>

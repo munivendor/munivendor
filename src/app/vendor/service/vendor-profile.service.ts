@@ -10,7 +10,7 @@ import { ComplianceFormType } from '../model/complianceformtype.model';
   providedIn: 'root'
 })
 export class VendorProfileService {
-  apiUrl = `${environment.apiUrl}users/`;
+  apiUrl = `${environment.apiUrl}`;
 
   constructor(private http: HttpClient) {}
 
@@ -103,9 +103,9 @@ export class VendorProfileService {
 
 
 // Get Compliance Form Types
-getComplianceFormTypes(): Observable<{ isSuccess: boolean, complianceFormTypes: ComplianceFormType[] }> {
-  const url = `${this.apiUrl}/VendorDocuments/RCF`;
-  return this.http.get<{ isSuccess: boolean, complianceFormTypes: ComplianceFormType[] }>(url);
+getComplianceFormTypes(): Observable<{complianceFormType: ComplianceFormType[]}> {
+  const url = `${this.apiUrl}VendorDocuments2/RFC/2`;
+  return this.http.get<  {complianceFormType: ComplianceFormType[]} >(url);
 }
 
 // Get Compliance Data by ID

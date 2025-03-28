@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MatSelectModule } from '@angular/material/select';
+import { MatSelectChange, MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,11 +8,9 @@ import { MatDividerModule } from '@angular/material/divider';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { VendorProfileService } from '../service/vendor-profile.service';
+import { ComplianceFormType } from '../model/complianceformtype.model';
 
-export interface ComplianceFormType {
-  documentId?: number;
-  documentName?: string;
-}
+
 
 @Component({
   selector: 'app-compliance-forms',
@@ -35,9 +33,9 @@ export class ComplianceFormsComponent implements OnInit {
   isLoading = true;
 
   readonly DOCUMENT_TYPES = {
-    FEDERAL_APPROVAL: 1,
-    EMPLOYEE_INFO_CERTIFICATE: 2,
-    AA302_FORM: 3
+    FEDERAL_APPROVAL: 108,
+    EMPLOYEE_INFO_CERTIFICATE: 107,
+    AA302_FORM: 109
   };
 
   constructor(
@@ -45,7 +43,7 @@ export class ComplianceFormsComponent implements OnInit {
     private vendorProfileService: VendorProfileService
   ) {
     this.complianceForm = this.fb.group({
-      eeoLanguage: ['', Validators.required],
+      eeoLanguage: [null, Validators.required],
       federalApprovalLetter: [''],
       employeeInfoCertificate: [''],
       aa302Form: [''],
@@ -62,8 +60,8 @@ export class ComplianceFormsComponent implements OnInit {
   loadComplianceFormTypes(): void {
     this.vendorProfileService.getComplianceFormTypes().subscribe({
       next: (response) => {
-        if (response.isSuccess && response.complianceFormTypes) {
-          this.eeoOptions = response.complianceFormTypes;
+        if ( response) {
+          this.eeoOptions = response.complianceFormType;
         }
         this.isLoading = false;
       },
@@ -76,8 +74,10 @@ export class ComplianceFormsComponent implements OnInit {
 
   isSelectedDocument(documentId: number): boolean {
     const selectedValue = this.complianceForm.get('eeoLanguage')?.value;
-    return selectedValue && selectedValue.documentId === documentId;
+    return selectedValue === documentId;
   }
+
+
 
   onFileChange(event: Event, controlName: string) {
     const input = event.target as HTMLInputElement;
