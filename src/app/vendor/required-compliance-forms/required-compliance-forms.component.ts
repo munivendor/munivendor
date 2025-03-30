@@ -9,6 +9,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { VendorProfileService } from '../service/vendor-profile.service';
 import { ComplianceFormType } from '../model/complianceformtype.model';
+import { MatIconModule } from '@angular/material/icon';
 
 
 
@@ -22,7 +23,8 @@ import { ComplianceFormType } from '../model/complianceformtype.model';
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
-    MatDividerModule
+    MatDividerModule,
+    MatIconModule
   ],
   templateUrl: './required-compliance-forms.component.html',
   styleUrls: ['./required-compliance-forms.component.css']

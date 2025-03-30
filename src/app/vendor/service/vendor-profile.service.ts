@@ -108,6 +108,16 @@ getComplianceFormTypes(): Observable<{complianceFormType: ComplianceFormType[]}>
   return this.http.get<  {complianceFormType: ComplianceFormType[]} >(url);
 }
 
+  saveVendorDocument(organizationId: number,documentId: number, vendorDocumentId?: number ): Observable<{vendorDocumentId:number}> {
+    
+    let url = `${this.apiUrl}/VendorDocuments/${organizationId}/${documentId}`;
+    if (vendorDocumentId !== undefined) {
+      url += `/${vendorDocumentId}`;
+    }
+
+    return this.http.put<{vendorDocumentId:number}>(url, null);
+  }
+
 // Get Compliance Data by ID
 getComplianceData(id: number): Observable<{ isSuccess: boolean, complianceData?: any }> {
   const url = `${this.apiUrl}/ComplianceData/${id}`;

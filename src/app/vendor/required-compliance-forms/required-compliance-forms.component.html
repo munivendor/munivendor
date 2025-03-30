@@ -3,88 +3,146 @@
   
   <form [formGroup]="complianceForm" (ngSubmit)="onSubmit()">
     <!-- Mandatory Equal Employment Opportunity Language -->
-    <label>Mandatory Equal Employment Opportunity Language</label>
-    <p>
-       N.J.S.A. 10:5-31 et seq. (P.L.1975, c.127) and N.J.A.C. 17:27 et seq.
-       Selected contractors must submit one of the documents listed below to the public agency. 
-       Please confirm which of the following your organization will submit when responding to opportunities. 
-       Form AA-302 can be downloaded at  <a href="http://www.state.nj.us/treasury/contract_compliance" target="_blank" rel="noopener">this link</a>.
-    </p>
-    <mat-form-field appearance="fill" class="full-width">
+    <div class="section-content">
+      <label class="section-label">Mandatory Equal Employment Opportunity Language</label>
+      <p class="section-description">
+        N.J.S.A. 10:5-31 et seq. (P.L.1975, c.127) and N.J.A.C. 17:27 et seq.
+        Selected contractors must submit one of the documents listed below to the public agency. 
+        Please confirm which of the following your organization will submit when responding to opportunities. 
+        Form AA-302 can be downloaded at <a href="http://www.state.nj.us/treasury/contract_compliance" target="_blank" rel="noopener">this link</a>.
+      </p>
       
-      <div class="spacer"></div>
-      <mat-select formControlName="eeoLanguage" required placeholder="Select your EEO compliance document">
-        <mat-option value="">Select One</mat-option>
-        <mat-option *ngFor="let option of eeoOptions" [value]="option.documentId">
-          {{ option.documentName }}
-        </mat-option>
-      </mat-select>
-      
-    </mat-form-field>
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Select your EEO compliance document</mat-label>
+        <mat-select formControlName="eeoLanguage" required>
+          <mat-option *ngFor="let option of eeoOptions" [value]="option.documentId">
+            {{ option.documentName }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
 
     <!-- Conditional fields based on selection -->
-    <div *ngIf="isSelectedDocument(DOCUMENT_TYPES.FEDERAL_APPROVAL)">
-      <div class="file-upload-container">
-        <label>Letter of Federal Affirmative Action Plan Approval</label>
-        <input type="file" formControlName="federalApprovalLetter"  placeholder="federalApprovalLetter"
-               (change)="onFileChange($event, 'federalApprovalLetter')">
-        <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
+    <div *ngIf="isSelectedDocument(DOCUMENT_TYPES.FEDERAL_APPROVAL)" class="file-upload-section">
+      <label class="file-upload-label">Letter of Federal Affirmative Action Plan Approval</label>
+      <div class="file-upload-wrapper">
+        <button mat-stroked-button type="button" (click)="fileInputFederal.click()">
+          <mat-icon>attach_file</mat-icon>
+          Choose File
+        </button>
+        <input #fileInputFederal type="file" formControlName="federalApprovalLetter" 
+               (change)="onFileChange($event, 'federalApprovalLetter')" hidden>
+        <span class="file-name" *ngIf="complianceForm.get('federalApprovalLetter')?.value?.name">
+          {{ complianceForm.get('federalApprovalLetter')?.value?.name }}
+        </span>
       </div>
+      <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
     </div>
 
-    <div *ngIf="isSelectedDocument(DOCUMENT_TYPES.EMPLOYEE_INFO_CERTIFICATE)">
-      <div class="file-upload-container">
-        <label>Certificate of Employee Information Report</label>
-        <p>Please upload your organization's Employee Information Report Form AA-302</p>
-        <input type="file" formControlName="employeeInfoCertificate" placeholder="employeeInfoCertificate"
-               (change)="onFileChange($event, 'employeeInfoCertificate')">
-        <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
+    <div *ngIf="isSelectedDocument(DOCUMENT_TYPES.EMPLOYEE_INFO_CERTIFICATE)" class="file-upload-section">
+      <label class="file-upload-label">Certificate of Employee Information Report</label>
+      <p class="file-upload-description">Please upload your organization's Employee Information Report Form AA-302</p>
+      <div class="file-upload-wrapper">
+        <button mat-stroked-button type="button" (click)="fileInputCertificate.click()">
+          <mat-icon>attach_file</mat-icon>
+          Choose File
+        </button>
+        <input #fileInputCertificate type="file" formControlName="employeeInfoCertificate" 
+               (change)="onFileChange($event, 'employeeInfoCertificate')" hidden>
+        <span class="file-name" *ngIf="complianceForm.get('employeeInfoCertificate')?.value?.name">
+          {{ complianceForm.get('employeeInfoCertificate')?.value?.name }}
+        </span>
       </div>
+      <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
     </div>
 
-    <div *ngIf="isSelectedDocument(DOCUMENT_TYPES.AA302_FORM)">
-      <div class="file-upload-container">
-        <label>Employee Information Report Form AA-302</label>
-        <input type="file" formControlName="aa302Form" placeholder="aa302Form"
-               (change)="onFileChange($event, 'aa302Form')">
-        <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
+    <div *ngIf="isSelectedDocument(DOCUMENT_TYPES.AA302_FORM)" class="file-upload-section">
+      <label class="file-upload-label">Employee Information Report Form AA-302</label>
+      <div class="file-upload-wrapper">
+        <button mat-stroked-button type="button" (click)="fileInputAA302.click()">
+          <mat-icon>attach_file</mat-icon>
+          Choose File
+        </button>
+        <input #fileInputAA302 type="file" formControlName="aa302Form" 
+               (change)="onFileChange($event, 'aa302Form')" hidden>
+        <span class="file-name" *ngIf="complianceForm.get('aa302Form')?.value?.name">
+          {{ complianceForm.get('aa302Form')?.value?.name }}
+        </span>
       </div>
+      <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
     </div>
 
     <mat-divider></mat-divider>
 
     <!-- Required Files Section -->
-    <h3 class="section-title">Required Files</h3>
-    <p class="section-description">
-      The files below are required by the overwhelming majority of local government organizations.
-    </p>
+    <div class="section-content">
+      <h3 class="section-title">Required Files</h3>
+      <p class="section-description">
+        The files below are required by the overwhelming majority of local government organizations.
+      </p>
 
-    <div class="file-upload-container">
-      <label>Business Registration Certificate <span class="required">*</span></label>
-      <input type="file" formControlName="businessRegistration" required placeholder="file"
-             (change)="onFileChange($event, 'businessRegistration')">
-      <mat-hint>
-        Pursuant to N.J.S.A. 52:32-44, local government organizations are prohibited from entering into a contract with an entity unless the bidder/proposer/contractor has a valid Business Registration Certificate.
-        Accepted file types: jpg, png, pdf, Max. file size: 50 MB.
-      </mat-hint>
+      <div class="file-upload-section">
+        <label class="file-upload-label">Business Registration Certificate <span class="required">*</span></label>
+        <div class="file-upload-wrapper">
+          <button mat-stroked-button type="button" (click)="fileInputBusiness.click()" [class.required-field]="complianceForm.get('businessRegistration')?.invalid && complianceForm.get('businessRegistration')?.touched">
+            <mat-icon>attach_file</mat-icon>
+            Choose File
+          </button>
+          <input #fileInputBusiness type="file" formControlName="businessRegistration" required 
+                 (change)="onFileChange($event, 'businessRegistration')" hidden>
+          <span class="file-name" *ngIf="complianceForm.get('businessRegistration')?.value?.name">
+            {{ complianceForm.get('businessRegistration')?.value?.name }}
+          </span>
+        </div>
+        <mat-hint>
+          Pursuant to N.J.S.A. 52:32-44, local government organizations are prohibited from entering into a contract with an entity unless the bidder/proposer/contractor has a valid Business Registration Certificate.
+          Accepted file types: jpg, png, pdf, Max. file size: 50 MB.
+        </mat-hint>
+        <mat-error *ngIf="complianceForm.get('businessRegistration')?.invalid && complianceForm.get('businessRegistration')?.touched">
+          This file is required
+        </mat-error>
+      </div>
+
+      <div class="file-upload-section">
+        <label class="file-upload-label">W9 <span class="required">*</span></label>
+        <div class="file-upload-wrapper">
+          <button mat-stroked-button type="button" (click)="fileInputW9.click()" [class.required-field]="complianceForm.get('w9Form')?.invalid && complianceForm.get('w9Form')?.touched">
+            <mat-icon>attach_file</mat-icon>
+            Choose File
+          </button>
+          <input #fileInputW9 type="file" formControlName="w9Form" required 
+                 (change)="onFileChange($event, 'w9Form')" hidden>
+          <span class="file-name" *ngIf="complianceForm.get('w9Form')?.value?.name">
+            {{ complianceForm.get('w9Form')?.value?.name }}
+          </span>
+        </div>
+        <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
+        <mat-error *ngIf="complianceForm.get('w9Form')?.invalid && complianceForm.get('w9Form')?.touched">
+          This file is required
+        </mat-error>
+      </div>
+
+      <div class="file-upload-section">
+        <label class="file-upload-label">Insurance Policies</label>
+        <div class="file-upload-wrapper">
+          <button mat-stroked-button type="button" (click)="fileInputInsurance.click()">
+            <mat-icon>attach_file</mat-icon>
+            Choose File
+          </button>
+          <input #fileInputInsurance type="file" formControlName="insurancePolicies" multiple 
+                 (change)="onFileChange($event, 'insurancePolicies')" hidden>
+          <span class="file-name" *ngIf="complianceForm.get('insurancePolicies')?.value?.name">
+            {{ complianceForm.get('insurancePolicies')?.value?.name }}
+          </span>
+        </div>
+        <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
+      </div>
     </div>
 
-    <div class="file-upload-container">
-      <label>W9 <span class="required">*</span></label>
-      <input type="file" formControlName="w9Form" required placeholder="file"
-             (change)="onFileChange($event, 'w9Form')">
-      <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
+    <div class="form-actions">
+      <button mat-raised-button color="primary" type="submit" [disabled]="!complianceForm.valid">
+        Submit Compliance Documents
+      </button>
     </div>
-
-    <div class="file-upload-container">
-      <label>Insurance Policies</label>
-      <input type="file" formControlName="insurancePolicies" multiple placeholder="file"
-             (change)="onFileChange($event, 'insurancePolicies')">
-      <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
-    </div>
-
-    <button mat-raised-button color="primary" type="submit" [disabled]="!complianceForm.valid">
-      Submit Compliance Documents
-    </button>
   </form>
 </div>
