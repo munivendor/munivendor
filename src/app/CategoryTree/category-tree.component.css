@@ -1,23 +1,10 @@
-.add-root-category {
-  background-color: white;
-  padding-top: 10px;
-}
-
-mat-tree-node,
 .mat-tree-node {
-  box-shadow: none;
-  margin: 0;
-  background-color: transparent;
-  border-radius: 0;
+  display: flex;
+  align-items: center;
 }
 
 .mat-tree-node .mat-icon-button {
-  margin-right: 8px; 
-}
-
-mat-tree-node,
-.mat-tree-node {
-  padding: 8px 0;
+  margin-right: 8px;
 }
 
 .node-actions {
@@ -37,31 +24,11 @@ mat-tree-node,
   display: none;
 }
 
-::ng-deep .mat-tree-node {
-  min-height: 40px;
-}
-
-::ng-deep .mat-nested-tree-node .mat-tree-node {
-  padding-left: 40px;
-}
-
-::ng-deep .mat-nested-tree-node .mat-nested-tree-node .mat-tree-node {
-  padding-left: 80px;
-}
-
-::ng-deep .mat-nested-tree-node .mat-nested-tree-node .mat-nested-tree-node .mat-tree-node {
-  padding-left: 120px;
-}
-
-.empty-state {
-  padding: 20px;
-  text-align: center;
-  border: 1px dashed #ccc;
+.badge {
+  margin-left: 8px;
+  background-color: #f44336;
+  color: white;
+  padding: 2px 6px;
   border-radius: 4px;
-  margin: 20px 0;
-}
-
-.add-root-category {
-  margin-top: 10px;
-  padding-left: 40px;
+  font-size: 10px;
 }
