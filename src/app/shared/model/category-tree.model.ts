@@ -1,8 +1,9 @@
 export interface CategoryNode {
-  categoryHierarchyId: number;
+  id: number | null;
   name: string;
-  parentId: number | null;
+  tempName?: string;
   deleted: boolean;
+  isEditing: boolean;
+  level?: number;
   children?: CategoryNode[];
-  isEditing?: boolean;
 }
