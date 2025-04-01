@@ -136,8 +136,9 @@ export class CategoryTreeComponent implements OnInit {
   }
 
   saveCategoryHierarchy(): void {
-    const cleanedHierarchy = this.categoryHierarchy.map(node => this.cleanNode(node));
-    this.categoryHierarchyService.saveCategoryHierarchy(cleanedHierarchy).subscribe({
+    const cleanedCategoryHierarchy = this.categoryHierarchy.map(node => this.cleanNode(node));
+    const categoryHierarchyString = JSON.stringify(cleanedCategoryHierarchy);
+    this.categoryHierarchyService.saveCategoryHierarchy(categoryHierarchyString).subscribe({
       next: () => {
         console.log('Category hierarchy saved successfully!');
         this.loadCategoryHierarchy();
