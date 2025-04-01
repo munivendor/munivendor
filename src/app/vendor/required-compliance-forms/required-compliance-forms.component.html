@@ -25,13 +25,14 @@
     <!-- Conditional fields based on selection -->
     <div *ngIf="isSelectedDocument(DOCUMENT_TYPES.FEDERAL_APPROVAL)" class="file-upload-section">
       <label class="file-upload-label">Letter of Federal Affirmative Action Plan Approval</label>
+      <p class="file-upload-description">Please upload your organization's Letter of Federal Affirmative Action Plan Approval</p>
       <div class="file-upload-wrapper">
         <button mat-stroked-button type="button" (click)="fileInputFederal.click()">
           <mat-icon>attach_file</mat-icon>
           Choose File
         </button>
         <input #fileInputFederal type="file" formControlName="federalApprovalLetter" 
-               (change)="onFileChange($event, 'federalApprovalLetter')" hidden>
+       (change)="onFileChange($event, 'federalApprovalLetter', DOCUMENT_TYPES.FEDERAL_APPROVAL)" hidden>
         <span class="file-name" *ngIf="complianceForm.get('federalApprovalLetter')?.value?.name">
           {{ complianceForm.get('federalApprovalLetter')?.value?.name }}
         </span>
@@ -41,14 +42,14 @@
 
     <div *ngIf="isSelectedDocument(DOCUMENT_TYPES.EMPLOYEE_INFO_CERTIFICATE)" class="file-upload-section">
       <label class="file-upload-label">Certificate of Employee Information Report</label>
-      <p class="file-upload-description">Please upload your organization's Employee Information Report Form AA-302</p>
+      <p class="file-upload-description">Please upload your organization's Certificate of Employee Information Report</p>
       <div class="file-upload-wrapper">
         <button mat-stroked-button type="button" (click)="fileInputCertificate.click()">
           <mat-icon>attach_file</mat-icon>
           Choose File
         </button>
         <input #fileInputCertificate type="file" formControlName="employeeInfoCertificate" 
-               (change)="onFileChange($event, 'employeeInfoCertificate')" hidden>
+        (change)="onFileChange($event, 'employeeInfoCertificate', DOCUMENT_TYPES.EMPLOYEE_INFO_CERTIFICATE)" hidden>
         <span class="file-name" *ngIf="complianceForm.get('employeeInfoCertificate')?.value?.name">
           {{ complianceForm.get('employeeInfoCertificate')?.value?.name }}
         </span>
@@ -58,13 +59,14 @@
 
     <div *ngIf="isSelectedDocument(DOCUMENT_TYPES.AA302_FORM)" class="file-upload-section">
       <label class="file-upload-label">Employee Information Report Form AA-302</label>
+      <p class="file-upload-description">Please upload your organization's Employee Information Report Form AA-302</p>
       <div class="file-upload-wrapper">
         <button mat-stroked-button type="button" (click)="fileInputAA302.click()">
           <mat-icon>attach_file</mat-icon>
           Choose File
         </button>
         <input #fileInputAA302 type="file" formControlName="aa302Form" 
-               (change)="onFileChange($event, 'aa302Form')" hidden>
+       (change)="onFileChange($event, 'aa302Form', DOCUMENT_TYPES.AA302_FORM)" hidden>
         <span class="file-name" *ngIf="complianceForm.get('aa302Form')?.value?.name">
           {{ complianceForm.get('aa302Form')?.value?.name }}
         </span>

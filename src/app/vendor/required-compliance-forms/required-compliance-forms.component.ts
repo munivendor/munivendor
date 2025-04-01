@@ -10,6 +10,7 @@ import { CommonModule } from '@angular/common';
 import { VendorProfileService } from '../service/vendor-profile.service';
 import { ComplianceFormType } from '../model/complianceformtype.model';
 import { MatIconModule } from '@angular/material/icon';
+import { ToastrService } from 'ngx-toastr';
 
 
 
@@ -39,6 +40,7 @@ export class ComplianceFormsComponent implements OnInit {
     EMPLOYEE_INFO_CERTIFICATE: 107,
     AA302_FORM: 109
   };
+  organizationId: number | undefined;
 
   constructor(
     private fb: FormBuilder,
@@ -81,11 +83,40 @@ export class ComplianceFormsComponent implements OnInit {
 
 
 
-  onFileChange(event: Event, controlName: string) {
+  /*onFileChange(event: Event, controlName: string) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       this.complianceForm.get(controlName)?.setValue(input.files[0]);
     }
+  }*/
+
+    onFileChange(event: Event, controlName: string, documentId?: number) {
+      const input = event.target as HTMLInputElement;
+      
+      if (input.files && input.files.length > 0) {
+          const file = input.files[0];
+          // Store the entire file object in the form control
+          //this.complianceForm.get(controlName)?.setValue(file);
+          
+          if (documentId) {
+              const organizationId = this.organizationId || 1;
+              
+              this.vendorProfileService.saveVendorDocument(organizationId, documentId, null, file)
+                  .subscribe({
+                      next: (response) => {
+                          console.log('Document saved successfully', response);
+                      },
+                      error: (err) => {
+                          console.error('Error saving document', err);
+                          input.value = ''; // Reset file input
+                          this.complianceForm.get(controlName)?.setValue(null);
+                      }
+                  });
+          }
+      } else {
+          // Handle case when files are cleared
+          this.complianceForm.get(controlName)?.setValue(null);
+      }
   }
 
   onSubmit() {
