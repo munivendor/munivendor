@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { CategoryNode } from '../../shared/model/category-tree.model';
 
 @Injectable({
@@ -13,10 +13,17 @@ export class CategoryHierarchyService {
     constructor(private http: HttpClient) { }
 
     getCategoryHierarchy(): Observable<CategoryNode[]> {
-        return this.http.get<CategoryNode[]>(`${this.apiUrl}CategoryHierarchy`);
+        return this.http.get<string>(`${this.apiUrl}CategoryHierarchy`).pipe(
+            map(categoryHierarchyString => {
+                const result = JSON.parse(categoryHierarchyString);
+                return result as CategoryNode[];
+            })
+        );
     }
 
-    saveCategoryHierarchy(categoryHierarchy: CategoryNode[]): Observable<any> {
-        return this.http.put(`${this.apiUrl}CategoryHierarchy`, categoryHierarchy);
+    saveCategoryHierarchy(categoryHierarchy: string): Observable<any> {
+        return this.http.put(`${this.apiUrl}CategoryHierarchy`, JSON.stringify(categoryHierarchy), {
+            headers: { 'Content-Type': 'application/json' }
+        });
     }
 }
