@@ -113,7 +113,7 @@ getComplianceFormTypes(): Observable<{complianceFormType: ComplianceFormType[]}>
     documentId: number,
     vendorDocumentId: number | null,
     file: File
-  ): Observable<{ documentId: number }> {
+  ): Observable<{isSuccess: number, vendorDocumentId: number }> {
     const formData = new FormData();
     formData.append('file', file, file.name); // Include filename for backend
 
@@ -122,7 +122,7 @@ getComplianceFormTypes(): Observable<{complianceFormType: ComplianceFormType[]}>
     if (vendorDocumentId !== null && vendorDocumentId !== undefined) {
       url += `/${vendorDocumentId}`;
     }
-    return this.http.post<{ documentId: number }>(url, formData);
+    return this.http.post<{ isSuccess: number, vendorDocumentId: number }>(url, formData);
   }
 
 // Get Compliance Data by ID

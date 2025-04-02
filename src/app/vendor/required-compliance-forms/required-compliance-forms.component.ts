@@ -42,6 +42,8 @@ export class ComplianceFormsComponent implements OnInit {
   };
   organizationId: number | undefined;
 
+  vendorDocumentMap = new Map<number, number>();
+
   constructor(
     private fb: FormBuilder,
     private vendorProfileService: VendorProfileService
@@ -59,6 +61,7 @@ export class ComplianceFormsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadComplianceFormTypes();
+    this.loadExistingVendorDocuments();
   }
 
   loadComplianceFormTypes(): void {
@@ -76,47 +79,59 @@ export class ComplianceFormsComponent implements OnInit {
     });
   }
 
+  loadExistingVendorDocuments(): void {
+    const organizationId = this.organizationId || 1;
+    this.vendorProfileService.getVendorDocuments(organizationId).subscribe({
+      next: (documents) => {
+        documents.forEach(doc => {
+          if (doc.vendorDocumentId) {
+            this.vendorDocumentMap.set(doc.documentTypeId, doc.vendorDocumentId);
+          }
+        });
+      },
+      error: (err) => {
+        console.error('Error loading vendor documents:', err);
+      }
+    });
+  }
+
   isSelectedDocument(documentId: number): boolean {
     const selectedValue = this.complianceForm.get('eeoLanguage')?.value;
     return selectedValue === documentId;
   }
 
 
-
-  /*onFileChange(event: Event, controlName: string) {
+  onFileChange(event: Event, controlName: string, documentId?: number) {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      this.complianceForm.get(controlName)?.setValue(input.files[0]);
-    }
-  }*/
-
-    onFileChange(event: Event, controlName: string, documentId?: number) {
-      const input = event.target as HTMLInputElement;
+    
+    if (input.files?.length && documentId) {
+      const file = input.files[0];
+      const organizationId = this.organizationId || 1;
       
-      if (input.files && input.files.length > 0) {
-          const file = input.files[0];
-          // Store the entire file object in the form control
-          //this.complianceForm.get(controlName)?.setValue(file);
-          
-          if (documentId) {
-              const organizationId = this.organizationId || 1;
-              
-              this.vendorProfileService.saveVendorDocument(organizationId, documentId, null, file)
-                  .subscribe({
-                      next: (response) => {
-                          console.log('Document saved successfully', response);
-                      },
-                      error: (err) => {
-                          console.error('Error saving document', err);
-                          input.value = ''; // Reset file input
-                          this.complianceForm.get(controlName)?.setValue(null);
-                      }
-                  });
+      // Get existing vendorDocumentId for this document type
+      const vendorDocumentId = this.vendorDocumentMap.get(documentId) || null;
+
+      this.vendorProfileService.saveVendorDocument(
+        organizationId,
+        documentId,
+        vendorDocumentId, 
+        file
+      ).subscribe({
+        next: (response) => {
+          if (response.vendorDocumentId) {
+            // Update the map with the new vendorDocumentId
+            this.vendorDocumentMap.set(documentId, response.vendorDocumentId);
           }
-      } else {
-          // Handle case when files are cleared
+        },
+        error: (err) => {
+          console.error('Upload failed', err);
+          input.value = '';
           this.complianceForm.get(controlName)?.setValue(null);
-      }
+        }
+      });
+    } else {
+      this.complianceForm.get(controlName)?.setValue(null);
+    }
   }
 
   onSubmit() {
