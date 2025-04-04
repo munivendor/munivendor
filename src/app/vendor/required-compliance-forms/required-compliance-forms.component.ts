@@ -11,8 +11,7 @@ import { VendorProfileService } from '../service/vendor-profile.service';
 import { ComplianceFormType } from '../model/complianceformtype.model';
 import { MatIconModule } from '@angular/material/icon';
 import { ToastrService } from 'ngx-toastr';
-
-
+import { VendorDocument } from '../model/vendordocument.model';
 
 @Component({
   selector: 'app-compliance-forms',
@@ -34,11 +33,14 @@ export class ComplianceFormsComponent implements OnInit {
   complianceForm: FormGroup;
   eeoOptions: ComplianceFormType[] = [];
   isLoading = true;
+  uploadedFileNames: { [key: string]: string } = {};
 
   readonly DOCUMENT_TYPES = {
     FEDERAL_APPROVAL: 108,
     EMPLOYEE_INFO_CERTIFICATE: 107,
-    AA302_FORM: 109
+    AA302_FORM: 109,
+    BUSINESS_RGISTRATION_CERTIFICATE: 111,
+    W9: 112
   };
   organizationId: number | undefined;
 
@@ -46,7 +48,8 @@ export class ComplianceFormsComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private vendorProfileService: VendorProfileService
+    private vendorProfileService: VendorProfileService,
+    private toastr: ToastrService
   ) {
     this.complianceForm = this.fb.group({
       eeoLanguage: [null, Validators.required],
@@ -67,7 +70,7 @@ export class ComplianceFormsComponent implements OnInit {
   loadComplianceFormTypes(): void {
     this.vendorProfileService.getComplianceFormTypes().subscribe({
       next: (response) => {
-        if ( response) {
+        if (response) {
           this.eeoOptions = response.complianceFormType;
         }
         this.isLoading = false;
@@ -81,18 +84,51 @@ export class ComplianceFormsComponent implements OnInit {
 
   loadExistingVendorDocuments(): void {
     const organizationId = this.organizationId || 1;
+    
     this.vendorProfileService.getVendorDocuments(organizationId).subscribe({
-      next: (documents) => {
-        documents.forEach(doc => {
-          if (doc.vendorDocumentId) {
-            this.vendorDocumentMap.set(doc.documentTypeId, doc.vendorDocumentId);
-          }
-        });
+      next: (documents: VendorDocument[] | null) => {
+        if (documents && documents.length > 0) {
+          documents.forEach(doc => {
+            if (doc.vendorDocumentId && doc.documentCategoryId==2) {
+              this.vendorDocumentMap.set(doc.documentId, doc.vendorDocumentId);
+              
+              // Check if this is an EEO document
+              if (this.isEEODocument(doc.documentId)) {
+                this.complianceForm.get('eeoLanguage')?.setValue(doc.documentId);
+              }
+              
+              if (doc.documentName) {
+                const controlName = this.getControlNameForDocumentId(doc.documentId);
+                if (controlName) {
+                  this.uploadedFileNames[controlName] = doc.documentName;
+                }
+              }
+            }
+          });
+        } else {
+          console.warn('No documents found');
+        }
       },
       error: (err) => {
         console.error('Error loading vendor documents:', err);
       }
     });
+  }
+  private isEEODocument(documentId: number): boolean {
+    return Object.values(this.DOCUMENT_TYPES).includes(documentId);
+  }
+
+  private getControlNameForDocumentId(documentId: number): string | null {
+    switch (documentId) {
+      case this.DOCUMENT_TYPES.FEDERAL_APPROVAL:
+        return 'federalApprovalLetter';
+      case this.DOCUMENT_TYPES.EMPLOYEE_INFO_CERTIFICATE:
+        return 'employeeInfoCertificate';
+      case this.DOCUMENT_TYPES.AA302_FORM:
+        return 'aa302Form';
+      default:
+        return null;
+    }
   }
 
   isSelectedDocument(documentId: number): boolean {
@@ -100,38 +136,45 @@ export class ComplianceFormsComponent implements OnInit {
     return selectedValue === documentId;
   }
 
-
   onFileChange(event: Event, controlName: string, documentId?: number) {
     const input = event.target as HTMLInputElement;
     
-    if (input.files?.length && documentId) {
+    if (input.files?.length) {
       const file = input.files[0];
-      const organizationId = this.organizationId || 1;
+      this.uploadedFileNames[controlName] = file.name;
       
-      // Get existing vendorDocumentId for this document type
-      const vendorDocumentId = this.vendorDocumentMap.get(documentId) || null;
+      if (documentId) {
+        const organizationId = this.organizationId || 1;
+        // Get existing vendorDocumentId for this document type
+        const vendorDocumentId = this.vendorDocumentMap.get(documentId) || null;
 
-      this.vendorProfileService.saveVendorDocument(
-        organizationId,
-        documentId,
-        vendorDocumentId, 
-        file
-      ).subscribe({
-        next: (response) => {
-          if (response.vendorDocumentId) {
-            // Update the map with the new vendorDocumentId
-            this.vendorDocumentMap.set(documentId, response.vendorDocumentId);
+        this.vendorProfileService.saveVendorDocument(
+          organizationId,
+          documentId,
+          vendorDocumentId, 
+          file
+        ).subscribe({
+          next: (response) => {
+            if (response.vendorDocumentId) {
+              this.vendorDocumentMap.set(documentId, response.vendorDocumentId);
+              this.toastr.success('File uploaded successfully');
+            }
+          },
+          error: (err) => {
+            console.error('Upload failed', err);
+            this.toastr.error('File upload failed');
+            input.value = '';
+            delete this.uploadedFileNames[controlName];
           }
-        },
-        error: (err) => {
-          console.error('Upload failed', err);
-          input.value = '';
-          this.complianceForm.get(controlName)?.setValue(null);
-        }
-      });
+        });
+      }
     } else {
-      this.complianceForm.get(controlName)?.setValue(null);
+      delete this.uploadedFileNames[controlName];
     }
+  }
+
+  getFileName(controlName: string): string {
+    return this.uploadedFileNames[controlName] || 'No file chosen';
   }
 
   onSubmit() {

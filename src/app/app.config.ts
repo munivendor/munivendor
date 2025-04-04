@@ -6,6 +6,8 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { SocialAuthService, SocialAuthServiceConfig } from '@abacritt/angularx-social-login';
 import { GoogleLoginProvider } from '@abacritt/angularx-social-login';
 import { routes } from './app.routes';
+import { provideAnimations } from '@angular/platform-browser/animations';
+import { provideToastr } from 'ngx-toastr';
 
 const CLIENT_ID = "954795010792-oafduvq9mhtlatg68rhl4hadtcuajos6.apps.googleusercontent.com";
 
@@ -15,6 +17,8 @@ export const appConfig: ApplicationConfig = {
     provideClientHydration(),
     provideHttpClient(),
     provideAnimationsAsync('noop'),
+    provideAnimations(), 
+    provideToastr(),
   
     SocialAuthService,
     {

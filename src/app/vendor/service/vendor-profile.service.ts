@@ -5,6 +5,7 @@ import { Organization } from '../model/organization.model';
 //import { VendorLegalInformation } from '../model/vendor-legal-information.model';
 import { environment } from '../../../environments/environment';
 import { ComplianceFormType } from '../model/complianceformtype.model';
+import { VendorDocument } from '../model/vendordocument.model';
 
 @Injectable({
   providedIn: 'root'
@@ -123,6 +124,23 @@ getComplianceFormTypes(): Observable<{complianceFormType: ComplianceFormType[]}>
       url += `/${vendorDocumentId}`;
     }
     return this.http.post<{ isSuccess: number, vendorDocumentId: number }>(url, formData);
+  }
+
+  getVendorDocuments(
+    organizationId: number,
+    documentId?: number,
+    vendorDocumentId?: number
+  ): Observable< VendorDocument [] | null > {
+    let url = `${this.apiUrl}VendorDocuments/${organizationId}`;
+  
+    // Build URL based on provided parameters
+    if (documentId !== undefined && documentId !== null) {
+      url += `/${documentId}`;
+    } else if (vendorDocumentId !== undefined && vendorDocumentId !== null) {
+      url += `/null/${vendorDocumentId}`; // Use 'null' as placeholder for documentId
+    }
+  
+    return this.http.get<  VendorDocument[] | null >(url);
   }
 
 // Get Compliance Data by ID

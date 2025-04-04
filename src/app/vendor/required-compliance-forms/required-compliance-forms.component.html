@@ -32,9 +32,9 @@
           Choose File
         </button>
         <input #fileInputFederal type="file" formControlName="federalApprovalLetter" 
-       (change)="onFileChange($event, 'federalApprovalLetter', DOCUMENT_TYPES.FEDERAL_APPROVAL)" hidden>
-        <span class="file-name" *ngIf="complianceForm.get('federalApprovalLetter')?.value?.name">
-          {{ complianceForm.get('federalApprovalLetter')?.value?.name }}
+          (change)="onFileChange($event, 'federalApprovalLetter', DOCUMENT_TYPES.FEDERAL_APPROVAL)" hidden>
+        <span class="file-name">
+          {{ getFileName('federalApprovalLetter') }}
         </span>
       </div>
       <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
@@ -49,9 +49,9 @@
           Choose File
         </button>
         <input #fileInputCertificate type="file" formControlName="employeeInfoCertificate" 
-        (change)="onFileChange($event, 'employeeInfoCertificate', DOCUMENT_TYPES.EMPLOYEE_INFO_CERTIFICATE)" hidden>
-        <span class="file-name" *ngIf="complianceForm.get('employeeInfoCertificate')?.value?.name">
-          {{ complianceForm.get('employeeInfoCertificate')?.value?.name }}
+          (change)="onFileChange($event, 'employeeInfoCertificate', DOCUMENT_TYPES.EMPLOYEE_INFO_CERTIFICATE)" hidden>
+        <span class="file-name">
+          {{ getFileName('employeeInfoCertificate') }}
         </span>
       </div>
       <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
@@ -66,9 +66,9 @@
           Choose File
         </button>
         <input #fileInputAA302 type="file" formControlName="aa302Form" 
-       (change)="onFileChange($event, 'aa302Form', DOCUMENT_TYPES.AA302_FORM)" hidden>
-        <span class="file-name" *ngIf="complianceForm.get('aa302Form')?.value?.name">
-          {{ complianceForm.get('aa302Form')?.value?.name }}
+          (change)="onFileChange($event, 'aa302Form', DOCUMENT_TYPES.AA302_FORM)" hidden>
+        <span class="file-name">
+          {{ getFileName('aa302Form') }}
         </span>
       </div>
       <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
@@ -86,14 +86,15 @@
       <div class="file-upload-section">
         <label class="file-upload-label">Business Registration Certificate <span class="required">*</span></label>
         <div class="file-upload-wrapper">
-          <button mat-stroked-button type="button" (click)="fileInputBusiness.click()" [class.required-field]="complianceForm.get('businessRegistration')?.invalid && complianceForm.get('businessRegistration')?.touched">
+          <button mat-stroked-button type="button" (click)="fileInputBusiness.click()" 
+                  [class.required-field]="complianceForm.get('businessRegistration')?.invalid && complianceForm.get('businessRegistration')?.touched">
             <mat-icon>attach_file</mat-icon>
             Choose File
           </button>
           <input #fileInputBusiness type="file" formControlName="businessRegistration" required 
-                 (change)="onFileChange($event, 'businessRegistration')" hidden>
-          <span class="file-name" *ngIf="complianceForm.get('businessRegistration')?.value?.name">
-            {{ complianceForm.get('businessRegistration')?.value?.name }}
+                (change)="onFileChange($event, 'businessRegistration', DOCUMENT_TYPES.BUSINESS_RGISTRATION_CERTIFICATE)" hidden>
+          <span class="file-name">
+            {{ getFileName('businessRegistration') }}
           </span>
         </div>
         <mat-hint>
@@ -108,14 +109,15 @@
       <div class="file-upload-section">
         <label class="file-upload-label">W9 <span class="required">*</span></label>
         <div class="file-upload-wrapper">
-          <button mat-stroked-button type="button" (click)="fileInputW9.click()" [class.required-field]="complianceForm.get('w9Form')?.invalid && complianceForm.get('w9Form')?.touched">
+          <button mat-stroked-button type="button" (click)="fileInputW9.click()" 
+                  [class.required-field]="complianceForm.get('w9Form')?.invalid && complianceForm.get('w9Form')?.touched">
             <mat-icon>attach_file</mat-icon>
             Choose File
           </button>
           <input #fileInputW9 type="file" formControlName="w9Form" required 
-                 (change)="onFileChange($event, 'w9Form')" hidden>
-          <span class="file-name" *ngIf="complianceForm.get('w9Form')?.value?.name">
-            {{ complianceForm.get('w9Form')?.value?.name }}
+                (change)="onFileChange($event, 'w9Form',DOCUMENT_TYPES.W9)" hidden>
+          <span class="file-name">
+            {{ getFileName('w9Form') }}
           </span>
         </div>
         <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
@@ -132,9 +134,9 @@
             Choose File
           </button>
           <input #fileInputInsurance type="file" formControlName="insurancePolicies" multiple 
-                 (change)="onFileChange($event, 'insurancePolicies')" hidden>
-          <span class="file-name" *ngIf="complianceForm.get('insurancePolicies')?.value?.name">
-            {{ complianceForm.get('insurancePolicies')?.value?.name }}
+                (change)="onFileChange($event, 'insurancePolicies')" hidden>
+          <span class="file-name">
+            {{ getFileName('insurancePolicies') }}
           </span>
         </div>
         <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
