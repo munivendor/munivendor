@@ -89,7 +89,7 @@ export class ComplianceFormsComponent implements OnInit {
       next: (documents: VendorDocument[] | null) => {
         if (documents && documents.length > 0) {
           documents.forEach(doc => {
-            if (doc.vendorDocumentId && doc.documentCategoryId==2) {
+            if (doc.vendorDocumentId && doc.documentCategoryId) {
               this.vendorDocumentMap.set(doc.documentId, doc.vendorDocumentId);
               
               // Check if this is an EEO document
@@ -126,6 +126,10 @@ export class ComplianceFormsComponent implements OnInit {
         return 'employeeInfoCertificate';
       case this.DOCUMENT_TYPES.AA302_FORM:
         return 'aa302Form';
+      case this.DOCUMENT_TYPES.FEDERAL_APPROVAL:
+        return 'businessRegistration'
+      case this.DOCUMENT_TYPES.W9:
+        return 'w9form'
       default:
         return null;
     }
