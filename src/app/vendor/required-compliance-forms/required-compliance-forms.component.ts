@@ -1,3 +1,13 @@
+
+interface InsuranceFile {
+  name: string;
+  isUploading?: boolean;
+  isError?: boolean;
+  vendorDocumentId?: number;
+  documentName?: string;
+  // Add other properties you need from the server response
+}
+
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatSelectChange, MatSelectModule } from '@angular/material/select';
@@ -34,6 +44,7 @@ export class ComplianceFormsComponent implements OnInit {
   eeoOptions: ComplianceFormType[] = [];
   isLoading = true;
   uploadedFileNames: { [key: string]: string } = {};
+  insuranceFiles: InsuranceFile[] = []; 
 
   readonly DOCUMENT_TYPES = {
     FEDERAL_APPROVAL: 108,
@@ -45,6 +56,7 @@ export class ComplianceFormsComponent implements OnInit {
   organizationId: number | undefined;
 
   vendorDocumentMap = new Map<number, number>();
+  isDragging: boolean =false;
 
   constructor(
     private fb: FormBuilder,
@@ -84,19 +96,19 @@ export class ComplianceFormsComponent implements OnInit {
 
   loadExistingVendorDocuments(): void {
     const organizationId = this.organizationId || 1;
-    
+
     this.vendorProfileService.getVendorDocuments(organizationId).subscribe({
       next: (documents: VendorDocument[] | null) => {
         if (documents && documents.length > 0) {
           documents.forEach(doc => {
             if (doc.vendorDocumentId && doc.documentCategoryId) {
               this.vendorDocumentMap.set(doc.documentId, doc.vendorDocumentId);
-              
+
               // Check if this is an EEO document
               if (this.isEEODocument(doc.documentId)) {
                 this.complianceForm.get('eeoLanguage')?.setValue(doc.documentId);
               }
-              
+
               if (doc.documentName) {
                 const controlName = this.getControlNameForDocumentId(doc.documentId);
                 if (controlName) {
@@ -126,10 +138,10 @@ export class ComplianceFormsComponent implements OnInit {
         return 'employeeInfoCertificate';
       case this.DOCUMENT_TYPES.AA302_FORM:
         return 'aa302Form';
-      case this.DOCUMENT_TYPES.FEDERAL_APPROVAL:
-        return 'businessRegistration'
+      case this.DOCUMENT_TYPES.BUSINESS_RGISTRATION_CERTIFICATE:
+        return 'businessRegistration';
       case this.DOCUMENT_TYPES.W9:
-        return 'w9form'
+        return 'w9Form'; // Fixed typo (was 'w9form')
       default:
         return null;
     }
@@ -142,11 +154,11 @@ export class ComplianceFormsComponent implements OnInit {
 
   onFileChange(event: Event, controlName: string, documentId?: number) {
     const input = event.target as HTMLInputElement;
-    
+
     if (input.files?.length) {
       const file = input.files[0];
       this.uploadedFileNames[controlName] = file.name;
-      
+
       if (documentId) {
         const organizationId = this.organizationId || 1;
         // Get existing vendorDocumentId for this document type
@@ -155,7 +167,7 @@ export class ComplianceFormsComponent implements OnInit {
         this.vendorProfileService.saveVendorDocument(
           organizationId,
           documentId,
-          vendorDocumentId, 
+          vendorDocumentId,
           file
         ).subscribe({
           next: (response) => {
@@ -180,6 +192,102 @@ export class ComplianceFormsComponent implements OnInit {
   getFileName(controlName: string): string {
     return this.uploadedFileNames[controlName] || 'No file chosen';
   }
+
+  private updateFormControl(): void {
+    this.complianceForm.get('insurancePolicies')?.setValue(
+      this.insuranceFiles.length > 0 ? this.insuranceFiles : null
+    );
+  }
+
+  // In your component
+onInsuranceFilesChange(event: Event): void {
+  const input = event.target as HTMLInputElement;
+  if (input.files?.length) {
+    const file = input.files[input.files.length - 1]; // Get most recent file
+    this.uploadFile(file);
+    input.value = '';
+  }
+}
+
+private uploadFile(file: File): void {
+  const maxSize = 50 * 1024 * 1024;
+  if (file.size > maxSize) {
+    this.toastr.warning(`${file.name} exceeds 50MB limit`);
+    return;
+  }
+
+  // Create and add the new file entry
+  const newFileEntry = {
+    name: file.name,
+    isUploading: true,
+    isError: false
+  };
+  this.insuranceFiles = [...this.insuranceFiles, newFileEntry];
+
+  this.vendorProfileService.uploadVendorDocument(
+    this.organizationId || 1,
+    this.DOCUMENT_TYPES.INSURANCE_POLICY,
+    file
+  ).subscribe({
+    next: (response) => {
+      this.insuranceFiles = this.insuranceFiles.map(f => 
+        f.name === file.name ? { ...response, isUploading: false } : f
+      );
+      this.updateFormControl();
+    },
+    error: (err) => {
+      this.insuranceFiles = this.insuranceFiles.map(f => 
+        f.name === file.name ? { ...f, isUploading: false, isError: true } : f
+      );
+      this.toastr.error(`Failed to upload ${file.name}`);
+      this.updateFormControl();
+    }
+  });
+}
+
+removeInsuranceFile(index: number): void {
+  const fileToRemove = this.insuranceFiles[index];
+  if (fileToRemove.isUploading) return;
+
+  this.vendorProfileService.deleteVendorDocument(
+    this.organizationId || 1,
+    fileToRemove.vendorDocumentId
+  ).subscribe({
+    next: () => {
+      this.insuranceFiles.splice(index, 1);
+      this.updateFormControl();
+    },
+    error: (err) => {
+      this.toastr.error(`Failed to remove ${fileToRemove.documentName || fileToRemove.name}`);
+    }
+  });
+}
+  
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+    
+    if (event.dataTransfer?.files) {
+      // Append dropped files to existing ones
+      this.insuranceFiles = [...this.insuranceFiles, ...Array.from(event.dataTransfer.files)];
+      this.complianceForm.get('insurancePolicies')?.setValue(this.insuranceFiles);
+    }
+  }
+  
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = true;
+  }
+
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+  }
+
 
   onSubmit() {
     if (this.complianceForm.valid) {

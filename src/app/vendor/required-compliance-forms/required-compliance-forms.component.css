@@ -76,3 +76,53 @@ button[type="submit"] {
   height: 12px; /* Adds a space between the hint and mat-select */
 }
 
+/* Drag and drop styles */
+.drag-drop-container {
+  border: 2px dashed #ccc;
+  border-radius: 4px;
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 16px;
+  transition: all 0.3s;
+}
+
+.drag-drop-container.drag-over {
+  border-color: #3f51b5;
+  background-color: rgba(63, 81, 181, 0.05);
+}
+
+.drag-drop-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.drag-drop-content mat-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  color: #3f51b5;
+}
+
+/* File list styles */
+.file-list {
+  margin-top: 16px;
+  border-top: 1px solid #eee;
+  padding-top: 16px;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: #f5f5f5;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.file-item mat-icon {
+  color: #757575;
+}
+

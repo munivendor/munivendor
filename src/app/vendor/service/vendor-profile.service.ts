@@ -143,6 +143,26 @@ getComplianceFormTypes(): Observable<{complianceFormType: ComplianceFormType[]}>
     return this.http.get<  VendorDocument[] | null >(url);
   }
 
+  // In your VendorProfileService
+uploadVendorDocument(organizationId: number, documentType: number, file: File): Observable<VendorDocument> {
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  return this.http.post<VendorDocument>(
+    `${this.apiUrl}/vendors/${organizationId}/documents`,
+    formData,
+    {
+      params: { documentType: documentType.toString() }
+    }
+  );
+}
+
+deleteVendorDocument(organizationId: number, vendorDocumentId: number): Observable<void> {
+  return this.http.delete<void>(
+    `${this.apiUrl}/vendors/${organizationId}/documents/${vendorDocumentId}`
+  );
+}
+
 // Get Compliance Data by ID
 getComplianceData(id: number): Observable<{ isSuccess: boolean, complianceData?: any }> {
   const url = `${this.apiUrl}/ComplianceData/${id}`;
