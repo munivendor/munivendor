@@ -1,11 +1,11 @@
 
 interface InsuranceFile {
   name: string;
-  isUploading?: boolean;
-  isError?: boolean;
+  isUploading: boolean;
+  isError: boolean;
   vendorDocumentId?: number;
   documentName?: string;
-  // Add other properties you need from the server response
+  file?: File;
 }
 
 import { Component, OnInit } from '@angular/core';
@@ -51,9 +51,10 @@ export class ComplianceFormsComponent implements OnInit {
     EMPLOYEE_INFO_CERTIFICATE: 107,
     AA302_FORM: 109,
     BUSINESS_RGISTRATION_CERTIFICATE: 111,
-    W9: 112
+    W9: 112,
+    INSURANCE_POLICY: 113
   };
-  organizationId: number | undefined;
+  organizationId: number =1;
 
   vendorDocumentMap = new Map<number, number>();
   isDragging: boolean =false;
@@ -141,7 +142,7 @@ export class ComplianceFormsComponent implements OnInit {
       case this.DOCUMENT_TYPES.BUSINESS_RGISTRATION_CERTIFICATE:
         return 'businessRegistration';
       case this.DOCUMENT_TYPES.W9:
-        return 'w9Form'; // Fixed typo (was 'w9form')
+        return 'w9Form'; 
       default:
         return null;
     }
@@ -161,7 +162,7 @@ export class ComplianceFormsComponent implements OnInit {
 
       if (documentId) {
         const organizationId = this.organizationId || 1;
-        // Get existing vendorDocumentId for this document type
+        
         const vendorDocumentId = this.vendorDocumentMap.get(documentId) || null;
 
         this.vendorProfileService.saveVendorDocument(
@@ -199,11 +200,12 @@ export class ComplianceFormsComponent implements OnInit {
     );
   }
 
-  // In your component
+ 
 onInsuranceFilesChange(event: Event): void {
   const input = event.target as HTMLInputElement;
+  
   if (input.files?.length) {
-    const file = input.files[input.files.length - 1]; // Get most recent file
+    const file = input.files[input.files.length - 1]; 
     this.uploadFile(file);
     input.value = '';
   }
@@ -216,28 +218,55 @@ private uploadFile(file: File): void {
     return;
   }
 
-  // Create and add the new file entry
-  const newFileEntry = {
+  if (!this.organizationId) {
+    this.toastr.error('Organization ID is required');
+    return;
+  }
+
+  
+  const newFileEntry: InsuranceFile = {
     name: file.name,
     isUploading: true,
-    isError: false
+    isError: false,
+    file: file
   };
-  this.insuranceFiles = [...this.insuranceFiles, newFileEntry];
 
-  this.vendorProfileService.uploadVendorDocument(
-    this.organizationId || 1,
+  this.insuranceFiles = [...this.insuranceFiles, newFileEntry];
+  // Get existing vendorDocumentId if this is an update
+ // const existingFile = this.insuranceFiles.find(f => f.name === file.name);
+  //const vendorDocumentId = existingFile?.vendorDocumentId || null;
+
+  this.vendorProfileService.saveVendorDocument(
+    this.organizationId,
     this.DOCUMENT_TYPES.INSURANCE_POLICY,
+    null,
     file
   ).subscribe({
     next: (response) => {
-      this.insuranceFiles = this.insuranceFiles.map(f => 
-        f.name === file.name ? { ...response, isUploading: false } : f
-      );
-      this.updateFormControl();
+      if (response.isSuccess) {
+        this.insuranceFiles = this.insuranceFiles.map(f => 
+          f.name === file.name ? { 
+            name: file.name,
+            isUploading: false,
+            isError: false,
+            vendorDocumentId: response.vendorDocumentId,
+            documentName: file.name,
+            file: f.file
+          } : f
+        );
+        this.updateFormControl();
+        this.toastr.success(`${file.name} uploaded successfully`);
+      } else {
+        throw new Error('Upload failed');
+      }
     },
     error: (err) => {
       this.insuranceFiles = this.insuranceFiles.map(f => 
-        f.name === file.name ? { ...f, isUploading: false, isError: true } : f
+        f.name === file.name ? { 
+          ...f, 
+          isUploading: false, 
+          isError: true 
+        } : f
       );
       this.toastr.error(`Failed to upload ${file.name}`);
       this.updateFormControl();
@@ -247,33 +276,59 @@ private uploadFile(file: File): void {
 
 removeInsuranceFile(index: number): void {
   const fileToRemove = this.insuranceFiles[index];
-  if (fileToRemove.isUploading) return;
+  if (!fileToRemove || fileToRemove.isUploading || !this.organizationId) {
+    return;
+  }
 
-  this.vendorProfileService.deleteVendorDocument(
-    this.organizationId || 1,
-    fileToRemove.vendorDocumentId
+  // If no vendorDocumentId, just remove from local state
+  if (!fileToRemove.vendorDocumentId) {
+    this.insuranceFiles = this.insuranceFiles.filter((_, i) => i !== index);
+    this.updateFormControl();
+    return;
+  }
+
+  // For deletion, we can use saveVendorDocument with null file
+  // or implement a separate delete method in the service
+  this.vendorProfileService.saveVendorDocument(
+    this.organizationId,
+    this.DOCUMENT_TYPES.INSURANCE_POLICY,
+    fileToRemove.vendorDocumentId,
+    null as any // This might need adjustment based on your API
   ).subscribe({
-    next: () => {
-      this.insuranceFiles.splice(index, 1);
-      this.updateFormControl();
+    next: (response) => {
+      if (response.isSuccess) {
+        this.insuranceFiles = this.insuranceFiles.filter((_, i) => i !== index);
+        this.updateFormControl();
+        this.toastr.success(`${fileToRemove.name} removed`);
+      } else {
+        throw new Error('Deletion failed');
+      }
     },
     error: (err) => {
-      this.toastr.error(`Failed to remove ${fileToRemove.documentName || fileToRemove.name}`);
+      this.toastr.error(`Failed to remove ${fileToRemove.name}`);
     }
   });
 }
   
-  onDrop(event: DragEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.isDragging = false;
+onDrop(event: DragEvent): void {
+  event.preventDefault();
+  event.stopPropagation();
+  this.isDragging = false;
+  
+  if (event.dataTransfer?.files) {
+    // Convert dropped files to InsuranceFile objects
+    const newInsuranceFiles = Array.from(event.dataTransfer.files).map(file => ({
+      name: file.name,
+      isUploading: false,
+      isError: false,
+      file: file
+    }));
     
-    if (event.dataTransfer?.files) {
-      // Append dropped files to existing ones
-      this.insuranceFiles = [...this.insuranceFiles, ...Array.from(event.dataTransfer.files)];
-      this.complianceForm.get('insurancePolicies')?.setValue(this.insuranceFiles);
-    }
+    // Append to existing files
+    this.insuranceFiles = [...this.insuranceFiles, ...newInsuranceFiles];
+    this.updateFormControl();
   }
+}
   
 
   onDragOver(event: DragEvent): void {

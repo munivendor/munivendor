@@ -116,7 +116,7 @@ getComplianceFormTypes(): Observable<{complianceFormType: ComplianceFormType[]}>
     file: File
   ): Observable<{isSuccess: number, vendorDocumentId: number }> {
     const formData = new FormData();
-    formData.append('file', file, file.name); // Include filename for backend
+    formData.append('file', file, file.name); 
 
     let url = `${this.apiUrl}VendorDocuments/${organizationId}/${documentId}`;
 
@@ -143,7 +143,7 @@ getComplianceFormTypes(): Observable<{complianceFormType: ComplianceFormType[]}>
     return this.http.get<  VendorDocument[] | null >(url);
   }
 
-  // In your VendorProfileService
+
 uploadVendorDocument(organizationId: number, documentType: number, file: File): Observable<VendorDocument> {
   const formData = new FormData();
   formData.append('file', file);
