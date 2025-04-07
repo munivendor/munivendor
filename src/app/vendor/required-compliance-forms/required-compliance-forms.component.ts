@@ -44,7 +44,8 @@ export class ComplianceFormsComponent implements OnInit {
   eeoOptions: ComplianceFormType[] = [];
   isLoading = true;
   uploadedFileNames: { [key: string]: string } = {};
-  insuranceFiles: InsuranceFile[] = []; 
+  //insuranceFiles: InsuranceFile[] = []; 
+  insuranceFiles: VendorDocument []= [];
 
   readonly DOCUMENT_TYPES = {
     FEDERAL_APPROVAL: 108,
@@ -105,19 +106,29 @@ export class ComplianceFormsComponent implements OnInit {
             if (doc.vendorDocumentId && doc.documentCategoryId) {
               this.vendorDocumentMap.set(doc.documentId, doc.vendorDocumentId);
 
-              // Check if this is an EEO document
               if (this.isEEODocument(doc.documentId)) {
                 this.complianceForm.get('eeoLanguage')?.setValue(doc.documentId);
               }
 
-              if (doc.documentName) {
+              if (doc.fileName) {
                 const controlName = this.getControlNameForDocumentId(doc.documentId);
                 if (controlName) {
-                  this.uploadedFileNames[controlName] = doc.documentName;
+                  this.uploadedFileNames[controlName] = doc.fileName!;
                 }
+                // Add insurance policy files to insuranceFiles array
+              if (doc.documentCategoryId === this.DOCUMENT_TYPES.INSURANCE_POLICY) {
+                this.insuranceFiles.push({
+                  fileName: doc.fileName,
+                  documentId: doc.documentId,
+                  vendorDocumentId: doc.vendorDocumentId,
+                  documentCategoryId: doc.documentCategoryId
+                });
+              }
+              
               }
             }
           });
+          this.updateFormControl();
         } else {
           console.warn('No documents found');
         }
@@ -224,18 +235,20 @@ private uploadFile(file: File): void {
   }
 
   
-  const newFileEntry: InsuranceFile = {
+  /*const newFileEntry: InsuranceFile = {
     name: file.name,
     isUploading: true,
     isError: false,
     file: file
+  };*/
+
+  const newFileEntry: VendorDocument = {
+    fileName: file.name,
+    documentId: this.DOCUMENT_TYPES.INSURANCE_POLICY,
   };
 
   this.insuranceFiles = [...this.insuranceFiles, newFileEntry];
-  // Get existing vendorDocumentId if this is an update
- // const existingFile = this.insuranceFiles.find(f => f.name === file.name);
-  //const vendorDocumentId = existingFile?.vendorDocumentId || null;
-
+  
   this.vendorProfileService.saveVendorDocument(
     this.organizationId,
     this.DOCUMENT_TYPES.INSURANCE_POLICY,
@@ -243,42 +256,38 @@ private uploadFile(file: File): void {
     file
   ).subscribe({
     next: (response) => {
-      if (response.isSuccess) {
-        this.insuranceFiles = this.insuranceFiles.map(f => 
-          f.name === file.name ? { 
-            name: file.name,
-            isUploading: false,
-            isError: false,
-            vendorDocumentId: response.vendorDocumentId,
-            documentName: file.name,
-            file: f.file
-          } : f
-        );
-        this.updateFormControl();
-        this.toastr.success(`${file.name} uploaded successfully`);
-      } else {
-        throw new Error('Upload failed');
-      }
+     
+      this.insuranceFiles[this.insuranceFiles.length - 1].vendorDocumentId = response.vendorDocumentId;
+      this.updateFormControl();
+      this.toastr.success(`${file.name} uploaded successfully`);
     },
     error: (err) => {
-      this.insuranceFiles = this.insuranceFiles.map(f => 
-        f.name === file.name ? { 
-          ...f, 
-          isUploading: false, 
-          isError: true 
-        } : f
-      );
       this.toastr.error(`Failed to upload ${file.name}`);
-      this.updateFormControl();
+      // Remove the failed file from array
+      this.insuranceFiles.pop();
     }
   });
 }
 
 removeInsuranceFile(index: number): void {
   const fileToRemove = this.insuranceFiles[index];
-  if (!fileToRemove || fileToRemove.isUploading || !this.organizationId) {
+  /*if (!fileToRemove || fileToRemove.isUploading || !this.organizationId) {
     return;
-  }
+  }*/
+    this.vendorProfileService.deleteVendorDocument(this.organizationId, fileToRemove.vendorDocumentId!).subscribe({
+      next: () => {
+        console.log('Document deleted successfully');
+        // Add any success handling logic here
+      },
+      error: (err) => {
+        console.error('Failed to delete document:', err);
+        // Add error handling logic here
+      },
+      complete: () => {
+        console.log('Delete operation completed');
+        // Optional completion handling
+      }
+    });
 
   // If no vendorDocumentId, just remove from local state
   if (!fileToRemove.vendorDocumentId) {
@@ -299,13 +308,13 @@ removeInsuranceFile(index: number): void {
       if (response.isSuccess) {
         this.insuranceFiles = this.insuranceFiles.filter((_, i) => i !== index);
         this.updateFormControl();
-        this.toastr.success(`${fileToRemove.name} removed`);
+        this.toastr.success(`${fileToRemove.fileName} removed`);
       } else {
         throw new Error('Deletion failed');
       }
     },
     error: (err) => {
-      this.toastr.error(`Failed to remove ${fileToRemove.name}`);
+      this.toastr.error(`Failed to remove ${fileToRemove.fileName}`);
     }
   });
 }
@@ -325,7 +334,7 @@ onDrop(event: DragEvent): void {
     }));
     
     // Append to existing files
-    this.insuranceFiles = [...this.insuranceFiles, ...newInsuranceFiles];
+   // this.insuranceFiles = [...this.insuranceFiles, ...newInsuranceFiles];
     this.updateFormControl();
   }
 }

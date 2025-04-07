@@ -145,18 +145,19 @@
               Select files
             </button>
             <input #fileInputInsurance type="file" formControlName="insurancePolicies" multiple
-              (change)="onInsuranceFilesChange($event)" hidden>
+              (change)="onInsuranceFilesChange($event)" hidden accept=".pdf,.doc,.docx">
           </div>
-          <div class="file-list" *ngIf="insuranceFiles.length > 0">
-            <div class="file-item" *ngFor="let file of insuranceFiles; let i = index">
+          <div class="file-list">
+            <div *ngFor="let file of insuranceFiles" class="file-item">
               <mat-icon>description</mat-icon>
-              <span>{{ file.name }}</span>
-              <button mat-icon-button (click)="removeInsuranceFile(i)">
-                <mat-icon>close</mat-icon>
+              <span>{{ file.fileName }}</span>
+              <button mat-icon-button (click)="removeInsuranceFile(insuranceFiles.indexOf(file))">
+                <mat-icon>delete</mat-icon>
               </button>
             </div>
           </div>
         </div>
+          
         <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
       </div>
 

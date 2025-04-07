@@ -5,4 +5,5 @@ export interface VendorDocument {
     documentName?: string;
     documentDescription?: string;
     documentCategoryId?: number;
+    fileName?: string;
   }
