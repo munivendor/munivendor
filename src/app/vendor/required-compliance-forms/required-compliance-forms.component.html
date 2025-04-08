@@ -52,7 +52,7 @@
           Choose File
         </button>
         <input #fileInputCertificate type="file" formControlName="employeeInfoCertificate"
-          (change)="onFileChange($event, 'employeeInfoCertificate', DOCUMENT_TYPES.EMPLOYEE_INFO_CERTIFICATE)" hidden>
+          (change)="oneeoDocumentFileChange($event, 'employeeInfoCertificate', DOCUMENT_TYPES.EMPLOYEE_INFO_CERTIFICATE)" hidden>
         <span class="file-name">
           {{ getFileName('employeeInfoCertificate') }}
         </span>
@@ -69,7 +69,7 @@
           Choose File
         </button>
         <input #fileInputAA302 type="file" formControlName="aa302Form"
-          (change)="onFileChange($event, 'aa302Form', DOCUMENT_TYPES.AA302_FORM)" hidden>
+          (change)="oneeoDocumentFileChange($event, 'aa302Form', DOCUMENT_TYPES.AA302_FORM)" hidden>
         <span class="file-name">
           {{ getFileName('aa302Form') }}
         </span>
@@ -95,7 +95,7 @@
             Choose File
           </button>
           <input #fileInputBusiness type="file" formControlName="businessRegistration" required
-            (change)="onFileChange($event, 'businessRegistration', DOCUMENT_TYPES.BUSINESS_RGISTRATION_CERTIFICATE)"
+            (change)="onRequiredDocumentFileChange($event, 'businessRegistration', DOCUMENT_TYPES.BUSINESS_RGISTRATION_CERTIFICATE)"
             hidden>
           <span class="file-name">
             {{ getFileName('businessRegistration') }}
@@ -121,7 +121,7 @@
             Choose File
           </button>
           <input #fileInputW9 type="file" formControlName="w9Form" required
-            (change)="onFileChange($event, 'w9Form',DOCUMENT_TYPES.W9)" hidden>
+            (change)="onRequiredDocumentFileChange($event, 'w9Form',DOCUMENT_TYPES.W9)" hidden>
           <span class="file-name">
             {{ getFileName('w9Form') }}
           </span>

@@ -46,6 +46,7 @@ export class ComplianceFormsComponent implements OnInit {
   uploadedFileNames: { [key: string]: string } = {};
   //insuranceFiles: InsuranceFile[] = []; 
   insuranceFiles: VendorDocument []= [];
+  eeoVendorDocumentId: number | null = null ;
 
   readonly DOCUMENT_TYPES = {
     FEDERAL_APPROVAL: 108,
@@ -108,6 +109,7 @@ export class ComplianceFormsComponent implements OnInit {
 
               if (this.isEEODocument(doc.documentId)) {
                 this.complianceForm.get('eeoLanguage')?.setValue(doc.documentId);
+                this.eeoVendorDocumentId=doc.vendorDocumentId;
               }
 
               if (doc.fileName) {
@@ -139,7 +141,11 @@ export class ComplianceFormsComponent implements OnInit {
     });
   }
   private isEEODocument(documentId: number): boolean {
-    return Object.values(this.DOCUMENT_TYPES).includes(documentId);
+    return [
+      this.DOCUMENT_TYPES.FEDERAL_APPROVAL,
+      this.DOCUMENT_TYPES.EMPLOYEE_INFO_CERTIFICATE,
+      this.DOCUMENT_TYPES.AA302_FORM
+    ].includes(documentId);
   }
 
   private getControlNameForDocumentId(documentId: number): string | null {
@@ -165,6 +171,81 @@ export class ComplianceFormsComponent implements OnInit {
   }
 
   onFileChange(event: Event, controlName: string, documentId?: number) {
+    const input = event.target as HTMLInputElement;
+
+    if (input.files?.length) {
+      const file = input.files[0];
+      this.uploadedFileNames[controlName] = file.name;
+
+      if (documentId) {
+        const organizationId = this.organizationId || 1;
+        
+        const vendorDocumentId = this.eeoVendorDocumentId;//this.vendorDocumentMap.get(documentId) || null;
+
+        this.vendorProfileService.saveVendorDocument(
+          organizationId,
+          documentId,
+          vendorDocumentId,
+          file
+        ).subscribe({
+          next: (response) => {
+            if (response.vendorDocumentId) {
+             // this.vendorDocumentMap.set(documentId, response.vendorDocumentId);
+              this.eeoVendorDocumentId = response.vendorDocumentId;
+              this.toastr.success('File uploaded successfully');
+            }
+          },
+          error: (err) => {
+            console.error('Upload failed', err);
+            this.toastr.error('File upload failed');
+            input.value = '';
+            delete this.uploadedFileNames[controlName];
+          }
+        });
+      }
+    } else {
+      delete this.uploadedFileNames[controlName];
+    }
+  }
+
+  oneeoDocumentFileChange(event: Event, controlName: string, documentId?: number) {
+    const input = event.target as HTMLInputElement;
+
+    if (input.files?.length) {
+      const file = input.files[0];
+      this.uploadedFileNames[controlName] = file.name;
+
+      if (documentId) {
+        const organizationId = this.organizationId || 1;
+        
+        const vendorDocumentId = this.eeoVendorDocumentId;
+
+        this.vendorProfileService.saveVendorDocument(
+          organizationId,
+          documentId,
+          vendorDocumentId,
+          file
+        ).subscribe({
+          next: (response) => {
+            if (response.vendorDocumentId) {
+              this.eeoVendorDocumentId = response.vendorDocumentId;
+              this.toastr.success('File uploaded successfully');
+            }
+          },
+          error: (err) => {
+            console.error('Upload failed', err);
+            this.toastr.error('File upload failed');
+            input.value = '';
+            delete this.uploadedFileNames[controlName];
+          }
+        });
+      }
+    } else {
+      delete this.uploadedFileNames[controlName];
+    }
+  }
+
+  onRequiredDocumentFileChange(event: Event, controlName: string, documentId?: number) {
     const input = event.target as HTMLInputElement;
 
     if (input.files?.length) {
@@ -234,14 +315,6 @@ private uploadFile(file: File): void {
     return;
   }
 
-  
-  /*const newFileEntry: InsuranceFile = {
-    name: file.name,
-    isUploading: true,
-    isError: false,
-    file: file
-  };*/
-
   const newFileEntry: VendorDocument = {
     fileName: file.name,
     documentId: this.DOCUMENT_TYPES.INSURANCE_POLICY,
@@ -289,16 +362,14 @@ removeInsuranceFile(index: number): void {
       }
     });
 
-  // If no vendorDocumentId, just remove from local state
-  if (!fileToRemove.vendorDocumentId) {
+  
+  /*if (!fileToRemove.vendorDocumentId) {
     this.insuranceFiles = this.insuranceFiles.filter((_, i) => i !== index);
     this.updateFormControl();
     return;
-  }
+  }*/
 
-  // For deletion, we can use saveVendorDocument with null file
-  // or implement a separate delete method in the service
-  this.vendorProfileService.saveVendorDocument(
+  /*this.vendorProfileService.saveVendorDocument(
     this.organizationId,
     this.DOCUMENT_TYPES.INSURANCE_POLICY,
     fileToRemove.vendorDocumentId,
@@ -316,7 +387,7 @@ removeInsuranceFile(index: number): void {
     error: (err) => {
       this.toastr.error(`Failed to remove ${fileToRemove.fileName}`);
     }
-  });
+  });*/
 }
   
 onDrop(event: DragEvent): void {
