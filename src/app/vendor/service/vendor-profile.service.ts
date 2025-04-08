@@ -159,8 +159,13 @@ uploadVendorDocument(organizationId: number, documentType: number, file: File): 
 
 deleteVendorDocument(organizationId: number, vendorDocumentId: number): Observable<void> {
   return this.http.delete<void>(
-    `${this.apiUrl}/vendors/${organizationId}/documents/${vendorDocumentId}`
+    `${this.apiUrl}VendorDocuments/${organizationId}/${vendorDocumentId}`
   );
+}
+
+downloadVendorDocument(organizationId: number, vendorDocumentId: number): Observable<Blob> {
+  const url = `${this.apiUrl}/VendorDocuments/${organizationId}/${vendorDocumentId}`;
+  return this.http.get(url, { responseType: 'blob' });
 }
 
 // Get Compliance Data by ID

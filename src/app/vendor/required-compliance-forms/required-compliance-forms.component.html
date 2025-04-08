@@ -38,6 +38,10 @@
         <span class="file-name">
           {{ getFileName('federalApprovalLetter') }}
         </span>
+        <button *ngIf="uploadedFileNames['federalApprovalLetter']" mat-icon-button
+          (click)="downloadFile(DOCUMENT_TYPES.FEDERAL_APPROVAL, 'federalApprovalLetter')" matTooltip="Download file">
+          <mat-icon>download</mat-icon>
+        </button>
       </div>
       <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
     </div>
@@ -52,10 +56,15 @@
           Choose File
         </button>
         <input #fileInputCertificate type="file" formControlName="employeeInfoCertificate"
-          (change)="oneeoDocumentFileChange($event, 'employeeInfoCertificate', DOCUMENT_TYPES.EMPLOYEE_INFO_CERTIFICATE)" hidden>
+          (change)="oneeoDocumentFileChange($event, 'employeeInfoCertificate', DOCUMENT_TYPES.EMPLOYEE_INFO_CERTIFICATE)"
+          hidden>
         <span class="file-name">
           {{ getFileName('employeeInfoCertificate') }}
         </span>
+        <button *ngIf="uploadedFileNames['employeeInfoCertificate']" mat-icon-button
+        (click)="downloadFile(DOCUMENT_TYPES.EMPLOYEE_INFO_CERTIFICATE, 'employeeInfoCertificate')" matTooltip="Download file">
+        <mat-icon>download</mat-icon>
+      </button>
       </div>
       <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
     </div>
@@ -73,6 +82,10 @@
         <span class="file-name">
           {{ getFileName('aa302Form') }}
         </span>
+        <button *ngIf="uploadedFileNames['aa302Form']" mat-icon-button
+        (click)="downloadFile(DOCUMENT_TYPES.AA302_FORM, 'aa302Form')" matTooltip="Download file">
+        <mat-icon>download</mat-icon>
+        </button>
       </div>
       <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
     </div>
@@ -100,6 +113,13 @@
           <span class="file-name">
             {{ getFileName('businessRegistration') }}
           </span>
+          <!-- Download button - only shows when there's a file -->
+          <button *ngIf="uploadedFileNames['businessRegistration']" mat-icon-button 
+                  (click)="downloadFile(DOCUMENT_TYPES.BUSINESS_RGISTRATION_CERTIFICATE, 'businessRegistration')"
+                  matTooltip="Download Business Registration Certificate"
+                  class="download-button">
+            <mat-icon>download</mat-icon>
+          </button>
         </div>
         <mat-hint>
           Pursuant to N.J.S.A. 52:32-44, local government organizations are prohibited from entering into a contract
@@ -121,10 +141,17 @@
             Choose File
           </button>
           <input #fileInputW9 type="file" formControlName="w9Form" required
-            (change)="onRequiredDocumentFileChange($event, 'w9Form',DOCUMENT_TYPES.W9)" hidden>
+            (change)="onRequiredDocumentFileChange($event, 'w9Form', DOCUMENT_TYPES.W9)" hidden>
           <span class="file-name">
             {{ getFileName('w9Form') }}
           </span>
+          <!-- Download button - only shows when there's a file -->
+          <button *ngIf="uploadedFileNames['w9Form']" mat-icon-button 
+                  (click)="downloadFile(DOCUMENT_TYPES.W9, 'w9Form')"
+                  matTooltip="Download W9 form"
+                  class="download-button">
+            <mat-icon>download</mat-icon>
+          </button>
         </div>
         <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
         <mat-error *ngIf="complianceForm.get('w9Form')?.invalid && complianceForm.get('w9Form')?.touched">
@@ -132,14 +159,13 @@
         </mat-error>
       </div>
 
-      <!-- Insurance Policies Section with complete drag-and-drop -->
       <div class="file-upload-section">
         <label class="file-upload-label">Insurance Policies</label>
         <div class="drag-drop-container" (drop)="onDrop($event)" (dragover)="onDragOver($event)"
           (dragleave)="onDragLeave($event)" [class.drag-over]="isDragging">
           <div class="drag-drop-content">
             <mat-icon>cloud_upload</mat-icon>
-            <p>Drop your insurance files here or</p>
+            <p>Select your insurance files here or</p>
             <button mat-stroked-button type="button" (click)="fileInputInsurance.click()">
               <mat-icon>attach_file</mat-icon>
               Select files
@@ -151,17 +177,22 @@
             <div *ngFor="let file of insuranceFiles" class="file-item">
               <mat-icon>description</mat-icon>
               <span>{{ file.fileName }}</span>
-              <button mat-icon-button (click)="removeInsuranceFile(insuranceFiles.indexOf(file))">
-                <mat-icon>delete</mat-icon>
-              </button>
+              <div class="file-actions">
+                <button mat-icon-button (click)="downloadInsuranceFile(file)" matTooltip="Download file">
+                  <mat-icon>download</mat-icon>
+                </button>
+                <button mat-icon-button (click)="removeInsuranceFile(insuranceFiles.indexOf(file))">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
             </div>
           </div>
         </div>
-          
+
         <mat-hint>Accepted file types: jpg, png, pdf, Max. file size: 50 MB.</mat-hint>
       </div>
 
-    </div> 
+    </div>
 
     <div class="form-actions">
       <button mat-raised-button color="primary" type="submit" [disabled]="!complianceForm.valid">

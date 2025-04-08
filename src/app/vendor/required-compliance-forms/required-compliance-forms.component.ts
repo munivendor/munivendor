@@ -349,6 +349,8 @@ removeInsuranceFile(index: number): void {
   }*/
     this.vendorProfileService.deleteVendorDocument(this.organizationId, fileToRemove.vendorDocumentId!).subscribe({
       next: () => {
+        this.insuranceFiles = this.insuranceFiles.filter((_, i) => i !== index);
+        this.updateFormControl();
         console.log('Document deleted successfully');
         // Add any success handling logic here
       },
@@ -361,33 +363,56 @@ removeInsuranceFile(index: number): void {
         // Optional completion handling
       }
     });
+}
 
-  
-  /*if (!fileToRemove.vendorDocumentId) {
-    this.insuranceFiles = this.insuranceFiles.filter((_, i) => i !== index);
-    this.updateFormControl();
+downloadFile(documentId: number, controlName: string): void {
+  const vendorDocumentId = this.vendorDocumentMap.get(documentId);
+  if (!vendorDocumentId) {
+    this.toastr.warning('No file available to download');
     return;
-  }*/
+  }
 
-  /*this.vendorProfileService.saveVendorDocument(
-    this.organizationId,
-    this.DOCUMENT_TYPES.INSURANCE_POLICY,
-    fileToRemove.vendorDocumentId,
-    null as any // This might need adjustment based on your API
-  ).subscribe({
+  this.vendorProfileService.downloadVendorDocument(this.organizationId, vendorDocumentId).subscribe({
     next: (response) => {
-      if (response.isSuccess) {
-        this.insuranceFiles = this.insuranceFiles.filter((_, i) => i !== index);
-        this.updateFormControl();
-        this.toastr.success(`${fileToRemove.fileName} removed`);
-      } else {
-        throw new Error('Deletion failed');
+      if (response instanceof Blob) {
+        // Create a download link and trigger it
+        const blobUrl = window.URL.createObjectURL(response);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = this.uploadedFileNames[controlName] || 'document';
+        link.click();
+        window.URL.revokeObjectURL(blobUrl);
       }
     },
     error: (err) => {
-      this.toastr.error(`Failed to remove ${fileToRemove.fileName}`);
+      console.error('Download failed', err);
+      this.toastr.error('Failed to download file');
     }
-  });*/
+  });
+}
+
+downloadInsuranceFile(file: VendorDocument): void {
+  if (!file.vendorDocumentId) {
+    this.toastr.warning('No file available to download');
+    return;
+  }
+
+  this.vendorProfileService.downloadVendorDocument(this.organizationId, file.vendorDocumentId).subscribe({
+    next: (response) => {
+      if (response instanceof Blob) {
+        const blobUrl = window.URL.createObjectURL(response);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = file.fileName || 'insurance_document';
+        link.click();
+        window.URL.revokeObjectURL(blobUrl);
+      }
+    },
+    error: (err) => {
+      console.error('Download failed', err);
+      this.toastr.error('Failed to download file');
+    }
+  });
 }
   
 onDrop(event: DragEvent): void {
