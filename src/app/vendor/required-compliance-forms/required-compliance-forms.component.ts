@@ -116,7 +116,7 @@ export class ComplianceFormsComponent implements OnInit {
                   this.uploadedFileNames[controlName] = doc.fileName!;
                 }
                 // Add insurance policy files to insuranceFiles array
-              if (doc.documentCategoryId === this.DOCUMENT_TYPES.INSURANCE_POLICY) {
+              if (doc.documentCategoryId === 4) {
                 this.insuranceFiles.push({
                   fileName: doc.fileName,
                   documentId: doc.documentId,
@@ -124,7 +124,7 @@ export class ComplianceFormsComponent implements OnInit {
                   documentCategoryId: doc.documentCategoryId
                 });
               }
-              
+
               }
             }
           });
