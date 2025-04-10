@@ -375,7 +375,6 @@ downloadFile(documentId: number, controlName: string): void {
   this.vendorProfileService.downloadVendorDocument(this.organizationId, vendorDocumentId).subscribe({
     next: (response) => {
       if (response instanceof Blob) {
-        // Create a download link and trigger it
         const blobUrl = window.URL.createObjectURL(response);
         const link = document.createElement('a');
         link.href = blobUrl;
@@ -428,9 +427,6 @@ onDrop(event: DragEvent): void {
       isError: false,
       file: file
     }));
-    
-    // Append to existing files
-   // this.insuranceFiles = [...this.insuranceFiles, ...newInsuranceFiles];
     this.updateFormControl();
   }
 }
