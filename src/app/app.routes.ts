@@ -27,7 +27,7 @@ import { ResponseBasicComponent } from './Response/response-basic.component';
 import { ResponseDetailsComponent } from './Response/response-details.component';
 import { ResponseDocumentsComponent } from './Response/response-documents.component';
 import { ResponseOverviewComponent } from './Response/response-overview.component';
-import { OrganizationInformationComponent } from './vendor/organization-information.component';
+import { OrganizationInformationComponent } from './vendor/organization-information/organization-information.component';
 import { ComplianceFormsComponent } from './vendor/required-compliance-forms/required-compliance-forms.component';
 
 
@@ -58,6 +58,7 @@ export const routes: Routes = [
   },
 
   {path: 'vendor-compliance-forms', component: ComplianceFormsComponent},
+  {path: 'vendor-required-forms', component: OrganizationInformationComponent},
 
   {
     path: 'dashboard-component', component: DashboardComponent,

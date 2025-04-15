@@ -6,11 +6,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { VendorProfileService } from './service/vendor-profile.service';
+import { VendorProfileService } from '../service/vendor-profile.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { debounceTime, distinctUntilChanged, takeUntil, filter, switchMap } from 'rxjs/operators';
-import { Organization } from './model/organization.model';
-import { interval, Subject, of } from 'rxjs';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 interface Option {
   id: number;
@@ -33,29 +32,29 @@ interface Option {
 })
 export class OrganizationInformationComponent implements OnInit {
   organizationInformationForm: FormGroup;
-  organizationId: number | null = null;
+  organizationId: number | undefined;
+  saveStatus: string = '';
   private originalOrganizationData: any = null;
-  private hasUnsavedChanges: boolean = false;
   private destroy$ = new Subject<void>();
 
-  // Options for Organization Type and State
   organizationTypes: Option[] = [];
   states: Option[] = [];
 
   constructor(
     private fb: FormBuilder,
     private vendorProfileService: VendorProfileService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private router: Router
   ) {
     this.organizationInformationForm = this.fb.group({
       organizationName: ['', Validators.required],
       address: ['', Validators.required],
       address2: [''],
       city: ['', Validators.required],
-      state: ['', Validators.required], // This will store the ID
+      state: ['', Validators.required],
       zipCode: ['', [Validators.required, Validators.pattern('^[0-9]{5}$')]],
       dateOfIncorporation: ['', Validators.required],
-      organizationTypeId: ['', Validators.required], // This will store the ID
+      organizationTypeId: ['', Validators.required],
       taxId: ['', Validators.required],
       phone: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
       fax: [''],
@@ -63,14 +62,8 @@ export class OrganizationInformationComponent implements OnInit {
   }
 
   ngOnInit() {
-    // Fetch Organization Types and States from the API
-  /*  this.vendorProfileService.getOrganizationTypes().subscribe((types) => {
-      this.organizationTypes = types;
-    });
 
-    this.vendorProfileService.getStates().subscribe((states) => {
-      this.states = states;
-    });*/
+    //this.setupFieldBlurHandlers();
 
     // Load organization data if editing
     this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
@@ -80,23 +73,66 @@ export class OrganizationInformationComponent implements OnInit {
         this.loadOrganization(this.organizationId);
       }
     });
-
-    // Auto-save logic (if needed)
-    interval(5000)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        if (this.hasUnsavedChanges) {
-          const validChangedFields = this.getValidChangedFields();
-          if (Object.keys(validChangedFields).length > 0) {
-            this.vendorProfileService.saveOrganization(validChangedFields);
-          }
-        }
-      });
   }
 
-  ngOnDestroy() {
-    this.destroy$.next();
-    this.destroy$.complete();
+ 
+  onFieldBlur(fieldName: string) {
+    const control = this.organizationInformationForm.get(fieldName);
+    if (control && control.valid && control.dirty) {
+      this.saveStatus = 'Saving...';
+      this.saveField(fieldName, control.value);
+    }
+  }
+
+  private setupFieldBlurHandlers() {
+    Object.keys(this.organizationInformationForm.controls).forEach(fieldName => {
+      const control = this.organizationInformationForm.get(fieldName);
+      
+      if (control) {
+        control.valueChanges.pipe(
+          debounceTime(500),
+          distinctUntilChanged(),
+          takeUntil(this.destroy$)
+        ).subscribe(() => {
+          if (control.valid && control.dirty) {
+            this.saveField(fieldName, control.value);
+          }
+        });
+      }
+    });
+  }
+
+  private saveField(fieldName: string, value: any) {
+    /*if (!this.organizationId) {
+      console.error('Organization ID is not available');
+      this.saveStatus = 'Error: Organization ID missing';
+      setTimeout(() => this.saveStatus = '', 2000);
+      return;
+    }*/
+
+    const payload = {
+      organizationId: this.organizationId,
+      [fieldName]: value
+    };
+
+    this.vendorProfileService.saveOrganization(payload, this.organizationId).subscribe({
+      next: (response) => {
+        if (response) {
+          this.organizationId = response.organizationId;
+          this.organizationInformationForm.get(fieldName)?.markAsPristine();
+          this.saveStatus = 'Saved';
+          //setTimeout(() => this.saveStatus = '', 2000);
+        } else {
+          this.saveStatus = 'Error saving';
+          //setTimeout(() => this.saveStatus = '', 2000);
+        }
+      },
+      error: (error) => {
+        console.error(`Error saving ${fieldName}:`, error);
+        this.saveStatus = 'Error saving';
+       // setTimeout(() => this.saveStatus = '', 2000);
+      }
+    });
   }
 
   private loadOrganization(organizationId: number) {
@@ -109,6 +145,8 @@ export class OrganizationInformationComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading organization:', error);
+        this.saveStatus = 'Error loading organization';
+        setTimeout(() => this.saveStatus = '', 2000);
       },
     });
   }
@@ -119,49 +157,21 @@ export class OrganizationInformationComponent implements OnInit {
       address: organization.address,
       address2: organization.address2,
       city: organization.city,
-      state: organization.stateId, // Map to ID
+      state: organization.stateId,
       zipCode: organization.zipCode,
       dateOfIncorporation: organization.dateOfIncorporation,
-      organizationTypeId: organization.organizationTypeId, // Map to ID
+      organizationTypeId: organization.organizationTypeId,
       taxId: organization.taxId,
       phone: organization.phone,
       fax: organization.fax,
     });
+
+    // Mark all controls as pristine after initial load
+    this.organizationInformationForm.markAllAsTouched();
   }
 
-  onSubmit() {
-    if (this.organizationInformationForm.valid) {
-      const formValue = this.organizationInformationForm.value;
-      const payload = {
-        ...formValue,
-        stateId: formValue.state, // Map to ID
-        organizationTypeId: formValue.organizationTypeId, // Map to ID
-      };
-      this.vendorProfileService.saveOrganization(payload).subscribe({
-        next: (response) => {
-          console.log('Organization saved successfully:', response);
-        },
-        error: (error) => {
-          console.error('Error saving organization:', error);
-        },
-      });
-    }
-  }
-
-  private getValidChangedFields(): any {
-    const validChangedFields: any = {};
-    const formValue = this.organizationInformationForm.value;
-
-    for (const key in formValue) {
-      if (
-        this.organizationInformationForm.get(key)?.valid &&
-        this.originalOrganizationData &&
-        formValue[key] !== this.originalOrganizationData[key]
-      ) {
-        validChangedFields[key] = formValue[key];
-      }
-    }
-
-    return validChangedFields;
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

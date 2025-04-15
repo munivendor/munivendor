@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Organization } from '../model/organization.model';
-//import { VendorLegalInformation } from '../model/vendor-legal-information.model';
 import { environment } from '../../../environments/environment';
 import { ComplianceFormType } from '../model/complianceformtype.model';
 import { VendorDocument } from '../model/vendordocument.model';
@@ -15,13 +14,11 @@ export class VendorProfileService {
 
   constructor(private http: HttpClient) {}
 
-  // Save Organization (insert or update)
-  saveOrganization(organization: Organization, organizationId?: number): Observable<{ isSuccess: boolean, vendorProfileId?: number }> {
-    const url = organizationId ? `${this.apiUrl}/VendorProfiles/${organizationId}` : `${this.apiUrl}/VendorProfiles`;
-    return this.http.post<{ isSuccess: boolean, vendorProfileId?: number }>(url, organization);
+  saveOrganization(organization: Organization, organizationId?: number): Observable<{ isSuccess: boolean, organizationId: number }> {
+    const url = organizationId ? `${this.apiUrl}VendorProfiles/${organizationId}` : `${this.apiUrl}VendorProfiles`;
+    return this.http.post<{ isSuccess: boolean, organizationId: number }>(url, organization);
   }
 
-  // Get Organization by ID
   getOrganization(organizationId: number): Observable<{ isSuccess: boolean, organization?: Organization, message: string }> {
     const url = `${this.apiUrl}/VendorProfiles/${organizationId}`;
     return this.http.get<{ isSuccess: boolean, organization?: Organization, message: string }>(url);
@@ -103,7 +100,6 @@ export class VendorProfileService {
   }
 
 
-// Get Compliance Form Types
 getComplianceFormTypes(): Observable<{complianceFormType: ComplianceFormType[]}> {
   const url = `${this.apiUrl}VendorDocuments2/RFC/2`;
   return this.http.get<  {complianceFormType: ComplianceFormType[]} >(url);
@@ -164,17 +160,16 @@ deleteVendorDocument(organizationId: number, vendorDocumentId: number): Observab
 }
 
 downloadVendorDocument(organizationId: number, vendorDocumentId: number): Observable<Blob> {
-  const url = `${this.apiUrl}/VendorDocuments/${organizationId}/${vendorDocumentId}`;
+  const url = `${this.apiUrl}VendorDocuments/${organizationId}/${vendorDocumentId}`;
   return this.http.get(url, { responseType: 'blob' });
 }
 
-// Get Compliance Data by ID
 getComplianceData(id: number): Observable<{ isSuccess: boolean, complianceData?: any }> {
   const url = `${this.apiUrl}/ComplianceData/${id}`;
   return this.http.get<{ isSuccess: boolean, complianceData?: any }>(url);
 }
 
-// Save Compliance Data
+
 saveComplianceData(data: any): Observable<{ isSuccess: boolean }> {
   const url = `${this.apiUrl}/ComplianceData`;
   return this.http.post<{ isSuccess: boolean }>(url, data);
