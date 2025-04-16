@@ -41,12 +41,12 @@
     <!-- State Dropdown -->
     <mat-form-field appearance="fill">
       <mat-label>State</mat-label>
-      <mat-select formControlName="state" title="state" (blur)="onFieldBlur('state')">
+      <mat-select formControlName="stateId" title="stateId" (blur)="onFieldBlur('stateId')">
         <mat-option *ngFor="let state of states" [value]="state.id">
           {{ state.description }}
         </mat-option>
       </mat-select>
-      <mat-error *ngIf="organizationInformationForm.get('state')?.invalid">
+      <mat-error *ngIf="organizationInformationForm.get('stateId')?.invalid">
         State is required.
       </mat-error>
     </mat-form-field>

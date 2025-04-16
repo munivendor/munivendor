@@ -51,7 +51,7 @@ export class OrganizationInformationComponent implements OnInit {
       address: ['', Validators.required],
       address2: [''],
       city: ['', Validators.required],
-      state: ['', Validators.required],
+      stateId: ['', Validators.required], 
       zipCode: ['', [Validators.required, Validators.pattern('^[0-9]{5}$')]],
       dateOfIncorporation: ['', Validators.required],
       organizationTypeId: ['', Validators.required],
@@ -65,12 +65,28 @@ export class OrganizationInformationComponent implements OnInit {
 
     //this.setupFieldBlurHandlers();
 
-    // Load organization data if editing
+    this.loadStates();
     this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       const id = params.get('organizationId');
       if (id) {
         this.organizationId = +id;
         this.loadOrganization(this.organizationId);
+      }
+    });
+  }
+
+  private loadStates() {
+    this.vendorProfileService.getStates().subscribe({
+      next: (response) => {
+        if (response.isSuccess && response.states) {
+          this.states = response.states.map(state => ({
+            id: state.codeId,
+            description: state.codeDesc
+          }));
+        }
+      },
+      error: (error) => {
+        console.error('Error loading states:', error);
       }
     });
   }
@@ -103,19 +119,13 @@ export class OrganizationInformationComponent implements OnInit {
   }
 
   private saveField(fieldName: string, value: any) {
-    /*if (!this.organizationId) {
-      console.error('Organization ID is not available');
-      this.saveStatus = 'Error: Organization ID missing';
-      setTimeout(() => this.saveStatus = '', 2000);
-      return;
-    }*/
-
-    const payload = {
+    
+    const organizationInfo = {
       organizationId: this.organizationId,
       [fieldName]: value
     };
 
-    this.vendorProfileService.saveOrganization(payload, this.organizationId).subscribe({
+    this.vendorProfileService.saveOrganization(organizationInfo, this.organizationId).subscribe({
       next: (response) => {
         if (response) {
           this.organizationId = response.organizationId;
