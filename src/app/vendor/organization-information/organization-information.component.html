@@ -42,8 +42,8 @@
     <mat-form-field appearance="fill">
       <mat-label>State</mat-label>
       <mat-select formControlName="stateId" title="stateId" (blur)="onFieldBlur('stateId')">
-        <mat-option *ngFor="let state of states" [value]="state.id">
-          {{ state.description }}
+        <mat-option *ngFor="let state of states" [value]="state.codeId">
+          {{ state.codeDesc }}
         </mat-option>
       </mat-select>
       <mat-error *ngIf="organizationInformationForm.get('stateId')?.invalid">
@@ -72,8 +72,8 @@
     <mat-form-field appearance="fill">
       <mat-label>Organization Type</mat-label>
       <mat-select formControlName="organizationTypeId" title="organizationType" (blur)="onFieldBlur('organizationType')">
-        <mat-option *ngFor="let type of organizationTypes" [value]="type.id">
-          {{ type.description }}
+        <mat-option *ngFor="let type of organizationTypes" [value]="type.codeId">
+          {{ type.codeDesc }}
         </mat-option>
       </mat-select>
       <mat-error *ngIf="organizationInformationForm.get('organizationTypeId')?.invalid">

@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+
+
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -10,11 +12,9 @@ import { VendorProfileService } from '../service/vendor-profile.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
+import { ListDataService, Option } from '../../shared/service/listdata.service';
 
-interface Option {
-  id: number;
-  description: string;
-}
+
 
 @Component({
   selector: 'organization-information',
@@ -43,6 +43,7 @@ export class OrganizationInformationComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private vendorProfileService: VendorProfileService,
+    private listDataService: ListDataService,
     private route: ActivatedRoute,
     private router: Router
   ) {
@@ -66,6 +67,7 @@ export class OrganizationInformationComponent implements OnInit {
     //this.setupFieldBlurHandlers();
 
     this.loadStates();
+    this.loadOrganizationTypes();
     this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       const id = params.get('organizationId');
       if (id) {
@@ -76,12 +78,12 @@ export class OrganizationInformationComponent implements OnInit {
   }
 
   private loadStates() {
-    this.vendorProfileService.getStates().subscribe({
+    this.listDataService.getStates().subscribe({
       next: (response) => {
-        if (response.isSuccess && response.states) {
-          this.states = response.states.map(state => ({
-            id: state.codeId,
-            description: state.codeDesc
+        if (response) {
+          this.states = response.map(state => ({
+            codeId: state.codeId,
+            codeDesc: state.codeDesc
           }));
         }
       },
@@ -90,6 +92,57 @@ export class OrganizationInformationComponent implements OnInit {
       }
     });
   }
+
+  private loadOrganizationTypes() {
+    this.listDataService.getOrganizationTypes().subscribe({
+      next: (response) => {
+        if (response) {
+          this.organizationTypes = response.map(type => ({
+            codeId: type.codeId,
+            codeDesc: type.codeDesc
+          }));
+        }
+      },
+      error: (error) => {
+        console.error('Error loading organization types:', error);
+      }
+    });
+  }
+
+  private loadOrganization(organizationId: number) {
+    this.vendorProfileService.getOrganization(organizationId).subscribe({
+      next: (response) => {
+        if (response.isSuccess && response.organization) {
+          this.originalOrganizationData = response.organization;
+          this.populateForm(response.organization);
+        }
+      },
+      error: (error) => {
+        console.error('Error loading organization:', error);
+        this.saveStatus = 'Error loading organization';
+        setTimeout(() => this.saveStatus = '', 2000);
+      }
+    });
+  }
+
+  private populateForm(organization: any) {
+    this.organizationInformationForm.patchValue({
+      organizationName: organization.organizationName,
+      address: organization.address,
+      address2: organization.address2,
+      city: organization.city,
+      stateId: organization.stateId,
+      zipCode: organization.zipCode,
+      dateOfIncorporation: organization.dateOfIncorporation,
+      organizationTypeId: organization.organizationTypeId,
+      taxId: organization.taxId,
+      phone: organization.phone,
+      fax: organization.fax,
+    });
+
+    this.organizationInformationForm.markAsPristine();
+  }
+
 
  
   onFieldBlur(fieldName: string) {
