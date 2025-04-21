@@ -20,7 +20,7 @@ export class VendorProfileService {
   }
 
   getOrganization(organizationId: number): Observable<{ isSuccess: boolean, organization?: Organization, message: string }> {
-    const url = `${this.apiUrl}/VendorProfiles/${organizationId}`;
+    const url = `${this.apiUrl}VendorProfiles/${organizationId}`;
     return this.http.get<{ isSuccess: boolean, organization?: Organization, message: string }>(url);
   }
 

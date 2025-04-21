@@ -6,6 +6,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatDatepickerInputEvent, MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core'; 
 import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { VendorProfileService } from '../service/vendor-profile.service';
@@ -13,6 +15,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { ListDataService, Option } from '../../shared/service/listdata.service';
+
 
 
 
@@ -27,7 +30,9 @@ import { ListDataService, Option } from '../../shared/service/listdata.service';
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
-    MatCardModule
+    MatCardModule,
+    MatDatepickerModule,
+     MatNativeDateModule
   ]
 })
 export class OrganizationInformationComponent implements OnInit {
@@ -56,9 +61,10 @@ export class OrganizationInformationComponent implements OnInit {
       zipCode: ['', [Validators.required, Validators.pattern('^[0-9]{5}$')]],
       dateOfIncorporation: ['', Validators.required],
       organizationTypeId: ['', Validators.required],
+      timeAtCurrentAddress: ['', [Validators.required, Validators.min(0), Validators.max(100)]],
       taxId: ['', Validators.required],
       phone: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
-      fax: [''],
+      fax: ['',Validators.pattern('^[0-9]{10}$')],
     });
   }
 
@@ -69,7 +75,8 @@ export class OrganizationInformationComponent implements OnInit {
     this.loadStates();
     this.loadOrganizationTypes();
     this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
-      const id = params.get('organizationId');
+      const id = 23;//params.get('organizationId');
+      
       if (id) {
         this.organizationId = +id;
         this.loadOrganization(this.organizationId);
@@ -112,9 +119,9 @@ export class OrganizationInformationComponent implements OnInit {
   private loadOrganization(organizationId: number) {
     this.vendorProfileService.getOrganization(organizationId).subscribe({
       next: (response) => {
-        if (response.isSuccess && response.organization) {
-          this.originalOrganizationData = response.organization;
-          this.populateForm(response.organization);
+        if (response) {
+          this.originalOrganizationData = response;
+          this.populateForm(response);
         }
       },
       error: (error) => {
@@ -135,6 +142,7 @@ export class OrganizationInformationComponent implements OnInit {
       zipCode: organization.zipCode,
       dateOfIncorporation: organization.dateOfIncorporation,
       organizationTypeId: organization.organizationTypeId,
+      timeAtCurrentAddress: organization.duration,
       taxId: organization.taxId,
       phone: organization.phone,
       fax: organization.fax,
@@ -143,7 +151,12 @@ export class OrganizationInformationComponent implements OnInit {
     this.organizationInformationForm.markAsPristine();
   }
 
-
+  onDateChanged(event: MatDatepickerInputEvent<Date>) {
+    // Handle the date change here
+    console.log('Date changed:', event.value);
+    // You can call your existing blur handler if you want
+    this.onFieldBlur('dateOfIncorporation');
+  }
  
   onFieldBlur(fieldName: string) {
     const control = this.organizationInformationForm.get(fieldName);
@@ -198,7 +211,7 @@ export class OrganizationInformationComponent implements OnInit {
     });
   }
 
-  private loadOrganization(organizationId: number) {
+  /*private loadOrganization(organizationId: number) {
     this.vendorProfileService.getOrganization(organizationId).subscribe({
       next: (response) => {
         if (response.isSuccess && response.organization) {
@@ -231,7 +244,7 @@ export class OrganizationInformationComponent implements OnInit {
 
     // Mark all controls as pristine after initial load
     this.organizationInformationForm.markAllAsTouched();
-  }
+  }*/
 
   ngOnDestroy() {
     this.destroy$.next();
