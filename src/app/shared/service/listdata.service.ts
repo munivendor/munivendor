@@ -18,9 +18,18 @@ export class ListDataService {
   getOrganizationTypes(): Observable<Option[]> {
     return this.http.get<Option[]>(`${this.baseUrl}ListData/OrganizationTypes`);
   }
+
+  getCounties(): Observable<Option[] > {
+    const url = `${this.baseUrl}ListData/Counties`;
+    return this.http.get< Option[] >(url);
+  }
+  getTimes(): Observable<Option[]>{
+    const url = `${this.baseUrl}ListData/Times`; // Adjust the API endpoint as needed
+    return this.http.get<Option[]>(url);
+  }
 }
   
-export interface Option {
-  codeId: number;
-  codeDesc: string;
-}
+  export interface Option {
+    codeId: number;
+    codeDesc: string;
+  }

@@ -50,16 +50,6 @@ export class VendorProfileService {
     return this.http.get<{ isSuccess: boolean, vendorLegalInformationList?: VendorLegalInformation[] }>(url);
   }
 
-  // Get Organization Types
-  getOrganizationTypes(): Observable<Option[]> {
-    return this.http.get<Option[]>('/api/organization-types');
-  }
-
-  // Get States
-  getStates(): Observable<Option[]> {
-    return this.http.get<Option[]>('/api/states');
-  }
-    
 
   // Save Stockholder Information (insert or update)
   saveStockholderInformation(stockholderInformation: StockholderInformation, stockholderId?: number): Observable<{ isSuccess: boolean; stockholderId?: number; message: string }> {
@@ -79,18 +69,19 @@ export class VendorProfileService {
     return this.http.get<{ isSuccess: boolean; stockholderInformationList?: StockholderInformation[] }>(url);
   }
 
- 
-  getCounties(): Observable<{ isSuccess: boolean, counties?: string[], message: string }> {
-    const url = `${this.apiUrl}/Counties`; // Adjust the API endpoint as needed
-    return this.http.get<{ isSuccess: boolean, counties?: string[], message: string }>(url);
-  }
-*/
-  // Get Times
-  getTimes(): Observable<{ isSuccess: boolean, times?: string[], message: string }> {
-    const url = `${this.apiUrl}/Times`; // Adjust the API endpoint as needed
-    return this.http.get<{ isSuccess: boolean, times?: string[], message: string }>(url);
+ */
+  
+
+  getContact(contactId: number): Observable<{ isSuccess: boolean, contact?: any, message?: string }> {
+    const url = `${this.apiUrl}Contacts/${contactId}`;
+    return this.http.get<{ isSuccess: boolean, contact?: any, message?: string }>(url);
   }
 
+  saveContact(contact: any, contactId?: number): Observable<{ isSuccess: boolean, contactId: number }> {
+    const url = contactId ? `${this.apiUrl}Contacts/${contactId}` : `${this.apiUrl}Contacts`;
+    return this.http.post<{ isSuccess: boolean, contactId: number }>(url, contact);
+  }
+  
   getContactInformation(contactId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/${contactId}`);
   }

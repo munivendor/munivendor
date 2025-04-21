@@ -62,7 +62,7 @@ export class OrganizationInformationComponent implements OnInit {
       dateOfIncorporation: ['', Validators.required],
       organizationTypeId: ['', Validators.required],
       timeAtCurrentAddress: ['', [Validators.required, Validators.min(0), Validators.max(100)]],
-      taxId: ['', Validators.required],
+      taxId: ['', Validators.required, Validators.pattern(/^\d{2}-\d{7}$/)],
       phone: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
       fax: ['',Validators.pattern('^[0-9]{10}$')],
     });
@@ -209,6 +209,20 @@ export class OrganizationInformationComponent implements OnInit {
        // setTimeout(() => this.saveStatus = '', 2000);
       }
     });
+  }
+
+  formatFein(event: Event) {
+    const input = event.target as HTMLInputElement;
+    let value = input.value.replace(/\D/g, ''); // Remove all non-digits
+    
+    // Format as XX-XXXXXXX
+    if (value.length > 2) {
+      value = value.substring(0, 2) + '-' + value.substring(2, 9);
+    }
+    
+    // Update both the display value and form control value
+    input.value = value;
+    this.organizationInformationForm.get('taxId')?.setValue(value, { emitEvent: false });
   }
 
   /*private loadOrganization(organizationId: number) {

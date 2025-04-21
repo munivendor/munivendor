@@ -72,7 +72,7 @@
     </mat-form-field>
 
     <mat-form-field appearance="fill">
-      <mat-label>Length of time at current address with business name (years)</mat-label>
+      <mat-label>Length of time at current address with current business name (years)</mat-label>
       <input matInput type="number" formControlName="timeAtCurrentAddress" 
              (blur)="onFieldBlur('timeAtCurrentAddress')" min="0" max="100" placeholder="0-100"/>
       <mat-error *ngIf="organizationInformationForm.get('timeAtCurrentAddress')?.hasError('required')">
@@ -101,8 +101,10 @@
 
     <!-- Tax ID Number -->
     <mat-form-field appearance="fill">
+      <p>To acquire a Federal Tax ID Number, please visit the IRS website at https://www.irs.gov/businesses/small-businesses-self-employed/get-an-employer-identification-number and click on "Apply for an EIN". </p> 
+      
       <mat-label>Tax ID Number (FEIN)</mat-label>
-      <input matInput formControlName="taxId" title="taxId" (blur)="onFieldBlur('taxId')"/>
+     <input matInput formControlName="taxId" title="taxId" (blur)="onFieldBlur('taxId')"  placeholder="XX-XXXXXXX"   (input)="formatFein($event)"/>
       <mat-error *ngIf="organizationInformationForm.get('taxId')?.invalid">
         This field is required. Visit the
         <a href="https://www.irs.gov/businesses/small-businesses-self-employed/get-an-employer-identification-number" target="_blank" rel="noopener">IRS website</a> to obtain your FEIN.
