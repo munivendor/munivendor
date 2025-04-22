@@ -1,9 +1,9 @@
-.basics-width {
-    width: 80%;
+.input-width {
+    width: 100%;
 }
 
-.basics-decision-maker-width {
-    width: 40%;
+.single-input-width {
+    width: 49%;
 }
 
 .field-container {
@@ -16,3 +16,9 @@
     flex: 1;
     min-width: 200px;
 }
+
+.form-with-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
