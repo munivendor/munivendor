@@ -12,18 +12,18 @@ export class CategoryHierarchyService {
 
     constructor(private http: HttpClient) { }
 
-    getCategoryHierarchy(): Observable<CategoryNode[]> {
+    GetCategoryHierarchy(): Observable<CategoryNode[]> {
         return this.http.get<string>(`${this.apiUrl}CategoryHierarchy`).pipe(
-            map(categoryHierarchyString => {
-                const result = JSON.parse(categoryHierarchyString);
-                return result as CategoryNode[];
-            })
+          map(categoryHierarchyString => {
+            const result = JSON.parse(categoryHierarchyString);
+            return result as CategoryNode[];
+          })
         );
-    }
-
-    saveCategoryHierarchy(categoryHierarchy: string): Observable<any> {
-        return this.http.put(`${this.apiUrl}CategoryHierarchy`, JSON.stringify(categoryHierarchy), {
-            headers: { 'Content-Type': 'application/json' }
+      }
+      
+    SaveCategoryHierarchy(categoryHierarchy: string): Observable<any> {
+        return this.http.put(`${this.apiUrl}CategoryHierarchy`, categoryHierarchy, {
+            headers: { 'Content-Type': 'application/json' },
         });
     }
 }

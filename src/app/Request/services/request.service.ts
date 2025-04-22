@@ -1,7 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { SubCategory } from '../model/subcategory.model';
 import { DecisionMaker } from '../model/decisionmaker.model';
 import { RequestType } from '../model/requesttype.model';
 import { Request } from '../model/request.model';
@@ -18,15 +17,6 @@ export class RequestService {
 
   loadRequests(): Observable<any> {
     return this.http.get<any>(this.url);
-  }
-
-  GetSubcategories(categoryId: any): Observable<SubCategory[]> {
-    let params = this.url + 'Subcategories/' + categoryId
-    return this.http.get<SubCategory[]>(params);
-  }
-
-  GetAllSubcategories(): Observable<SubCategory[]> {
-    return this.http.get<SubCategory[]>(this.url + 'Subcategories');
   }
 
   GetDecisionMakers(): Observable<DecisionMaker[]> {
@@ -89,10 +79,6 @@ export class RequestService {
     return this.http.get<any>(`${this.url}Requests`);
   }
 
-  GetCategories(): Observable<any> {
-    return this.http.get<any>(`${this.url}Categories`);
-  }
-
   GetRequestStatuses(): Observable<any> {
     return this.http.get<any>(`${this.url}RequestStatus`);
   }
@@ -132,8 +118,6 @@ export class RequestService {
     return this.http.delete<void>(`${this.url}MunicipalityDocuments/${documentId}`)
   }
 
- 
-
   SaveRequestDocuments(requestId: number, documentIds: number[]): Observable<any> {
     const headers = { 'Content-Type': 'application/json' };
     const url = `${this.url}RequestDocuments/${requestId}`;
@@ -152,6 +136,3 @@ export class RequestService {
     return this.http.delete<void>(`${this.url}DecisionMakers/${requestId}/${decisionMakerId}`);
   }
 }
-
-
-

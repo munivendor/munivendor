@@ -1,5 +1,5 @@
 <div>
-  <button mat-button color="primary" (click)="addRootCategory()">
+  <button mat-button color="primary" (click)="addRootCategory()" [disabled]="isAnyNodeEditing()">
     <mat-icon>add</mat-icon> Add Root Category
   </button>
 </div>
@@ -13,13 +13,14 @@
       <input *ngIf="node.isEditing" [(ngModel)]="node.tempName" class="edit-input" (blur)="saveNodeEdit(node)" />
       <span class="badge" *ngIf="node.deleted">Deleted</span>
       <span class="node-actions" *ngIf="!node.deleted">
-        <button mat-icon-button (click)="node.isEditing ? saveNodeEdit(node) : editNode(node)">
+        <button mat-icon-button (click)="node.isEditing ? saveNodeEdit(node) : editNode(node)"
+          [disabled]="!node.isEditing && isAnyNodeEditing()">
           <mat-icon>{{ node.isEditing ? 'check' : 'edit' }}</mat-icon>
         </button>
-        <button mat-icon-button (click)="deleteNode(node)">
+        <button mat-icon-button (click)="deleteNode(node)" [disabled]="isAnyNodeEditing()">
           <mat-icon>delete</mat-icon>
         </button>
-        <button mat-icon-button (click)="addChild(node)">
+        <button mat-icon-button (click)="addChild(node)" [disabled]="isAnyNodeEditing()">
           <mat-icon>add</mat-icon>
         </button>
       </span>
@@ -38,13 +39,14 @@
       <input *ngIf="node.isEditing" [(ngModel)]="node.tempName" class="edit-input" (blur)="saveNodeEdit(node)" />
       <span class="badge" *ngIf="node.deleted">Deleted</span>
       <span class="node-actions" *ngIf="!node.deleted">
-        <button mat-icon-button (click)="node.isEditing ? saveNodeEdit(node) : editNode(node)">
+        <button mat-icon-button (click)="node.isEditing ? saveNodeEdit(node) : editNode(node)"
+          [disabled]="!node.isEditing && isAnyNodeEditing()">
           <mat-icon>{{ node.isEditing ? 'check' : 'edit' }}</mat-icon>
         </button>
-        <button mat-icon-button (click)="deleteNode(node)">
+        <button mat-icon-button (click)="deleteNode(node)" [disabled]="isAnyNodeEditing()">
           <mat-icon>delete</mat-icon>
         </button>
-        <button mat-icon-button (click)="addChild(node)">
+        <button mat-icon-button (click)="addChild(node)" [disabled]="isAnyNodeEditing()">
           <mat-icon>add</mat-icon>
         </button>
       </span>
@@ -54,3 +56,9 @@
     </div>
   </mat-nested-tree-node>
 </mat-tree>
+
+<div>
+  <button mat-raised-button color="primary" (click)="saveCategoryHierarchy()" [disabled]="isAnyNodeEditing()" style="margin-top: 8px;">
+    <mat-icon>save</mat-icon> Save Changes
+  </button>
+</div>
