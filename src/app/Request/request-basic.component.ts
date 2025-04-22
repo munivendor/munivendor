@@ -4,8 +4,6 @@ import { FormGroup, FormBuilder, FormArray, ReactiveFormsModule, Validators, For
 import { CommonModule } from '@angular/common';
 import { RequestService } from './services/request.service';
 import { StateService } from './services/state.service';
-import { SubCategory } from './model/subcategory.model';
-import { Category } from './model/category.model';
 import { DecisionMaker } from './model/decisionmaker.model';
 import { RequestType } from './model/requesttype.model';
 import { Request } from './model/request.model';
@@ -13,13 +11,24 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
-import { MatSelectChange } from '@angular/material/select';
 import { MatDatepickerInputEvent, MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { NgxMatTimepickerModule } from 'ngx-mat-timepicker';
 import { MatIconModule } from '@angular/material/icon';
-import { forkJoin, Subject, takeUntil } from 'rxjs';
-
+import { BehaviorSubject, forkJoin, Subject, takeUntil } from 'rxjs';
+import { MatTreeModule } from '@angular/material/tree';
+import { CategoryHierarchyService } from './services/category-hierarchy.service';
+import { CategoryNode } from '../shared/model/category-tree.model';
+import { debounceTime, distinctUntilChanged, filter, tap } from 'rxjs/operators';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+interface FlattenedCategoryNode {
+  name: string;
+  categoryId: string;
+  level: number;
+  expandable: boolean;
+  parentId?: string | null;
+  children?: FlattenedCategoryNode[];
+}
 @Component({
   selector: 'request-basic',
   standalone: true,
@@ -37,8 +46,10 @@ import { forkJoin, Subject, takeUntil } from 'rxjs';
     MatDatepickerModule,
     MatNativeDateModule,
     NgxMatTimepickerModule,
-    MatIconModule
-  ]
+    MatIconModule,
+    MatTreeModule,
+    MatAutocompleteModule
+  ],
 })
 
 export class BasicRequestComponent implements OnInit, OnDestroy {
@@ -47,11 +58,16 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
   @Output() deleteDropdown = new EventEmitter<{ decisionMakerId: number | null }>();
   @Output() formValidityChange = new EventEmitter<boolean>();
 
+  filteredCategoriesSubject = new BehaviorSubject<FlattenedCategoryNode[]>([]);
+  filteredCategories = this.filteredCategoriesSubject.asObservable();
+  isFiltering = false;
+  hierarchicalCategories: CategoryNode[] = [];
+  flattenedCategories: FlattenedCategoryNode[] = [];
+  expandedNodes: Set<string> = new Set<string>();
+  selectedCategoryDisplay: string = '';
   private destroy$ = new Subject<void>();
-
   decisionMakers!: DecisionMaker[];
-  categories: Category[] = [];
-  subcategories!: SubCategory[];
+  categories: CategoryNode[] = [];
   requestTypes: RequestType[] | undefined;
   requestName = new FormControl<string | null>(null, [Validators.required]);
   basicsFormGroup!: FormGroup;
@@ -61,20 +77,190 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private requestService: RequestService,
     private stateService: StateService,
-    private cdr: ChangeDetectorRef) { }
+    private cdr: ChangeDetectorRef,
+    private categoryHierarchyService: CategoryHierarchyService
+  ) {
+    this.flattenCategories();
+  }
 
   ngOnInit() {
     if (this.idParam) {
-      this.getRequestById(Number(this.idParam))
+      this.getRequestById(Number(this.idParam));
     } else {
       this.initializeForm();
+
+      // optimize performance and emit only real changes
+      let lastStatus = this.basicsFormGroup.valid;
+      this.basicsFormGroup.statusChanges
+        .pipe(
+          debounceTime(100),
+          takeUntil(this.destroy$),
+          filter(() => this.basicsFormGroup.valid !== lastStatus),
+          tap(() => lastStatus = this.basicsFormGroup.valid)
+        )
+        .subscribe(() => {
+          this.formValidityChange.emit(this.basicsFormGroup.valid);
+        });
     }
   }
 
+  getNodeIndent(level: number | undefined): number {
+    return (level ?? 0) * 30;
+  }
+
+  applyCategoryFilter(value: string | { name: string }) {
+    const name = typeof value === 'string' ? value : value?.name;
+    const filterValue = name?.toLowerCase() ?? '';
+
+    this.isFiltering = !!filterValue;
+
+    if (!filterValue) {
+      this.isFiltering = false;
+
+      const visible: FlattenedCategoryNode[] = [];
+
+      for (const node of this.flattenedCategories) {
+        if (node.level === 0 || this.isNodeVisible(node)) {
+          const parentId = node.parentId;
+          if (!parentId || this.expandedNodes.has(parentId) || node.level === 0) {
+            visible.push(node);
+          }
+        }
+      }
+
+      this.filteredCategoriesSubject.next(visible);
+      return;
+    }
+
+    const filtered = this.flattenedCategories.filter(cat =>
+      cat.name.toLowerCase().includes(filterValue)
+    );
+
+    this.expandParentsOfFilteredNodes(filtered);
+    this.filteredCategoriesSubject.next(filtered);
+  }
+
+  expandParentsOfFilteredNodes(filtered: FlattenedCategoryNode[]): void {
+    const toExpand: Set<string> = new Set();
+
+    for (const node of filtered) {
+      let currentParentId = node.parentId;
+      while (currentParentId) {
+        toExpand.add(currentParentId);
+        const parentNode = this.flattenedCategories.find(cat => cat.categoryId === currentParentId);
+        currentParentId = parentNode?.parentId;
+      }
+    }
+
+    for (const id of toExpand) {
+      this.expandedNodes.add(id);
+    }
+
+    for (const id of toExpand) {
+      const parentNode = this.flattenedCategories.find(cat => cat.categoryId === id);
+      if (parentNode && !filtered.includes(parentNode)) {
+        filtered.push(parentNode);
+      }
+    }
+
+    filtered.sort((a, b) => {
+      const indexA = this.flattenedCategories.findIndex(cat => cat.categoryId === a.categoryId);
+      const indexB = this.flattenedCategories.findIndex(cat => cat.categoryId === b.categoryId);
+      return indexA - indexB;
+    });
+  }
+
+  // triggers autocomplete dropdown to display since the component is a
+  // custom tree-like autocomplete and value is manually set by category ID,
+  onCategoryFocus(): void {
+    const categoryControl = this.basicsFormGroup.get('category');
+    const currentValue = categoryControl?.value;
+    categoryControl?.setValue(currentValue);
+  }
+
+  isNodeVisible(node: FlattenedCategoryNode): boolean {
+    if (node.level === 0) return true;
+
+    let parentId = node.parentId;
+    while (parentId) {
+      if (!this.expandedNodes.has(parentId)) {
+        return false;
+      }
+      const parent = this.flattenedCategories.find(cat => cat.categoryId === parentId);
+      parentId = parent?.parentId;
+    }
+    return true;
+  }
+
+  transformApiCategories(categories: CategoryNode[], level: number = 0): CategoryNode[] {
+    return categories
+      .filter(cat => !cat.deleted)
+      .map(category => ({
+        ...category,
+        categoryId: category.id?.toString() ?? '',
+        level,
+        expandable: !!category.children?.length,
+        children: category.children?.length
+          ? this.transformApiCategories(category.children, level + 1)
+          : undefined
+      }));
+  }
+
+  flattenCategories(): void {
+    this.flattenedCategories = [];
+    this.processCategoryLevel(this.hierarchicalCategories);
+  }
+
+  private processCategoryLevel(categories: CategoryNode[], level = 0, parentId: string | null = null): void {
+    categories.forEach(category => {
+      const catId = category.categoryId ?? '';
+      const flatNode: FlattenedCategoryNode = {
+        name: category.name,
+        categoryId: catId,
+        level: level,
+        expandable: !!category.children?.length,
+        parentId: parentId ?? undefined
+      };
+
+      this.flattenedCategories.push(flatNode);
+
+      if (category.children?.length) {
+        this.processCategoryLevel(category.children, level + 1, catId);
+      }
+    });
+  }
+
+  toggleExpand(categoryId: number, event: MouseEvent): void {
+    event.stopPropagation();
+    if (this.expandedNodes.has(categoryId.toString())) {
+      this.expandedNodes.delete(categoryId.toString());
+    } else {
+      this.expandedNodes.add(categoryId.toString());
+    }
+
+    this.applyCategoryFilter('');
+  }
+
+  isExpanded(categoryId: string): boolean {
+    return this.expandedNodes.has(categoryId);
+  }
+
+  private formStatus$ = new Subject<void>();
+
   private initializeForm(data: any = null): void {
+    this.formStatus$.next();
+
+    this.createFormGroup(data);
+    this.handleCategoryValueChanges();
+    this.monitorFormValidity();
+
+    this.emitInitialFormValidity();
+    this.fetchInitialData();
+  }
+
+  private createFormGroup(data: any = null): void {
     this.basicsFormGroup = this.fb.group({
       category: [data?.category || '', Validators.required],
-      subcategory: [data?.subcategory || '', Validators.required],
       requestType: [data?.requestType || '', Validators.required],
       requestName: [data?.requestName || '', Validators.required],
       publishDate: [data?.publishDate || '', Validators.required],
@@ -85,78 +271,119 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
       contractEndDate: [data?.contractEndDate || '', Validators.required],
       dropdowns: this.fb.array(data?.dropdowns || [this.createDropdownControl()]),
     });
-
-    this.basicsFormGroup.statusChanges
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.formValidityChange.emit(this.basicsFormGroup.valid);
-      });
-
-    this.fetchInitialData();
   }
 
+  private handleCategoryValueChanges(): void {
+    const categoryControl = this.basicsFormGroup.get('category');
+    if (!categoryControl) return;
+
+    categoryControl.valueChanges
+      .pipe(debounceTime(200), distinctUntilChanged())
+      .subscribe(value => {
+        if (!value) {
+          categoryControl.setValue('', { emitEvent: false });
+          this.expandedNodes.clear();
+        }
+        if (value !== null) {
+          this.applyCategoryFilter(value);
+        }
+      });
+  }
+
+  private monitorFormValidity(): void {
+    let lastValid = this.basicsFormGroup.valid;
+
+    this.basicsFormGroup.statusChanges
+      .pipe(
+        debounceTime(100),
+        takeUntil(this.formStatus$),
+        filter(() => this.basicsFormGroup.valid !== lastValid),
+        tap(() => lastValid = this.basicsFormGroup.valid)
+      )
+      .subscribe(() => {
+        Promise.resolve().then(() => {
+          this.formValidityChange.emit(this.basicsFormGroup.valid);
+        });
+      });
+  }
+
+  private emitInitialFormValidity(): void {
+    setTimeout(() => {
+      this.formValidityChange.emit(this.basicsFormGroup.valid);
+    });
+  }
+
+  displayCategoryName = (categoryId: string): string => {
+    const match = this.flattenedCategories.find(cat => cat.categoryId === categoryId);
+    return match ? match.name : '';
+  };
+
   private fetchInitialData(): void {
-    this.requestService.GetCategories()
+    this.categoryHierarchyService.GetCategoryHierarchy()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (categories: Category[]) => {
-          this.categories = categories;
+        next: (categories) => {
+          this.hierarchicalCategories = this.transformApiCategories(categories);
+          this.flattenCategories();
         },
-        error: (err) => {
-          console.error('Error fetching categories:', err);
-        },
+        error: err => console.error('Error fetching categories:', err)
       });
 
     this.requestService.GetDecisionMakers()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (decisionMakers: DecisionMaker[]) => {
-          this.decisionMakers = decisionMakers;
-        },
-        error: (err) => {
-          console.error('Error fetching decision makers:', err);
-        },
+        next: (decisionMakers: DecisionMaker[]) => this.decisionMakers = decisionMakers,
+        error: err => console.error('Error fetching decision makers:', err)
       });
 
     this.requestService.GetRequestTypes()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (requestTypes: RequestType[]) => {
-          this.requestTypes = requestTypes;
-        },
-        error: (err) => {
-          console.error('Error fetching request types:', err);
-        },
+        next: (requestTypes: RequestType[]) => this.requestTypes = requestTypes,
+        error: err => console.error('Error fetching request types:', err)
       });
+  }
+
+  selectCategory(categoryId: string, categoryName: string): void {
+    this.basicsFormGroup.get('category')?.setValue(categoryId, { emitEvent: true });
+    setTimeout(() => this.cdr.markForCheck());
+  }
+
+  // finds a category by its ID in the hierarchical categories since
+  // nested categories need to be accounted for
+  private findCategoryById(categories: any[], targetId: number): any {
+    for (const category of categories) {
+      if (category.id === targetId) {
+        return category;
+      }
+
+      if (category.children && category.children.length > 0) {
+        const found = this.findCategoryById(category.children, targetId);
+        if (found) return found;
+      }
+    }
+    return null;
   }
 
   private getRequestById(requestId: number): void {
     const request$ = this.requestService.GetRequestDetailsById(requestId);
-    const categories$ = this.requestService.GetCategories();
+    const categories$ = this.categoryHierarchyService.GetCategoryHierarchy();
     const requestTypes$ = this.requestService.GetRequestTypes();
-    const subCategories$ = this.requestService.GetAllSubcategories();
     const decisionMakers$ = this.requestService.GetDecisionMakers();
 
-    forkJoin([request$, categories$, requestTypes$, subCategories$, decisionMakers$])
+    forkJoin([request$, categories$, requestTypes$, decisionMakers$])
       .pipe(takeUntil(this.destroy$))
       .subscribe(
-        ([request, categories, requestTypes, subCategories, decisionMakers]) => {
-          const category = categories.find((c: { categoryId: any }) => c.categoryId === request.categoryId);
+        ([request, categories, requestTypes, decisionMakers]) => {
+          const category = this.findCategoryById(categories, request.categoryId);
           const requestType = requestTypes.find((r: { requestTypeId: number }) => r.requestTypeId === request.requestTypeId);
-          const subCategory = subCategories.find(
-            (sc: { subCategoryId: number }) => sc.subCategoryId === request.subCategoryId
-          );
-
-          this.subcategories = subCategories.filter(sc => sc.categoryId === request.categoryId);
-
           const decisionMakersMapped = request.decisionMakerSelections.map(
             (selection: { decisionMakerId: number }) =>
               decisionMakers.find((dm: { decisionMakerId: number }) => dm.decisionMakerId === selection.decisionMakerId)
           ).filter((dm: any) => dm);
 
           const formData = {
-            category: category?.categoryId || '',
-            subcategory: subCategory?.subCategoryId || '',
+            category: category?.id,
             requestType: requestType?.requestTypeId,
             requestName: request.requestName,
             publishDate: request.publishDate,
@@ -169,8 +396,23 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
           };
 
           this.initializeForm(formData);
+          if (category) {
+            this.basicsFormGroup.get('category')?.setValue(category.id, { emitEvent: true });
+            if (category.id !== null) {
+              this.selectCategory(category.id.toString(), category.name);
+            }
+            this.selectedCategoryDisplay = category.name;
 
-          this.formValidityChange.emit(this.basicsFormGroup.valid);
+            // Force update with DOM manipulation approach
+            setTimeout(() => {
+              const categoryInput = document.querySelector('input[formControlName="category"]');
+              if (categoryInput) {
+                (categoryInput as HTMLInputElement).value = category.name;
+              }
+              this.cdr.detectChanges();
+            }, 0);
+          }
+          this.cdr.detectChanges();
         },
         (error: any) => {
           console.error('Error fetching data', error);
@@ -230,21 +472,6 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     return this.decisionMakers?.filter(dm => !selectedDecisionMakerIds.has(dm.decisionMakerId)) ?? [];
   }
 
-  onCategoryChange(event: MatSelectChange): void {
-    const categoryId = event.value;
-    this.requestService.GetSubcategories(categoryId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((subcategories: SubCategory[]) => {
-        this.subcategories = subcategories;
-        const currentSubcategoryId = this.basicsFormGroup.get('subcategory')?.value;
-        if (this.subcategories.some(sc => sc.subCategoryId === currentSubcategoryId)) {
-          this.basicsFormGroup.get('subcategory')?.setValue(currentSubcategoryId);
-        } else {
-          this.basicsFormGroup.get('subcategory')?.setValue('');
-        }
-      });
-  }
-
   saveRequest() {
     let request = this.createRequest();
     const requestIdFromStateService = this.stateService.getRequestId();
@@ -286,7 +513,6 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     let request = new Request();
 
     request.categoryId = formValues.category;
-    request.subcategoryId = formValues.subcategory;
     request.requestTypeId = formValues.requestType;
     request.requestName = formValues.requestName;
 
@@ -340,13 +566,10 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     }
   }
 
-  combineDateTimeInUtc(inputDate: string, inputTime: string): string {
-    const dateTimeString = `${inputDate}T${inputTime}Z`;
-    return dateTimeString;
-  }
-
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    this.formStatus$.next();
+    this.formStatus$.complete();
   }
 }
