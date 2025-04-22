@@ -14,7 +14,6 @@ export class Request
         requestName!: string
         requestTypeId!: number
         categoryId!: number
-        subcategoryId!: number
         publishDate!: Date
         publishTime!:Time
         openDate!: Date

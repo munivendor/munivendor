@@ -5,7 +5,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { ConfirmationDialog } from '../RequestConfirmationDialog/confirmation-dialog.component';
 import { RequestService } from '../services/request.service';
 import { Request } from '../model/request.model';
-
+import { CategoryHierarchyService } from '../services/category-hierarchy.service';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 
 @Component({
@@ -22,11 +22,10 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   joinedRequestData: Request[] = [];
-
   displayedColumns: string[] = ['actions', 'emptyColumn', 'requestName', 'requestType', 'category', 'publishDate', 'requestStatus',];
   dataSource = new MatTableDataSource<any>();
 
-  constructor(public dialog: MatDialog, private requestService: RequestService) { }
+  constructor(public dialog: MatDialog, private requestService: RequestService, private categoryHierarchyService: CategoryHierarchyService) { }
 
   ngOnInit(): void {
     this.getRequestObjDetails();
@@ -37,12 +36,25 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  private findCategoryById(categories: any[], targetId: number): any {
+    for (const category of categories) {
+      if (category.id === targetId) {
+        return category;
+      }
+
+      if (category.children && category.children.length > 0) {
+        const found = this.findCategoryById(category.children, targetId);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+
   getRequestObjDetails() {
     const requests$ = this.requestService.GetRequests();
-    const categories$ = this.requestService.GetCategories();
+    const categories$ = this.categoryHierarchyService.GetCategoryHierarchy();
     const requestTypes$ = this.requestService.GetRequestTypes();
     const requestStatuses$ = this.requestService.GetRequestStatuses();
-
     const combinedData: any[] = [];
 
     forkJoin([requests$, categories$, requestTypes$, requestStatuses$])
@@ -50,14 +62,15 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
       .subscribe(
         ([requests, categories, requestTypes, requestStatuses]) => {
           requests.forEach((request: { categoryId: any; requestTypeId: number; requestStatusId: any; }) => {
-            const category = categories.find((c: { categoryId: any; }) => c.categoryId === request.categoryId);
+            const category = this.findCategoryById(categories, request.categoryId);
             const requestType = requestTypes.find(r => r.requestTypeId === request.requestTypeId);
             const requestStatus = requestStatuses.find((rs: { requestStatusId: any; }) => rs.requestStatusId === request.requestStatusId);
+
             combinedData.push({
               ...request,
               category,
               requestType,
-              requestStatus
+              requestStatus,
             });
           });
           this.joinedRequestData.push(...combinedData);
