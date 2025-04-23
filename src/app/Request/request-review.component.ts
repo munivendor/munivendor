@@ -47,19 +47,19 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
     private categoryHierarchyService: CategoryHierarchyService
   ) { }
 
-  private fetchCategoryHierarchy() {
+  private getCategoryHierarchy() {
     this.categoryHierarchyService.GetCategoryHierarchy()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (categories) => {
-          this.hierarchicalCategories = this.transformApiCategories(categories);
+          this.hierarchicalCategories = this.prepareCategoriesForTreeRendering(categories);
         },
         error: err => console.error('Error fetching categories:', err)
       });
   }
 
   ngOnInit() {
-    this.fetchCategoryHierarchy();
+    this.getCategoryHierarchy();
 
     if (this.paramRequestId) {
       this.getRequestObjDetails(this.paramRequestId);
@@ -156,27 +156,30 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
       );
   }
 
-  findCategoryById(categoryId: string | number): CategoryNode | null {
+  findCategoryById(categoryId: number): CategoryNode | null {
     if (!categoryId) return null;
-    const idToFind = categoryId.toString();
-    let result: CategoryNode | null = null;
-    const findRecursive = (categories: CategoryNode[]) => {
+    const categoryIdToFind = categoryId.toString();
+  
+    const search = (categories: CategoryNode[]): CategoryNode | null => {
       for (const category of categories) {
-        if (category.categoryId === idToFind || category.id?.toString() === idToFind) {
-          result = category;
-          return;
+        if (
+          category.categoryId === categoryIdToFind ||
+          category.id?.toString() === categoryIdToFind
+        ) {
+          return category;
         }
         if (category.children) {
-          findRecursive(category.children);
-          if (result) return;
+          const found = search(category.children);
+          if (found) return found;
         }
       }
+      return null;
     };
-    findRecursive(this.hierarchicalCategories);
-    return result;
+  
+    return search(this.hierarchicalCategories);
   }
 
-  transformApiCategories(categories: CategoryNode[], level: number = 0): CategoryNode[] {
+  prepareCategoriesForTreeRendering(categories: CategoryNode[], level: number = 0): CategoryNode[] {
     return categories
       .filter(cat => !cat.deleted)
       .map(category => ({
@@ -185,13 +188,11 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
         level,
         expandable: !!category.children?.length,
         children: category.children?.length
-          ? this.transformApiCategories(category.children, level + 1)
+          ? this.prepareCategoriesForTreeRendering(category.children, level + 1)
           : undefined
       }));
   }
 
-  // takes a combined date-time string, parses it
-  // returns an object containing separate date and time fields.
   splitDateTime(dateTimeString: string): { date: string; time: string } {
     const utcDate = new Date(dateTimeString + 'Z');
     const dateOptions: Intl.DateTimeFormatOptions = {

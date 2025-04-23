@@ -192,7 +192,7 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     return true;
   }
 
-  transformApiCategories(categories: CategoryNode[], level: number = 0): CategoryNode[] {
+  prepareCategoriesForTreeRendering(categories: CategoryNode[], level: number = 0): CategoryNode[] {
     return categories
       .filter(cat => !cat.deleted)
       .map(category => ({
@@ -201,7 +201,7 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
         level,
         expandable: !!category.children?.length,
         children: category.children?.length
-          ? this.transformApiCategories(category.children, level + 1)
+          ? this.prepareCategoriesForTreeRendering(category.children, level + 1)
           : undefined
       }));
   }
@@ -323,7 +323,7 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (categories) => {
-          this.hierarchicalCategories = this.transformApiCategories(categories);
+          this.hierarchicalCategories = this.prepareCategoriesForTreeRendering(categories);
           this.flattenCategories();
         },
         error: err => console.error('Error fetching categories:', err)
