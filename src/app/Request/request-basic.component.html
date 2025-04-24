@@ -20,7 +20,7 @@
                     {{ isExpanded(option.categoryId) ? 'expand_more' : 'chevron_right' }}
                   </mat-icon>
                 </button>
-                <span *ngIf="!option.expandable" class="spacer"></span>
+                <span *ngIf="!option.expandable" [ngStyle]="{ 'padding-left.px': getNodeIndent(option.level)}"></span>
                 <span>{{ option.name }}</span>
               </div>
             </mat-option>
