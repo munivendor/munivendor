@@ -77,6 +77,7 @@ export class CategoryTreeComponent implements OnInit {
       id: null,
       name: 'New Category',
       tempName: 'New Category',
+      parentId: null,
       deleted: false,
       isEditing: true,
       isNew: true,
@@ -84,7 +85,6 @@ export class CategoryTreeComponent implements OnInit {
       children: []
     };
   }
-
   addRootCategory() {
     const newRoot = this.createNewNode(0);
 
@@ -92,7 +92,6 @@ export class CategoryTreeComponent implements OnInit {
     this.updateCategoryHierarchy();
     this.updateTreeData();
   }
-
   addChild(parentNode: CategoryNode) {
     this.treeControl.expand(parentNode);
     const expandedNodeIds = this.getExpandedNodeIds();
@@ -110,10 +109,7 @@ export class CategoryTreeComponent implements OnInit {
     if (!this.treeControl.isExpanded(parentNode)) {
       this.treeControl.expand(parentNode);
     }
-
-    setTimeout(() => {
       this.restoreExpandedNodes(expandedNodeIds);
-    }, 0);
   }
 
   editNode(node: CategoryNode): void {

@@ -2,7 +2,7 @@ export interface CategoryNode {
   id: number | null;
   categoryId?: string;
   expandable?: boolean
-  parentId?: number | null;
+  parentId: number | null;
   tempParentId?: string;
   name: string;
   tempName?: string;
