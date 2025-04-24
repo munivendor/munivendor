@@ -74,7 +74,7 @@ export class ConfirmationDialog {
     }
 
     if (this.requestObjAndUserAction.action === 'edit') {
-      this.router.navigate(['/dashboard-component/edit-request-view', this.requestObjAndUserAction.request.requestId]);
+      this.router.navigate(['/edit-request-view', this.requestObjAndUserAction.request.requestId]);
     }
     this.dialogRef.close(true); 
   }

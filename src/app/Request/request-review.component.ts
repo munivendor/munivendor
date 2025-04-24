@@ -10,6 +10,8 @@ import { RequestService } from './services/request.service';
 import { StateService } from './services/state.service';
 import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { CategoryNode } from '../shared/model/category-tree.model';
+import { CategoryHierarchyService } from './services/category-hierarchy.service';
 
 @Component({
   selector: 'request-review',
@@ -29,21 +31,36 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 export class RequestReviewComponent implements OnInit, OnDestroy {
   @Input() paramRequestId?: number;
   private destroy$ = new Subject<void>();
-  
+
   requestId!: number | null;
   requestFinalReviewDetailsForm!: FormGroup;
   requestFinalReviewDetails: any = {};
   docs: any;
+  hierarchicalCategories: CategoryNode[] = [];
 
   constructor(
     private fb: FormBuilder,
     private requestService: RequestService,
     private stateService: StateService,
     private router: Router,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private categoryHierarchyService: CategoryHierarchyService
   ) { }
 
+  private fetchCategoryHierarchy() {
+    this.categoryHierarchyService.GetCategoryHierarchy()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (categories) => {
+          this.hierarchicalCategories = this.transformApiCategories(categories);
+        },
+        error: err => console.error('Error fetching categories:', err)
+      });
+  }
+
   ngOnInit() {
+    this.fetchCategoryHierarchy();
+
     if (this.paramRequestId) {
       this.getRequestObjDetails(this.paramRequestId);
     }
@@ -82,19 +99,16 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
 
   getRequestObjDetails(requestId: number) {
     const request$ = this.requestService.GetRequestDetailsById(requestId);
-    const categories$ = this.requestService.GetCategories();
     const requestTypes$ = this.requestService.GetRequestTypes();
-    const subCategories$ = this.requestService.GetAllSubcategories();
     const decisionMakers$ = this.requestService.GetDecisionMakers();
     const requiredRequestDocuments$ = this.requestService.GetRequestRequiredDocumentsById(requestId);
 
-    forkJoin([request$, categories$, requestTypes$, subCategories$, decisionMakers$, requiredRequestDocuments$])
+    forkJoin([request$, requestTypes$, decisionMakers$, requiredRequestDocuments$])
       .pipe(takeUntil(this.destroy$))
       .subscribe(
-        ([request, categories, requestTypes, subCategories, decisionMakers, requiredRequestDocuments]) => {
-          const category = categories.find((c: { categoryId: any }) => c.categoryId === request.categoryId);
+        ([request, requestTypes, decisionMakers, requiredRequestDocuments]) => {
+          const category = this.findCategoryById(request.categoryId);
           const requestType = requestTypes.find((r: { requestTypeId: number }) => r.requestTypeId === request.requestTypeId);
-          const subCategory = subCategories.find((sc: { subCategoryId: number }) => sc.subCategoryId === request.subCategoryId);
 
           const decisionMakersMapped = request.decisionMakerSelections.map((selection: { decisionMakerId: number }) =>
             decisionMakers.find((dm: { decisionMakerId: number }) => dm.decisionMakerId === selection.decisionMakerId)
@@ -111,7 +125,6 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
             ...request,
             category,
             requestType,
-            subCategory,
             decisionMakers: decisionMakersMapped,
             requestDocuments,
             openDate,
@@ -124,8 +137,7 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
 
           this.requestFinalReviewDetailsForm.patchValue({
             requestName: request.requestName,
-            category: category?.categoryName || '',
-            subcategory: subCategory?.subCategoryName || '',
+            category: category?.name || '',
             requestType: requestType?.requestTypeDesc || '',
             publishDate: publishDate,
             publishTime: publishTime,
@@ -144,23 +156,54 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
       );
   }
 
+  findCategoryById(categoryId: string | number): CategoryNode | null {
+    if (!categoryId) return null;
+    const idToFind = categoryId.toString();
+    let result: CategoryNode | null = null;
+    const findRecursive = (categories: CategoryNode[]) => {
+      for (const category of categories) {
+        if (category.categoryId === idToFind || category.id?.toString() === idToFind) {
+          result = category;
+          return;
+        }
+        if (category.children) {
+          findRecursive(category.children);
+          if (result) return;
+        }
+      }
+    };
+    findRecursive(this.hierarchicalCategories);
+    return result;
+  }
+
+  transformApiCategories(categories: CategoryNode[], level: number = 0): CategoryNode[] {
+    return categories
+      .filter(cat => !cat.deleted)
+      .map(category => ({
+        ...category,
+        categoryId: category.id?.toString() ?? '',
+        level,
+        expandable: !!category.children?.length,
+        children: category.children?.length
+          ? this.transformApiCategories(category.children, level + 1)
+          : undefined
+      }));
+  }
+
   // takes a combined date-time string, parses it
   // returns an object containing separate date and time fields.
   splitDateTime(dateTimeString: string): { date: string; time: string } {
     const utcDate = new Date(dateTimeString + 'Z');
-  
     const dateOptions: Intl.DateTimeFormatOptions = {
       month: '2-digit',
       day: '2-digit',
       year: 'numeric',
     };
-  
     const timeOptions: Intl.DateTimeFormatOptions = {
       hour: '2-digit',
       minute: '2-digit',
       hour12: false
     };
-   
     return {
       date: new Intl.DateTimeFormat('en-US', dateOptions).format(utcDate),
       time: utcDate.toLocaleTimeString(undefined, timeOptions), // Convert to local time
@@ -192,7 +235,7 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
             duration: 5000,
             verticalPosition: 'top'
           });
-          this.router.navigate(['/dashboard-component/requests-view']);
+          this.router.navigate(['/requests-view']);
         },
         error: (err) => {
           console.error('Failed to update request status:', err);

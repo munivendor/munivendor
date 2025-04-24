@@ -12,10 +12,8 @@ import { RequestOverviewComponent } from '../request-overview.component';
 import { RequestRequiredDocumentsComponent } from '../request-required-docs.component';
 import { RequestReviewComponent } from '../request-review.component';
 import { Request } from '../model/request.model';
-import { SubCategory } from '../model/subcategory.model';
 import { RequestSection } from '../model/requestsection.model';
 import { Subject, takeUntil } from 'rxjs';
-
 @Component({
   selector: 'create-request-stepper',
   templateUrl: 'create-request-stepper.component.html',
@@ -42,11 +40,10 @@ export class CreateRequestStepper implements OnDestroy {
   @ViewChild(RequestReviewComponent) requestReviewComponent!: RequestReviewComponent;
 
   private destroy$ = new Subject<void>();
-  
+
   receivedProposalSections: RequestSection[] = [];
   requestData!: Request;
   basicsFormGroup!: FormGroup;
-  subcategories!: SubCategory[];
   proposalsOverview!: FormGroup;
   requestDocumentsFormGroup!: FormGroup;
   municipalityId = 1;
@@ -57,8 +54,8 @@ export class CreateRequestStepper implements OnDestroy {
   municipalityDocuments: Document[] = [];
   finalReviewFormGroup!: FormGroup;
   idParam?: string | undefined | null;
-  isStepValid = true;
-
+  isStepValid = false;
+  
   constructor(
     private route: ActivatedRoute,
   ) {
@@ -70,24 +67,44 @@ export class CreateRequestStepper implements OnDestroy {
       });
   }
 
+  onFormValidityChange(valid: boolean) {
+    this.isStepValid = valid;
+  }
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
 
   saveRequest() {
-    this.basicRequestComponent.saveRequest();
+    if (this.basicRequestComponent) {
+      this.basicRequestComponent.saveRequest();
+    } else {
+      console.error('Basic request component not initialized');
+    }
   }
 
   saveSections(): void {
-    this.requestOverViewComponent.saveSections();
+    if (this.requestOverViewComponent) {
+      this.requestOverViewComponent.saveSections();
+    } else {
+      console.error('Request overview component not initialized');
+    }
   }
 
   saveDocuments(): void {
+    if (this.requestRequiredDocumentsComponent) {
     this.requestRequiredDocumentsComponent.saveDocuments();
+    } else {
+      console.error('Request required documents component not initialized');  
+    }
   }
 
   updateRequestStatusToScheduled(): void {
+    if (this.requestReviewComponent) {
     this.requestReviewComponent.onSubmit();
+    } else {
+      console.error('Request review component not initialized');
+    }
   }
 }

@@ -1,20 +1,11 @@
 <form [formGroup]="requestFinalReviewDetailsForm" (ngSubmit)="onSubmit()">
   <h2>Please review the following selections before submitting your request:</h2>
-
   <div class="field-container">
     <div class="inline-field">
       <p>Category:</p>
       <mat-form-field appearance="fill" class="input-width">
         <input matInput formControlName="category" readonly placeholder="Chosen Category"
-          value={{requestFinalReviewDetails.category?.categoryName}}>
-      </mat-form-field>
-    </div>
-
-    <div class="inline-field">
-      <p>Subcategory:</p>
-      <mat-form-field appearance="fill" class="input-width">
-        <input matInput formControlName="subcategory" readonly placeholder="Chosen Subcategory"
-          value={{requestFinalReviewDetails.subCategory?.subCategoryName}}>
+          value={{requestFinalReviewDetails.category?.name}}>
       </mat-form-field>
     </div>
 
@@ -28,7 +19,6 @@
   </div>
 
   <h2>Request Details</h2>
-
   <div class="field-container">
     <div class="inline-field">
       <p>Request Name:</p>
@@ -37,6 +27,7 @@
           value={{requestFinalReviewDetails.requestName}}>
       </mat-form-field>
     </div>
+    <div class="inline-field"></div>
   </div>
 
   <div class="field-container">
@@ -97,26 +88,23 @@
     <div *ngFor="let decisionMaker of requestFinalReviewDetails.decisionMakers; let i = index" class="inline-field">
       <p *ngIf="i === 0">Decision Makers:</p>
       <p *ngIf="i > 0" style="visibility: hidden;">&nbsp;</p>
-      <mat-form-field appearance="fill" class="input-width">
+      <mat-form-field appearance="fill" class="single-input-width">
         <input matInput readonly placeholder="Chosen Decision Maker(s)" [value]="decisionMaker.decisionMakerName">
       </mat-form-field>
     </div>
   </div>
 
   <div>
-    <h3>Notarization Method</h3>
+    <h3><b>Digital Notarization</b></h3>
     <mat-checkbox [checked]="true" [disabled]="true">
-      Mail In By Close Date/Time- This means that the proposer will
-      need to mail all notarized forms separately from their submission
-      through Munivendor. The proposer will label the original documents
-      with a corresponding and unique proposal submission reference
-      number that will be given to the proposer upon proposal submission.
+      Proposers will submit digitally notarized documents using the MuniVendor platform with one of our certified notaries. Completed and digitally notarized documents will be included in the proposer's digital submission package.
     </mat-checkbox>
   </div>
 
   <br>
 
-  <h2>The Bid Checklist that proposers will complete for this opportunity will include a list of the following forms. Any documents that require notarization will be digitally notarized and included in the proposer’s submission.</h2>
+  <h2>The Bid Checklist that proposers will complete for this opportunity will include a list of the following forms.
+    Any documents that require notarization will be digitally notarized and included in the proposer’s submission.</h2>
   <div *ngFor="let requestDocument of requestFinalReviewDetails.requestDocuments">
     <mat-checkbox [checked]="true" [disabled]="true"> {{
       requestDocument.documentName }}</mat-checkbox>
@@ -125,7 +113,8 @@
   <br />
 
   <!-- display ONLY if user has not uploaded any documents for municipality -->
-  <p *ngIf="requestFinalReviewDetails.requestDocuments === null">Note: You have not uploaded/selected any additional documents.</p>
+  <p *ngIf="requestFinalReviewDetails.requestDocuments === null">Note: You have not uploaded/selected any additional
+    documents.</p>
 
   <h2>You have uploaded the following request:</h2>
   <!-- the PDF of the proposals step (all sections that have been filled out by user compiled into a PDF) -->

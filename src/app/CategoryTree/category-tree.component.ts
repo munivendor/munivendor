@@ -7,6 +7,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CategoryHierarchyService } from '../Request/services/category-hierarchy.service';
 import { CategoryNode } from '../shared/model/category-tree.model';
+import { ChangeDetectorRef } from '@angular/core';
 @Component({
   selector: 'app-category-tree',
   templateUrl: './category-tree.component.html',
@@ -21,13 +22,24 @@ export class CategoryTreeComponent implements OnInit {
   dataSource = new MatTreeNestedDataSource<CategoryNode>();
   categoryHierarchy: CategoryNode[] = [];
   newlyCreatedNode: CategoryNode | null = null;
+  editedNode: CategoryNode | null = null;
 
   constructor(
     private categoryHierarchyService: CategoryHierarchyService,
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit() {
     this.loadCategoryHierarchy();
+  }
+
+  isAnyNodeEditing(): boolean {
+    return !!this.editedNode || this.categoryHierarchy.some(node => this.checkEditing(node));
+  }
+
+  private checkEditing(node: CategoryNode): boolean {
+    if (node.isEditing) return true;
+    return node.children?.some(child => this.checkEditing(child)) ?? false;
   }
 
   hasChild = (_: number, node: CategoryNode) => !!node.children && node.children.length > 0;
@@ -37,7 +49,7 @@ export class CategoryTreeComponent implements OnInit {
   }
 
   private loadCategoryHierarchy() {
-    this.categoryHierarchyService.getCategoryHierarchy().subscribe({
+    this.categoryHierarchyService.GetCategoryHierarchy().subscribe({
       next: (categories: CategoryNode[]) => {
         this.updateNodeLevels(categories);
         this.categoryHierarchy = categories;
@@ -67,6 +79,7 @@ export class CategoryTreeComponent implements OnInit {
       tempName: 'New Category',
       deleted: false,
       isEditing: true,
+      isNew: true,
       level,
       children: []
     };
@@ -81,8 +94,10 @@ export class CategoryTreeComponent implements OnInit {
   }
 
   addChild(parentNode: CategoryNode) {
+    this.treeControl.expand(parentNode);
     const expandedNodeIds = this.getExpandedNodeIds();
     const newChild: CategoryNode = this.createNewNode(parentNode.level! + 1);
+    newChild.parentId = parentNode.id;
 
     parentNode.children = parentNode.children || [];
     parentNode.children.push(newChild);
@@ -91,29 +106,96 @@ export class CategoryTreeComponent implements OnInit {
     this.updateNodeLevels(this.dataSource.data);
     this.updateCategoryHierarchy();
     this.updateTreeData();
-    this.restoreExpandedNodes(expandedNodeIds);
-    this.treeControl.expand(parentNode);
+
+    if (!this.treeControl.isExpanded(parentNode)) {
+      this.treeControl.expand(parentNode);
+    }
+
+    setTimeout(() => {
+      this.restoreExpandedNodes(expandedNodeIds);
+    }, 0);
   }
 
-  editNode(node: CategoryNode) {
+  editNode(node: CategoryNode): void {
+    if (this.isAnyNodeEditing() && !node.isEditing) {
+      return;
+    }
+
+    if (this.editedNode && this.editedNode !== node) {
+      this.saveNodeEdit(this.editedNode);
+    }
+
     node.tempName = node.name;
     node.isEditing = true;
+    this.editedNode = node;
+
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      const inputs = document.querySelectorAll('.edit-input');
+      inputs.forEach(input => {
+        if (input instanceof HTMLInputElement) {
+          input.focus();
+        }
+      });
+    }, 0);
   }
 
-  saveNodeEdit(node: CategoryNode) {
+  saveNodeEdit(node: CategoryNode): void {
+    const expandedNodeIds = this.getExpandedNodeIds();
+    const parentPath = this.findParentPath(this.categoryHierarchy, node);
+
     if (node.tempName && node.tempName.trim() !== '') {
       node.name = node.tempName.trim();
+      node.isModified = true;
     }
+
     node.isEditing = false;
+    this.editedNode = null;
+
     this.updateCategoryHierarchy();
     this.updateTreeData();
-    this.saveCategoryHierarchy();
+    this.restoreExpandedNodes(expandedNodeIds);
+
+    parentPath.forEach(parent => {
+      this.treeControl.expand(parent);
+    });
+    this.cdr.markForCheck();
+    this.cdr.detectChanges();
+  }
+
+  private findParentPath(nodes: CategoryNode[], targetNode: CategoryNode, currentPath: CategoryNode[] = []): CategoryNode[] {
+    for (const node of nodes) {
+      if (node === targetNode) {
+        return currentPath;
+      }
+
+      if (node.children && node.children.length > 0) {
+        const foundPath = this.findParentPath(
+          node.children,
+          targetNode,
+          [...currentPath, node]
+        );
+
+        if (foundPath.length > 0) {
+          return foundPath;
+        }
+      }
+    }
+    return [];
   }
 
   deleteNode(node: CategoryNode) {
+    const expandedNodeIds = this.getExpandedNodeIds();
+    const parentPath = this.findParentPath(this.categoryHierarchy, node);
+
     this.markAndUpdateDeletedNode(node.id, this.categoryHierarchy);
-    this.refreshTreeAndExpand();
-    this.saveCategoryHierarchy();
+    this.updateCategoryHierarchy();
+    this.updateTreeData();
+    this.restoreExpandedNodes(expandedNodeIds);
+
+    parentPath.forEach(parent => {
+      this.treeControl.expand(parent);
+    });
   }
 
   private markAndUpdateDeletedNode(nodeId: number | null, nodes: CategoryNode[]) {
@@ -138,29 +220,18 @@ export class CategoryTreeComponent implements OnInit {
   saveCategoryHierarchy(): void {
     const cleanedCategoryHierarchy = this.categoryHierarchy.map(node => this.cleanNode(node));
     const categoryHierarchyString = JSON.stringify(cleanedCategoryHierarchy);
-    this.categoryHierarchyService.saveCategoryHierarchy(categoryHierarchyString).subscribe({
-      next: () => {
+
+    this.categoryHierarchyService.SaveCategoryHierarchy(categoryHierarchyString).subscribe({
+      next: (response) => {
         console.log('Category hierarchy saved successfully!');
         this.loadCategoryHierarchy();
+        const expandedNodeIds = this.getExpandedNodeIds();
+        this.restoreExpandedNodes(expandedNodeIds);
       },
       error: (error) => {
         console.error('Error saving category hierarchy:', error);
       }
     });
-  }
-
-  private setTreeData(data: CategoryNode[]) {
-    this.dataSource.data = data;
-    this.treeControl.dataNodes = data;
-  }
-
-  private refreshTreeAndExpand(expandedNode?: CategoryNode) {
-    const expandedNodeIds = this.getExpandedNodeIds();
-    this.setTreeData([...this.categoryHierarchy]);
-    this.restoreExpandedNodes(expandedNodeIds);
-    if (expandedNode) {
-      this.treeControl.expand(expandedNode);
-    }
   }
 
   private updateNodeLevels(nodes: CategoryNode[], parentLevel: number = 0) {
@@ -172,13 +243,15 @@ export class CategoryTreeComponent implements OnInit {
     });
   }
 
-  private getExpandedNodeIds(): (number | null)[] {
-    const expandedNodeIds: (number | null)[] = [];
-
+  private getExpandedNodeIds(): (number | string | null)[] {
+    const expandedNodeIds: (number | string | null)[] = [];
     const checkNode = (nodes: CategoryNode[]) => {
       nodes.forEach(node => {
-        if (node.id !== null && this.treeControl.isExpanded(node)) {
-          expandedNodeIds.push(node.id);
+        if (this.treeControl.isExpanded(node)) {
+          const nodeId = node.id ?? null;
+          if (nodeId !== undefined) {
+            expandedNodeIds.push(nodeId);
+          }
         }
         if (node.children && node.children.length) {
           checkNode(node.children);
@@ -189,10 +262,11 @@ export class CategoryTreeComponent implements OnInit {
     return expandedNodeIds;
   }
 
-  private restoreExpandedNodes(expandedNodeIds: (number | null)[]) {
+  private restoreExpandedNodes(expandedNodeIds: (number | string | null)[]) {
     const expandNode = (nodes: CategoryNode[]) => {
       nodes.forEach(node => {
-        if (node.id !== null && expandedNodeIds.includes(node.id)) {
+        const nodeId = node.id ?? null;
+        if (nodeId !== undefined && expandedNodeIds.includes(nodeId)) {
           this.treeControl.expand(node);
         }
         if (node.children && node.children.length) {
