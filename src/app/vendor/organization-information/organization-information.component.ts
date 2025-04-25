@@ -166,7 +166,7 @@ export class OrganizationInformationComponent implements OnInit {
     }
   }
 
-  private setupFieldBlurHandlers() {
+  /*private setupFieldBlurHandlers() {
     Object.keys(this.organizationInformationForm.controls).forEach(fieldName => {
       const control = this.organizationInformationForm.get(fieldName);
       
@@ -182,7 +182,7 @@ export class OrganizationInformationComponent implements OnInit {
         });
       }
     });
-  }
+  }*/
 
   private saveField(fieldName: string, value: any) {
     

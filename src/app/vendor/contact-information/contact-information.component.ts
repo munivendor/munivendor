@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
@@ -55,7 +55,7 @@ export class ContactInformationComponent implements OnInit, OnDestroy {
       city: [''],
       stateId: [''],
       zipCode: ['', [Validators.pattern('^[0-9]{5}$')]],
-      digitalSignatureConsent: [false, Validators.requiredTrue],
+      digitalSignatureConsented: [false, Validators.requiredTrue],
       email: ['', [Validators.required, Validators.email]],
       confirmEmail: ['', [Validators.required, Validators.email]],
       phone: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
@@ -69,7 +69,7 @@ export class ContactInformationComponent implements OnInit, OnDestroy {
     this.loadTimes();
 
     this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
-      const id = params.get('contactId');
+      const id =3 //params.get('contactId');
       if (id) {
         this.contactId = +id;
         this.loadContact(this.contactId);
@@ -88,10 +88,17 @@ export class ContactInformationComponent implements OnInit, OnDestroy {
     });
   }
 
-  private emailMatchValidator(formGroup: FormGroup) {
+  emailMatchValidator(formGroup: AbstractControl): ValidationErrors | null {
     const email = formGroup.get('email')?.value;
     const confirmEmail = formGroup.get('confirmEmail')?.value;
-    return email === confirmEmail ? null : { emailMismatch: true };
+    
+    if (email !== confirmEmail) {
+      formGroup.get('confirmEmail')?.setErrors({ emailMismatch: true });
+      return { emailMismatch: true };
+    } else {
+      formGroup.get('confirmEmail')?.setErrors(null);
+      return null;
+    }
   }
 
   private loadCounties() {
@@ -168,9 +175,9 @@ export class ContactInformationComponent implements OnInit, OnDestroy {
       city: contact.city,
       stateId: contact.stateId,
       zipCode: contact.zipCode,
-      digitalSignatureConsent: contact.digitalSignatureConsent,
+      digitalSignatureConsented: contact.digitalSignatureConsented,
       email: contact.email,
-      confirmEmail: contact.email, // Assuming same email for confirmation
+      confirmEmail: contact.email, 
       phone: contact.phone,
       bestTimeToCallId: contact.bestTimeToCallId
     });
@@ -186,6 +193,12 @@ export class ContactInformationComponent implements OnInit, OnDestroy {
     }
   }
 
+  handleEmailBlur(fieldName: string) {
+    if (!this.contactForm.hasError('emailMismatch')) {
+      this.onFieldBlur(fieldName);
+    }
+  }
+
   private saveField(fieldName: string, value: any) {
     const contactInfo = {
       contactId: this.contactId,
@@ -195,7 +208,7 @@ export class ContactInformationComponent implements OnInit, OnDestroy {
     this.vendorProfileService.saveContact(contactInfo, this.contactId).subscribe({
       next: (response) => {
         if (response) {
-          this.contactId = response.contactId;
+          this.contactId = response.vendorAuthorizingOfficialId;
           this.contactForm.get(fieldName)?.markAsPristine();
           this.saveStatus = 'Saved';
         } else {
@@ -221,7 +234,7 @@ export class ContactInformationComponent implements OnInit, OnDestroy {
       this.vendorProfileService.saveContact(contactInfo, this.contactId).subscribe({
         next: (response) => {
           if (response) {
-            this.contactId = response.contactId;
+            this.contactId = response.vendorAuthorizingOfficialId;
             this.originalContactData = { ...this.originalContactData, ...changedFields };
             this.contactForm.markAsPristine();
             this.saveStatus = 'Saved';

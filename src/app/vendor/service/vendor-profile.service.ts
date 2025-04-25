@@ -72,22 +72,22 @@ export class VendorProfileService {
  */
   
 
-  getContact(contactId: number): Observable<{ isSuccess: boolean, contact?: any, message?: string }> {
-    const url = `${this.apiUrl}Contacts/${contactId}`;
-    return this.http.get<{ isSuccess: boolean, contact?: any, message?: string }>(url);
+  getContact(contactId: number): Observable<{contact?: any}> {
+    const url = `${this.apiUrl}VendorAuthorizingOfficials/${contactId}`;
+    return this.http.get<{ contact?: any}>(url);
   }
 
-  saveContact(contact: any, contactId?: number): Observable<{ isSuccess: boolean, contactId: number }> {
-    const url = contactId ? `${this.apiUrl}Contacts/${contactId}` : `${this.apiUrl}Contacts`;
-    return this.http.post<{ isSuccess: boolean, contactId: number }>(url, contact);
+  saveContact(contact: any, contactId?: number): Observable<{vendorAuthorizingOfficialId: number}> {
+    const url = contactId ? `${this.apiUrl}VendorAuthorizingOfficials/${contactId}` : `${this.apiUrl}VendorAuthorizingOfficials`;
+    return this.http.post<{vendorAuthorizingOfficialId: number}>(url, contact);
   }
-  
+
   getContactInformation(contactId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/${contactId}`);
   }
 
   saveContactInformation(data: any): Observable<any> {
-    return this.http.post(this.apiUrl, data);
+    return this.http.post(`${this.apiUrl}VendorAuthorizingOfficials`, data);
   }
 
 

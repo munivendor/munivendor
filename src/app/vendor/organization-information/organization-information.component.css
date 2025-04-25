@@ -69,14 +69,11 @@ button[type="submit"]:hover {
   border-left: 4px solid #204ce5;
 }
 
-/* /* Responsive Layout 
-@media screen and (max-width: 600px) {
-  mat-card {
-    margin: 10px;
-    padding: 15px;
-  } 
+mat-hint {
+  font-size: 0.75em;
+  color: rgba(0, 0, 0, 0.6);
+}
 
-  button[type="submit"] {
-    width: 100%;
-  }
-}*/
+input[placeholder] {
+  color: rgba(0, 0, 0, 0.42);
+}

@@ -29,6 +29,7 @@ import { ResponseDocumentsComponent } from './Response/response-documents.compon
 import { ResponseOverviewComponent } from './Response/response-overview.component';
 import { OrganizationInformationComponent } from './vendor/organization-information/organization-information.component';
 import { ComplianceFormsComponent } from './vendor/required-compliance-forms/required-compliance-forms.component';
+import { ContactInformationComponent } from './vendor/contact-information/contact-information.component';
 
 
 
@@ -48,10 +49,10 @@ export const routes: Routes = [
   { path: 'response-details/:id', component: ResponseDetailsComponent},
   { path: 'response-documents/:id', component: ResponseDocumentsComponent},
   { path: 'response-overview/:id', component: ResponseOverviewComponent},
-  {
-    path: 'organization-information', 
-    component: OrganizationInformationComponent
-  },
+  
+  {path: 'organization-information', component: OrganizationInformationComponent},
+  { path: 'contact-information', component: ContactInformationComponent},
+  
   {
     path: 'organization-information/:organizationId', 
     component: OrganizationInformationComponent

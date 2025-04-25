@@ -89,8 +89,8 @@
     <!-- Digital Signature Consent -->
     <div class="signature-consent full-width">
       <h3>Digital Signature Consent</h3>
-      <mat-checkbox formControlName="digitalSignatureConsent" title="digitalSignatureConsent" 
-                   (change)="onFieldBlur('digitalSignatureConsent')" required>
+      <mat-checkbox formControlName="digitalSignatureConsented" title="digitalSignatureConsent" 
+                   (change)="onFieldBlur('digitalSignatureConsented')" required>
         I agree to enable MuniVendor to automatically create my digital signature and my digital initials. 
         I also agree to enable MuniVendor to automatically apply both my digital signature and digital initials 
         to the respective forms and documents in submission packets as required.
@@ -105,25 +105,28 @@
       </mat-error>
     </div>
 
-    <!-- Contact Information -->
-    <legend>Contact Information</legend>
-    <div class="flex-row">
-      <mat-form-field class="half-width" appearance="fill">
-        <mat-label>Email Address</mat-label>
-        <input matInput type="email" formControlName="email" title="email" (blur)="onFieldBlur('email')" required/>
-        <mat-error *ngIf="contactForm.get('email')?.invalid">
-          A valid email is required.
-        </mat-error>
-      </mat-form-field>
+      <!-- Contact Information -->
+<legend>Contact Information</legend>
+<div class="flex-row">
+  <mat-form-field class="half-width" appearance="fill">
+    <mat-label>Email Address</mat-label>
+    <input matInput type="email" formControlName="email" title="email" (blur)="handleEmailBlur('email')" required />
+    <mat-error *ngIf="contactForm.get('email')?.invalid">
+      <span *ngIf="contactForm.get('email')?.hasError('required')">Email is required.</span>
+      <span *ngIf="contactForm.get('email')?.hasError('email')">A valid email is required.</span>
+    </mat-error>
+  </mat-form-field>
 
-      <mat-form-field class="half-width" appearance="fill">
-        <mat-label>Confirm Email</mat-label>
-        <input matInput type="email" formControlName="confirmEmail" title="confirmEmail" (blur)="onFieldBlur('confirmEmail')" required/>
-        <mat-error *ngIf="contactForm.get('confirmEmail')?.invalid">
-          Please confirm your email.
-        </mat-error>
-      </mat-form-field>
-    </div>
+  <mat-form-field class="half-width" appearance="fill">
+    <mat-label>Confirm Email</mat-label>
+    <input matInput type="email" formControlName="confirmEmail" title="confirmEmail"
+      (blur)="handleEmailBlur('confirmEmail')" required />
+    <mat-error *ngIf="contactForm.get('confirmEmail')?.invalid">
+      <span *ngIf="contactForm.get('confirmEmail')?.hasError('required')">Please confirm your email.</span>
+      <span *ngIf="contactForm.get('confirmEmail')?.hasError('emailMismatch')">Emails do not match.</span>
+    </mat-error>
+  </mat-form-field>
+</div>
 
     <mat-form-field class="full-width" appearance="fill">
       <mat-label>Phone Number</mat-label>
