@@ -41,7 +41,7 @@ export class ConfirmationDialog {
 
   getConfirmationMessage(): string {
     if (this.requestObjAndUserAction.action === 'cancel') {
-      const statusDesc = this.requestObjAndUserAction.request.requestStatus.requestStatusDesc;
+      const statusDesc = this.requestObjAndUserAction?.request?.requestStatus?.requestStatusDesc;
       if (statusDesc === 'Scheduled') {
         return 'This request is scheduled to go live and canceling it will revert it back to a Draft. Are you sure you want to cancel this request?';
       } else if (statusDesc === 'Live') {

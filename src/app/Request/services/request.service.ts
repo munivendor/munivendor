@@ -7,6 +7,7 @@ import { RequestType } from '../model/requesttype.model';
 import { Request } from '../model/request.model';
 import { environment } from '../../../environments/environment';
 import { RequestSection } from '../model/requestsection.model';
+import { DocumentInstance } from '../model/documentinstance.model';
 
 @Injectable({
   providedIn: 'root'
@@ -108,6 +109,10 @@ export class RequestService {
   SaveRequestSections(requestSection: RequestSection, requestId: number): Observable<{ success: boolean; requestSectionId: number | null }> {
     const headers = { 'Content-Type': 'application/json' };
     return this.http.post<{ success: boolean; requestSectionId: number | null }>(`${this.url}RequestSections/${requestId}`, requestSection, { headers });
+  }
+
+  GetDocumentInstances(requestId: number): Observable<DocumentInstance[]> {
+    return this.http.get<DocumentInstance[]>(`${this.url}InstanceDocuments/${requestId}`);
   }
 
   GetRequiredDocuments(): Observable<any> {

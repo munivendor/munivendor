@@ -1,0 +1,60 @@
+<form [formGroup]="politicalContributionsForm" (ngSubmit)="onSubmit()">
+  <mat-card>
+    <mat-card-title>Political Contributions</mat-card-title>
+    <mat-card-content>
+      <div formArrayName="contributions">
+        <div *ngFor="let contribution of contributions.controls; let i = index" [formGroupName]="i" class="contribution-item">
+          <!-- Contributor Name -->
+          <mat-form-field class="full-width" appearance="fill">
+            <mat-label>Contributor Name</mat-label>
+            <input matInput formControlName="contributorName" placeholder="Enter contributor's name" required />
+            <mat-error *ngIf="contribution.get('contributorName')?.invalid">
+              Contributor name is required.
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Recipient Name -->
+          <mat-form-field class="full-width" appearance="fill">
+            <mat-label>Recipient Name</mat-label>
+            <input matInput formControlName="recipientName" placeholder="Enter recipient's name" required />
+            <mat-error *ngIf="contribution.get('recipientName')?.invalid">
+              Recipient name is required.
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Contribution Date -->
+          <mat-form-field class="full-width" appearance="fill">
+            <mat-label>Contribution Date</mat-label>
+            <input matInput type="date" formControlName="contributionDate" placeholder="Select contribution date" required />
+            <mat-error *ngIf="contribution.get('contributionDate')?.invalid">
+              Contribution date is required.
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Dollar Amount -->
+          <mat-form-field class="full-width" appearance="fill">
+            <mat-label>Dollar Amount</mat-label>
+            <input matInput type="number" formControlName="dollarAmount" placeholder="Enter dollar amount" required />
+            <mat-error *ngIf="contribution.get('dollarAmount')?.invalid">
+              Dollar amount is required.
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Remove Contribution -->
+          <button mat-icon-button color="warn" (click)="removeContribution(i)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Add Contribution -->
+      <button mat-raised-button color="primary" (click)="addContribution()">Add Contribution</button>
+    </mat-card-content>
+
+    <mat-card-actions>
+      <button mat-raised-button color="accent" type="submit" [disabled]="politicalContributionsForm.invalid">
+        Save
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</form>

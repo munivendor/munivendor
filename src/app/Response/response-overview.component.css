@@ -1,0 +1,12 @@
+/* response-overview.component.css */
+.container {
+    padding: 20px;
+  }
+  
+  mat-card {
+    margin-bottom: 20px;
+  }
+  
+  iframe {
+    border: none;
+  }

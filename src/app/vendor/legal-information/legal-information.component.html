@@ -1,0 +1,81 @@
+<form [formGroup]="legalDetailsForm" class="legal-details-form">
+  <mat-card>
+    <mat-card-title>Legal Details</mat-card-title>
+    <mat-card-content>
+      <!-- Contract Failure -->
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Contract Failure</mat-label>
+        <mat-select formControlName="contractFailure" required>
+          <mat-option *ngFor="let option of yesNoOptions" [value]="option.value">
+            {{ option.label }}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="legalDetailsForm.get('contractFailure')?.invalid">
+          Please select an option.
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Contract Failure Details (Conditional) -->
+      <mat-form-field
+        appearance="fill"
+        class="full-width"
+        *ngIf="legalDetailsForm.get('contractFailure')?.value === 'yes'"
+      >
+        <mat-label>Contract Failure Details</mat-label>
+        <textarea
+          matInput
+          formControlName="contractFailureDetails"
+          placeholder="Provide details of contract failure, if any."
+          rows="4"
+        ></textarea>
+        <mat-error *ngIf="legalDetailsForm.get('contractFailureDetails')?.invalid">
+          Please provide valid details.
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Liens and/or Lawsuits -->
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Liens and/or Lawsuits</mat-label>
+        <mat-select formControlName="liensLawsuits" required>
+          <mat-option *ngFor="let option of yesNoOptions" [value]="option.value">
+            {{ option.label }}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="legalDetailsForm.get('liensLawsuits')?.invalid">
+          Please select an option.
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Lien & Lawsuit Details (Conditional) -->
+      <mat-form-field
+        appearance="fill"
+        class="full-width"
+        *ngIf="legalDetailsForm.get('liensLawsuits')?.value === 'yes'"
+      >
+        <mat-label>Lien & Lawsuit Details</mat-label>
+        <textarea
+          matInput
+          formControlName="lienLawsuitDetails"
+          placeholder="Provide details of liens and lawsuits, if any."
+          rows="4"
+        ></textarea>
+        <mat-error *ngIf="legalDetailsForm.get('lienLawsuitDetails')?.invalid">
+          Please provide valid details.
+        </mat-error>
+      </mat-form-field>
+    </mat-card-content>
+
+    <!-- Submit Button -->
+    <mat-card-actions>
+      <button
+        mat-raised-button
+        color="primary"
+        type="submit"
+        [disabled]="legalDetailsForm.invalid"
+        (click)="onSubmit()"
+      >
+        Save
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</form>
