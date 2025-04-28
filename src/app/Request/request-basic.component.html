@@ -8,14 +8,14 @@
         <mat-form-field appearance="fill" class="input-width">
           <mat-label>Category</mat-label>
           <input type="text" placeholder="Choose Category" aria-label="Category" matInput required
-            (focus)="onCategoryFocus()" formControlName="category" [matAutocomplete]="auto" [value]="selectedCategoryDisplay">
+            (focus)="onCategoryFocus()" formControlName="category" [matAutocomplete]="auto">
           <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayCategoryName">
             @for (option of filteredCategories | async; track option) {
             <mat-option *ngIf="isNodeVisible(option)" [value]="option.categoryId" (onSelectionChange)="$event.isUserInput && selectCategory(option.categoryId, option.name)"
             >
               <div class="tree-node" [ngStyle]="{ 'padding-left.px': getNodeIndent(option.level)}">
                 <button *ngIf="option.expandable" mat-icon-button (click)="toggleExpand(+option.categoryId, $event)"
-                  [disabled]="isFiltering" class="toggle-button">
+                  class="toggle-button">
                   <mat-icon>
                     {{ isExpanded(option.categoryId) ? 'expand_more' : 'chevron_right' }}
                   </mat-icon>

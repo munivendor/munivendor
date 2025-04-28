@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { FormGroup, FormBuilder, FormArray, ReactiveFormsModule, Validators, FormControl, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -21,6 +21,7 @@ import { CategoryHierarchyService } from './services/category-hierarchy.service'
 import { CategoryNode } from '../shared/model/category-tree.model';
 import { debounceTime, distinctUntilChanged, filter, tap } from 'rxjs/operators';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
+
 interface FlattenedCategoryNode {
   name: string;
   categoryId: string;
@@ -64,7 +65,6 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
   hierarchicalCategories: CategoryNode[] = [];
   flattenedCategories: FlattenedCategoryNode[] = [];
   expandedNodes: Set<string> = new Set<string>();
-  selectedCategoryDisplay: string = '';
   private destroy$ = new Subject<void>();
   decisionMakers!: DecisionMaker[];
   categories: CategoryNode[] = [];
@@ -89,7 +89,6 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     } else {
       this.initializeForm();
 
-      // optimize performance and emit only real changes
       let lastStatus = this.basicsFormGroup.valid;
       this.basicsFormGroup.statusChanges
         .pipe(
@@ -111,14 +110,14 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
   applyCategoryFilter(value: string | { name: string }) {
     const name = typeof value === 'string' ? value : value?.name;
     const filterValue = name?.toLowerCase() ?? '';
-
+  
     this.isFiltering = !!filterValue;
-
+  
     if (!filterValue) {
       this.isFiltering = false;
-
+  
       const visible: FlattenedCategoryNode[] = [];
-
+  
       for (const node of this.flattenedCategories) {
         if (node.level === 0 || this.isNodeVisible(node)) {
           const parentId = node.parentId;
@@ -127,17 +126,35 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
           }
         }
       }
-
+  
       this.filteredCategoriesSubject.next(visible);
       return;
     }
-
-    const filtered = this.flattenedCategories.filter(cat =>
+  
+    const matched = this.flattenedCategories.filter(cat =>
       cat.name.toLowerCase().includes(filterValue)
     );
-
+  
+    const matchedWithChildren = new Set<FlattenedCategoryNode>();
+  
+    for (const match of matched) {
+      matchedWithChildren.add(match);
+      this.collectAllDescendants(parseInt(match.categoryId), matchedWithChildren);
+    }
+  
+    const filtered = Array.from(matchedWithChildren);
+  
     this.expandParentsOfFilteredNodes(filtered);
     this.filteredCategoriesSubject.next(filtered);
+  }
+
+  private collectAllDescendants(parentId: number, result: Set<FlattenedCategoryNode>) {
+    for (const node of this.flattenedCategories) {
+      if (node.parentId === parentId.toString()) {
+        result.add(node);
+        this.collectAllDescendants(parseInt(node.categoryId), result);
+      }
+    }
   }
 
   expandParentsOfFilteredNodes(filtered: FlattenedCategoryNode[]): void {
@@ -171,7 +188,7 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
   }
 
   // triggers autocomplete dropdown to display since the component is a
-  // custom tree-like autocomplete and value is manually set by category ID,
+  // custom tree-like autocomplete and value is manually set by category ID
   onCategoryFocus(): void {
     const categoryControl = this.basicsFormGroup.get('category');
     const currentValue = categoryControl?.value;
@@ -237,8 +254,6 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     } else {
       this.expandedNodes.add(categoryId.toString());
     }
-
-    this.applyCategoryFilter('');
   }
 
   isExpanded(categoryId: string): boolean {
@@ -313,9 +328,17 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     });
   }
 
-  displayCategoryName = (categoryId: string): string => {
-    const match = this.flattenedCategories.find(cat => cat.categoryId === categoryId);
-    return match ? match.name : '';
+  displayCategoryName = (value: string | number | null): string => {
+    if (value == null) {
+      return '';
+    }
+  
+    const match = this.flattenedCategories.find(cat => cat.categoryId === value);
+    if (match) {
+      return match.name;
+    }
+  
+    return typeof value === 'string' ? value : '';
   };
 
   private fetchInitialData(): void {
@@ -349,8 +372,6 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     setTimeout(() => this.cdr.markForCheck());
   }
 
-  // finds a category by its ID in the hierarchical categories since
-  // nested categories need to be accounted for
   private findCategoryById(categories: any[], targetId: number): any {
     for (const category of categories) {
       if (category.id === targetId) {
@@ -401,9 +422,7 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
             if (category.id !== null) {
               this.selectCategory(category.id.toString(), category.name);
             }
-            this.selectedCategoryDisplay = category.name;
 
-            // Force update with DOM manipulation approach
             setTimeout(() => {
               const categoryInput = document.querySelector('input[formControlName="category"]');
               if (categoryInput) {
