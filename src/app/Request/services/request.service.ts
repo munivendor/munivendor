@@ -108,11 +108,14 @@ export class RequestService {
     return this.http.get<any>(`${this.url}MunicipalityDocuments/${municipalityId}`)
   }
 
-  SaveMunicipalityDocument(municipalityId: number, municipalityDocument: any): Observable<any> {
-    const headers = { 'Content-Type': 'application/json' };
+  SaveMunicipalityDocument(municipalityId: number, municipalityDocument: any, file: File): Observable<any> {
     const url = `${this.url}MunicipalityDocuments/${municipalityId}`;
-    return this.http.post<void>(url, municipalityDocument, { headers })
+    const formData = new FormData();
+    formData.append('documentName', municipalityDocument.documentName);
+    formData.append('file', file);
+    return this.http.post<any>(url, formData);
   }
+  
 
   DeleteMunicipalityDocument(documentId: number): Observable<void> {
     return this.http.delete<void>(`${this.url}MunicipalityDocuments/${documentId}`)
