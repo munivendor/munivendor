@@ -89,6 +89,7 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
           },
         });
     } else if (this.idParam) {
+
       forkJoin({
         allDocuments: this.getAllDocumentTypes(this.municipalityId, Number(this.idParam)).pipe(
           catchError((error) => {
@@ -106,11 +107,18 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: ({ allDocuments, requestDocuments }) => {
-            if (requestDocuments.isSuccess) {
-              this.populateRequestDocuments(requestDocuments.documents);
+            try {
+              if (requestDocuments.isSuccess) {
+
+                this.populateRequestDocuments(requestDocuments.documents);
+              }
+
+              this.mergeUnselectedDocuments(allDocuments);
+
+              console.log('Documents fetched and form arrays initialized for editing.');
+            } catch (err) {
+              console.error('Error during form initialization:', err);
             }
-            this.mergeUnselectedDocuments(allDocuments);
-            console.log('Documents fetched and form arrays initialized for editing.');
           },
           error: (error) => {
             console.error('Error fetching documents for editing:', error);
@@ -120,25 +128,19 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
   }
 
   getAllDocumentTypes(municipalityId: number, requestId?: number): Observable<any> {
-    if (!requestId) {
-      return forkJoin({
-        requiredStateDocuments: this.requestService.GetRequiredDocuments(),
-        optionalStateDocuments: this.requestService.GetOptionalDocuments(),
-        optionalMunicipalityDocuments: this.requestService.GetMunicipalityDocuments(municipalityId),
-      }).pipe(
-        tap(({ requiredStateDocuments, optionalStateDocuments, optionalMunicipalityDocuments }) => {
+    return forkJoin({
+      requiredStateDocuments: this.requestService.GetRequiredDocuments(),
+      optionalStateDocuments: this.requestService.GetOptionalDocuments(),
+      optionalMunicipalityDocuments: this.requestService.GetMunicipalityDocuments(municipalityId),
+    }).pipe(
+      tap(({ requiredStateDocuments, optionalStateDocuments, optionalMunicipalityDocuments }) => {
+        if (!requestId) {
           this.populateFormArray(this.requiredStateDocuments, requiredStateDocuments);
           this.populateFormArray(this.optionalStateDocuments, optionalStateDocuments);
           this.populateFormArray(this.optionalMunicipalityDocuments, optionalMunicipalityDocuments);
-        })
-      );
-    } else {
-      return forkJoin({
-        requiredStateDocuments: this.requestService.GetRequiredDocuments(),
-        optionalStateDocuments: this.requestService.GetOptionalDocuments(),
-        optionalMunicipalityDocuments: this.requestService.GetMunicipalityDocuments(municipalityId),
-      });
-    }
+        }
+      })
+    );
   }
 
   populateRequestDocuments(requestDocuments: RequestDocument[]): void {
@@ -165,16 +167,20 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
   }
 
   mergeUnselectedDocuments(allDocuments: any): void {
-    const { requiredStateDocuments, optionalStateDocuments, optionalMunicipalityDocuments } = allDocuments;
+    const {
+      requiredStateDocuments = [],
+      optionalStateDocuments = [],
+      optionalMunicipalityDocuments = []
+    } = allDocuments;
     // filter and merge the two data responses based on two criterias:
     // display documents if selected are false from from getAllDocumentTypes
     // but do not display duplicates if getAllDocumentTypes has same documentId as GetRequestRequiredDocumentsById
     const filterUnselected = (documents: any[]) =>
-      documents.filter((doc) => !this.isDocumentSelected(doc.documentId));
+      documents?.filter?.((doc) => !this.isDocumentSelected(doc.documentId)) ?? [];
 
-    this.populateFormArray(this.requiredStateDocuments, filterUnselected(requiredStateDocuments));
-    this.populateFormArray(this.optionalStateDocuments, filterUnselected(optionalStateDocuments));
-    this.populateFormArray(this.optionalMunicipalityDocuments, filterUnselected(optionalMunicipalityDocuments));
+    this.populateFormArray(this.requiredStateDocuments, filterUnselected(requiredStateDocuments.documents));
+    this.populateFormArray(this.optionalStateDocuments, filterUnselected(optionalStateDocuments.documents));
+    this.populateFormArray(this.optionalMunicipalityDocuments, filterUnselected(optionalMunicipalityDocuments.documents));
   }
 
   isDocumentSelected(documentId: number): boolean {
@@ -186,16 +192,19 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
   }
 
   populateFormArray(formArray: FormArray, response: any): void {
-    const documents = response.documents || [];
-    documents.forEach((document: { documentId: number; documentName: string; documentRequired: boolean; selected: boolean; }) => {
-      formArray.push(
-        this.fb.group({
-          documentId: [document.documentId],
-          documentName: [document.documentName],
-          documentRequired: [document.documentRequired ?? false],
-          selected: [document.selected ?? false]
-        })
-      );
+    const documents = Array.isArray(response?.documents) ? response.documents : response;
+
+    documents.forEach((document: any) => {
+      if (!this.isDocumentSelected(document.documentId)) {
+        formArray.push(
+          this.fb.group({
+            documentId: [document.documentId],
+            documentName: [document.documentName],
+            documentRequired: [document.documentRequired ?? false],
+            selected: [document.selected ?? false]
+          })
+        );
+      }
     });
   }
 

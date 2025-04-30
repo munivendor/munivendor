@@ -124,7 +124,7 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          response.forEach((section: { requestSectionTitle: string; requestId: number; requestSectionId: number; requestSectionContent: string; }) => {
+          response.requestSections.forEach((section: { requestSectionTitle: string; requestId: number; requestSectionId: number; requestSectionContent: string; }) => {
             if (section.requestSectionTitle) {
               this.proposalSections.push(
                 this.fb.group({
