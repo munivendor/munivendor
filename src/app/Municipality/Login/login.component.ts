@@ -5,12 +5,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatCardModule } from '@angular/material/card';
-import { Component, OnInit } from '@angular/core';
-import { GoogleSigninButtonModule} from '@abacritt/angularx-social-login';
+import { Component, inject, OnInit } from '@angular/core';
+import { GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { AuthService } from '../../authorization/auth.service';
 import { UserLogin } from '../../shared/model/user-login.model';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'login',
@@ -21,6 +22,7 @@ import { UserLogin } from '../../shared/model/user-login.model';
 })
 
 export class LoginComponent implements OnInit {
+  private _snackBar = inject(MatSnackBar);
   loginForm!: FormGroup;
   userId!: number;
 
@@ -29,7 +31,7 @@ export class LoginComponent implements OnInit {
     public dialog: MatDialog,
     private authService: AuthService,
     private router: Router
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.loginForm = this.fb.group({
@@ -44,10 +46,15 @@ export class LoginComponent implements OnInit {
         username: this.loginForm.controls["email"].value,
         password: this.loginForm.controls["password"].value
       };
-  
+
       this.authService.login(userLogin).subscribe({
         next: () => this.router.navigate(['/municipality-details']),
-        error: (error) => console.error('Login failed:', error)
+        error: (error) => {
+          this._snackBar.open('Login failed: Invalid email, password, or unauthorized email.', 'Close', {
+            duration: 3000,
+            verticalPosition: 'top',
+          });
+        }
       });
     }
   }

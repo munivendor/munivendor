@@ -50,9 +50,9 @@ export class UserService {
     return this.http.post<boolean>(`${this.userApiUrl}sendveremail/${userId}`, null, { headers });
   }
 
-  ValidateEmailToken(token: string): Observable<boolean> {
+  ValidateEmailToken(token: string, userId: number): Observable<boolean> {
     const headers = { 'Content-Type': 'application/json' };
-    return this.http.post<boolean>(`${this.userApiUrl}validate/${token}`, null, { headers });
+    return this.http.post<boolean>(`${this.userApiUrl}validate/${token}/${userId}`, null, { headers });
   }
 
   designeeApiUrl = `${environment.apiUrl}designations`;
