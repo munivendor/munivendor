@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
-import { MaterialModule } from '../shared/material.module';
+import { MaterialModule } from '../../Municipality/shared/material.module';
 import { MatDialog } from '@angular/material/dialog';
 import { ReactiveFormsModule } from '@angular/forms';
 import { PaymentInfoService } from './services/payment-info.service'

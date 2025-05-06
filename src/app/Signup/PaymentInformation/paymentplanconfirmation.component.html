@@ -1,0 +1,40 @@
+<div class="container">
+  <mat-card class="lgo-card">
+    <mat-card-header>
+    <mat-card-title>Payment Plan</mat-card-title>
+  </mat-card-header>
+    <mat-card-content>
+      <div><u>Local Government Organization Plan A</u></div>
+      <ul>
+        <li>Free for 12 Months</li>
+        <li>After 12 months pay $299/month</li>
+        <li>Includes all of Munivendor’s Features, including ALL future features, improvements, and enhancements</li>
+      </ul>
+    </mat-card-content>
+    <mat-card-actions>
+      <button mat-raised-button color="primary" [routerLink]="'/payment-information'">Continue</button>
+    </mat-card-actions>
+  </mat-card>
+</div>
+
+
+  <div class="pricing-container">
+    <mat-card class="pricing-card" *ngFor="let plan of pricingPlans; let planIndex = index">
+      <mat-card-header>
+        <mat-card-title>{{ plan.name }}</mat-card-title>
+        <mat-card-subtitle>{{ plan.price }}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content class="pricing-card-content">
+        <ul class="features">
+          <li *ngFor="let feature of allFeatures; let i = index" 
+              [ngClass]="{'feature-included': isFeatureIncluded(planIndex, i), 'feature-excluded': !isFeatureIncluded(planIndex, i)}">
+              {{ getFeatureText(planIndex, i) }}
+          </li>
+        </ul>
+      </mat-card-content>
+      <div class="spacer"></div>
+      <mat-card-actions class="card-footer">
+        <button mat-raised-button color="primary">Select</button>
+      </mat-card-actions>
+    </mat-card>
+  </div>

@@ -9,8 +9,8 @@ import { Component, inject, OnInit } from '@angular/core';
 import { GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { AuthService } from '../../authorization/auth.service';
-import { UserLogin } from '../../shared/model/user-login.model';
+import { AuthService } from '../authorization/auth.service';
+import { UserLogin } from '../shared/model/user-login.model';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
@@ -48,6 +48,7 @@ export class LoginComponent implements OnInit {
       };
 
       this.authService.login(userLogin).subscribe({
+        // in future, add flag to navigate users to appropriate page based on whether they've completed the form
         next: () => this.router.navigate(['/municipality-details']),
         error: (error) => {
           this._snackBar.open('Login failed: Invalid email, password, or unauthorized email.', 'Close', {

@@ -45,6 +45,7 @@ export class FileUploadDialogComponent {
       return;
     }
 
+    // save file name into database not only document name
     const municipalityDocument = {
       municipalityId: this.data.municipalityId,
       documentName: this.documentName,

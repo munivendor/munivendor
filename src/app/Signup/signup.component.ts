@@ -10,11 +10,11 @@ import { OnDestroy } from '@angular/core';
 import { Component, OnInit } from '@angular/core';
 import { GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
 import { Router } from '@angular/router';
-import { UserService } from '../../shared/service/user.service';
-import { User } from '../../shared/model/user.model';
-import { UserLogin } from '../../shared/model/user-login.model';
+import { UserService } from '../shared/service/user.service';
+import { User } from '../shared/model/user.model';
+import { UserLogin } from '../shared/model/user-login.model';
 import { catchError, filter, finalize, Subject, switchMap, takeUntil, tap, throwError } from 'rxjs';
-import { AuthService } from '../../authorization/auth.service';
+import { AuthService } from '../authorization/auth.service';
 
 @Component({
   selector: 'signup',
@@ -29,8 +29,8 @@ import { AuthService } from '../../authorization/auth.service';
     MatCardModule,
     MatSelectModule,
     GoogleSigninButtonModule],
-  templateUrl: './municipality.signup.component.html',
-  styleUrls: ['./municipality.signup.component.css'],
+  templateUrl: './signup.component.html',
+  styleUrls: ['./signup.component.css'],
 })
 
 export class SignupComponent implements OnInit, OnDestroy {
