@@ -45,9 +45,6 @@ export class TokenValidationComponent implements OnInit, OnDestroy {
       .subscribe({
         next: response => {
           if (response === true) {
-            // userId is now returned from the backend, we can set the authenticated user
-            // and redirect to the municipality details page
-            // this.authService.setAuthenticated(response, userId);
             this.verificationStatus = 'Verification successful! Redirecting to login...';
             setTimeout(() => this.router.navigate(['/login']), 5000);
           } else {
