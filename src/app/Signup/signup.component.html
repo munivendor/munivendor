@@ -58,7 +58,9 @@
 
         <mat-form-field class="full-width">
           <mat-label>Confirm Password</mat-label>
-          <input matInput type="password" formControlName="confirmPassword" placeholder="Confirm your password">
+          <input matInput type="password" formControlName="confirmPassword" placeholder="Confirm your password"  (cut)="$event.preventDefault()"
+          (copy)="$event.preventDefault()"
+          (paste)="$event.preventDefault()">
           <mat-error *ngIf="signupForm.get('confirmPassword')?.hasError('required')">
             Password is required.
           </mat-error>

@@ -40,7 +40,7 @@ export class RoleVerificationComponent implements OnInit {
     } 
     else if (buttonName === 'vendor') {
       this.roleVerificationForm.get('userType')?.setValue('vendor');
-      // TODO: Navigate to vendor related page
+      this.router.navigate(['/user-details']);
     }
   }
   

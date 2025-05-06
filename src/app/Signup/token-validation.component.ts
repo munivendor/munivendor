@@ -1,8 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { UserService } from '../../shared/service/user.service';
+import { UserService } from '../shared/service/user.service';
 import { Subject, takeUntil } from 'rxjs';
-import { AuthService } from '../../authorization/auth.service';
+import { AuthService } from '../authorization/auth.service';
 @Component({
   selector: 'token-validation',
   templateUrl: './token-validation.component.html',

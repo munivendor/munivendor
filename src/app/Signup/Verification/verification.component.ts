@@ -3,12 +3,12 @@ import { ActivatedRoute } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
-    selector: 'municipality-verification',
+    selector: 'verification',
     standalone: true,
-    templateUrl: './municipality.verification.component.html',
-    styleUrls: ['./municipality.verification.component.css'],
+    templateUrl: './verification.component.html',
+    styleUrls: ['./verification.component.css'],
 })
-export class MunicipalityVerificationComponent implements OnInit, OnDestroy {
+export class EmailVerification implements OnInit, OnDestroy {
     private destroy$ = new Subject<void>();
     email: string | null = null;
 
