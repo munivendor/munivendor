@@ -3,7 +3,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { UserService } from '../../shared/service/user.service';
 import { Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../../authorization/auth.service';
-
 @Component({
   selector: 'token-validation',
   templateUrl: './token-validation.component.html',
@@ -11,6 +10,7 @@ import { AuthService } from '../../authorization/auth.service';
 })
 export class TokenValidationComponent implements OnInit, OnDestroy {
   token: string | null = null;
+  userId: number | null = null;
   verificationStatus = 'Verifying...';
   private destroy$ = new Subject<void>();
 
@@ -26,24 +26,27 @@ export class TokenValidationComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(params => {
         this.token = params['token'];
+        this.userId = params['userId'];
         if (this.token) {
-          this.validateToken(this.token);
+          if (this.userId !== null) {
+            this.validateToken(this.token, this.userId);
+          } else {
+            this.verificationStatus = 'Invalid or missing user ID.';
+          }
         } else {
           this.verificationStatus = 'Invalid or missing verification link.';
         }
       });
   }
 
-  validateToken(token: string): void {
-    this.userService.ValidateEmailToken(token)
+  validateToken(token: string, userId: number): void {
+    this.userService.ValidateEmailToken(token, userId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: response => {
           if (response === true) {
-            const userData = { emailVerified: true };
-            this.authService.setAuthenticated(true, userData);
-            this.verificationStatus = 'Verification successful! Redirecting...';
-            setTimeout(() => this.router.navigate(['/municipality-details']), 5000);
+            this.verificationStatus = 'Verification successful! Redirecting to login...';
+            setTimeout(() => this.router.navigate(['/login']), 5000);
           } else {
             this.verificationStatus = 'Verification failed. Invalid or expired token. Redirecting...';
             setTimeout(() => this.router.navigate(['/signup']), 5000);

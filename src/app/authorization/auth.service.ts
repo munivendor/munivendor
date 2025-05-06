@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { SocialAuthService, SocialUser } from '@abacritt/angularx-social-login';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, catchError, Observable, tap, throwError } from 'rxjs';
 import { Router } from '@angular/router';
 import { UserLogin } from '../shared/model/user-login.model';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -52,6 +52,9 @@ export class AuthService {
           this.authState.next(true);
           this.userSubject.next(response as any);
         }
+      }),
+      catchError((error: HttpErrorResponse) => {
+        return throwError(() => error);
       })
     );
   }
@@ -87,7 +90,6 @@ export class AuthService {
       return;
     }
 
-    console.log('Resetting Auth State');
     this.userSubject.next(null);
     this.authState.next(false);
 
