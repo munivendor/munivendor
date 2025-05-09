@@ -110,7 +110,7 @@
         </div>
       </mat-tab>
 
-      <mat-tab label="invoice">
+      <mat-tab label="invoice" *ngIf="organizationTypeId === 1">
         <ng-template mat-tab-label>
           <mat-icon class="tab-icon">receipt_long</mat-icon>
           Invoice
@@ -185,8 +185,8 @@
         <mat-form-field>
           <mat-label>State</mat-label>
           <mat-select formControlName="state" placeholder="Select your state" required>
-            <mat-option *ngFor="let state of states" [value]="state.value">
-              {{ state.viewValue }}
+            <mat-option *ngFor="let state of states" [value]="state.codeId">
+              {{ state.codeDesc }} ({{ state.codeName}})
             </mat-option>
           </mat-select>
           <mat-error

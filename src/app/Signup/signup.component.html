@@ -35,6 +35,18 @@
         </mat-form-field>
 
         <mat-form-field class="full-width">
+          <mat-label>Organization Type</mat-label>
+          <mat-select formControlName="organizationTypeId" placeholder="Select your organization" [disabled]="isLGA">
+            <mat-option *ngFor="let organizationType of organizationTypes" [value]="organizationType.organizationTypeId">
+              {{ organizationType.organizationTypeDescription }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="signupForm.get('organization')?.hasError('required')">
+            Organization Type is required
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="full-width">
           <mat-label>Work Email/Username</mat-label>
           <input matInput type="email" formControlName="email" placeholder="Enter your work email">
           <mat-error *ngIf="signupForm.get('email')?.hasError('required')">
@@ -68,19 +80,7 @@
             Passwords do not match.
           </mat-error>
         </mat-form-field>
-
-        <mat-form-field class="full-width">
-          <mat-label>Organization</mat-label>
-          <mat-select formControlName="organization" placeholder="Select your organization" [disabled]="isLGO">
-            <mat-option value="LGO">Local Government Organization</mat-option>
-            <mat-option value="Vendor">Vendor</mat-option>
-          </mat-select>
-          <mat-error *ngIf="signupForm.get('organization')?.hasError('required')">
-            Organization is required
-          </mat-error>
-        </mat-form-field>
-       
-
+      
         <button style="margin-top: 1rem; margin-bottom: 1rem;" class="full-width" mat-raised-button color="primary"
           type="submit">Sign Up</button>
 

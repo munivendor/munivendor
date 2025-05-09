@@ -3,7 +3,7 @@ export class Municipality {
     municipalityName?: string;
     municipalityAddress?: string;
     municipalityCity?: string;
-    municipalityState?: string;
-    municipalityZip?: number;
+    municipalityStateId?: string;
+    municipalityZipCode?: number;
     municipalityFactsAndFigures?: string;
 }
