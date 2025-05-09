@@ -7,7 +7,7 @@
 
     <!-- Authorized -->
     <a routerLink="/role-verification" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="user$ | async">Role Verification</a>
-    <a routerLink="/municipality-details" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="user$ | async">Local Government Organization Details</a>
+    <a routerLink="/government-agency-details" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="user$ | async">Government Agency Details</a>
     <a routerLink="/user-details" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="user$ | async">User Details</a>
     <a routerLink="/user-designation" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="user$ | async">User Designation</a>
     <a routerLink="/payment-plan-confirmation" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="user$ | async">Payment Plan</a>
@@ -38,7 +38,7 @@
         <a mat-list-item routerLink="/create-component" routerLinkActive="active">Reports</a>
         <a mat-list-item routerLink="/create-component" routerLinkActive="active">Definitions</a>
         <a mat-list-item routerLink="/create-component" routerLinkActive="active">My Profile</a>
-        <a mat-list-item routerLink="/create-component" routerLinkActive="active">Municipality Profile</a>
+        <a mat-list-item routerLink="/create-component" routerLinkActive="active">Government Agency Profile</a>
         <a mat-list-item routerLink="/create-component" routerLinkActive="active">Search</a>
         <a mat-list-item routerLink="/create-component" routerLinkActive="active">Log out</a>
       </mat-nav-list>

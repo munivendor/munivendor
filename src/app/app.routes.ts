@@ -10,7 +10,7 @@ import { TokenValidationComponent } from './Signup/token-validation.component';
 
 // Authorized pages
 import { RoleVerificationComponent } from './Signup/RoleVerification/role-verification.component';
-import { MunicipalityDetailsComponent } from './Municipality/Details/municipality.details.component';
+import { GovernmentAgencyDetailsComponent } from './Municipality/Details/municipality.details.component';
 import { UserSignUpDetails } from './Signup/UserSignUpDetails/user-signup-details.component';
 import { DesignationSelectionComponent } from './Municipality/UserDesignationSelection/municipality.user-designation-selection.component';
 import { PaymentPlanConfirmationComponent } from './Signup/PaymentInformation/paymentplanconfirmation.component';
@@ -29,7 +29,7 @@ export const routes: Routes = [
   { path: 'validateuser', component: TokenValidationComponent },
 
   { path: 'role-verification', component: RoleVerificationComponent, canActivate: [AuthGuard] },
-  { path: 'municipality-details', component: MunicipalityDetailsComponent, canActivate: [AuthGuard] },
+  { path: 'government-agency-details', component: GovernmentAgencyDetailsComponent, canActivate: [AuthGuard] },
   { path: 'user-details', component: UserSignUpDetails, canActivate: [AuthGuard] },
   { path: 'user-designation', component: DesignationSelectionComponent, canActivate: [AuthGuard] },
   { path: 'payment-plan-confirmation', component: PaymentPlanConfirmationComponent, canActivate: [AuthGuard] },

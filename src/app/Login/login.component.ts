@@ -49,7 +49,7 @@ export class LoginComponent implements OnInit {
 
       this.authService.login(userLogin).subscribe({
         // in future, add flag to navigate users to appropriate page based on whether they've completed the form
-        next: () => this.router.navigate(['/municipality-details']),
+        next: () => this.router.navigate(['/government-agency-details']),
         error: (error) => {
           this._snackBar.open('Login failed: Invalid email, password, or unauthorized email.', 'Close', {
             duration: 3000,

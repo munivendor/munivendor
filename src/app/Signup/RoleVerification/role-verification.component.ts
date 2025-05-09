@@ -36,7 +36,7 @@ export class RoleVerificationComponent implements OnInit {
   
     if (buttonName === 'municipality') {
       this.roleVerificationForm.get('userType')?.setValue('municipality');
-      this.router.navigate(['/municipality-details']);
+      this.router.navigate(['/government-agency-details']);
     } 
     else if (buttonName === 'vendor') {
       this.roleVerificationForm.get('userType')?.setValue('vendor');
