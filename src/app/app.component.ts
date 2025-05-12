@@ -43,11 +43,11 @@ export class AppComponent {
     const routesToHideSidenav = [
       '/role-verification',
       '/validateuser',
-      '/municipality-details',
+      '/government-agency-details',
       '/user-details',
       '/user-designation',
       '/payment-plan-confirmation',
-      '/payment-information'
+      '/billing-profile'
     ];
 
     this.showSidenav = !routesToHideSidenav.some(route => currentRoute.includes(route));

@@ -17,6 +17,8 @@ import { MunicipalityService } from "./services/municipality.service"
 import { Municipality } from './model/municipality.model';
 import { Subject } from 'rxjs';
 import { takeUntil, tap, catchError } from 'rxjs/operators';
+import { State } from '../../shared/model/state.model';
+import { AuthService } from '../../authorization/auth.service';
 
 @Component({
   selector: 'app-municipality-details',
@@ -34,26 +36,48 @@ import { takeUntil, tap, catchError } from 'rxjs/operators';
     CommonModule],
 
 })
-export class MunicipalityDetailsComponent implements OnInit {
+export class GovernmentAgencyDetailsComponent implements OnInit {
   municipalityDetailForm!: FormGroup;
-  states: string[] = ['Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming'];
+  states: State[] = [];
+  userId!: number;
   private destroy$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
     private municipalityService: MunicipalityService,
     private router: Router,
-    private stateService: StateService) {
+    private stateService: StateService,
+    private authService: AuthService) {
+    this.municipalityDetailForm = this.fb.group({});
   }
 
-  ngOnInit(): void { this.initializeForm(); }
+  ngOnInit(): void {
+    this.initializeForm();
+    this.authService.user$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(user => {
+      if (user) {
+        const userId = user
+        if (userId) {
+          this.userId = userId;
+        } else {
+          console.error('No user ID available in authentication state');
+        }
+      }
+    });
+    this.municipalityService.getStates()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(states => {
+        this.states = states;
+      });
+  }
 
   private initializeForm(): void {
     this.municipalityDetailForm = this.fb.group({
       municipalityName: ['', [Validators.required, Validators.minLength(3)]],
       municipalityAddress: ['', [Validators.required, Validators.minLength(3)]],
       municipalityCity: ['', [Validators.required, Validators.minLength(3)]],
-      municipalityState: ['', Validators.required],
+      municipalityStateId: ['', Validators.required],
       municipalityZipCode: ['', [Validators.required, Validators.pattern(/^\d{5}(-\d{4})?$/)]],
     });
   }
@@ -62,21 +86,19 @@ export class MunicipalityDetailsComponent implements OnInit {
     if (this.municipalityDetailForm.invalid) {
       return;
     }
-  
     const municipality: Municipality = this.municipalityDetailForm.value;
-  
-    this.municipalityService.saveMunicipality(municipality)
-      .pipe(
-        tap((municipalityId: number) => {
-          this.stateService.setMunicipalityId(municipalityId);
-          this.router.navigate(['/user-details']);
-        }),
-        catchError(error => {
-          console.error('Error saving municipality:', error);
-          throw error;
-        }),
-        takeUntil(this.destroy$)
-      )
+
+    this.municipalityService.saveMunicipality(municipality, this.userId).pipe(
+      tap((municipalityId: number) => {
+        this.stateService.setMunicipalityId(municipalityId);
+        this.router.navigate(['/user-details']);
+      }),
+      catchError(error => {
+        console.error('Error saving municipality:', error);
+        throw error;
+      }),
+      takeUntil(this.destroy$)
+    )
       .subscribe();
   }
 

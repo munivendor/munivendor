@@ -3,17 +3,17 @@
   the next step.
 </h3>
 <mat-card>
-    <mat-card-title>Local Government Organization Details</mat-card-title>
+    <mat-card-title>Government Agency Details</mat-card-title>
   <mat-card-content>
     <form [formGroup]="municipalityDetailForm" class="full-width" (ngSubmit)="onSubmit()">
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Name</mat-label>
-        <input matInput formControlName="municipalityName" required placeholder="Enter Local Government Organization Name Ex. Linden">
+        <input matInput formControlName="municipalityName" required placeholder="Enter Government Agency Name Ex. Linden">
         <mat-error *ngIf="municipalityDetailForm.get('municipalityName')?.hasError('required')">
-          Local Government Organization Name is required.
+          Government Agency Name is required.
         </mat-error>
         <mat-error *ngIf="municipalityDetailForm.get('municipalityName')?.hasError('minlength')">
-          Local Government Organization Name must be at least 3 characters long.
+          Government Agency Name must be at least 3 characters long.
         </mat-error>
       </mat-form-field>
 
@@ -41,12 +41,12 @@
 
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>State</mat-label>
-        <mat-select formControlName="municipalityState" required>
-          <mat-option *ngFor="let state of states" [value]="state">
-            {{ state }}
+        <mat-select formControlName="municipalityStateId" required>
+          <mat-option *ngFor="let state of states" [value]="state.codeId">
+            {{ state.codeDesc }} ({{ state.codeName}})
           </mat-option>
         </mat-select>
-        <mat-error *ngIf="municipalityDetailForm.get('municipalityState')?.hasError('required')">
+        <mat-error *ngIf="municipalityDetailForm.get('municipalityStateId')?.hasError('required')">
           State is required.
         </mat-error>
       </mat-form-field>

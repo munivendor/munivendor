@@ -1,12 +1,12 @@
 <div>
-  <h1>Are you a Vendor or Local Government Organization?</h1>
+  <h1>Are you an Offeror or Government Agency?</h1>
   <form [formGroup]="roleVerificationForm" (ngSubmit)="onSubmit($event)">
     <div class="button-container">
       <div>
-        <button mat-raised-button color="primary" name="vendor" type="submit">Vendor</button>
+        <button mat-raised-button color="primary" name="offeror" type="submit">Offeror</button>
       </div>
       <div>
-        <button mat-raised-button color="primary" name="municipality" type="submit">Local Government Organization</button>
+        <button mat-raised-button color="primary" name="governmentAgency" type="submit">Government Agency</button>
       </div>
     </div>
   </form>

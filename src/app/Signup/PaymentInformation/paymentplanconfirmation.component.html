@@ -1,10 +1,10 @@
-<div class="container">
-  <mat-card class="lgo-card">
+<div class="lga-container" *ngIf="organizationTypeId === 1">
+  <mat-card class="lga-card">
     <mat-card-header>
-    <mat-card-title>Payment Plan</mat-card-title>
-  </mat-card-header>
+      <mat-card-title>Payment Plan</mat-card-title>
+    </mat-card-header>
     <mat-card-content>
-      <div><u>Local Government Organization Plan A</u></div>
+      <div><u>Government Agency Plan A</u></div>
       <ul>
         <li>Free for 12 Months</li>
         <li>After 12 months pay $299/month</li>
@@ -12,29 +12,34 @@
       </ul>
     </mat-card-content>
     <mat-card-actions>
-      <button mat-raised-button color="primary" [routerLink]="'/payment-information'">Continue</button>
+      <button mat-raised-button color="primary" [routerLink]="'/billing-profile'">Continue</button>
     </mat-card-actions>
   </mat-card>
 </div>
 
-
-  <div class="pricing-container">
-    <mat-card class="pricing-card" *ngFor="let plan of pricingPlans; let planIndex = index">
+<div *ngIf="organizationTypeId !== 1">
+  <div style="text-align: center;">
+    <h1><b>Choose Your Plan</b></h1>
+    <p>Give your team the features they need to succeed.</p>
+  </div>
+  <div class="offeror-container">
+    <mat-card class="offeror-card" *ngFor="let plan of offerorPricingPlans; let planIndex = index">
       <mat-card-header>
         <mat-card-title>{{ plan.name }}</mat-card-title>
         <mat-card-subtitle>{{ plan.price }}</mat-card-subtitle>
       </mat-card-header>
-      <mat-card-content class="pricing-card-content">
+      <mat-card-content class="offeror-card-content">
         <ul class="features">
-          <li *ngFor="let feature of allFeatures; let i = index" 
-              [ngClass]="{'feature-included': isFeatureIncluded(planIndex, i), 'feature-excluded': !isFeatureIncluded(planIndex, i)}">
-              {{ getFeatureText(planIndex, i) }}
+          <li *ngFor="let feature of allFeatures; let i = index"
+            [ngClass]="{'feature-included': isFeatureIncluded(planIndex, i), 'feature-excluded': !isFeatureIncluded(planIndex, i)}">
+            {{ getFeatureText(planIndex, i) }}
           </li>
         </ul>
       </mat-card-content>
       <div class="spacer"></div>
       <mat-card-actions class="card-footer">
-        <button mat-raised-button color="primary">Select</button>
+        <button mat-raised-button color="primary" [routerLink]="'/billing-profile'">Select</button>
       </mat-card-actions>
     </mat-card>
   </div>
+</div>

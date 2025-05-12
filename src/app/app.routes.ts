@@ -10,11 +10,11 @@ import { TokenValidationComponent } from './Signup/token-validation.component';
 
 // Authorized pages
 import { RoleVerificationComponent } from './Signup/RoleVerification/role-verification.component';
-import { MunicipalityDetailsComponent } from './Municipality/Details/municipality.details.component';
+import { GovernmentAgencyDetailsComponent } from './Municipality/Details/municipality.details.component';
 import { UserSignUpDetails } from './Signup/UserSignUpDetails/user-signup-details.component';
 import { DesignationSelectionComponent } from './Municipality/UserDesignationSelection/municipality.user-designation-selection.component';
 import { PaymentPlanConfirmationComponent } from './Signup/PaymentInformation/paymentplanconfirmation.component';
-import { PaymentInfoComponent } from './Signup/PaymentInformation/paymentinformation.component';
+import { BillingProfileComponent } from './Signup/PaymentInformation/paymentinformation.component';
 
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { TableDetailsComponent } from './Request/TableDetails/request-tabledetails.component';
@@ -29,11 +29,11 @@ export const routes: Routes = [
   { path: 'validateuser', component: TokenValidationComponent },
 
   { path: 'role-verification', component: RoleVerificationComponent, canActivate: [AuthGuard] },
-  { path: 'municipality-details', component: MunicipalityDetailsComponent, canActivate: [AuthGuard] },
+  { path: 'government-agency-details', component: GovernmentAgencyDetailsComponent, canActivate: [AuthGuard] },
   { path: 'user-details', component: UserSignUpDetails, canActivate: [AuthGuard] },
   { path: 'user-designation', component: DesignationSelectionComponent, canActivate: [AuthGuard] },
   { path: 'payment-plan-confirmation', component: PaymentPlanConfirmationComponent, canActivate: [AuthGuard] },
-  { path: 'payment-information', component: PaymentInfoComponent, canActivate: [AuthGuard] },
+  { path: 'billing-profile', component: BillingProfileComponent, canActivate: [AuthGuard] },
   
   { path: 'dashboard-component', component: DashboardComponent, canActivate: [AuthGuard]},
   { path: 'create-request-view', component: CreateRequestStepper, canActivate: [AuthGuard]},

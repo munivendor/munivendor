@@ -10,6 +10,12 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatTabChangeEvent } from '@angular/material/tabs';
 import { Subject, takeUntil } from 'rxjs';
 import { Router } from '@angular/router';
+import { State } from '../../shared/model/state.model';
+import { MunicipalityService } from '../../Municipality/Details/services/municipality.service';
+import { UserService } from '../../shared/service/user.service';
+import { AuthService } from '../../authorization/auth.service';
+import { User } from '../../shared/model/user.model';
+import { ConfirmationDialogComponent } from './confirmation-dialog.component';
 
 @Component({
   selector: 'app-payment-form',
@@ -20,81 +26,67 @@ import { Router } from '@angular/router';
   providers: [PaymentInfoService]
 })
 
-export class PaymentInfoComponent implements OnInit, OnDestroy {
-  paymentInformationForm!: FormGroup;
+export class BillingProfileComponent implements OnInit, OnDestroy {
+  billingProfileForm!: FormGroup;
   accountTypes = ['Checking', 'Savings'];
   selectedPaymentType: string = 'ACH';
   cardType: string | null = null;
+  organizationTypeId: number | undefined;
+  user: User | undefined;
   private destroy$ = new Subject<void>();
 
-  states = [
-    { value: 'AL', viewValue: 'Alabama' },
-    { value: 'AK', viewValue: 'Alaska' },
-    { value: 'AZ', viewValue: 'Arizona' },
-    { value: 'AR', viewValue: 'Arkansas' },
-    { value: 'CA', viewValue: 'California' },
-    { value: 'CO', viewValue: 'Colorado' },
-    { value: 'CT', viewValue: 'Connecticut' },
-    { value: 'DE', viewValue: 'Delaware' },
-    { value: 'FL', viewValue: 'Florida' },
-    { value: 'GA', viewValue: 'Georgia' },
-    { value: 'HI', viewValue: 'Hawaii' },
-    { value: 'ID', viewValue: 'Idaho' },
-    { value: 'IL', viewValue: 'Illinois' },
-    { value: 'IN', viewValue: 'Indiana' },
-    { value: 'IA', viewValue: 'Iowa' },
-    { value: 'KS', viewValue: 'Kansas' },
-    { value: 'KY', viewValue: 'Kentucky' },
-    { value: 'LA', viewValue: 'Louisiana' },
-    { value: 'ME', viewValue: 'Maine' },
-    { value: 'MD', viewValue: 'Maryland' },
-    { value: 'MA', viewValue: 'Massachusetts' },
-    { value: 'MI', viewValue: 'Michigan' },
-    { value: 'MN', viewValue: 'Minnesota' },
-    { value: 'MS', viewValue: 'Mississippi' },
-    { value: 'MO', viewValue: 'Missouri' },
-    { value: 'MT', viewValue: 'Montana' },
-    { value: 'NE', viewValue: 'Nebraska' },
-    { value: 'NV', viewValue: 'Nevada' },
-    { value: 'NH', viewValue: 'New Hampshire' },
-    { value: 'NJ', viewValue: 'New Jersey' },
-    { value: 'NM', viewValue: 'New Mexico' },
-    { value: 'NY', viewValue: 'New York' },
-    { value: 'NC', viewValue: 'North Carolina' },
-    { value: 'ND', viewValue: 'North Dakota' },
-    { value: 'OH', viewValue: 'Ohio' },
-    { value: 'OK', viewValue: 'Oklahoma' },
-    { value: 'OR', viewValue: 'Oregon' },
-    { value: 'PA', viewValue: 'Pennsylvania' },
-    { value: 'RI', viewValue: 'Rhode Island' },
-    { value: 'SC', viewValue: 'South Carolina' },
-    { value: 'SD', viewValue: 'South Dakota' },
-    { value: 'TN', viewValue: 'Tennessee' },
-    { value: 'TX', viewValue: 'Texas' },
-    { value: 'UT', viewValue: 'Utah' },
-    { value: 'VT', viewValue: 'Vermont' },
-    { value: 'VA', viewValue: 'Virginia' },
-    { value: 'WA', viewValue: 'Washington' },
-    { value: 'WV', viewValue: 'West Virginia' },
-    { value: 'WI', viewValue: 'Wisconsin' },
-    { value: 'WY', viewValue: 'Wyoming' }
-  ];
+  states: State[] = [];
 
   constructor(
     private fb: FormBuilder,
     public dialog: MatDialog,
     private paymentInfoService: PaymentInfoService,
-    private router: Router
+    private router: Router,
+    private municipalityService: MunicipalityService,
+    private userService: UserService,
+    private authService: AuthService
   ) { }
 
   ngOnInit(): void {
-    this.paymentInformationForm = this.fb.group({
+    this.billingProfileForm = this.fb.group({
       paymentType: ['', Validators.required],
       address: this.createAddressGroup(),
       ACH: this.createAchGroup(),
       CC: this.createCreditCardGroup(),
       invoice: this.createInvoiceGroup(),
     });
+
+    this.municipalityService.getStates()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(states => {
+        this.states = states;
+      });
+
+    this.authService.user$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(user => {
+      if (user) {
+        const userId = user
+        if (userId) {
+
+          this.getUserDetails(userId);
+        } else {
+          console.error('No user ID available in authentication state');
+        }
+      }
+    });
+  }
+
+  getUserDetails(userId: number): void {
+    this.userService.getUser(userId).subscribe(
+      (user: User) => {
+        this.organizationTypeId = user.organizationTypeId;
+        this.user = user;
+      },
+      (error) => {
+        console.error('Error fetching user data:', error);
+      }
+    );
   }
 
   private createAddressGroup(): FormGroup {
@@ -137,7 +129,7 @@ export class PaymentInfoComponent implements OnInit, OnDestroy {
   }
 
   get selectedFormGroup(): FormGroup {
-    return this.paymentInformationForm.get(this.selectedPaymentType) as FormGroup;
+    return this.billingProfileForm.get(this.selectedPaymentType) as FormGroup;
   }
 
   onTabChange(event: MatTabChangeEvent): void {
@@ -147,7 +139,7 @@ export class PaymentInfoComponent implements OnInit, OnDestroy {
   }
 
   clearAddressErrors() {
-    const addressGroup = this.paymentInformationForm.get('address');
+    const addressGroup = this.billingProfileForm.get('address');
     if (addressGroup) {
       addressGroup.reset(addressGroup.value);
       addressGroup.markAsPristine();
@@ -156,14 +148,25 @@ export class PaymentInfoComponent implements OnInit, OnDestroy {
   }
 
   onSubmit(): void {
+    // testing confirmation dialog without needing to trigger payment APIs
+    if (this.organizationTypeId === 2) {
+      this.dialog.open(ConfirmationDialogComponent, {
+        width: '400px',
+        data: {
+          title: 'Payment Information',
+          message: 'Your payment information has been submitted successfully. Please wait for the administrator to approve your request.'
+        }
+      });
+    }
+   
     if (!this.selectedFormGroup.valid) {
       this.selectedFormGroup.markAllAsTouched();
       console.error(`Form in ${this.selectedPaymentType} tab is invalid.`);
       return;
     }
-
-    let customerProfileData: CustomerProfileData = { Email: "testemail1111@gmail.com", UserId: 10, MerchantCustomerId: "10" };
-    let municipalityId = 1;
+  
+    let customerProfileData: CustomerProfileData = { Email: this.user?.workEmail || '', UserId: this.user?.userId ?? 0, MerchantCustomerId: (this.user?.userId ?? 0).toString() };
+    let organizationId = 1;
     let paymentData = { ...this.selectedFormGroup.value };
 
     if (this.selectedPaymentType === 'CC') {
@@ -172,20 +175,35 @@ export class PaymentInfoComponent implements OnInit, OnDestroy {
       delete paymentData.nameOnCard;
     }
 
-    this.savePaymentInfo(municipalityId, customerProfileData, paymentData, this.selectedPaymentType);
+    this.savePaymentInfo(organizationId, customerProfileData, paymentData, this.selectedPaymentType);
   }
 
-  private savePaymentInfo(municipalityId: number, customerProfileData: CustomerProfileData, paymentData: any, selectedPaymentType: string) {
+  private savePaymentInfo(organizationId: number, customerProfileData: CustomerProfileData, paymentData: any, selectedPaymentType: string) {
     const saveMethods = {
-      ACH: () => this.paymentInfoService.saveACHPaymentInfo(municipalityId, customerProfileData, paymentData, selectedPaymentType),
-      CC: () => this.paymentInfoService.saveCreditCardPaymentInfo(municipalityId, customerProfileData, paymentData, selectedPaymentType),
+      ACH: () => this.paymentInfoService.saveACHPaymentInfo(organizationId, customerProfileData, paymentData, selectedPaymentType),
+      CC: () => this.paymentInfoService.saveCreditCardPaymentInfo(organizationId, customerProfileData, paymentData, selectedPaymentType),
       invoice: () => this.paymentInfoService.saveInvoicePaymentInfo(paymentData)
     };
 
     saveMethods[this.selectedPaymentType as keyof typeof saveMethods]?.()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: response => { console.log(`${this.selectedPaymentType} Payment Info Submitted and Saved`, response); this.router.navigate(['/dashboard-component']); },
+        next: response => {
+          // TODO: check organizationTypeId and if offeror, pass in user's selected payment plan
+          if (this.organizationTypeId === 1) {
+            console.log(`${this.selectedPaymentType} Payment Info Submitted and Saved`, response);
+            this.router.navigate(['/dashboard-component']);
+          } else {
+            console.log(`${this.selectedPaymentType} Payment Info Submitted and Saved`, response);
+            this.dialog.open(ConfirmationDialogComponent, {
+              width: '400px',
+              data: {
+                title: 'Payment Information',
+                message: 'Your payment information has been submitted successfully. Please wait for the administrator to approve your request.'
+              }
+            });
+          }
+        },
         error: error => { console.error(`Error saving ${this.selectedPaymentType} payment data`, error); this.router.navigate(['/dashboard-component']); }
       });
   }
@@ -209,20 +227,16 @@ export class PaymentInfoComponent implements OnInit, OnDestroy {
     const cvv = control.value;
     if (!cvv) return null;
 
-    const cardNumber = this.paymentInformationForm?.get('CC.cardNumber')?.value || '';
+    const cardNumber = this.billingProfileForm?.get('CC.cardNumber')?.value || '';
     const cardType = this.detectCardType(cardNumber); // No more type error
-    console.log("cardType", cardType)
 
     const cvvPattern = cardType === 'amex' ? /^\d{4}$/ : /^\d{3}$/;
-    console.log("cvvPattern", cvvPattern)
     return cvvPattern.test(cvv) ? null : { invalidCvv: true };
   }
 
   nameOnCardValidator(control: AbstractControl): { [key: string]: boolean } | null {
     if (!control.value) return null;
-    // Regex: Only letters, spaces, hyphens, and apostrophes (2-50 characters)
     const validNamePattern = /^[A-Za-z\s'-]{2,50}$/;
-
     return validNamePattern.test(control.value.trim()) ? null : { invalidName: true };
   }
 
