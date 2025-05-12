@@ -26,8 +26,8 @@ import { ConfirmationDialogComponent } from './confirmation-dialog.component';
   providers: [PaymentInfoService]
 })
 
-export class BillingInformationComponent implements OnInit, OnDestroy {
-  billingInformationForm!: FormGroup;
+export class BillingProfileComponent implements OnInit, OnDestroy {
+  billingProfileForm!: FormGroup;
   accountTypes = ['Checking', 'Savings'];
   selectedPaymentType: string = 'ACH';
   cardType: string | null = null;
@@ -48,7 +48,7 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-    this.billingInformationForm = this.fb.group({
+    this.billingProfileForm = this.fb.group({
       paymentType: ['', Validators.required],
       address: this.createAddressGroup(),
       ACH: this.createAchGroup(),
@@ -129,7 +129,7 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
   }
 
   get selectedFormGroup(): FormGroup {
-    return this.billingInformationForm.get(this.selectedPaymentType) as FormGroup;
+    return this.billingProfileForm.get(this.selectedPaymentType) as FormGroup;
   }
 
   onTabChange(event: MatTabChangeEvent): void {
@@ -139,7 +139,7 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
   }
 
   clearAddressErrors() {
-    const addressGroup = this.billingInformationForm.get('address');
+    const addressGroup = this.billingProfileForm.get('address');
     if (addressGroup) {
       addressGroup.reset(addressGroup.value);
       addressGroup.markAsPristine();
@@ -227,7 +227,7 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
     const cvv = control.value;
     if (!cvv) return null;
 
-    const cardNumber = this.billingInformationForm?.get('CC.cardNumber')?.value || '';
+    const cardNumber = this.billingProfileForm?.get('CC.cardNumber')?.value || '';
     const cardType = this.detectCardType(cardNumber); // No more type error
 
     const cvvPattern = cardType === 'amex' ? /^\d{4}$/ : /^\d{3}$/;

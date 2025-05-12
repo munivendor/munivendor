@@ -14,7 +14,7 @@ import { GovernmentAgencyDetailsComponent } from './Municipality/Details/municip
 import { UserSignUpDetails } from './Signup/UserSignUpDetails/user-signup-details.component';
 import { DesignationSelectionComponent } from './Municipality/UserDesignationSelection/municipality.user-designation-selection.component';
 import { PaymentPlanConfirmationComponent } from './Signup/PaymentInformation/paymentplanconfirmation.component';
-import { BillingInformationComponent } from './Signup/PaymentInformation/paymentinformation.component';
+import { BillingProfileComponent } from './Signup/PaymentInformation/paymentinformation.component';
 
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { TableDetailsComponent } from './Request/TableDetails/request-tabledetails.component';
@@ -33,7 +33,7 @@ export const routes: Routes = [
   { path: 'user-details', component: UserSignUpDetails, canActivate: [AuthGuard] },
   { path: 'user-designation', component: DesignationSelectionComponent, canActivate: [AuthGuard] },
   { path: 'payment-plan-confirmation', component: PaymentPlanConfirmationComponent, canActivate: [AuthGuard] },
-  { path: 'billing-information', component: BillingInformationComponent, canActivate: [AuthGuard] },
+  { path: 'billing-profile', component: BillingProfileComponent, canActivate: [AuthGuard] },
   
   { path: 'dashboard-component', component: DashboardComponent, canActivate: [AuthGuard]},
   { path: 'create-request-view', component: CreateRequestStepper, canActivate: [AuthGuard]},
