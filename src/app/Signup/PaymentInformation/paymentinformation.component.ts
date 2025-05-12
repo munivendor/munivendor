@@ -26,8 +26,8 @@ import { ConfirmationDialogComponent } from './confirmation-dialog.component';
   providers: [PaymentInfoService]
 })
 
-export class PaymentInfoComponent implements OnInit, OnDestroy {
-  paymentInformationForm!: FormGroup;
+export class BillingInformationComponent implements OnInit, OnDestroy {
+  billingInformationForm!: FormGroup;
   accountTypes = ['Checking', 'Savings'];
   selectedPaymentType: string = 'ACH';
   cardType: string | null = null;
@@ -48,7 +48,7 @@ export class PaymentInfoComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-    this.paymentInformationForm = this.fb.group({
+    this.billingInformationForm = this.fb.group({
       paymentType: ['', Validators.required],
       address: this.createAddressGroup(),
       ACH: this.createAchGroup(),
@@ -129,7 +129,7 @@ export class PaymentInfoComponent implements OnInit, OnDestroy {
   }
 
   get selectedFormGroup(): FormGroup {
-    return this.paymentInformationForm.get(this.selectedPaymentType) as FormGroup;
+    return this.billingInformationForm.get(this.selectedPaymentType) as FormGroup;
   }
 
   onTabChange(event: MatTabChangeEvent): void {
@@ -139,7 +139,7 @@ export class PaymentInfoComponent implements OnInit, OnDestroy {
   }
 
   clearAddressErrors() {
-    const addressGroup = this.paymentInformationForm.get('address');
+    const addressGroup = this.billingInformationForm.get('address');
     if (addressGroup) {
       addressGroup.reset(addressGroup.value);
       addressGroup.markAsPristine();
@@ -166,7 +166,7 @@ export class PaymentInfoComponent implements OnInit, OnDestroy {
     }
   
     let customerProfileData: CustomerProfileData = { Email: this.user?.workEmail || '', UserId: this.user?.userId ?? 0, MerchantCustomerId: (this.user?.userId ?? 0).toString() };
-    let municipalityId = 1;
+    let organizationId = 1;
     let paymentData = { ...this.selectedFormGroup.value };
 
     if (this.selectedPaymentType === 'CC') {
@@ -175,13 +175,13 @@ export class PaymentInfoComponent implements OnInit, OnDestroy {
       delete paymentData.nameOnCard;
     }
 
-    this.savePaymentInfo(municipalityId, customerProfileData, paymentData, this.selectedPaymentType);
+    this.savePaymentInfo(organizationId, customerProfileData, paymentData, this.selectedPaymentType);
   }
 
-  private savePaymentInfo(municipalityId: number, customerProfileData: CustomerProfileData, paymentData: any, selectedPaymentType: string) {
+  private savePaymentInfo(organizationId: number, customerProfileData: CustomerProfileData, paymentData: any, selectedPaymentType: string) {
     const saveMethods = {
-      ACH: () => this.paymentInfoService.saveACHPaymentInfo(municipalityId, customerProfileData, paymentData, selectedPaymentType),
-      CC: () => this.paymentInfoService.saveCreditCardPaymentInfo(municipalityId, customerProfileData, paymentData, selectedPaymentType),
+      ACH: () => this.paymentInfoService.saveACHPaymentInfo(organizationId, customerProfileData, paymentData, selectedPaymentType),
+      CC: () => this.paymentInfoService.saveCreditCardPaymentInfo(organizationId, customerProfileData, paymentData, selectedPaymentType),
       invoice: () => this.paymentInfoService.saveInvoicePaymentInfo(paymentData)
     };
 
@@ -227,7 +227,7 @@ export class PaymentInfoComponent implements OnInit, OnDestroy {
     const cvv = control.value;
     if (!cvv) return null;
 
-    const cardNumber = this.paymentInformationForm?.get('CC.cardNumber')?.value || '';
+    const cardNumber = this.billingInformationForm?.get('CC.cardNumber')?.value || '';
     const cardType = this.detectCardType(cardNumber); // No more type error
 
     const cvvPattern = cardType === 'amex' ? /^\d{4}$/ : /^\d{3}$/;

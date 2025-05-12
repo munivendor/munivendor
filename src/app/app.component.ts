@@ -47,7 +47,7 @@ export class AppComponent {
       '/user-details',
       '/user-designation',
       '/payment-plan-confirmation',
-      '/payment-information'
+      '/billing-information'
     ];
 
     this.showSidenav = !routesToHideSidenav.some(route => currentRoute.includes(route));
