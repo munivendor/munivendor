@@ -118,9 +118,9 @@
         <br />
         <div formGroupName="invoice">
           <mat-form-field>
-            <mat-label>Municipality Name</mat-label>
-            <input matInput formControlName="municipalityName" placeholder="Enter municipality name">
-            <mat-error *ngIf="billingProfileForm.get('invoice.municipalityName')?.hasError('required')">Municipality
+            <mat-label>Organization Name</mat-label>
+            <input matInput formControlName="organizationName" placeholder="Enter organization name">
+            <mat-error *ngIf="billingProfileForm.get('invoice.organizationName')?.hasError('required')">Organization
               name is
               required.</mat-error>
           </mat-form-field>

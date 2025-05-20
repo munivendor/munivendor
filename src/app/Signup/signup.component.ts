@@ -13,10 +13,43 @@ import { Router } from '@angular/router';
 import { UserService } from '../shared/service/user.service';
 import { User } from '../shared/model/user.model';
 import { UserLogin } from '../shared/model/user-login.model';
-import { catchError, filter, finalize, Subject, switchMap, takeUntil, tap, throwError } from 'rxjs';
+import { catchError, combineLatest, filter, finalize, Observable, Subject, switchMap, take, takeUntil, tap, throwError } from 'rxjs';
 import { AuthService } from '../authorization/auth.service';
 import { SignupService } from './services/signup.service';
 import { OrganizationType } from '../shared/model/organization-type.model';
+import { OrganizationService } from '../Organization/Details/services/organization.service';
+import { Organization } from '../Organization/Details/model/organization.model';
+import { SocialAuthService } from '@abacritt/angularx-social-login';
+import {
+  MatDialogModule,
+  MatDialog,
+  MatDialogActions,
+  MatDialogClose,
+  MatDialogContent,
+  MatDialogTitle,
+} from '@angular/material/dialog';
+
+@Component({
+  selector: 'dialog-elements-example-dialog',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatDialogModule,
+    MatDialogTitle,
+    MatDialogContent,
+    MatDialogActions,
+    MatDialogClose,
+    MatButtonModule
+  ],
+  template: `
+ <h2 mat-dialog-title> Organization Type Change</h2>
+    <div mat-dialog-content>Hey there! Your organization type has been changed from Offeror to Government Agency because you are using a .gov domain extension. </div>
+    <div mat-dialog-actions align="end">
+      <button mat-button mat-dialog-close>Continue</button>
+    </div>
+  `
+})
+export class DialogElementsExampleDialog { }
 
 @Component({
   selector: 'signup',
@@ -30,17 +63,22 @@ import { OrganizationType } from '../shared/model/organization-type.model';
     MatInputModule,
     MatCardModule,
     MatSelectModule,
-    GoogleSigninButtonModule],
+    GoogleSigninButtonModule,
+    MatDialogModule
+  ],
   templateUrl: './signup.component.html',
   styleUrls: ['./signup.component.css'],
 })
 
 export class SignupComponent implements OnInit, OnDestroy {
-  signupForm!: FormGroup;
+
+  signupFormEmail!: FormGroup;
+  signupFormGoogle!: FormGroup;
   userId!: number;
   isLGA: boolean = false;
   organizationTypes: OrganizationType[] = [];
-  private userSelectedOrgTypeId: number | null = null;
+  private userSelectedOrgTypeIdEmail: number | null = null;
+  private userSelectedOrgTypeIdGoogle: number | null = null;
   private userCreationInProgress = false;
   private destroy$ = new Subject<void>();
 
@@ -48,12 +86,31 @@ export class SignupComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private authService: AuthService,
     private userService: UserService,
+    private socialAuthService: SocialAuthService,
     private router: Router,
-    private signupService: SignupService
+    private signupService: SignupService,
+    private organizationService: OrganizationService,
+    public dialog: MatDialog
   ) { }
+
+  openDialog() {
+    this.dialog.open(DialogElementsExampleDialog, {
+      width: '575px',
+    });
+  }
+
+  prepareGoogleSignIn(): void {
+    // Set flag to true BEFORE the Google button triggers authentication
+    this.authService.setSkipNextAuthState(true);
+    // No need to manually trigger authentication as the library will do that
+    console.log("Preparing for Google authentication, skip flag set");
+  }
+
 
   ngOnInit(): void {
     this.initForm();
+    // Listen for Google authentication
+    this.setupGoogleAuthListener();
 
     this.signupService.getOrganizationTypes()
       .pipe(takeUntil(this.destroy$))
@@ -61,65 +118,52 @@ export class SignupComponent implements OnInit, OnDestroy {
         this.organizationTypes = organizationTypes;
       });
 
-    this.signupForm.get('organizationTypeId')?.valueChanges
+    this.signupFormGoogle.get('organizationTypeId')?.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(value => {
         if (!this.isLGA) {
-          this.userSelectedOrgTypeId = value;
+          this.userSelectedOrgTypeIdGoogle = value;
         }
       });
 
-    this.signupForm.get('email')?.valueChanges
+    this.signupFormEmail.get('organizationTypeId')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(value => {
+        if (!this.isLGA) {
+          this.userSelectedOrgTypeIdEmail = value;
+        }
+      });
+
+    this.signupFormEmail.get('email')?.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(email => {
-        const orgControl = this.signupForm.get('organizationTypeId');
-
+        const orgControl = this.signupFormEmail.get('organizationTypeId');
         if (email && email.endsWith('.gov')) {
+          // only open dialog if organizationTypeId is 2 (Offeror)
+          if (orgControl && orgControl.value === 2) {
+            this.openDialog();
+          }
           this.isLGA = true;
           orgControl?.setValue(1);
           orgControl?.disable();
         } else {
           this.isLGA = false;
           orgControl?.enable();
-          if (this.userSelectedOrgTypeId !== null) {
-            orgControl?.setValue(this.userSelectedOrgTypeId);
+          if (this.userSelectedOrgTypeIdEmail !== null) {
+            orgControl?.setValue(this.userSelectedOrgTypeIdEmail);
           } else {
             orgControl?.reset();
           }
         }
       });
-
-    this.authService.user$
-      .pipe(
-        takeUntil(this.destroy$),
-        filter(user => !!user && !this.userCreationInProgress),
-        tap(user => {
-          console.log("Google Authenticated User:", user);
-          this.userCreationInProgress = true;
-        })
-      )
-      .subscribe({
-        next: (user) => {
-          const municipalityUser: User = {
-            firstName: user.firstName,
-            lastName: user.lastName,
-            workEmail: user.email,
-            username: user.email,
-            userIdentity: user.id,
-            identityTypeId: 2
-          };
-
-          this.createUserByGoogle(municipalityUser);
-        },
-        error: (error) => {
-          this.userCreationInProgress = false;
-          console.error('Authentication error', error);
-        }
-      });
   }
 
   private initForm(): void {
-    this.signupForm = this.fb.group({
+    this.signupFormGoogle = this.fb.group({
+      organizationTypeId: ['', [Validators.required]],
+    });
+
+    this.signupFormEmail = this.fb.group({
       firstname: ['', [
         Validators.required,
         Validators.pattern(/^[A-Za-zÀ-ÖØ-öø-ÿ'' -]{3,50}$/)
@@ -163,7 +207,7 @@ export class SignupComponent implements OnInit, OnDestroy {
   }
 
   getPasswordErrorMessage(): string {
-    const passwordControl = this.signupForm.get('password');
+    const passwordControl = this.signupFormEmail.get('password');
 
     if (passwordControl?.hasError('required')) {
       return 'Password is required.';
@@ -184,56 +228,125 @@ export class SignupComponent implements OnInit, OnDestroy {
     return '';
   }
 
-  private markFormGroupTouched(formGroup: FormGroup) {
+  // Form utility method
+  markFormGroupTouched(formGroup: FormGroup) {
     Object.values(formGroup.controls).forEach(control => {
       control.markAsTouched();
-
       if (control instanceof FormGroup) {
         this.markFormGroupTouched(control);
       }
     });
   }
 
-  onSubmit() {
-    if (this.signupForm.valid) {
+  onSubmitByEmail() {
+    if (this.signupFormEmail.valid) {
+      const organizationTypeId = this.signupFormEmail.controls["organizationTypeId"].value;
 
-      let municipalityUser: User = {
-        firstName: this.signupForm.controls["firstname"].value,
-        lastName: this.signupForm.controls["lastname"].value,
-        workEmail: this.signupForm.controls["email"].value,
-        organizationTypeId: this.signupForm.controls["organizationTypeId"].value,
-        username: this.signupForm.controls["email"].value,
-        password: this.signupForm.controls["password"].value,
-        identityTypeId: 1
+      const organization: Organization = {
+        organizationTypeId: organizationTypeId
       };
-      this.createUserByEmail(municipalityUser)
+
+      this.organizationService.saveOrganization(organization).subscribe({
+        next: (response: any) => {
+          const organizationUser: User = {
+            firstName: this.signupFormEmail.controls["firstname"].value,
+            lastName: this.signupFormEmail.controls["lastname"].value,
+            workEmail: this.signupFormEmail.controls["email"].value,
+            organizationId: response.organizationId,
+            username: this.signupFormEmail.controls["email"].value,
+            password: this.signupFormEmail.controls["password"].value,
+            identityTypeId: 1,
+          };
+
+          this.createUserByEmail(organizationUser);
+        },
+        error: (err) => {
+          console.error("Failed to save organization:", err);
+        }
+      });
+
     } else {
-      this.markFormGroupTouched(this.signupForm);
+      this.markFormGroupTouched(this.signupFormEmail);
     }
   }
 
-  private createUserByGoogle(user: User) {
-    this.userService.createUser(user).pipe(
+  private setupGoogleAuthListener(): void {
+    combineLatest([
+      this.authService.skipNextAuthState$,
+      this.socialAuthService.authState
+    ])
+      .pipe(
+        takeUntil(this.destroy$),
+        // Modified filter condition - just check for valid user and form
+        filter(([_, user]) => {
+          return !!user && this.signupFormGoogle.valid;
+        }),
+        // Take only the first emission to prevent multiple signups
+        take(1),
+        switchMap(([_, user]) => {
+          this.userCreationInProgress = true;
+          const selectedOrganizationTypeId = this.signupFormGoogle.get('organizationTypeId')?.value;
+  
+          const organizationData: Organization = {
+            organizationTypeId: selectedOrganizationTypeId
+          };
+  
+          return this.organizationService.saveOrganization(organizationData).pipe(
+            switchMap((orgResponse) => {
+              console.log("Organization created:", orgResponse);
+  
+              const userData = {
+                firstName: user.firstName,
+                lastName: user.lastName,
+                workEmail: user.email,
+                username: user.email,
+                userIdentity: user.id,
+                identityTypeId: 2,
+                organizationId: orgResponse.organizationId
+              };
+  
+              return this.createUserByGoogle(userData);
+            })
+          );
+        }),
+        finalize(() => {
+          this.userCreationInProgress = false;
+        })
+      )
+      .subscribe({
+        next: (user) => {
+          console.log("Google Auth Detected:", user);
+          this.router.navigate(['/role-verification']);
+        },
+        error: (error) => {
+          console.error('Google sign-up failed:', error);
+          this.authService.setSkipNextAuthState(false);
+        }
+      });
+  }
+
+  private createUserByGoogle(user: User): Observable<any> {
+    return this.userService.createUser(user).pipe(
       switchMap(() => {
         const googleUserLogin: UserLogin = {
           userIdentity: user.userIdentity,
-          username: user.username
+          username: user.username,
         };
-        return this.authService.login(googleUserLogin);
+        return this.authService.login(googleUserLogin).pipe(
+          // Reset the skip flag after successful login
+          tap(() => this.authService.setSkipNextAuthState(false))
+        );
       }),
       catchError((error) => {
         this.userCreationInProgress = false;
+        // Reset the flag on error too
+        this.authService.setSkipNextAuthState(false);
         return throwError(() => error);
       }),
       finalize(() => {
         this.userCreationInProgress = false;
       })
-    ).subscribe({
-      next: () => this.router.navigate(['/role-verification']),
-      error: (error) => {
-        console.error('Failed to log in after Google sign-up:', error);
-      }
-    });
+    );
   }
 
   private createUserByEmail(user: User) {
@@ -252,6 +365,7 @@ export class SignupComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.authService.setSkipNextAuthState(false);
     this.destroy$.next();
     this.destroy$.complete();
   }

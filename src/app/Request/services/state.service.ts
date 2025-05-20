@@ -16,8 +16,8 @@ export class StateService {
   private requestHasBeenSaved = new BehaviorSubject<boolean>(false);
   currentRequestHasBeenSaved$ = this.requestHasBeenSaved.asObservable();
 
-  private municipalityIdSource = new BehaviorSubject<number | null>(null);
-  currentMunicipalityId$ = this.municipalityIdSource.asObservable();
+  private organizationIdSource = new BehaviorSubject<number | null>(null);
+  currentOrganizationId$ = this.organizationIdSource.asObservable();
 
   saveState(state: any) {
     this.myComponentState = state;
@@ -51,11 +51,11 @@ export class StateService {
     return this.requestHasBeenSaved.getValue();
   }
   
-  setMunicipalityId(municipalityId: number) {
-    this.municipalityIdSource.next(municipalityId);
+  setOrganizationId(organizationId: number) {
+    this.organizationIdSource.next(organizationId);
   }
 
-  getMunicipalityId(): number | null {
-    return this.municipalityIdSource.getValue();
+  getOrganizationId(): number | null {
+    return this.organizationIdSource.getValue();
   }
 }

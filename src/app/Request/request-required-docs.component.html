@@ -24,23 +24,23 @@
 
   <br />
 
-  <h2>Optional forms from [Municipality]</h2>
+  <h2>Optional forms from [Organization]</h2>
   <p>Upload documents you would like to be required</p>
-  <div formArrayName="optionalMunicipalityDocuments">
-    <div *ngFor="let municipalityDocument of optionalMunicipalityDocuments.controls; let i = index" [formGroupName]="i"
+  <div formArrayName="optionalOrganizationDocuments">
+    <div *ngFor="let organizationDocument of optionalOrganizationDocuments.controls; let i = index" [formGroupName]="i"
       class="document-item">
       <button mat-icon-button aria-label="delete" type="button" color="warn" style="margin-top: 5px;"
-        (click)="deleteMunicipalityDocument(municipalityDocument.get('documentId')?.value)">
+        (click)="deleteOrganizationDocument(organizationDocument.get('documentId')?.value)">
         <mat-icon>delete</mat-icon>
       </button>
-      <mat-checkbox color="primary" [checked]="municipalityDocument.get('selected')?.value"
-        (change)="onCheckboxChange(optionalMunicipalityDocuments, i, $event.checked)">
-        {{ municipalityDocument.get('documentName')?.value || 'Unnamed Document' }}
+      <mat-checkbox color="primary" [checked]="organizationDocument.get('selected')?.value"
+        (change)="onCheckboxChange(optionalOrganizationDocuments, i, $event.checked)">
+        {{ organizationDocument.get('documentName')?.value || 'Unnamed Document' }}
       </mat-checkbox>
     </div>
   </div>
 
-  <button mat-raised-button type="button" (click)="openFileUploadDialog(municipalityId)">Add</button>
+  <button mat-raised-button type="button" (click)="openFileUploadDialog(organizationId)">Add</button>
   <br />
   <br />
 

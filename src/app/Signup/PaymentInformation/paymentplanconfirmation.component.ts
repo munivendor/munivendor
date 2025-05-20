@@ -76,7 +76,7 @@ export class PaymentPlanConfirmationComponent implements OnInit {
       if (user) {
         const userId = user
         if (userId) {
-          this.getUserDetails(userId);
+          // this.getUserDetails(userId);
         } else {
           console.error('No user ID available in authentication state');
         }
@@ -84,16 +84,16 @@ export class PaymentPlanConfirmationComponent implements OnInit {
     });
   }
 
-  getUserDetails(userId: number): void {
-    this.userService.getUser(userId).subscribe(
-      (user: User) => {
-        this.organizationTypeId = user.organizationTypeId;
-      },
-      (error) => {
-        console.error('Error fetching user data:', error);
-      }
-    );
-  }
+  // getUserDetails(userId: number): void {
+  //   this.userService.getUser(userId).subscribe(
+  //     (user: User) => {
+  //       this.organizationTypeId = user.organizationTypeId;
+  //     },
+  //     (error) => {
+  //       console.error('Error fetching user data:', error);
+  //     }
+  //   );
+  // }
   
   getFeatureText(planIndex: number, featureIndex: number): string {
     if (featureIndex === 0) {

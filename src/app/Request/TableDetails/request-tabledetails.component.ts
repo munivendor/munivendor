@@ -7,6 +7,8 @@ import { RequestService } from '../services/request.service';
 import { Request } from '../model/request.model';
 import { CategoryHierarchyService } from '../services/category-hierarchy.service';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import {MatButtonModule} from '@angular/material/button';
 
 @Component({
   selector: 'request-tabledetails',
@@ -15,7 +17,9 @@ import { MatTableModule, MatTableDataSource } from '@angular/material/table';
   styleUrls: ['./request-tabledetails.component.css'],
   imports: [
     CommonModule,
-    MatTableModule
+    MatTableModule,
+    MatPaginatorModule,
+    MatButtonModule
   ]
 })
 export class TableDetailsComponent implements OnInit, OnDestroy {

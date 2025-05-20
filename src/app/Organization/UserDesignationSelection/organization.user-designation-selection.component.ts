@@ -17,8 +17,8 @@ import { AuthService } from '../../authorization/auth.service';
 
 @Component({
   selector: 'app-designation-selection',
-  templateUrl: './municipality.user-designation-selection.component.html',
-  styleUrls: ['./municipality.user-designation-selection.component.css'],
+  templateUrl: './organization.user-designation-selection.component.html',
+  styleUrls: ['./organization.user-designation-selection.component.css'],
   standalone: true,
   imports: [
     CommonModule,

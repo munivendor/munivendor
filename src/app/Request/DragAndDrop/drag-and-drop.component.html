@@ -8,10 +8,10 @@
     </div>
 
     <!-- Selected files list with remove button -->
-    <div class="file-list" *ngIf="municipalityDocuments.length > 0">
+    <div class="file-list" *ngIf="organizationDocuments.length > 0">
         <h3>Selected Files:</h3>
         <ul>
-            <li *ngFor="let document of municipalityDocuments; let i = index">
+            <li *ngFor="let document of organizationDocuments; let i = index">
                 {{ document.file.name }} ({{ formatBytes(document.file.size) }})
               
                 <mat-form-field appearance="outline">

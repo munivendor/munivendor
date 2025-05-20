@@ -14,22 +14,22 @@ export class PaymentInfoService {
   apiUrl = `${environment.apiUrl}paymentprofile`;
 
   constructor(private http: HttpClient) { }
-  saveCreditCardPaymentInfo(municipalityId: number, customerProfileData: CustomerProfileData, CCPaymentProfileData: CCPaymentProfileData, selectedPaymentType: string): Observable<string> {
+  saveCreditCardPaymentInfo(organizationId: number, customerProfileData: CustomerProfileData, CCPaymentProfileData: CCPaymentProfileData, selectedPaymentType: string): Observable<string> {
     const body = {
       selectedPaymentType,
       customerProfileData,
       CCPaymentProfileData
     };
-    return this.http.post<string>(`${this.apiUrl}/${municipalityId}`, body);
+    return this.http.post<string>(`${this.apiUrl}/${organizationId}`, body);
   }
 
-  saveACHPaymentInfo(municipalityId: number, customerProfileData: CustomerProfileData, ACHPaymentProfileData: ACHPaymentProfileData, selectedPaymentType: string): Observable<string> {
+  saveACHPaymentInfo(organizationId: number, customerProfileData: CustomerProfileData, ACHPaymentProfileData: ACHPaymentProfileData, selectedPaymentType: string): Observable<string> {
     const body = {
       selectedPaymentType,
       customerProfileData,
       ACHPaymentProfileData
     };
-    return this.http.post<string>(`${this.apiUrl}/${municipalityId}`, body);
+    return this.http.post<string>(`${this.apiUrl}/${organizationId}`, body);
   }
 
   saveInvoicePaymentInfo(data: any): Observable<any> {

@@ -10,9 +10,9 @@ import { TokenValidationComponent } from './Signup/token-validation.component';
 
 // Authorized pages
 import { RoleVerificationComponent } from './Signup/RoleVerification/role-verification.component';
-import { GovernmentAgencyDetailsComponent } from './Municipality/Details/municipality.details.component';
+import { GovernmentAgencyDetailsComponent } from './Organization/Details/organization.details.component';
 import { UserSignUpDetails } from './Signup/UserSignUpDetails/user-signup-details.component';
-import { DesignationSelectionComponent } from './Municipality/UserDesignationSelection/municipality.user-designation-selection.component';
+import { DesignationSelectionComponent } from './Organization/UserDesignationSelection/organization.user-designation-selection.component';
 import { PaymentPlanConfirmationComponent } from './Signup/PaymentInformation/paymentplanconfirmation.component';
 import { BillingProfileComponent } from './Signup/PaymentInformation/paymentinformation.component';
 

@@ -2,6 +2,12 @@
   width: 100%;
 }
 
+.signup-card {
+  width: 100%;
+  max-width: 500px;
+  margin-top: 5rem;
+}
+
 .form-container {
   width: 45%;
   margin: 0 auto;
@@ -14,7 +20,7 @@
 }
 
 mat-card {
-  padding: 2rem;
+  padding: 1rem;
 }
 
 mat-card-title {
@@ -52,4 +58,17 @@ mat-card-actions > * {
   margin: 0 10px;
 }
 
+.disabled-button {
+  position: relative;
+  opacity: 0.6;
+  pointer-events: none;
+}
 
+.disabled-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  cursor: not-allowed;
+}

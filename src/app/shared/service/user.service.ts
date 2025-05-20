@@ -41,8 +41,8 @@ export class UserService {
     return this.http.get<User>(`${this.userApiUrl}${userId}`);
   }
 
-  getMunicipalityUsers(municipalityId: number): Observable<User[]> {
-    return this.http.get<User[]>(`${this.userApiUrl}${municipalityId}`);
+  getOrganizationUsers(organizationId: number): Observable<User[]> {
+    return this.http.get<User[]>(`${this.userApiUrl}${organizationId}`);
   }
 
   SendUserVerificationEmail(userId: number): Observable<boolean> {

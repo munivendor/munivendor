@@ -25,40 +25,40 @@ import { MatDialogActions, MatDialogContent, MatDialogRef, MatDialogTitle, MAT_D
 export class FileUploadDialogComponent {
   selectedFile!: File;
   documentName: string = '';
-  municipalityDocuments: Document[] = [];
+  organizationDocuments: Document[] = [];
 
   constructor(
     private fb: FormBuilder,
     private requestService: RequestService,
     private cdr: ChangeDetectorRef,
     public dialogRef: MatDialogRef<FileUploadDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { municipalityId: number; municipalityDocuments: any }
+    @Inject(MAT_DIALOG_DATA) public data: { organizationId: number; organizationDocuments: any }
   ) { }
 
   onFileSelected(event: any): void {
     this.selectedFile = event.target.files[0];
   }
 
-  onUpload(municipalityId: number): void {
+  onUpload(organizationId: number): void {
     if (!this.selectedFile || !this.documentName) {
       console.error('File or document name is missing');
       return;
     }
 
     // save file name into database not only document name
-    const municipalityDocument = {
-      municipalityId: this.data.municipalityId,
+    const organizationDocument = {
+      organizationId: this.data.organizationId,
       documentName: this.documentName,
       documentId: null,
     };
 
-    this.requestService.SaveMunicipalityDocument(municipalityId, municipalityDocument, this.selectedFile).subscribe(
+    this.requestService.SaveOrganizationDocument(organizationId, organizationDocument, this.selectedFile).subscribe(
       (response) => {
         console.log('Document saved successfully:', response);
-        this.data.municipalityDocuments.push(
+        this.data.organizationDocuments.push(
           this.fb.group({
             documentId: [response.documentId],
-            documentName: [municipalityDocument.documentName],
+            documentName: [organizationDocument.documentName],
             documentRequired: [true],
             selected: [true]
           })

@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
-import { MaterialModule } from '../../Municipality/shared/material.module';
+import { MaterialModule } from '../../Organization/shared/material.module';
 import { MatDialog } from '@angular/material/dialog';
 import { ReactiveFormsModule } from '@angular/forms';
 import { PaymentInfoService } from './services/payment-info.service'
@@ -11,7 +11,7 @@ import { MatTabChangeEvent } from '@angular/material/tabs';
 import { Subject, takeUntil } from 'rxjs';
 import { Router } from '@angular/router';
 import { State } from '../../shared/model/state.model';
-import { MunicipalityService } from '../../Municipality/Details/services/municipality.service';
+import { OrganizationService } from '../../Organization/Details/services/organization.service';
 import { UserService } from '../../shared/service/user.service';
 import { AuthService } from '../../authorization/auth.service';
 import { User } from '../../shared/model/user.model';
@@ -42,7 +42,7 @@ export class BillingProfileComponent implements OnInit, OnDestroy {
     public dialog: MatDialog,
     private paymentInfoService: PaymentInfoService,
     private router: Router,
-    private municipalityService: MunicipalityService,
+    private organizationService: OrganizationService,
     private userService: UserService,
     private authService: AuthService
   ) { }
@@ -56,7 +56,7 @@ export class BillingProfileComponent implements OnInit, OnDestroy {
       invoice: this.createInvoiceGroup(),
     });
 
-    this.municipalityService.getStates()
+    this.organizationService.getStates()
       .pipe(takeUntil(this.destroy$))
       .subscribe(states => {
         this.states = states;
@@ -69,7 +69,7 @@ export class BillingProfileComponent implements OnInit, OnDestroy {
         const userId = user
         if (userId) {
 
-          this.getUserDetails(userId);
+          // this.getUserDetails(userId);
         } else {
           console.error('No user ID available in authentication state');
         }
@@ -77,17 +77,17 @@ export class BillingProfileComponent implements OnInit, OnDestroy {
     });
   }
 
-  getUserDetails(userId: number): void {
-    this.userService.getUser(userId).subscribe(
-      (user: User) => {
-        this.organizationTypeId = user.organizationTypeId;
-        this.user = user;
-      },
-      (error) => {
-        console.error('Error fetching user data:', error);
-      }
-    );
-  }
+  // getUserDetails(userId: number): void {
+  //   this.userService.getUser(userId).subscribe(
+  //     (user: User) => {
+  //       this.organizationTypeId = user.organizationTypeId;
+  //       this.user = user;
+  //     },
+  //     (error) => {
+  //       console.error('Error fetching user data:', error);
+  //     }
+  //   );
+  // }
 
   private createAddressGroup(): FormGroup {
     return this.fb.group({
@@ -122,7 +122,7 @@ export class BillingProfileComponent implements OnInit, OnDestroy {
 
   private createInvoiceGroup(): FormGroup {
     return this.fb.group({
-      municipalityName: ['', Validators.required],
+      organizationName: ['', Validators.required],
       billingContact: ['', Validators.required],
       desiredDateOfInvoice: ['', Validators.required]
     }, { updateOn: 'blur' });
