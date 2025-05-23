@@ -29,15 +29,14 @@ export class PaymentPlanConfirmationComponent implements OnInit {
     'Automatic Data to Government Form Insertion',
     'Unlimited Vendor Data Storage',
     'Digital Notarization',
-    'Guaranteed Submission Delivery',
-    '5 Free Submissions'
+    'Guaranteed Submission Delivery'
   ];
 
   offerorPricingPlans = [
     {
       name: 'Pay As You Go',
       price: '$39/each',
-      includedFeatures: [0, 1, 2, 3, 4, 5, 6, 7]
+      includedFeatures: [0, 1, 2, 3, 4, 5, 6]
     }
   ];
 

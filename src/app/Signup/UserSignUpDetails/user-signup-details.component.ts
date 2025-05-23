@@ -31,6 +31,7 @@ export class UserSignUpDetails
     implements OnInit {
     userSignupDetailForm: FormGroup;
     user: User | undefined;
+    organizationTypeId: number | undefined;
     private destroy$ = new Subject<void>();
 
     constructor(
@@ -72,13 +73,13 @@ export class UserSignUpDetails
         this.userService.getUser(userId).subscribe(
             (user: User) => {
                 this.user = user;
-
                 this.userSignupDetailForm.patchValue({
                     email: user.workEmail,
                     firstName: user.firstName,
                     lastName: user.lastName,
                 });
                 this.userSignupDetailForm.updateValueAndValidity({ onlySelf: true });
+                this.organizationTypeId = user.organizationTypeId;
             },
             (error) => {
                 console.error('Error fetching user data:', error);
@@ -100,7 +101,12 @@ export class UserSignUpDetails
         if (this.userSignupDetailForm.valid) {
             const updatedUser: User = { ...this.user, ...this.userSignupDetailForm.value };
             this.updateUser(updatedUser);
+            if (this.organizationTypeId === 1) {
             this.router.navigate(['/user-designation'])
+            }
+            else if (this.organizationTypeId === 2) {
+                this.router.navigate(['/payment-plan-confirmation'])
+            };
         } else {
             console.error('Form is invalid or user data is not loaded yet.');
         }

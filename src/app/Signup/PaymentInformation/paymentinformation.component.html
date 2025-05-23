@@ -1,9 +1,12 @@
 <div class="billing-profile-container">
   <h2>Billing Profile</h2>
-  <p>
+  <p *ngIf="!isLoading && organizationTypeId === 1">
     Please choose your preferred payment method. You will not be charged until your 12-month trial is over.
     You will be notified 90 days before you are charged or billed.
   </p>
+  <p *ngIf="!isLoading && organizationTypeId === 2">Please enter your payment details. You will not be charged for a submission until after your five (5) free
+    submissions have been used by your organization. After your five submissions have been used, you will have the
+    option to pay $39 when you begin a submission, or you can purchase packs in advance at a discount.</p>
   <form [formGroup]="billingProfileForm" (ngSubmit)="onSubmit()">
     <mat-tab-group (selectedTabChange)="onTabChange($event)">
       <mat-tab label="ACH">
@@ -207,6 +210,6 @@
     </div>
 
     <button mat-raised-button color="primary" type="submit">Continue</button>
-    <a href="#" class="skip-link">Skip this step and continue.</a>
+    <a href="#" class="skip-link" *ngIf="!isLoading && organizationTypeId === 1">Skip this step and continue.</a>
   </form>
 </div>
