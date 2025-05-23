@@ -46,10 +46,18 @@ export class LoginComponent implements OnInit {
         username: this.loginForm.controls["email"].value,
         password: this.loginForm.controls["password"].value
       };
-
+  
+      const email = this.loginForm.controls["email"].value;
+      const isGovEmail = email.toLowerCase().endsWith('.gov');
+  
       this.authService.login(userLogin).subscribe({
-        // in future, add flag to navigate users to appropriate page based on whether they've completed the form
-        next: () => this.router.navigate(['/government-agency-details']),
+        next: () => { 
+          if (isGovEmail) {
+            this.router.navigate(['/government-agency-details']);
+          } else {
+            this.router.navigate(['/role-verification']);
+          }
+        },
         error: (error) => {
           this._snackBar.open('Login failed: Invalid email, password, or unauthorized email.', 'Close', {
             duration: 3000,

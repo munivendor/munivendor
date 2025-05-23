@@ -14,9 +14,6 @@
     <a routerLink="/billing-profile" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="user$ | async">Billing Profile</a>
   
     <a routerLink="/dashboard-component" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="user$ | async">Dashboard</a>
-    <a routerLink="/request-outframe-component" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="user$ | async">Basic Request</a>
-    <a routerLink="/request-proposal-component" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="user$ | async">Proposal</a>
-    <a routerLink="/request-overview-component" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="user$ | async">Overview</a>
     <a (click)="onLogOut()" *ngIf="user$ | async">Sign Out</a>
 </div>
   

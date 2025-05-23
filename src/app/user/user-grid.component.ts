@@ -49,7 +49,7 @@ export class UserGridComponent implements OnInit {
 
   ngOnInit(): void {
     
-    this.userService.getMunicipalityUsers().subscribe(
+    this.userService.getOrganizationUsers().subscribe(
       (data) => {
         this.filteredUsers = data;
       },

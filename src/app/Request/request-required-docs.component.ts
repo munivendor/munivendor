@@ -35,15 +35,15 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
 
   requestDocumentsFormGroup!: FormGroup;
   optionalRequestDocuments: Document[] = [];
-  municipalityRequestDocuments: Document[] = [];
+  organizationRequestDocuments: Document[] = [];
   files: File[] = [];
 
-  municipalityId = 1;
-  municipalityDocuments: Document[] = [];
+  organizationId = 1;
+  organizationDocuments: Document[] = [];
   documentId!: number;
 
   selectedOptionalStateDocs: Document[] = [];
-  selectedMunicipalityDocs: Document[] = [];
+  selectedOrganizationDocs: Document[] = [];
   requestId: any;
 
   constructor(
@@ -67,18 +67,18 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
   get optionalStateDocuments(): FormArray {
     return this.requestDocumentsFormGroup.get('optionalStateDocuments') as FormArray;
   }
-  get optionalMunicipalityDocuments(): FormArray {
-    return this.requestDocumentsFormGroup.get('optionalMunicipalityDocuments') as FormArray;
+  get optionalOrganizationDocuments(): FormArray {
+    return this.requestDocumentsFormGroup.get('optionalOrganizationDocuments') as FormArray;
   }
 
   initializeRequestDocuments(): void {
     this.requestDocumentsFormGroup = this.fb.group({
       requiredStateDocuments: this.fb.array([]),
       optionalStateDocuments: this.fb.array([]),
-      optionalMunicipalityDocuments: this.fb.array([]),
+      optionalOrganizationDocuments: this.fb.array([]),
     });
     if (!this.requestId && !this.idParam) {
-      this.getAllDocumentTypes(this.municipalityId)
+      this.getAllDocumentTypes(this.organizationId)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: () => {
@@ -91,7 +91,7 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
     } else if (this.idParam) {
 
       forkJoin({
-        allDocuments: this.getAllDocumentTypes(this.municipalityId, Number(this.idParam)).pipe(
+        allDocuments: this.getAllDocumentTypes(this.organizationId, Number(this.idParam)).pipe(
           catchError((error) => {
             console.error('Error in getAllDocumentTypes:', error);
             return of([]);
@@ -127,17 +127,17 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
     }
   }
 
-  getAllDocumentTypes(municipalityId: number, requestId?: number): Observable<any> {
+  getAllDocumentTypes(organizationId: number, requestId?: number): Observable<any> {
     return forkJoin({
       requiredStateDocuments: this.requestService.GetRequiredDocuments(),
       optionalStateDocuments: this.requestService.GetOptionalDocuments(),
-      optionalMunicipalityDocuments: this.requestService.GetMunicipalityDocuments(municipalityId),
+      optionalOrganizationDocuments: this.requestService.GetOrganizationDocuments(organizationId),
     }).pipe(
-      tap(({ requiredStateDocuments, optionalStateDocuments, optionalMunicipalityDocuments }) => {
+      tap(({ requiredStateDocuments, optionalStateDocuments, optionalOrganizationDocuments }) => {
         if (!requestId) {
           this.populateFormArray(this.requiredStateDocuments, requiredStateDocuments);
           this.populateFormArray(this.optionalStateDocuments, optionalStateDocuments);
-          this.populateFormArray(this.optionalMunicipalityDocuments, optionalMunicipalityDocuments);
+          this.populateFormArray(this.optionalOrganizationDocuments, optionalOrganizationDocuments);
         }
       })
     );
@@ -154,8 +154,8 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
         selected: [document.selected],
       });
       if (document.derived) {
-        // Derived = true -> Municipality document
-        this.optionalMunicipalityDocuments.push(documentFormGroup);
+        // Derived = true -> Organization document
+        this.optionalOrganizationDocuments.push(documentFormGroup);
       } else if (document.required) {
         // Derived = false, Required = true -> Required State document
         this.requiredStateDocuments.push(documentFormGroup);
@@ -170,7 +170,7 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
     const {
       requiredStateDocuments = [],
       optionalStateDocuments = [],
-      optionalMunicipalityDocuments = []
+      optionalOrganizationDocuments = []
     } = allDocuments;
     // filter and merge the two data responses based on two criterias:
     // display documents if selected are false from from getAllDocumentTypes
@@ -180,14 +180,14 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
 
     this.populateFormArray(this.requiredStateDocuments, filterUnselected(requiredStateDocuments.documents));
     this.populateFormArray(this.optionalStateDocuments, filterUnselected(optionalStateDocuments.documents));
-    this.populateFormArray(this.optionalMunicipalityDocuments, filterUnselected(optionalMunicipalityDocuments.documents));
+    this.populateFormArray(this.optionalOrganizationDocuments, filterUnselected(optionalOrganizationDocuments.documents));
   }
 
   isDocumentSelected(documentId: number): boolean {
     return (
       this.requiredStateDocuments.value.some((doc: any) => doc.documentId === documentId) ||
       this.optionalStateDocuments.value.some((doc: any) => doc.documentId === documentId) ||
-      this.optionalMunicipalityDocuments.value.some((doc: any) => doc.documentId === documentId)
+      this.optionalOrganizationDocuments.value.some((doc: any) => doc.documentId === documentId)
     );
   }
 
@@ -208,13 +208,13 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
     });
   }
 
-  openFileUploadDialog(municipalityId: number): void {
+  openFileUploadDialog(organizationId: number): void {
     const dialogRef = this.dialog.open(FileUploadDialogComponent, {
       width: '400px',
       height: 'auto',
       data: {
-        municipalityId,
-        municipalityDocuments: this.optionalMunicipalityDocuments
+        organizationId,
+        organizationDocuments: this.optionalOrganizationDocuments
       }
     });
     dialogRef.afterClosed()
@@ -231,23 +231,23 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
     documentControl.patchValue({ selected: isChecked });
   }
 
-  deleteMunicipalityDocument(documentId: number): void {
-    this.requestService.DeleteMunicipalityDocument(documentId)
+  deleteOrganizationDocument(documentId: number): void {
+    this.requestService.DeleteOrganizationDocument(documentId)
       .pipe(takeUntil(this.destroy$))
       .subscribe(
         () => {
-          const formArray = this.optionalMunicipalityDocuments;
+          const formArray = this.optionalOrganizationDocuments;
           const indexToDelete = formArray.controls.findIndex(
             (control) => control.get('documentId')?.value === documentId
           );
 
           if (indexToDelete > -1) {
             formArray.removeAt(indexToDelete);
-            console.log(`Optional municipality document id ${documentId} deleted successfully`);
+            console.log(`Optional organization document id ${documentId} deleted successfully`);
           }
         },
         (error) => {
-          console.error('Error deleting optional municipality document:', error);
+          console.error('Error deleting optional organization document:', error);
         }
       );
   }
@@ -262,14 +262,14 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
       .filter((control) => control.value.selected)
       .map((control) => control.value);
 
-    const updatedOptionalMunicipalityDocuments = this.optionalMunicipalityDocuments.controls
+    const updatedOptionalOrganizationDocuments = this.optionalOrganizationDocuments.controls
       .filter((control) => control.value.selected)
       .map((control) => control.value);
 
     const documentIds: number[] = [
       ...updatedRequiredStateDocuments,
       ...updatedOptionalStateDocuments,
-      ...updatedOptionalMunicipalityDocuments
+      ...updatedOptionalOrganizationDocuments
     ].map(documentId => documentId.documentId);
 
     this.requestService.SaveRequestDocuments(this.requestId, documentIds)

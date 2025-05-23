@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { SocialAuthService, SocialUser } from '@abacritt/angularx-social-login';
-import { BehaviorSubject, catchError, Observable, tap, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, filter, Observable, tap, throwError, withLatestFrom } from 'rxjs';
 import { Router } from '@angular/router';
 import { UserLogin } from '../shared/model/user-login.model';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
@@ -15,6 +15,12 @@ export class AuthService {
   user$: Observable<SocialUser | null> = this.userSubject.asObservable();
   private authState = new BehaviorSubject<boolean>(false);
   isAuthenticated$ = this.authState.asObservable();
+  private skipNextAuthStateSubject = new BehaviorSubject<boolean>(false);
+  skipNextAuthState$ = this.skipNextAuthStateSubject.asObservable();
+
+  setSkipNextAuthState(value: boolean): void {
+    this.skipNextAuthStateSubject.next(value);
+  }
 
   constructor(
     private http: HttpClient,
@@ -25,20 +31,33 @@ export class AuthService {
   }
 
   private initializeAuthListener(): void {
-    this.socialAuthService.authState.subscribe({
-      next: (user) => {
+    this.socialAuthService.authState.pipe(
+      withLatestFrom(this.skipNextAuthState$),
+      filter(([user, skipNext]) => !!user && !skipNext)
+    ).subscribe({
+      next: ([user, _]) => {
         console.log("Google Auth State Changed:", user);
-
-        if (user) {
-          this.userSubject.next(user);
-          this.authState.next(true);
-        } else {
-          this.safeResetAuthState();
+        if (user && user.id) {
+          const userLogin: UserLogin = {
+            userIdentity: user.id,
+            username: user.email
+          };
+  
+          this.login(userLogin).subscribe({
+            next: (response) => {
+              this.authState.next(true);
+              this.userSubject.next(response);
+              if (user.email.toLowerCase().endsWith('.gov')) {
+                this.router.navigate(['/government-agency-details']);
+              } else {
+                this.router.navigate(['/role-verification']);
+              }
+            },
+            error: (error) => {
+              this.safeResetAuthState();
+            }
+          });
         }
-      },
-      error: (error) => {
-        console.error('Google Auth Error:', error);
-        this.safeResetAuthState();
       }
     });
   }
@@ -49,6 +68,7 @@ export class AuthService {
     ).pipe(
       tap(response => {
         if (response) {
+          console.log("Login successful:", response);
           this.authState.next(true);
           this.userSubject.next(response as any);
         }

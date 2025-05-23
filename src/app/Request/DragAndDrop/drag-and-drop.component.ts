@@ -33,7 +33,7 @@ export class DragAndDropUploaderComponent {
         });
     }
 
-    municipalityDocuments: { file: File, documentTitle: string }[] = [];
+    organizationDocuments: { file: File, documentTitle: string }[] = [];
     requestId: number | null = null;
 
     @Output() filesDropped: EventEmitter<{ file: File, documentTitle: string }[]> = new EventEmitter();
@@ -46,7 +46,7 @@ export class DragAndDropUploaderComponent {
     // Handles file selection or drop
     onFileDropped(files: FileList): void {
         for (let i = 0; i < files.length; i++) {
-            this.municipalityDocuments.push({ file: files[i], documentTitle: '' });
+            this.organizationDocuments.push({ file: files[i], documentTitle: '' });
         }
     }
 
@@ -77,12 +77,12 @@ export class DragAndDropUploaderComponent {
     // Add files to the existing file list and initialize aliases
     addFiles(newFiles: File[]) {
         const uniqueFiles = newFiles.filter(
-            (newFile) => !this.municipalityDocuments.some(document => document.file.name === newFile.name)
+            (newFile) => !this.organizationDocuments.some(document => document.file.name === newFile.name)
         );
 
-        // Add unique files to municipalityDocuments with an empty documentTitle
-        this.municipalityDocuments = [
-            ...this.municipalityDocuments,
+        // Add unique files to organizationDocuments with an empty documentTitle
+        this.organizationDocuments = [
+            ...this.organizationDocuments,
             ...uniqueFiles.map(file => ({ file, documentTitle: '' }))
         ];
 
@@ -92,12 +92,12 @@ export class DragAndDropUploaderComponent {
 
     // Removes a file from the list
     removeFile(index: number): void {
-        this.municipalityDocuments.splice(index, 1);
+        this.organizationDocuments.splice(index, 1);
     }
 
     // Emit files along with their aliases
     emitFilesWithDocumentTitles(): void {
-        const emitFilesWithDocumentTitles = this.municipalityDocuments.map((document, index) => ({
+        const emitFilesWithDocumentTitles = this.organizationDocuments.map((document, index) => ({
             file: document.file,
             documentTitle: document.documentTitle || '' // Fallback to empty string if no title provided
         }));

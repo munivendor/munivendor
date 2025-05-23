@@ -43,7 +43,7 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
   proposalsOverviewFormGroup!: FormGroup;
   requestId!: number | null;
   overviewText: string = '';
-  municipalityId: number = 1;
+  organizationId: number = 1;
   isFileUploaded: boolean = false;
 
   constructor(

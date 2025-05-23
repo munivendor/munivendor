@@ -104,21 +104,21 @@ export class RequestService {
     return this.http.get<any>(`${this.url}OptionalDocuments`);
   }
 
-  GetMunicipalityDocuments(municipalityId: number): Observable<any> {
-    return this.http.get<any>(`${this.url}MunicipalityDocuments/${municipalityId}`)
+  GetOrganizationDocuments(organizationId: number): Observable<any> {
+    return this.http.get<any>(`${this.url}OrganizationDocuments/${organizationId}`)
   }
 
-  SaveMunicipalityDocument(municipalityId: number, municipalityDocument: any, file: File): Observable<any> {
-    const url = `${this.url}MunicipalityDocuments/${municipalityId}`;
+  SaveOrganizationDocument(organizationId: number, organizationDocument: any, file: File): Observable<any> {
+    const url = `${this.url}OrganizationDocuments/${organizationId}`;
     const formData = new FormData();
-    formData.append('documentName', municipalityDocument.documentName);
+    formData.append('documentName', organizationDocument.documentName);
     formData.append('file', file);
     return this.http.post<any>(url, formData);
   }
   
 
-  DeleteMunicipalityDocument(documentId: number): Observable<void> {
-    return this.http.delete<void>(`${this.url}MunicipalityDocuments/${documentId}`)
+  DeleteOrganizationDocument(documentId: number): Observable<void> {
+    return this.http.delete<void>(`${this.url}OrganizationDocuments/${documentId}`)
   }
 
   SaveRequestDocuments(requestId: number, documentIds: number[]): Observable<any> {

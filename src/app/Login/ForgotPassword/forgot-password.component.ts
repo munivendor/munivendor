@@ -32,7 +32,7 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
         if (this.forgotPasswordForm.valid) {
             console.log(this.forgotPasswordForm.value);
 
-            let municipalityUser: User = {
+            let organizationUser: User = {
                 workEmail: this.forgotPasswordForm.controls["email"].value
             };
         }

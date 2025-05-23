@@ -7,6 +7,8 @@ import { RequestService } from '../services/request.service';
 import { Request } from '../model/request.model';
 import { CategoryHierarchyService } from '../services/category-hierarchy.service';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import {MatButtonModule} from '@angular/material/button';
 
 @Component({
   selector: 'request-tabledetails',
@@ -15,14 +17,16 @@ import { MatTableModule, MatTableDataSource } from '@angular/material/table';
   styleUrls: ['./request-tabledetails.component.css'],
   imports: [
     CommonModule,
-    MatTableModule
+    MatTableModule,
+    MatPaginatorModule,
+    MatButtonModule
   ]
 })
 export class TableDetailsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   joinedRequestData: Request[] = [];
-  displayedColumns: string[] = ['actions', 'emptyColumn', 'requestName', 'requestType', 'category', 'publishDate', 'requestStatus',];
+  displayedColumns: string[] = ['actions', 'requestName', 'requestType', 'category', 'publishDate', 'requestStatus',];
   dataSource = new MatTableDataSource<any>();
 
   constructor(public dialog: MatDialog, private requestService: RequestService, private categoryHierarchyService: CategoryHierarchyService) { }

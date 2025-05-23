@@ -3,6 +3,7 @@ export class User {
     firstName?: string;
     lastName?: string;
     title?: string;
+    organizationId?: number;
     organizationTypeId?: number;
     workEmail?: string;
     username?: string;

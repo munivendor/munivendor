@@ -20,6 +20,7 @@ import { User } from '../../shared/model/user.model';
 export class PaymentPlanConfirmationComponent implements OnInit {
   private destroy$ = new Subject<void>();
   organizationTypeId: number | undefined;
+  isLoading = true;
 
   allFeatures = [
     'Submissions',
@@ -35,31 +36,6 @@ export class PaymentPlanConfirmationComponent implements OnInit {
     {
       name: 'Pay As You Go',
       price: '$39/each',
-      features: ['1 Submission', 'Feature 2'],
-      includedFeatures: [0, 1, 2, 3, 4, 5, 6]
-    },
-    {
-      name: 'Bronze',
-      price: '$99/month',
-      features: ['3 Submissions', 'Feature 2', 'Feature 3'],
-      includedFeatures: [0, 1, 2, 3, 4, 5, 6]
-    },
-    {
-      name: 'Silver',
-      price: '$199/month',
-      features: ['7 Submissions', 'Feature 2', 'Feature 3', 'Feature 4', 'Feature 5'],
-      includedFeatures: [0, 1, 2, 3, 4, 5, 6]
-    },
-    {
-      name: 'Gold',
-      price: '$299/month',
-      features: ['15 Submissions', 'Feature 2', 'Feature 3', 'Feature 4', 'Feature 5', 'Feature 6'],
-      includedFeatures: [0, 1, 2, 3, 4, 5, 6]
-    },
-    {
-      name: 'Platinum',
-      price: '$399/month',
-      features: ['Unlimited Submissions', 'Feature 2', 'Feature 3', 'Feature 4', 'Feature 5', 'Feature 6', 'Feature 7'],
       includedFeatures: [0, 1, 2, 3, 4, 5, 6]
     }
   ];
@@ -88,6 +64,7 @@ export class PaymentPlanConfirmationComponent implements OnInit {
     this.userService.getUser(userId).subscribe(
       (user: User) => {
         this.organizationTypeId = user.organizationTypeId;
+        this.isLoading = false;
       },
       (error) => {
         console.error('Error fetching user data:', error);

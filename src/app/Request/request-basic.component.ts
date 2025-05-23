@@ -71,7 +71,7 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
   requestTypes: RequestType[] | undefined;
   requestName = new FormControl<string | null>(null, [Validators.required]);
   basicsFormGroup!: FormGroup;
-  municipalityId = 1;
+  organizationId = 1;
 
   constructor(
     private fb: FormBuilder,

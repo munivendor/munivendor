@@ -1,4 +1,4 @@
-<div class="lga-container" *ngIf="organizationTypeId === 1">
+<div class="lga-container" *ngIf="!isLoading && organizationTypeId === 1">
   <mat-card class="lga-card">
     <mat-card-header>
       <mat-card-title>Payment Plan</mat-card-title>
@@ -17,10 +17,10 @@
   </mat-card>
 </div>
 
-<div *ngIf="organizationTypeId !== 1">
+<div *ngIf="!isLoading && organizationTypeId !== 1">
   <div style="text-align: center;">
-    <h1><b>Choose Your Plan</b></h1>
-    <p>Give your team the features they need to succeed.</p>
+    <h1><b>Payment Plan</b></h1>
+    <p>Every new offeror account will receive 5 free submissions.</p>
   </div>
   <div class="offeror-container">
     <mat-card class="offeror-card" *ngFor="let plan of offerorPricingPlans; let planIndex = index">

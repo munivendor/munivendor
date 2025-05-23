@@ -1,5 +1,5 @@
 export class Document {
-    municipalityId?: number;
+    organizationId?: number;
     documentId!: number;
     documentName!: string;
     documentDescription!: string;
