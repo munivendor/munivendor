@@ -4,7 +4,7 @@ export class User {
     lastName?: string;
     title?: string;
     organizationId?: number;
-    // organizationTypeId?: number;
+    organizationTypeId?: number;
     workEmail?: string;
     username?: string;
     password?: string;

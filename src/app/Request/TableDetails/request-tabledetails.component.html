@@ -5,16 +5,11 @@
     <th mat-header-cell *matHeaderCellDef></th>
     <td mat-cell *matCellDef="let request">
       <div class="action-button-container" style="align-items: center;">
-        <button *ngIf="canEdit(request)" (click)="openConfirmationDialog('edit', request)" style="margin-right: 8px;">Edit</button>
+        <button *ngIf="canEdit(request)" (click)="openConfirmationDialog('edit', request)">Edit</button>
         <button *ngIf="canDelete(request)" (click)="openConfirmationDialog('delete', request)">Delete</button>
         <button *ngIf="canCancel(request)" (click)="openConfirmationDialog('cancel', request)">Cancel</button>
       </div>
     </td>
-  </ng-container>
-
-  <ng-container matColumnDef="emptyColumn">
-    <th mat-header-cell *matHeaderCellDef></th>
-    <td mat-cell *matCellDef="let element">[✓]</td>
   </ng-container>
 
   <ng-container matColumnDef="requestName">

@@ -34,6 +34,7 @@ export class BillingProfileComponent implements OnInit, OnDestroy {
   organizationTypeId: number | undefined;
   user: User | undefined;
   private destroy$ = new Subject<void>();
+  isLoading = true;
 
   states: State[] = [];
 
@@ -68,8 +69,7 @@ export class BillingProfileComponent implements OnInit, OnDestroy {
       if (user) {
         const userId = user
         if (userId) {
-
-          // this.getUserDetails(userId);
+          this.getUserDetails(userId);
         } else {
           console.error('No user ID available in authentication state');
         }
@@ -77,17 +77,18 @@ export class BillingProfileComponent implements OnInit, OnDestroy {
     });
   }
 
-  // getUserDetails(userId: number): void {
-  //   this.userService.getUser(userId).subscribe(
-  //     (user: User) => {
-  //       this.organizationTypeId = user.organizationTypeId;
-  //       this.user = user;
-  //     },
-  //     (error) => {
-  //       console.error('Error fetching user data:', error);
-  //     }
-  //   );
-  // }
+  getUserDetails(userId: number): void {
+    this.userService.getUser(userId).subscribe(
+      (user: User) => {
+        this.organizationTypeId = user.organizationTypeId;
+        this.user = user;
+        this.isLoading = false;
+      },
+      (error) => {
+        console.error('Error fetching user data:', error);
+      }
+    );
+  }
 
   private createAddressGroup(): FormGroup {
     return this.fb.group({

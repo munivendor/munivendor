@@ -110,7 +110,7 @@
         </div>
       </mat-tab>
 
-      <mat-tab label="invoice" *ngIf="organizationTypeId === 1">
+      <mat-tab label="invoice" *ngIf="!isLoading && organizationTypeId === 1">
         <ng-template mat-tab-label>
           <mat-icon class="tab-icon">receipt_long</mat-icon>
           Invoice

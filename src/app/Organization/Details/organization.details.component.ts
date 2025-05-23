@@ -16,6 +16,8 @@ import { Subject } from 'rxjs';
 import { takeUntil, tap, catchError } from 'rxjs/operators';
 import { State } from '../../shared/model/state.model';
 import { AuthService } from '../../authorization/auth.service';
+import { UserService } from '../../shared/service/user.service';
+import { User } from '../../shared/model/user.model';
 
 @Component({
   selector: 'app-organization-details',
@@ -37,6 +39,7 @@ export class GovernmentAgencyDetailsComponent implements OnInit {
   organizationDetailForm!: FormGroup;
   states: State[] = [];
   userId!: number;
+  organizationId!: number | undefined;
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -44,7 +47,8 @@ export class GovernmentAgencyDetailsComponent implements OnInit {
     private organizationService: OrganizationService,
     private router: Router,
     private stateService: StateService,
-    private authService: AuthService) {
+    private authService: AuthService,
+    private userService: UserService) {
     this.organizationDetailForm = this.fb.group({});
   }
 
@@ -57,6 +61,7 @@ export class GovernmentAgencyDetailsComponent implements OnInit {
         const userId = user
         if (userId) {
           this.userId = userId;
+          this.getUserDetails(userId);
         } else {
           console.error('No user ID available in authentication state');
         }
@@ -69,8 +74,26 @@ export class GovernmentAgencyDetailsComponent implements OnInit {
       });
   }
 
+  getUserDetails(userId: number): void {
+    this.userService.getUser(userId).subscribe(
+      (user: User) => {
+        this.organizationId = user.organizationId;
+
+        if (this.organizationDetailForm) {
+          this.organizationDetailForm.patchValue({
+            organizationId: this.organizationId
+          });
+        }
+      },
+      (error) => {
+        console.error('Error fetching user data:', error);
+      }
+    );
+  }
+
   private initializeForm(): void {
     this.organizationDetailForm = this.fb.group({
+      organizationId: [this.organizationId],
       organizationName: ['', [Validators.required, Validators.minLength(3)]],
       address: ['', [Validators.required, Validators.minLength(3)]],
       address2: ['', [Validators.minLength(3)]],
@@ -86,7 +109,7 @@ export class GovernmentAgencyDetailsComponent implements OnInit {
     }
     const organization: Organization = this.organizationDetailForm.value;
 
-    this.organizationService.saveOrganization(organization).pipe(
+    this.organizationService.updateOrganization(organization).pipe(
       tap((organizationId: number) => {
         this.stateService.setOrganizationId(organizationId);
         this.router.navigate(['/user-details']);

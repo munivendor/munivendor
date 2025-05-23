@@ -26,7 +26,7 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   joinedRequestData: Request[] = [];
-  displayedColumns: string[] = ['actions', 'emptyColumn', 'requestName', 'requestType', 'category', 'publishDate', 'requestStatus',];
+  displayedColumns: string[] = ['actions', 'requestName', 'requestType', 'category', 'publishDate', 'requestStatus',];
   dataSource = new MatTableDataSource<any>();
 
   constructor(public dialog: MatDialog, private requestService: RequestService, private categoryHierarchyService: CategoryHierarchyService) { }

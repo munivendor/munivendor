@@ -20,6 +20,7 @@ import { User } from '../../shared/model/user.model';
 export class PaymentPlanConfirmationComponent implements OnInit {
   private destroy$ = new Subject<void>();
   organizationTypeId: number | undefined;
+  isLoading = true;
 
   allFeatures = [
     'Submissions',
@@ -28,39 +29,15 @@ export class PaymentPlanConfirmationComponent implements OnInit {
     'Automatic Data to Government Form Insertion',
     'Unlimited Vendor Data Storage',
     'Digital Notarization',
-    'Guaranteed Submission Delivery'
+    'Guaranteed Submission Delivery',
+    '5 Free Submissions'
   ];
 
   offerorPricingPlans = [
     {
       name: 'Pay As You Go',
       price: '$39/each',
-      features: ['1 Submission', 'Feature 2'],
-      includedFeatures: [0, 1, 2, 3, 4, 5, 6]
-    },
-    {
-      name: 'Bronze',
-      price: '$99/month',
-      features: ['3 Submissions', 'Feature 2', 'Feature 3'],
-      includedFeatures: [0, 1, 2, 3, 4, 5, 6]
-    },
-    {
-      name: 'Silver',
-      price: '$199/month',
-      features: ['7 Submissions', 'Feature 2', 'Feature 3', 'Feature 4', 'Feature 5'],
-      includedFeatures: [0, 1, 2, 3, 4, 5, 6]
-    },
-    {
-      name: 'Gold',
-      price: '$299/month',
-      features: ['15 Submissions', 'Feature 2', 'Feature 3', 'Feature 4', 'Feature 5', 'Feature 6'],
-      includedFeatures: [0, 1, 2, 3, 4, 5, 6]
-    },
-    {
-      name: 'Platinum',
-      price: '$399/month',
-      features: ['Unlimited Submissions', 'Feature 2', 'Feature 3', 'Feature 4', 'Feature 5', 'Feature 6', 'Feature 7'],
-      includedFeatures: [0, 1, 2, 3, 4, 5, 6]
+      includedFeatures: [0, 1, 2, 3, 4, 5, 6, 7]
     }
   ];
 
@@ -76,7 +53,7 @@ export class PaymentPlanConfirmationComponent implements OnInit {
       if (user) {
         const userId = user
         if (userId) {
-          // this.getUserDetails(userId);
+          this.getUserDetails(userId);
         } else {
           console.error('No user ID available in authentication state');
         }
@@ -84,16 +61,17 @@ export class PaymentPlanConfirmationComponent implements OnInit {
     });
   }
 
-  // getUserDetails(userId: number): void {
-  //   this.userService.getUser(userId).subscribe(
-  //     (user: User) => {
-  //       this.organizationTypeId = user.organizationTypeId;
-  //     },
-  //     (error) => {
-  //       console.error('Error fetching user data:', error);
-  //     }
-  //   );
-  // }
+  getUserDetails(userId: number): void {
+    this.userService.getUser(userId).subscribe(
+      (user: User) => {
+        this.organizationTypeId = user.organizationTypeId;
+        this.isLoading = false;
+      },
+      (error) => {
+        console.error('Error fetching user data:', error);
+      }
+    );
+  }
   
   getFeatureText(planIndex: number, featureIndex: number): string {
     if (featureIndex === 0) {
