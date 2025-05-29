@@ -12,13 +12,13 @@ import { MatOptionModule } from '@angular/material/core';
 import { StateService } from '../../Request/services/state.service';
 import { OrganizationService } from "./services/organization.service"
 import { Organization } from './model/organization.model';
-import { Subject } from 'rxjs';
-import { takeUntil, tap, catchError } from 'rxjs/operators';
+import { Subject, throwError } from 'rxjs';
+import { takeUntil, tap, catchError, switchMap } from 'rxjs/operators';
 import { State } from '../../shared/model/state.model';
 import { AuthService } from '../../authorization/auth.service';
 import { UserService } from '../../shared/service/user.service';
 import { User } from '../../shared/model/user.model';
-
+import { FlowProgressService } from '../../shared/service/flow-progress.service';
 @Component({
   selector: 'app-organization-details',
   templateUrl: './organization.details.component.html',
@@ -41,6 +41,7 @@ export class GovernmentAgencyDetailsComponent implements OnInit {
   userId!: number;
   organizationId!: number | undefined;
   private destroy$ = new Subject<void>();
+  framePageNumber = 2;
 
   constructor(
     private fb: FormBuilder,
@@ -48,7 +49,9 @@ export class GovernmentAgencyDetailsComponent implements OnInit {
     private router: Router,
     private stateService: StateService,
     private authService: AuthService,
-    private userService: UserService) {
+    private userService: UserService,
+    private flowProgressService: FlowProgressService
+  ) {
     this.organizationDetailForm = this.fb.group({});
   }
 
@@ -107,21 +110,26 @@ export class GovernmentAgencyDetailsComponent implements OnInit {
     if (this.organizationDetailForm.invalid) {
       return;
     }
+
     const organization: Organization = this.organizationDetailForm.value;
 
     this.organizationService.updateOrganization(organization).pipe(
-      tap((organizationId: number) => {
+      switchMap((organizationId: number) => {
         this.stateService.setOrganizationId(organizationId);
-        this.router.navigate(['/user-details']);
+
+        return this.flowProgressService.saveFlowProgress(this.userId, 1, this.framePageNumber).pipe(
+          tap(() => this.router.navigate(['/user-details']))
+        );
       }),
+
       catchError(error => {
-        console.error('Error saving organization:', error);
-        throw error;
+        console.error('Error saving organization or flow progress:', error);
+        return throwError(() => error);
       }),
       takeUntil(this.destroy$)
-    )
-      .subscribe();
+    ).subscribe();
   }
+
 
   ngOnDestroy(): void {
     this.destroy$.next();

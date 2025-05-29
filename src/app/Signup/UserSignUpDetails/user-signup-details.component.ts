@@ -10,9 +10,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { User } from '../../shared/model/user.model';
 import { UserService } from '../../shared/service/user.service';
 import { Router } from '@angular/router';
-import { Subject, takeUntil  } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../../authorization/auth.service';
-
+import { FlowProgressService } from '../../shared/service/flow-progress.service';
 @Component({
     selector: 'app-contact-form',
     templateUrl: './user-signup-details.component.html',
@@ -33,12 +33,15 @@ export class UserSignUpDetails
     user: User | undefined;
     organizationTypeId: number | undefined;
     private destroy$ = new Subject<void>();
+    userId!: number;
+    framePageNumber = 3;
 
     constructor(
         private fb: FormBuilder,
         private userService: UserService,
         private router: Router,
-        private authService: AuthService
+        private authService: AuthService,
+        private flowProgressService: FlowProgressService
     ) {
         this.userSignupDetailForm = this.fb.group({
             email: [{ value: '', disabled: true }, [Validators.required,]],
@@ -73,6 +76,7 @@ export class UserSignUpDetails
         this.userService.getUser(userId).subscribe(
             (user: User) => {
                 this.user = user;
+                this.userId = userId;
                 this.userSignupDetailForm.patchValue({
                     email: user.workEmail,
                     firstName: user.firstName,
@@ -101,12 +105,27 @@ export class UserSignUpDetails
         if (this.userSignupDetailForm.valid) {
             const updatedUser: User = { ...this.user, ...this.userSignupDetailForm.value };
             this.updateUser(updatedUser);
-            if (this.organizationTypeId === 1) {
-            this.router.navigate(['/user-designation'])
-            }
-            else if (this.organizationTypeId === 2) {
-                this.router.navigate(['/payment-plan-confirmation'])
+
+            const flowMap: { [key: number]: string } = {
+                1: '/user-designation',
+                2: '/payment-plan-confirmation'
             };
+
+            const nextRoute = this.organizationTypeId !== undefined ? flowMap[this.organizationTypeId] : undefined;
+            const flowId = this.organizationTypeId === 1 ? 1 : 2;
+
+            if (nextRoute) {
+                this.flowProgressService.saveFlowProgress(this.userId, flowId, this.framePageNumber).subscribe({
+                    next: () => {
+                        this.router.navigate([nextRoute]);
+                    },
+                    error: (err) => {
+                        console.error('Error saving flow progress:', err);
+                    }
+                });
+            } else {
+                console.warn(`No flow mapping found for organizationTypeId: ${this.organizationTypeId}`);
+            }
         } else {
             console.error('Form is invalid or user data is not loaded yet.');
         }

@@ -9,20 +9,20 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTabChangeEvent } from '@angular/material/tabs';
 import { Subject, takeUntil } from 'rxjs';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { State } from '../../shared/model/state.model';
 import { OrganizationService } from '../../Organization/Details/services/organization.service';
 import { UserService } from '../../shared/service/user.service';
 import { AuthService } from '../../authorization/auth.service';
 import { User } from '../../shared/model/user.model';
 import { ConfirmationDialogComponent } from './confirmation-dialog.component';
-
+import { FlowProgressService } from '../../shared/service/flow-progress.service';
 @Component({
   selector: 'app-payment-form',
   templateUrl: './paymentinformation.component.html',
   styleUrls: ['./paymentinformation.component.css'],
   standalone: true,
-  imports: [MaterialModule, ReactiveFormsModule, MatIconModule, MatTabsModule],
+  imports: [MaterialModule, ReactiveFormsModule, MatIconModule, MatTabsModule, RouterModule],
   providers: [PaymentInfoService]
 })
 
@@ -35,7 +35,8 @@ export class BillingProfileComponent implements OnInit, OnDestroy {
   user: User | undefined;
   private destroy$ = new Subject<void>();
   isLoading = true;
-
+  framePageNumber = 6;
+  userId!: number;
   states: State[] = [];
 
   constructor(
@@ -45,7 +46,8 @@ export class BillingProfileComponent implements OnInit, OnDestroy {
     private router: Router,
     private organizationService: OrganizationService,
     private userService: UserService,
-    private authService: AuthService
+    private authService: AuthService,
+    private flowProgressService: FlowProgressService
   ) { }
 
   ngOnInit(): void {
@@ -70,6 +72,7 @@ export class BillingProfileComponent implements OnInit, OnDestroy {
         const userId = user
         if (userId) {
           this.getUserDetails(userId);
+          this.userId = userId;
         } else {
           console.error('No user ID available in authentication state');
         }
@@ -155,17 +158,18 @@ export class BillingProfileComponent implements OnInit, OnDestroy {
         width: '400px',
         data: {
           title: 'Payment Information',
-          message: 'Your payment information has been submitted successfully. Please wait for the administrator to approve your request.'
+          message: 'Your payment information has been submitted successfully. Please wait for the administrator to approve your request.',
+          userId: this.userId
         }
       });
     }
-   
+
     if (!this.selectedFormGroup.valid) {
       this.selectedFormGroup.markAllAsTouched();
       console.error(`Form in ${this.selectedPaymentType} tab is invalid.`);
       return;
     }
-  
+
     let customerProfileData: CustomerProfileData = { Email: this.user?.workEmail || '', UserId: this.user?.userId ?? 0, MerchantCustomerId: (this.user?.userId ?? 0).toString() };
     let organizationId = 1;
     let paymentData = { ...this.selectedFormGroup.value };
@@ -193,14 +197,23 @@ export class BillingProfileComponent implements OnInit, OnDestroy {
           // TODO: check organizationTypeId and if offeror, pass in user's selected payment plan
           if (this.organizationTypeId === 1) {
             console.log(`${this.selectedPaymentType} Payment Info Submitted and Saved`, response);
-            this.router.navigate(['/dashboard-component']);
+            this.flowProgressService.saveFlowProgress(this.userId, 1, this.framePageNumber).subscribe({
+              next: () => {
+                console.log('Flow progress saved successfully');
+                this.router.navigate(['/dashboard-component']);
+              },
+              error: (err) => {
+                console.error('Error saving flow progress:', err);
+              }
+            });
           } else {
             console.log(`${this.selectedPaymentType} Payment Info Submitted and Saved`, response);
             this.dialog.open(ConfirmationDialogComponent, {
               width: '400px',
               data: {
                 title: 'Payment Information',
-                message: 'Your payment information has been submitted successfully. Please wait for the administrator to approve your request.'
+                message: 'Your payment information has been submitted successfully. Please wait for the administrator to approve your request.',
+                userId: this.userId
               }
             });
           }
@@ -229,7 +242,7 @@ export class BillingProfileComponent implements OnInit, OnDestroy {
     if (!cvv) return null;
 
     const cardNumber = this.billingProfileForm?.get('CC.cardNumber')?.value || '';
-    const cardType = this.detectCardType(cardNumber); // No more type error
+    const cardType = this.detectCardType(cardNumber);
 
     const cvvPattern = cardType === 'amex' ? /^\d{4}$/ : /^\d{3}$/;
     return cvvPattern.test(cvv) ? null : { invalidCvv: true };

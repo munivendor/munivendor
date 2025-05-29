@@ -19,7 +19,7 @@
   
   <mat-sidenav-container>
     <!-- Conditional Side Navigation (Visible only when sidenav should be shown) -->
-    <mat-sidenav *ngIf="showSidenav && (user$ | async)" mode="side" opened class="sidenav">
+    <mat-sidenav *ngIf="showSidenav" mode="side" opened class="sidenav">
       <mat-nav-list>
         <a mat-list-item routerLink="dashboard-component" routerLinkActive="active">Dashboard</a>
         <a mat-list-item routerLink="create-request-view" routerLinkActive="active">Create New Request</a>

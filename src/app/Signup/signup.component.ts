@@ -28,6 +28,7 @@ import {
   MatDialogContent,
   MatDialogTitle,
 } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'dialog-elements-example-dialog',
@@ -90,7 +91,8 @@ export class SignupComponent implements OnInit, OnDestroy {
     private router: Router,
     private signupService: SignupService,
     private organizationService: OrganizationService,
-    public dialog: MatDialog
+    public dialog: MatDialog,
+    private snackBar: MatSnackBar
   ) { }
 
   openDialog() {
@@ -100,16 +102,11 @@ export class SignupComponent implements OnInit, OnDestroy {
   }
 
   prepareGoogleSignIn(): void {
-    // Set flag to true BEFORE the Google button triggers authentication
     this.authService.setSkipNextAuthState(true);
-    // No need to manually trigger authentication as the library will do that
-    console.log("Preparing for Google authentication, skip flag set");
   }
-
 
   ngOnInit(): void {
     this.initForm();
-    // Listen for Google authentication
     this.setupGoogleAuthListener();
 
     this.signupService.getOrganizationTypes()
@@ -286,15 +283,15 @@ export class SignupComponent implements OnInit, OnDestroy {
         switchMap(([_, user]) => {
           this.userCreationInProgress = true;
           const selectedOrganizationTypeId = this.signupFormGoogle.get('organizationTypeId')?.value;
-  
+
           const organizationData: Organization = {
             organizationTypeId: selectedOrganizationTypeId
           };
-  
+
           return this.organizationService.saveOrganization(organizationData).pipe(
             switchMap((orgResponse) => {
               console.log("Organization created:", orgResponse);
-  
+
               const userData = {
                 firstName: user.firstName,
                 lastName: user.lastName,
@@ -304,7 +301,7 @@ export class SignupComponent implements OnInit, OnDestroy {
                 identityTypeId: 2,
                 organizationId: orgResponse.organizationId
               };
-  
+
               return this.createUserByGoogle(userData);
             })
           );
@@ -319,7 +316,9 @@ export class SignupComponent implements OnInit, OnDestroy {
           this.router.navigate(['/role-verification']);
         },
         error: (error) => {
-          console.error('Google sign-up failed:', error);
+          this.snackBar.open(`Sign up failed. ${error.error}`, 'Close', {
+            verticalPosition: 'top'
+          });
           this.authService.setSkipNextAuthState(false);
         }
       });
@@ -333,13 +332,11 @@ export class SignupComponent implements OnInit, OnDestroy {
           username: user.username,
         };
         return this.authService.login(googleUserLogin).pipe(
-          // Reset the skip flag after successful login
           tap(() => this.authService.setSkipNextAuthState(false))
         );
       }),
       catchError((error) => {
         this.userCreationInProgress = false;
-        // Reset the flag on error too
         this.authService.setSkipNextAuthState(false);
         return throwError(() => error);
       }),
@@ -360,7 +357,11 @@ export class SignupComponent implements OnInit, OnDestroy {
         )
       )
     ).subscribe({
-      error: (error) => console.error('Error in user creation or email verification:', error)
+      error: (error) => {
+        this.snackBar.open(`Sign up faild. ${error.error}`, 'Close', {
+          verticalPosition: 'top'
+        });
+      }
     });
   }
 
