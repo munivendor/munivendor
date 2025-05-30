@@ -7,7 +7,6 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatCardModule } from '@angular/material/card';
 import { Component, inject, OnInit } from '@angular/core';
 import { GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
-import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { AuthService } from '../authorization/auth.service';
 import { UserLogin } from '../shared/model/user-login.model';
@@ -20,17 +19,14 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   styleUrls: ['./login.component.css'],
   imports: [ReactiveFormsModule, RouterModule, CommonModule, MatButtonModule, MatInputModule, MatCardModule, MatSelectModule, GoogleSigninButtonModule],
 })
-
 export class LoginComponent implements OnInit {
   private _snackBar = inject(MatSnackBar);
   loginForm!: FormGroup;
-  userId!: number;
 
   constructor(
     private fb: FormBuilder,
     public dialog: MatDialog,
-    private authService: AuthService,
-    private router: Router
+    private authService: AuthService
   ) { }
 
   ngOnInit() {
@@ -40,31 +36,23 @@ export class LoginComponent implements OnInit {
     });
   }
 
-  onSubmit() {
-    if (this.loginForm.valid) {
-      const userLogin: UserLogin = {
-        username: this.loginForm.controls["email"].value,
-        password: this.loginForm.controls["password"].value
-      };
-  
-      const email = this.loginForm.controls["email"].value;
-      const isGovEmail = email.toLowerCase().endsWith('.gov');
-  
-      this.authService.login(userLogin).subscribe({
-        next: () => { 
-          if (isGovEmail) {
-            this.router.navigate(['/government-agency-details']);
-          } else {
-            this.router.navigate(['/role-verification']);
-          }
-        },
-        error: (error) => {
-          this._snackBar.open('Login failed: Invalid email, password, or unauthorized email.', 'Close', {
-            duration: 3000,
-            verticalPosition: 'top',
-          });
-        }
-      });
-    }
+  onSubmit(): void {
+    const userLogin: UserLogin = {
+      username: this.loginForm.controls["email"].value,
+      password: this.loginForm.controls["password"].value
+    };
+
+    const email = this.loginForm.controls["email"].value;
+
+    this.authService.login(userLogin).subscribe({
+      next: (response) => {
+        this.authService.completeEmailLogin(response, email);
+      },
+      error: (error) => {
+        this._snackBar.open('Login failed: Invalid email, password, or unauthorized email.', 'Close', {
+          verticalPosition: 'top',
+        });
+      }
+    });
   }
 }

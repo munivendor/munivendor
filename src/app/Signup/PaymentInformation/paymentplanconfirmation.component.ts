@@ -8,7 +8,8 @@ import { Subject, takeUntil } from 'rxjs';
 import { UserService } from '../../shared/service/user.service';
 import { AuthService } from '../../authorization/auth.service';
 import { User } from '../../shared/model/user.model';
-
+import { FlowProgressService } from '../../shared/service/flow-progress.service';
+import { Router } from '@angular/router';
 @Component({
   selector: 'payment-plan-confirmation',
   templateUrl: './paymentplanconfirmation.component.html',
@@ -21,6 +22,8 @@ export class PaymentPlanConfirmationComponent implements OnInit {
   private destroy$ = new Subject<void>();
   organizationTypeId: number | undefined;
   isLoading = true;
+  userId!: number;
+  framePageNumber = 5;
 
   allFeatures = [
     'Submissions',
@@ -42,8 +45,10 @@ export class PaymentPlanConfirmationComponent implements OnInit {
 
   constructor(
     private userService: UserService,
-    private authService: AuthService
-  ) {}
+    private authService: AuthService,
+    private flowProgressService: FlowProgressService,
+    private router: Router
+  ) { }
 
   ngOnInit(): void {
     this.authService.user$.pipe(
@@ -53,10 +58,25 @@ export class PaymentPlanConfirmationComponent implements OnInit {
         const userId = user
         if (userId) {
           this.getUserDetails(userId);
+          this.userId = userId;
         } else {
           console.error('No user ID available in authentication state');
         }
-      } 
+      }
+    });
+  }
+
+  onClick(): void {
+    const flowId = this.organizationTypeId === 1 ? 1 : 2;
+
+    this.flowProgressService.saveFlowProgress(this.userId, flowId, this.framePageNumber).subscribe({
+      next: () => {
+        console.log('Flow progress saved successfully');
+        this.router.navigate(['/billing-profile']);
+      },
+      error: (err) => {
+        console.error('Error saving flow progress:', err);
+      }
     });
   }
 
@@ -71,7 +91,7 @@ export class PaymentPlanConfirmationComponent implements OnInit {
       }
     );
   }
-  
+
   getFeatureText(planIndex: number, featureIndex: number): string {
     if (featureIndex === 0) {
       if (planIndex === 0) return '1 Submission';

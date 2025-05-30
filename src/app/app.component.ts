@@ -7,6 +7,8 @@ import { filter, Observable } from 'rxjs';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatListModule } from '@angular/material/list';
+import { combineLatest } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
@@ -14,12 +16,12 @@ import { MatListModule } from '@angular/material/list';
   styleUrls: ['./app.component.css'],
   templateUrl: './app.component.html',
   imports: [
-    CommonModule, 
-    RouterOutlet, 
-    RouterLink, 
-    RouterLinkActive, 
-    MatSidenavModule, 
-    MatToolbarModule, 
+    CommonModule,
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    MatSidenavModule,
+    MatToolbarModule,
     MatListModule
   ],
 })
@@ -30,16 +32,20 @@ export class AppComponent {
 
   constructor(private authService: AuthService, private router: Router) {
     this.user$ = this.authService.user$;
-     // Monitor route changes to decide whether to show or hide the sidenav
-     this.router.events.pipe(
-      filter(event => event instanceof NavigationEnd)
-    ).subscribe(() => {
-      this.toggleSidenav();
+
+    combineLatest([
+      this.authService.user$,
+      this.authService.isLoggingIn,
+      this.router.events.pipe(
+        filter(event => event instanceof NavigationEnd),
+        map(() => this.router.url)
+      )
+    ]).subscribe(([user, isLoggingIn, currentRoute]) => {
+      this.showSidenav = this.shouldShowSidenav(user, isLoggingIn, currentRoute);
     });
   }
 
-   toggleSidenav() {
-    const currentRoute = this.router.url;
+  private shouldShowSidenav(user: SocialUser | null, isLoggingIn: boolean, currentRoute: string): boolean {
     const routesToHideSidenav = [
       '/role-verification',
       '/validateuser',
@@ -49,8 +55,7 @@ export class AppComponent {
       '/payment-plan-confirmation',
       '/billing-profile'
     ];
-
-    this.showSidenav = !routesToHideSidenav.some(route => currentRoute.includes(route));
+    return !!user && !isLoggingIn && !routesToHideSidenav.some(route => currentRoute.includes(route));
   }
 
   onLogOut(): void {

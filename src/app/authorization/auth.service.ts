@@ -1,22 +1,26 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { SocialAuthService, SocialUser } from '@abacritt/angularx-social-login';
 import { BehaviorSubject, catchError, filter, Observable, tap, throwError, withLatestFrom } from 'rxjs';
 import { Router } from '@angular/router';
 import { UserLogin } from '../shared/model/user-login.model';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { environment } from '../../environments/environment';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { FlowNavigationService } from '../shared/service/flow-navigation.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
+  private _snackBar = inject(MatSnackBar);
   private url = environment.apiUrl;
   private userSubject = new BehaviorSubject<SocialUser | null>(null);
   user$: Observable<SocialUser | null> = this.userSubject.asObservable();
-  private authState = new BehaviorSubject<boolean>(false);
+  authState = new BehaviorSubject<boolean>(false);
   isAuthenticated$ = this.authState.asObservable();
   private skipNextAuthStateSubject = new BehaviorSubject<boolean>(false);
   skipNextAuthState$ = this.skipNextAuthStateSubject.asObservable();
+  public isLoggingIn = new BehaviorSubject<boolean>(false);
 
   setSkipNextAuthState(value: boolean): void {
     this.skipNextAuthStateSubject.next(value);
@@ -25,7 +29,8 @@ export class AuthService {
   constructor(
     private http: HttpClient,
     private router: Router,
-    private socialAuthService: SocialAuthService
+    private socialAuthService: SocialAuthService,
+    private flowNavigationService: FlowNavigationService
   ) {
     this.initializeAuthListener();
   }
@@ -42,19 +47,16 @@ export class AuthService {
             userIdentity: user.id,
             username: user.email
           };
-  
+
           this.login(userLogin).subscribe({
-            next: (response) => {
-              this.authState.next(true);
-              this.userSubject.next(response);
-              if (user.email.toLowerCase().endsWith('.gov')) {
-                this.router.navigate(['/government-agency-details']);
-              } else {
-                this.router.navigate(['/role-verification']);
-              }
+            next: (userId) => {
+              this.completeLoginProcess(userId, user.email);
             },
             error: (error) => {
               this.safeResetAuthState();
+              this._snackBar.open('Login failed: Invalid email, password, or unauthorized email.', 'Close', {
+                verticalPosition: 'top',
+              });
             }
           });
         }
@@ -63,17 +65,17 @@ export class AuthService {
   }
 
   login(userLogin: UserLogin): Observable<any> {
+    this.isLoggingIn.next(true);
     return this.http.post<{ UserId: number; Token: string }>(
       `${this.url}login`, userLogin, { withCredentials: true }
     ).pipe(
-      tap(response => {
-        if (response) {
-          console.log("Login successful:", response);
-          this.authState.next(true);
-          this.userSubject.next(response as any);
+      tap(userId => {
+        if (userId) {
+          this.userSubject.next(userId as any);
         }
       }),
       catchError((error: HttpErrorResponse) => {
+        this.isLoggingIn.next(false);
         return throwError(() => error);
       })
     );
@@ -112,6 +114,7 @@ export class AuthService {
 
     this.userSubject.next(null);
     this.authState.next(false);
+    this.isLoggingIn.next(false);
 
     if (this.router.url !== '/login') {
       this.router.navigate(['/login']);
@@ -121,5 +124,28 @@ export class AuthService {
   setAuthenticated(isAuthenticated: boolean, userData: any = null): void {
     this.authState.next(isAuthenticated);
     this.userSubject.next(userData);
+    this.isLoggingIn.next(false);
+  }
+
+  /**
+   * Handles the complete login process including navigation for email login
+   * This is called from LoginComponent
+   */
+  completeEmailLogin(userId: number, email: string): void {
+    this.completeLoginProcess(userId, email);
+  }
+
+  private completeLoginProcess(userId: number, email: string): void {
+    this.userSubject.next(userId);
+    this.flowNavigationService.navigateAfterLogin(userId, email).subscribe({
+      next: () => {
+        this.setAuthenticated(true, userId);
+      },
+      error: (error: any) => {
+        console.error('Navigation error:', error);
+        this.setAuthenticated(true, userId);
+        this.router.navigate(['/role-verification']);
+      }
+    });
   }
 }

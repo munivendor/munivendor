@@ -13,7 +13,7 @@ import { User } from '../../shared/model/user.model';
 import { Designation as Designation } from '../../shared/model/designation.model';
 import { Subject, filter, takeUntil } from 'rxjs';
 import { AuthService } from '../../authorization/auth.service';
-
+import { FlowProgressService } from '../../shared/service/flow-progress.service';
 
 @Component({
   selector: 'app-designation-selection',
@@ -35,12 +35,14 @@ export class DesignationSelectionComponent implements OnInit, OnDestroy {
   designations!: Designation[];
   noneSelected = false;
   private destroy$ = new Subject<void>();
+  framePageNumber = 4;
 
   constructor(
     private fb: FormBuilder,
     private userService: UserService,
     private router: Router,
-    private authService: AuthService) {
+    private authService: AuthService,
+    private flowProgressService: FlowProgressService) {
     this.designeeSelectionForm = this.fb.group(
       {
         selectedDesignees: this.fb.array([], this.minSelectedCheckboxes(1))
@@ -118,7 +120,15 @@ export class DesignationSelectionComponent implements OnInit, OnDestroy {
             .subscribe({
               next: response => {
                 console.log('Designation saved successfully:', response);
-                this.router.navigate(['/payment-plan-confirmation']);
+                this.flowProgressService.saveFlowProgress(currentUser, 1, this.framePageNumber).subscribe({
+                  next: () => {
+                    this.router.navigate(['/payment-plan-confirmation']);
+                  },
+                  error: (err) => {
+                    console.error('Error saving flow progress:', err);
+                  }
+                });
+
               },
               error: error => {
                 console.error('Error updating user:', error);
