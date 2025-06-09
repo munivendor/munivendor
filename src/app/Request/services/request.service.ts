@@ -6,7 +6,7 @@ import { RequestType } from '../model/requesttype.model';
 import { Request } from '../model/request.model';
 import { environment } from '../../../environments/environment';
 import { RequestSection } from '../model/requestsection.model';
-
+import { RequestDocument } from '../model/requestdocument.model';
 @Injectable({
   providedIn: 'root'
 })
@@ -104,27 +104,30 @@ export class RequestService {
     return this.http.get<any>(`${this.url}OptionalDocuments`);
   }
 
-  GetOrganizationDocuments(organizationId: number): Observable<any> {
-    return this.http.get<any>(`${this.url}OrganizationDocuments/${organizationId}`)
+  GetMunicipalityDocuments(organizationId: number): Observable<any> {
+    return this.http.get<any>(`${this.url}MunicipalityDocuments/${organizationId}`)
   }
 
-  SaveOrganizationDocument(organizationId: number, organizationDocument: any, file: File): Observable<any> {
-    const url = `${this.url}OrganizationDocuments/${organizationId}`;
+  SaveOrganizationDocument(organizationId: number, municipalityDocument: any, file: File): Observable<any> {
+    const url = `${this.url}MunicipalityDocuments/${organizationId}`;
     const formData = new FormData();
-    formData.append('documentName', organizationDocument.documentName);
+    formData.append('documentName', municipalityDocument.documentName);
     formData.append('file', file);
     return this.http.post<any>(url, formData);
   }
-  
 
   DeleteOrganizationDocument(documentId: number): Observable<void> {
-    return this.http.delete<void>(`${this.url}OrganizationDocuments/${documentId}`)
+    return this.http.delete<void>(`${this.url}MunicipalityDocuments/${documentId}`)
   }
 
-  SaveRequestDocuments(requestId: number, documentIds: number[]): Observable<any> {
+  SaveRequestDocuments(requestId: number, requestDocuments: RequestDocument[]): Observable<any> {
     const headers = { 'Content-Type': 'application/json' };
     const url = `${this.url}RequestDocuments/${requestId}`;
-    return this.http.post<void>(url, documentIds, { headers });
+    return this.http.post<any>(url, requestDocuments, { headers });
+  }
+
+  GetDocumentContent(organizationDocumentId: number, organizationId: number): Observable<Blob> {
+    return this.http.get(`${this.url}OrganizationDocuments/DocumentContent/${organizationDocumentId}/${organizationId}`, { responseType: 'blob' });
   }
 
   GetRequestDetailsById(requestId: number): Observable<any> {

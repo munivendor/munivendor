@@ -21,6 +21,11 @@ import { TableDetailsComponent } from './Request/TableDetails/request-tabledetai
 import { CreateRequestStepper } from './Request/CreateRequestStepper/create-request-stepper.component';
 import { CategoryTreeComponent } from './CategoryTree/category-tree.component';
 
+// import { ResponseBasicComponent } from './Response/response-basic.component';
+// import { ResponseDetailsComponent } from './Response/response-details.component';
+// import { ResponseDocumentsComponent } from './Response/response-documents.component';
+// import { ResponseOverviewComponent } from './Response/response-overview.component';
+
 export const routes: Routes = [
   { path: 'signup', component: SignupComponent },
   { path: 'login', component: LoginComponent },
@@ -40,5 +45,10 @@ export const routes: Routes = [
   { path: 'requests-view', component: TableDetailsComponent, canActivate: [AuthGuard] },
   { path: 'edit-request-view/:requestId', component: CreateRequestStepper, canActivate: [AuthGuard] },
   { path: 'categories', component: CategoryTreeComponent, canActivate: [AuthGuard] },
+
+  // { path: 'response-basic/:id', component: ResponseBasicComponent},
+  // { path: 'response-details/:id', component: ResponseDetailsComponent},
+  // { path: 'response-documents/:id', component: ResponseDocumentsComponent},
+  // { path: 'response-overview/:id', component: ResponseOverviewComponent},
 ];
 

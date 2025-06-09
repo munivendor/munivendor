@@ -51,7 +51,7 @@ export class CreateRequestStepper implements OnDestroy {
   proposalsOverviewFormGroup!: FormGroup;
   requiredDocuments: Document[] = [];
   optionalDocuments: Document[] = [];
-  organizationDocuments: Document[] = [];
+  municipalityDocuments: Document[] = [];
   finalReviewFormGroup!: FormGroup;
   idParam?: string | undefined | null;
   isStepValid = false;
