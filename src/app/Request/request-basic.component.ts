@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, ChangeDetectorRef, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { FormGroup, FormBuilder, FormArray, ReactiveFormsModule, Validators, FormControl, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -72,6 +72,7 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
   requestName = new FormControl<string | null>(null, [Validators.required]);
   basicsFormGroup!: FormGroup;
   organizationId = 1;
+  private formStatus$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
@@ -103,49 +104,103 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     }
   }
 
-  getNodeIndent(level: number | undefined): number {
-    return (level ?? 0) * 30;
+  private initializeForm(data: any = null): void {
+    this.formStatus$.next();
+
+    this.createFormGroup(data);
+    this.handleCategoryValueChanges();
+    this.monitorFormValidity();
+
+    this.emitInitialFormValidity();
+    this.fetchInitialData();
+  }
+
+  flattenCategories(): void {
+    this.flattenedCategories = [];
+    this.processCategoryLevel(this.hierarchicalCategories);
+
+    // Initialize display based on no filter or filtering
+    if (this.isFiltering && this.basicsFormGroup?.get('category')?.value) {
+      // Filtering
+      this.applyCategoryFilter(this.basicsFormGroup.get('category')?.value);
+    } else {
+      // No filter
+      this.updateFilteredCategoriesWithToggle();
+    }
+  }
+
+  private updateFilteredCategoriesWithToggle(): void {
+    const visible: FlattenedCategoryNode[] = [];
+    for (const node of this.flattenedCategories) {
+      if (this.isNodeVisible(node)) {
+        visible.push(node);
+      }
+    }
+    this.filteredCategoriesSubject.next(visible);
   }
 
   applyCategoryFilter(value: string | { name: string }) {
     const name = typeof value === 'string' ? value : value?.name;
     const filterValue = name?.toLowerCase() ?? '';
-  
     this.isFiltering = !!filterValue;
-  
+
     if (!filterValue) {
-      this.isFiltering = false;
-  
-      const visible: FlattenedCategoryNode[] = [];
-  
-      for (const node of this.flattenedCategories) {
-        if (node.level === 0 || this.isNodeVisible(node)) {
-          const parentId = node.parentId;
-          if (!parentId || this.expandedNodes.has(parentId) || node.level === 0) {
-            visible.push(node);
-          }
-        }
-      }
-  
-      this.filteredCategoriesSubject.next(visible);
+      this.updateFilteredCategoriesWithToggle();
       return;
     }
-  
+
+    // Show matching nodes + parents, but respect toggles for visibility
     const matched = this.flattenedCategories.filter(cat =>
       cat.name.toLowerCase().includes(filterValue)
     );
-  
-    const matchedWithChildren = new Set<FlattenedCategoryNode>();
-  
+
+    const relevantNodes = new Set<FlattenedCategoryNode>();
+
     for (const match of matched) {
-      matchedWithChildren.add(match);
-      this.collectAllDescendants(parseInt(match.categoryId), matchedWithChildren);
+      relevantNodes.add(match);
+      this.collectAllDescendants(parseInt(match.categoryId), relevantNodes);
     }
-  
-    const filtered = Array.from(matchedWithChildren);
-  
-    this.expandParentsOfFilteredNodes(filtered);
-    this.filteredCategoriesSubject.next(filtered);
+
+    // Add parents of all matched nodes to make the tree structure complete
+    this.addParentsOfFilteredNodes(Array.from(relevantNodes), relevantNodes);
+
+    // Filter based on toggle visibility within the relevant nodes
+    const finalFiltered = Array.from(relevantNodes).filter(node => {
+      const isMatched = matched.includes(node);
+      const isParentOfMatched = this.isParentOfMatchedNodes(node, matched);
+      if (isMatched || isParentOfMatched) {
+        return true;
+      }
+      return this.isNodeVisibleInFilterMode(node, relevantNodes);
+    });
+
+    finalFiltered.sort((a, b) => {
+      const indexA = this.flattenedCategories.findIndex(cat => cat.categoryId === a.categoryId);
+      const indexB = this.flattenedCategories.findIndex(cat => cat.categoryId === b.categoryId);
+      return indexA - indexB;
+    });
+
+    this.filteredCategoriesSubject.next(finalFiltered);
+  }
+
+  private addParentsOfFilteredNodes(filtered: FlattenedCategoryNode[], result: Set<FlattenedCategoryNode>): void {
+    const parentsToAdd: Set<string> = new Set();
+    // Collect all parent IDs that need to be visible
+    for (const node of filtered) {
+      let currentParentId = node.parentId;
+      while (currentParentId) {
+        parentsToAdd.add(currentParentId);
+        const parentNode = this.flattenedCategories.find(cat => cat.categoryId === currentParentId);
+        currentParentId = parentNode?.parentId;
+      }
+    }
+    // Add parent nodes to result set
+    for (const parentId of parentsToAdd) {
+      const parentNode = this.flattenedCategories.find(cat => cat.categoryId === parentId);
+      if (parentNode) {
+        result.add(parentNode);
+      }
+    }
   }
 
   private collectAllDescendants(parentId: number, result: Set<FlattenedCategoryNode>) {
@@ -187,8 +242,6 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     });
   }
 
-  // triggers autocomplete dropdown to display since the component is a
-  // custom tree-like autocomplete and value is manually set by category ID
   onCategoryFocus(): void {
     const categoryControl = this.basicsFormGroup.get('category');
     const currentValue = categoryControl?.value;
@@ -197,7 +250,6 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
 
   isNodeVisible(node: FlattenedCategoryNode): boolean {
     if (node.level === 0) return true;
-
     let parentId = node.parentId;
     while (parentId) {
       if (!this.expandedNodes.has(parentId)) {
@@ -223,9 +275,32 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
       }));
   }
 
-  flattenCategories(): void {
-    this.flattenedCategories = [];
-    this.processCategoryLevel(this.hierarchicalCategories);
+  private isParentOfMatchedNodes(node: FlattenedCategoryNode, matched: FlattenedCategoryNode[]): boolean {
+    return matched.some(matchedNode => {
+      let parentId = matchedNode.parentId;
+      while (parentId) {
+        if (parentId === node.categoryId) {
+          return true;
+        }
+        const parent = this.flattenedCategories.find(cat => cat.categoryId === parentId);
+        parentId = parent?.parentId;
+      }
+      return false;
+    });
+  }
+
+  private isNodeVisibleInFilterMode(node: FlattenedCategoryNode, relevantNodes: Set<FlattenedCategoryNode>): boolean {
+    if (node.level === 0) return true;
+
+    let parentId = node.parentId;
+    while (parentId) {
+      if (!this.expandedNodes.has(parentId)) {
+        return false;
+      }
+      const parent = this.flattenedCategories.find(cat => cat.categoryId === parentId);
+      parentId = parent?.parentId;
+    }
+    return true;
   }
 
   private processCategoryLevel(categories: CategoryNode[], level = 0, parentId: string | null = null): void {
@@ -249,28 +324,26 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
 
   toggleExpand(categoryId: number, event: MouseEvent): void {
     event.stopPropagation();
-    if (this.expandedNodes.has(categoryId.toString())) {
-      this.expandedNodes.delete(categoryId.toString());
+    const idStr = categoryId.toString();
+
+    if (this.expandedNodes.has(idStr)) {
+      this.expandedNodes.delete(idStr);
     } else {
-      this.expandedNodes.add(categoryId.toString());
+      this.expandedNodes.add(idStr);
+    }
+
+    if (this.isFiltering) {
+      const currentValue = this.basicsFormGroup?.get('category')?.value;
+      if (currentValue) {
+        this.applyCategoryFilter(currentValue);
+      }
+    } else {
+      this.updateFilteredCategoriesWithToggle();
     }
   }
 
   isExpanded(categoryId: string): boolean {
     return this.expandedNodes.has(categoryId);
-  }
-
-  private formStatus$ = new Subject<void>();
-
-  private initializeForm(data: any = null): void {
-    this.formStatus$.next();
-
-    this.createFormGroup(data);
-    this.handleCategoryValueChanges();
-    this.monitorFormValidity();
-
-    this.emitInitialFormValidity();
-    this.fetchInitialData();
   }
 
   private createFormGroup(data: any = null): void {
@@ -297,9 +370,9 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
       .subscribe(value => {
         if (!value) {
           categoryControl.setValue('', { emitEvent: false });
-          this.expandedNodes.clear();
-        }
-        if (value !== null) {
+          this.isFiltering = false;
+          this.updateFilteredCategoriesWithToggle();
+        } else if (value !== null) {
           this.applyCategoryFilter(value);
         }
       });
@@ -332,12 +405,12 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     if (value == null) {
       return '';
     }
-  
+
     const match = this.flattenedCategories.find(cat => cat.categoryId === value);
     if (match) {
       return match.name;
     }
-  
+
     return typeof value === 'string' ? value : '';
   };
 
@@ -583,6 +656,10 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
         )
       );
     }
+  }
+
+  getNodeIndent(level: number | undefined): number {
+    return (level ?? 0) * 30;
   }
 
   ngOnDestroy(): void {

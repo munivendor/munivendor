@@ -2,7 +2,7 @@
   <ng-template matStepLabel>Basics</ng-template>
   <div *ngIf="basicsFormGroup">
     <div class="field-container">
-      <!-- Category Selection -->
+      
       <div class="inline-field">
         <p>What category are you looking to create?</p>
         <mat-form-field appearance="fill" class="input-width">
@@ -11,8 +11,8 @@
             (focus)="onCategoryFocus()" formControlName="category" [matAutocomplete]="auto">
           <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayCategoryName">
             @for (option of filteredCategories | async; track option) {
-            <mat-option *ngIf="isNodeVisible(option)" [value]="option.categoryId" (onSelectionChange)="$event.isUserInput && selectCategory(option.categoryId, option.name)"
-            >
+            <mat-option [value]="option.categoryId"
+              (onSelectionChange)="$event.isUserInput && selectCategory(option.categoryId, option.name)">
               <div class="tree-node" [ngStyle]="{ 'padding-left.px': getNodeIndent(option.level)}">
                 <button *ngIf="option.expandable" mat-icon-button (click)="toggleExpand(+option.categoryId, $event)"
                   class="toggle-button">
@@ -20,8 +20,9 @@
                     {{ isExpanded(option.categoryId) ? 'expand_more' : 'chevron_right' }}
                   </mat-icon>
                 </button>
-                <span *ngIf="!option.expandable" [ngStyle]="{ 'padding-left.px': getNodeIndent(option.level)}"></span>
-                <span>{{ option.name }}</span>
+                <span *ngIf="!option.expandable" class="toggle-spacer" [ngStyle]="{ 'width.px': 40 }">
+                </span>
+                <span class="category-name">{{ option.name }}</span>
               </div>
             </mat-option>
             }
@@ -32,7 +33,6 @@
         </mat-form-field>
       </div>
 
-      <!-- Request Type Selection -->
       <div class="inline-field">
         <p>Please choose the request type below</p>
         <mat-form-field appearance="fill" class="input-width">
@@ -49,7 +49,6 @@
       </div>
     </div>
 
-    <!-- Request Name -->
     <div class="field-container">
       <div class="inline-field">
         <p>Request Name</p>
@@ -65,7 +64,6 @@
     </div>
 
     <div class="field-container">
-      <!-- Publish Date -->
       <div class="inline-field">
         <p>What is the Publish Date?</p>
         <mat-form-field appearance="fill" class="input-width">
@@ -80,7 +78,6 @@
         </mat-form-field>
       </div>
 
-      <!-- Publish Time -->
       <div class="inline-field">
         <p>What is the Publish Time?</p>
         <mat-form-field appearance="fill" class="input-width">
@@ -94,7 +91,6 @@
     </div>
 
     <div class="field-container">
-      <!-- Open Date -->
       <div class="inline-field">
         <p>What is the Open Date?</p>
         <mat-form-field appearance="fill" class="input-width">
@@ -109,7 +105,6 @@
         </mat-form-field>
       </div>
 
-      <!-- Open Time -->
       <div class="inline-field">
         <p>What is the Open Time?</p>
         <mat-form-field appearance="fill" class="input-width">
@@ -123,7 +118,6 @@
     </div>
 
     <div class="field-container">
-      <!-- Contract Start Date -->
       <div class="inline-field">
         <p>Contract Start Date</p>
         <mat-form-field appearance="fill" class="input-width">
@@ -138,7 +132,6 @@
         </mat-form-field>
       </div>
 
-      <!-- Contract End Date -->
       <div class="inline-field">
         <p>Contract End Date</p>
         <mat-form-field appearance="fill" class="input-width">
@@ -154,7 +147,6 @@
       </div>
     </div>
 
-    <!-- Decision Maker Selection -->
     <div class="field-container">
       <div class="inline-field">
         <p>Choose who will be the decision maker on this proposal.</p>
@@ -174,8 +166,8 @@
                 </mat-error>
               </mat-form-field>
 
-              <button *ngIf="i > 0" mat-icon-button aria-label="delete" type="button" color="warn" style="margin-bottom: 20px;"
-                (click)="removeDropdown(i)">
+              <button *ngIf="i > 0" mat-icon-button aria-label="delete" type="button" color="warn"
+                style="margin-bottom: 20px;" (click)="removeDropdown(i)">
                 <mat-icon>delete</mat-icon>
               </button>
             </div>
@@ -184,7 +176,6 @@
       </div>
       <div class="inline-field"></div>
     </div>
-
     <button mat-raised-button style="margin-bottom: 8px; margin-top: 8px;" color="primary" (click)="addDropdown()">
       Add Decision Maker
     </button>
