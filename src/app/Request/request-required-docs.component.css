@@ -1,9 +1,30 @@
 .document-item {
-    display: flex;
-    align-items: center;
-  }
-  
-  .delete-button {
-    margin-bottom: 5px;
-  }
-  
+  display: flex;
+  align-items: center;
+}
+
+.delete-button {
+  margin-bottom: 5px;
+}
+
+table {
+  width: 100%;
+}
+
+.mat-column-formName {
+  width: 50%;
+}
+
+.mat-column-notarization {
+  width: 30%;
+}
+
+.mat-column-download {
+  width: 15%;
+  text-align: center;
+}
+
+.mat-column-delete {
+  width: 5%;
+  text-align: center;
+}

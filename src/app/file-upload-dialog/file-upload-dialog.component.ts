@@ -20,19 +20,19 @@ import { MatDialogActions, MatDialogContent, MatDialogRef, MatDialogTitle, MAT_D
     MatDialogContent,
     MatDialogActions
   ],
-
 })
+
 export class FileUploadDialogComponent {
   selectedFile!: File;
   documentName: string = '';
-  organizationDocuments: Document[] = [];
+  municipalityDocuments: Document[] = [];
 
   constructor(
     private fb: FormBuilder,
     private requestService: RequestService,
     private cdr: ChangeDetectorRef,
     public dialogRef: MatDialogRef<FileUploadDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { organizationId: number; organizationDocuments: any }
+    @Inject(MAT_DIALOG_DATA) public data: { organizationId: number; municipalityDocuments: any }
   ) { }
 
   onFileSelected(event: any): void {
@@ -45,28 +45,22 @@ export class FileUploadDialogComponent {
       return;
     }
 
-    // save file name into database not only document name
-    const organizationDocument = {
+    const municipalityDocument = {
       organizationId: this.data.organizationId,
       documentName: this.documentName,
       documentId: null,
     };
 
-    this.requestService.SaveOrganizationDocument(organizationId, organizationDocument, this.selectedFile).subscribe(
+    this.requestService.SaveOrganizationDocument(organizationId, municipalityDocument, this.selectedFile).subscribe(
       (response) => {
-        console.log('Document saved successfully:', response);
-        this.data.organizationDocuments.push(
-          this.fb.group({
-            documentId: [response.documentId],
-            documentName: [organizationDocument.documentName],
-            documentRequired: [true],
-            selected: [true]
-          })
-
-        );
-        this.cdr.detectChanges();
-        this.dialogRef.close(response.isSuccess);
-        this.dialogRef.close(response.documentId);
+        console.log('Document uploaded and saved successfully:', response);
+        this.dialogRef.close({
+          documentId: response.documentId,
+          documentName: municipalityDocument.documentName,
+          documentRequired: true,
+          selected: true,
+          notarization: 'Not Required'
+        });
       },
       (error) => {
         console.error('Error uploading and saving document', error);
