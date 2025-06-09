@@ -27,4 +27,5 @@ export class Request
         requestStatus!: RequestStatus;
         requestStatusId!: number;
         requestType!: RequestType;
+        sourceRequestId?: number;
 }

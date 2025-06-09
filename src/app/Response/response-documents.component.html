@@ -1,0 +1,76 @@
+<mat-card>
+    <mat-card-content>
+      <table mat-table [dataSource]="documentInstances" class="mat-elevation-z8">
+        <!-- Form Name Column -->
+        <ng-container matColumnDef="formName">
+          <th mat-header-cell *matHeaderCellDef>Form Name</th>
+          <td mat-cell *matCellDef="let form">
+            <a [routerLink]="['/form-details', form.id]">{{ form.documentName }}</a>
+          </td>
+        </ng-container>
+  
+        <!-- Notarization Required Column -->
+        <ng-container matColumnDef="notarizationRequired">
+          <th mat-header-cell *matHeaderCellDef>Notarization Required</th>
+          <td mat-cell *matCellDef="let form">
+            {{ form.notarizationRequired ? 'Yes' : 'No' }}
+          </td>
+        </ng-container>
+  
+        <!-- Download Form Column -->
+        <ng-container matColumnDef="downloadForm">
+          <th mat-header-cell *matHeaderCellDef>Download Form</th>
+          <td mat-cell *matCellDef="let form">
+            <button mat-icon-button (click)="downloadForm(form.id)">
+              <mat-icon>download</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+  
+        <!-- Upload Form Column -->
+        <ng-container matColumnDef="uploadForm">
+          <th mat-header-cell *matHeaderCellDef>Upload Form</th>
+          <td mat-cell *matCellDef="let form">
+            <button mat-icon-button (click)="uploadForm(form.id)">
+              <mat-icon>upload</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+  
+        <!-- Completion Status Column -->
+        <ng-container matColumnDef="completionStatus">
+          <th mat-header-cell *matHeaderCellDef>Completion Status</th>
+          <td mat-cell *matCellDef="let form">
+            {{ form.documentStatus }}
+            <span *ngIf="form.documentStatus === 'Incomplete'" matTooltip="{{ form.missingItems }}"></span>
+          </td>
+        </ng-container>
+  
+       
+        <!-- Table Rows -->
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+
+      <!-- Upload Response Button Column -->
+      <ng-container matColumnDef="uploadResponse">
+        <th mat-header-cell *matHeaderCellDef>Upload Response</th>
+        <td mat-cell *matCellDef="let form">
+          <button mat-raised-button color="primary" (click)="uploadResponse(form.id)">
+            Upload Response
+          </button>
+        </td>
+      </ng-container>
+
+       <!-- Continue Button Column -->
+       <ng-container matColumnDef="continue">
+        <th mat-header-cell *matHeaderCellDef>Continue</th>
+        <td mat-cell *matCellDef="let form">
+          <button mat-raised-button color="accent" (click)="continue(form.id)">
+            Continue
+          </button>
+        </td>
+      </ng-container>
+
+    </mat-card-content>
+  </mat-card>
