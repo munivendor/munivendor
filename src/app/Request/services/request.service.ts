@@ -7,6 +7,8 @@ import { Request } from '../model/request.model';
 import { environment } from '../../../environments/environment';
 import { RequestSection } from '../model/requestsection.model';
 import { RequestDocument } from '../model/requestdocument.model';
+import { DocumentInstance } from '../model/documentinstance.model';
+import { Response } from '../../shared/model/response.model';
 @Injectable({
   providedIn: 'root'
 })
@@ -31,13 +33,13 @@ export class RequestService {
     return this.http.get<Request>(this.url + 'getdecisionmakers');
   }
 
-  CreateRequest(request: Request): Observable<number> {
+  CreateRequest(request: Request | Response): Observable<number> {
     const headers = { 'Content-Type': 'application/json' };
     const url = `${this.url}Requests`;
     return this.http.post<number>(url, request, { headers });
   }
 
-  UpdateRequest(requestId: number, request: Request,): Observable<any> {
+  UpdateRequest(requestId: number, request: Request | Response,): Observable<any> {
     const headers = { 'Content-Type': 'application/json' };
     const url = `${this.url}Requests/${requestId}`;
     return this.http.put<number>(url, request, { headers });
@@ -116,6 +118,18 @@ export class RequestService {
     return this.http.post<any>(url, formData);
   }
 
+  SaveOfferorDocument(requestId: number, offerorDocument: any, file: File): Observable<any> {
+    const url = `${this.url}RequestDocuments/Response/${requestId}`;
+    const formData = new FormData();
+    formData.append('documentName', offerorDocument.documentName);
+    formData.append('file', file);
+    return this.http.post<any>(url, formData);
+  }
+
+  deleteRequestDocument(requestId: number, documentId: number): Observable<{isSuccess: boolean}> {
+    return this.http.delete<{isSuccess: boolean}>(`${this.url}RequestDocuments/${requestId}/${documentId}`);
+}
+
   DeleteOrganizationDocument(documentId: number): Observable<void> {
     return this.http.delete<void>(`${this.url}MunicipalityDocuments/${documentId}`)
   }
@@ -126,8 +140,12 @@ export class RequestService {
     return this.http.post<any>(url, requestDocuments, { headers });
   }
 
-  GetDocumentContent(organizationDocumentId: number, organizationId: number): Observable<Blob> {
+  GetAgencySpecificDocumentContent(organizationDocumentId: number, organizationId: number): Observable<Blob> {
     return this.http.get(`${this.url}OrganizationDocuments/DocumentContent/${organizationDocumentId}/${organizationId}`, { responseType: 'blob' });
+  }
+
+  GetOfferorDocumentContent(requestDocumentId: number): Observable<Blob> {
+    return this.http.get(`${this.url}RequestDocuments/DocumentContent/Response/${requestDocumentId}`, { responseType: 'blob' });
   }
 
   GetRequestDetailsById(requestId: number): Observable<any> {
@@ -140,5 +158,9 @@ export class RequestService {
 
   DeleteDecisionMaker(requestId: number, decisionMakerId: number): Observable<any> {
     return this.http.delete<void>(`${this.url}DecisionMakers/${requestId}/${decisionMakerId}`);
+  }
+
+  GetDocumentInstances(requestId: number): Observable<DocumentInstance[]> {
+    return this.http.get<DocumentInstance[]>(`${this.url}InstanceDocuments/${requestId}`);
   }
 }
