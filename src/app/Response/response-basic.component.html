@@ -1,25 +1,121 @@
-<mat-card *ngIf="request" class="request-card">
-    <mat-card-content>
-      <p><strong>Category:</strong> {{ request.category }}</p>
-     <!-- <p><strong>Subcategories:</strong> {{ request.subcategories?.join(', ') }}</p>-->
-      <p><strong>Request Type:</strong> {{ request.requestType?.requestTypeDesc }}</p>
-      <p><strong>Publish Date:</strong> {{ request.publishDate }} at {{ request.publishTime }}</p>
-      <p><strong>Open Date:</strong> {{ request.openDate }} at {{ request.openTime }}</p>
-      <p><strong>Contract Term:</strong> {{ request.contractStart }} to {{ request.contractEnd }} </p>
-    </mat-card-content>
-  </mat-card>
-  
-  <form [formGroup]="responseForm">
-    <mat-form-field appearance="fill">
-      <mat-label>Name of Response</mat-label>
-      <input matInput formControlName="responseName" placeholder="Enter Response Name"/>
-      <mat-icon matSuffix matTooltip="Please create a name for your response to this request.">info</mat-icon>
-      <mat-error *ngIf="responseForm.get('responseName')?.hasError('required')">
-        This field is required.
-      </mat-error>
-    </mat-form-field>
+<div>
+  <ng-template matStepLabel>Basics</ng-template>
+  <h1>Offeror Response to Agency Request</h1>
+  <h2>Agency Section</h2>
+  <form [formGroup]="requestForm" *ngIf="requestForm">
+    <div class="field-container">
+      <div class="inline-field">
+        <p>Agency Request Title</p>
+        <mat-form-field appearance="fill" class="input-width">
+          <mat-label>Agency Request Title</mat-label>
+          <input matInput formControlName="requestName" [readonly]="true" />
+        </mat-form-field>
+      </div>
+    </div>
 
-   <!--  <button mat-raised-button color="primary" (click)="onContinue()" [disabled]="responseForm.invalid">
-      Continue
-    </button> -->
+    <div *ngIf="requestForm">
+      <div class="field-container">
+        <div class="inline-field">
+          <p>Request Category</p>
+          <mat-form-field appearance="fill" class="input-width">
+            <mat-label>Request Category</mat-label>
+            <input matInput formControlName="requestCategory" />
+          </mat-form-field>
+        </div>
+
+        <div class="inline-field">
+          <p>Request Type</p>
+          <mat-form-field appearance="fill" class="input-width">
+            <mat-label>Request Type</mat-label>
+            <input matInput formControlName="requestType" />
+          </mat-form-field>
+        </div>
+      </div>
+
+      <div class="field-container">
+        <div class="inline-field">
+          <p>Publish Date and Time</p>
+          <mat-form-field appearance="fill" class="input-width">
+            <mat-label>Publish Date and Time</mat-label>
+            <input matInput formControlName="publishDateAndTime" />
+          </mat-form-field>
+        </div>
+
+        <div class="inline-field">
+          <p>Open Date and Time</p>
+          <mat-form-field appearance="fill" class="input-width">
+            <mat-label>Open Date and Time</mat-label>
+            <input matInput formControlName="openDateAndTime" />
+          </mat-form-field>
+        </div>
+      </div>
+
+      <div class="field-container">
+        <div class="inline-field">
+          <p>Contract Start Date</p>
+          <mat-form-field appearance="fill" class="input-width">
+            <mat-label>Contract Start Date</mat-label>
+            <input matInput formControlName="contractStartDate" />
+          </mat-form-field>
+        </div>
+
+        <div class="inline-field">
+          <p>Contract End Date</p>
+          <mat-form-field appearance="fill" class="input-width">
+            <mat-label>Contract End Date</mat-label>
+            <input matInput formControlName="contractEndDate" />
+          </mat-form-field>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <form [formGroup]="responseForm">
+    <h2>Offeror Section</h2>
+    <div class="field-container">
+      <div class="inline-field">
+        <p>Offeror Response Title (the name of your response)</p>
+        <mat-form-field appearance="fill" class="input-width">
+          <mat-label>Offeror Response Title</mat-label>
+          <input matInput formControlName="responseName" placeholder="Enter Response Name" />
+          <mat-error *ngIf="responseForm.get('responseName')?.hasError('required')">
+            This field is required.
+          </mat-error>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <mat-menu #infoMenu="matMenu" class="info-menu">
+      <div mat-menu-item class="menu-content non-interactive" (mouseenter)="onMenuMouseEnter()"
+        (mouseleave)="onMenuMouseLeave()">
+        <div class="tooltip-text">
+          Please designate an authorizing official for this offer.
+          This can be done on the Offeror Profile Page.
+        </div>
+        <button mat-raised-button color="primary" (click)="navigateToProfile()">
+          Go to Profile
+        </button>
+      </div>
+    </mat-menu>
+
+    <div class="field-container">
+      <div class="inline-field">
+        <p>Authorizing official for this offer.<mat-icon 
+          [matMenuTriggerFor]="infoMenu" 
+          (mouseenter)="showMenu()"
+          (mouseleave)="scheduleHideMenu()"
+          color="primary" 
+          style="font-size: large; cursor: pointer; pointer-events: auto;">
+          info_outline
+        </mat-icon></p>
+        <mat-form-field appearance="fill" class="input-width">
+          <mat-label>Authorizing Official</mat-label>
+          <input matInput formControlName="authorizingOfficial" />
+          <mat-error *ngIf="responseForm.get('authorizingOfficial')?.hasError('required')">
+            This field is required.
+          </mat-error>
+        </mat-form-field>
+      </div>
+      <div class="inline-field"></div>
+    </div>
   </form>

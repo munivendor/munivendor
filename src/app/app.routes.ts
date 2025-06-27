@@ -21,10 +21,7 @@ import { TableDetailsComponent } from './Request/TableDetails/request-tabledetai
 import { CreateRequestStepper } from './Request/CreateRequestStepper/create-request-stepper.component';
 import { CategoryTreeComponent } from './CategoryTree/category-tree.component';
 
-// import { ResponseBasicComponent } from './Response/response-basic.component';
-// import { ResponseDetailsComponent } from './Response/response-details.component';
-// import { ResponseDocumentsComponent } from './Response/response-documents.component';
-// import { ResponseOverviewComponent } from './Response/response-overview.component';
+import { ResponseStepper } from './Response/ResponseStepper/response-stepper.component';
 
 export const routes: Routes = [
   { path: 'signup', component: SignupComponent },
@@ -39,16 +36,13 @@ export const routes: Routes = [
   { path: 'user-designation', component: DesignationSelectionComponent, canActivate: [AuthGuard] },
   { path: 'payment-plan-confirmation', component: PaymentPlanConfirmationComponent, canActivate: [AuthGuard] },
   { path: 'billing-profile', component: BillingProfileComponent, canActivate: [AuthGuard] },
-  
-  { path: 'dashboard-component', component: DashboardComponent, canActivate: [AuthGuard]},
-  { path: 'create-request-view', component: CreateRequestStepper, canActivate: [AuthGuard]},
+
+  { path: 'dashboard-component', component: DashboardComponent, canActivate: [AuthGuard] },
+  { path: 'create-request-view', component: CreateRequestStepper, canActivate: [AuthGuard] },
   { path: 'requests-view', component: TableDetailsComponent, canActivate: [AuthGuard] },
   { path: 'edit-request-view/:requestId', component: CreateRequestStepper, canActivate: [AuthGuard] },
   { path: 'categories', component: CategoryTreeComponent, canActivate: [AuthGuard] },
 
-  // { path: 'response-basic/:id', component: ResponseBasicComponent},
-  // { path: 'response-details/:id', component: ResponseDetailsComponent},
-  // { path: 'response-documents/:id', component: ResponseDocumentsComponent},
-  // { path: 'response-overview/:id', component: ResponseOverviewComponent},
+  { path: 'response-basic/:sourceId', component: ResponseStepper, canActivate: [AuthGuard] },
+  { path: 'response-basic/:sourceId/edit/:responseId', component: ResponseStepper, canActivate: [AuthGuard] },
 ];
-

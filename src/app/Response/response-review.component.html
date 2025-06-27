@@ -1,0 +1,151 @@
+<form [formGroup]="requestFinalReviewDetailsForm" (ngSubmit)="onSubmit()">
+  <h2>Agency Section</h2>
+  <div class="field-container">
+    <div class="inline-field">
+      <p>Agency Request Title</p>
+      <mat-form-field appearance="fill" class="input-width">
+        <input matInput formControlName="requestName" readonly
+          value={{requestFinalReviewDetails.requestName}}>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <div class="field-container">
+    <div class="inline-field">
+      <p>Request Category</p>
+      <mat-form-field appearance="fill" class="input-width">
+        <input matInput formControlName="category" readonly
+          value={{requestFinalReviewDetails.category?.name}}>
+      </mat-form-field>
+    </div>
+    <div class="inline-field">
+      <p>Request Type</p>
+      <mat-form-field appearance="fill" class="input-width">
+        <input matInput formControlName="requestType" readonly
+          value={{requestFinalReviewDetails.requestType?.requestTypeDesc}}>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <div class="field-container">
+    <div class="inline-field">
+      <p>Publish Date and Time</p>
+      <mat-form-field appearance="fill" class="input-width">
+        <input matInput formControlName="publishDate" readonly
+          value={{requestFinalReviewDetails?.publishDate}}>
+      </mat-form-field>
+    </div>
+
+    <div class="inline-field">
+      <p>Open Date and Time</p>
+      <mat-form-field appearance="fill" class="input-width">
+        <input matInput formControlName="openDate" readonly
+          value={{requestFinalReviewDetails?.openDate}}>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <div class="field-container">
+    <div class="inline-field">
+      <p>Contract Start Date</p>
+      <mat-form-field appearance="fill" class="input-width">
+        <input matInput formControlName="contractStart" readonly
+          value={{requestFinalReviewDetails.contractStart}}>
+      </mat-form-field>
+    </div>
+
+    <div class="inline-field">
+      <p>Contract End Date</p>
+      <mat-form-field appearance="fill" class="input-width">
+        <input matInput formControlName="contractEnd" readonly
+          value={{requestFinalReviewDetails.contractEnd}}>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <h2>Offeror Section</h2>
+  <div class="field-container">
+    <div class="inline-field">
+      <p>Offeror Response Title:</p>
+      <mat-form-field appearance="fill" class="input-width">
+        <input matInput formControlName="requestName" readonly
+          value={{requestFinalReviewDetails.requestName}}>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <div class="field-container">
+    <div class="inline-field">
+      <p>Authorizing Official</p>
+      <mat-form-field appearance="fill" class="input-width">
+        <mat-label>Authorizing Official</mat-label>
+        <input matInput formControlName="authorizingOfficial" readonly="" />
+      </mat-form-field>
+    </div>
+    <div class="inline-field"></div>
+  </div>
+</form>
+
+<section>
+<h2>Agency Documents</h2>
+<table mat-table [dataSource]="requiredDocumentsDatasource" class="mat-elevation-z8">
+  <ng-container matColumnDef="formName">
+    <th mat-header-cell *matHeaderCellDef>Form Name</th>
+    <td mat-cell *matCellDef="let row">
+      {{ row.documentName }}
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="notarizationRequired">
+    <th mat-header-cell *matHeaderCellDef>Notarization Required</th>
+    <td mat-cell *matCellDef="let row">
+      {{ row.notarizationRequired ? 'Yes' : 'No' }}
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="download">
+    <th mat-header-cell *matHeaderCellDef>Download</th>
+    <td mat-cell *matCellDef="let row">
+      <button mat-icon-button color="primary" (click)="onDownloadRequiredAgencyDocuments(row)">
+        <mat-icon>download</mat-icon>
+      </button>
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="status">
+    <th mat-header-cell *matHeaderCellDef>Status</th>
+    <td mat-cell *matCellDef="let row">
+      {{ row.documentStatus }}
+      <span *ngIf="row.documentStatus === 'Incomplete'" matTooltip="{{ row.missingItems }}"></span>
+    </td>
+  </ng-container>
+
+  <tr mat-header-row *matHeaderRowDef="agencyDocumentsColumns"></tr>
+  <tr mat-row *matRowDef="let row; columns: agencyDocumentsColumns;"></tr>
+</table>
+</section>
+  <br/>
+<section>
+<h2>Offeror Documents</h2>
+<table mat-table [dataSource]="offerorDocumentsDatasource" class="mat-elevation-z8">
+  <ng-container matColumnDef="formName">
+    <th mat-header-cell *matHeaderCellDef>Form Name</th>
+    <td mat-cell *matCellDef="let row">
+      {{ row.documentName }}
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="download">
+    <th mat-header-cell *matHeaderCellDef>Download</th>
+    <td mat-cell *matCellDef="let row">
+      <button mat-icon-button color="primary" (click)="onDownloadOfferorDocument(row)">
+        <mat-icon>download</mat-icon>
+      </button>
+    </td>
+  </ng-container>
+
+  <tr mat-header-row *matHeaderRowDef="offerorDocumentsColumns"></tr>
+  <tr mat-row *matRowDef="let row; columns: offerorDocumentsColumns;"></tr>
+</table>
+</section>
+<br/>
