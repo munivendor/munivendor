@@ -37,11 +37,11 @@ export class ConfirmationDialog {
     @Inject(MAT_DIALOG_DATA) public requestObjAndUserAction: DialogData,
     public dialog: MatDialog,
     private router: Router
-  ) {}
+  ) { }
 
   getConfirmationMessage(): string {
     if (this.requestObjAndUserAction.action === 'cancel') {
-      const statusDesc = this.requestObjAndUserAction.request.requestStatus.requestStatusDesc;
+      const statusDesc = this.requestObjAndUserAction.request.requestStatus?.requestStatusDesc ?? '';
       if (statusDesc === 'Scheduled') {
         return 'This request is scheduled to go live and canceling it will revert it back to a Draft. Are you sure you want to cancel this request?';
       } else if (statusDesc === 'Live') {
@@ -67,28 +67,33 @@ export class ConfirmationDialog {
   }
 
   confirm(action: string, request: any): void {
+
     if (this.requestObjAndUserAction.action === 'cancel' && request.requestStatus.requestStatusDesc === "Live") {
       this.openCancellationReasonDialog(action, request);
     } else if (this.requestObjAndUserAction.action === 'cancel' && request.requestStatus.requestStatusDesc === "Scheduled") {
       this.onCancelUpdateRequestStatus(request, action);
     }
 
-    if (this.requestObjAndUserAction.action === 'edit') {
-      this.router.navigate(['/edit-request-view', this.requestObjAndUserAction.request.requestId]);
+    // navigates to edit view for agency requests or offeror responses
+    if (request.requestTypeId === 4) {
+      const sourceId = request.sourceRequestId;
+      const responseId = request.requestId;
+      this.router.navigate(['/response-basic', sourceId, 'edit', responseId]);
+    } else {
+      this.router.navigate(['/edit-request-view', request.requestId]);
     }
-    this.dialogRef.close(true); 
+
+    this.dialogRef.close(true);
   }
 
   openCancellationReasonDialog(action: string, request: any): void {
     const cancelDialogRef = this.dialog.open(CancellationReasonDialog, {
       width: '500px',
-      data:  { action, request }
+      data: { action, request }
     });
 
     cancelDialogRef.componentInstance.cancelConfirmed.subscribe((cancelData: { request: any, action: string }) => {
       this.cancellationRequested.emit(cancelData);
     });
   }
-
-   
 }
