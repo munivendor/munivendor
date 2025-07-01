@@ -7,7 +7,9 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { FlowNavigationService } from '../shared/service/flow-navigation.service';
-
+import { UserService } from '../shared/service/user.service';
+import { User } from '../shared/model/user.model';
+import { StateService } from '../Request/services/state.service';
 @Injectable({
   providedIn: 'root',
 })
@@ -30,7 +32,9 @@ export class AuthService {
     private http: HttpClient,
     private router: Router,
     private socialAuthService: SocialAuthService,
-    private flowNavigationService: FlowNavigationService
+    private flowNavigationService: FlowNavigationService,
+    private userService: UserService,
+    private stateService: StateService
   ) {
     this.initializeAuthListener();
   }
@@ -72,6 +76,20 @@ export class AuthService {
       tap(userId => {
         if (userId) {
           this.userSubject.next(userId as any);
+          this.userService.getUser(Number(userId)).subscribe(
+            (user: User) => {
+              console.log('User data fetched successfully:', user);
+              if (user.organizationId !== undefined) {
+                this.stateService.setOrganizationId(user.organizationId);
+              } else {
+                console.warn('Organization ID is undefined.');
+              }
+
+            },
+            (error) => {
+              console.error('Error fetching user data:', error);
+            }
+          );
         }
       }),
       catchError((error: HttpErrorResponse) => {

@@ -18,6 +18,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { DocumentService } from '../shared/service/document.service';
 @Component({
   selector: 'request-required-documents',
   standalone: true,
@@ -48,17 +49,18 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
   optionalRequestDocuments: Document[] = [];
   organizationRequestDocuments: Document[] = [];
   files: File[] = [];
-  organizationId = 1;
   municipalityDocuments: Document[] = [];
   documentId!: number;
   selectedOptionalStateDocs: Document[] = [];
   selectedOrganizationDocs: Document[] = [];
   requestId: any;
+  organizationId = this.stateService.getOrganizationId();
 
   constructor(
     private fb: FormBuilder,
     private requestService: RequestService,
     private stateService: StateService,
+    private documentService: DocumentService,
     public dialog: MatDialog) { }
 
   ngOnInit(): void {
@@ -95,7 +97,7 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
   }
 
   private initializeForCreation(): void {
-    this.getAllDocumentTypes(this.organizationId)
+    this.getAllDocumentTypes(Number(this.organizationId))
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
@@ -109,7 +111,7 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
 
   initializeForEditing(): void {
     forkJoin({
-      allDocuments: this.getAllDocumentTypes(this.organizationId, Number(this.idParam)),
+      allDocuments: this.getAllDocumentTypes(Number(this.organizationId), Number(this.idParam)),
       requestDocuments: this.requestService.GetRequestRequiredDocumentsById(Number(this.idParam)),
     })
       .pipe(takeUntil(this.destroy$))
@@ -159,7 +161,7 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
   }
 
   private fallbackToCreation(): void {
-    this.getAllDocumentTypes(this.organizationId)
+    this.getAllDocumentTypes(Number(this.organizationId))
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
@@ -256,7 +258,7 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
             documentName: [document.documentName],
             documentRequired: [document.documentRequired ?? false],
             selected: [document.selected ?? false],
-            requiresNotarization: [document.requiresNotarization || false],
+            requiresNotarization: [{ value: document.requiresNotarization || false, disabled: !document.selected }],
             organizationDocumentId: [document.organizationDocumentId ?? null]
           })
         );
@@ -283,7 +285,7 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
             documentName: [newDocument.documentName],
             documentRequired: [newDocument.documentRequired],
             selected: [newDocument.selected],
-            requiresNotarization: false,
+            requiresNotarization: [{ value: newDocument.requiresNotarization || false, disabled: false }],
           });
 
           this.optionalMunicipalityDocuments.push(formGroup);
@@ -295,9 +297,16 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
       });
   }
 
-  onCheckboxChange(formArray: FormArray, idx: number, isChecked: boolean) {
-    const documentControl = formArray.at(idx) as FormGroup;
-    documentControl.patchValue({ selected: isChecked });
+  onCheckboxChange(formArray: FormArray, index: number, isChecked: boolean) {
+    const formGroup = formArray.at(index) as FormGroup;
+    formGroup.get('selected')?.setValue(isChecked);
+
+    const notarizationControl = formGroup.get('requiresNotarization');
+    if (isChecked) {
+      notarizationControl?.enable();
+    } else {
+      notarizationControl?.disable();
+    }
   }
 
   deleteOrganizationDocument(documentId: number): void {
@@ -322,28 +331,19 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
       );
   }
 
-  // automatic download of document when clicking on download button
-  onDownload(row: FormGroup): void {
+  // open document in new tab for preview instead of automatic download
+  onDownloadAgencySpecificDocument(row: FormGroup): void {
     const organizationDocumentId = row.get('organizationDocumentId')?.value;
     const organizationId = this.organizationId;
     if (!organizationDocumentId || !organizationId) {
-      console.error('Missing document ID or org ID');
+      console.error('Missing Org ID');
       return;
     }
 
-    this.requestService.GetDocumentContent(organizationDocumentId, organizationId).subscribe({
+    this.requestService.GetAgencySpecificDocumentContent(organizationDocumentId, organizationId).subscribe({
       next: (blob) => {
-        console.log('blob', blob);
-        const fileName = row.get('documentName')?.value || 'downloaded-file';
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = fileName;
-        link.style.display = 'none';
-        document.body.appendChild(link);
-        link.click();
-
-        document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
+        const blobUrl = URL.createObjectURL(blob);
+        window.open(blobUrl, '_blank');
       },
       error: (err) => {
         console.error('Failed to fetch document:', err);
@@ -351,8 +351,32 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
     });
   }
 
+  onDownloadStateDocument(row: FormGroup): void {
+    const documentId = row.get('documentId')?.value;
+    if (!documentId) {
+      console.error('Document ID is missing');
+      return;
+    }
+
+    this.documentService.GetStateDocumentContent(documentId).subscribe({
+      next: (blob) => {
+        const blobUrl = URL.createObjectURL(blob);
+        window.open(blobUrl, '_blank');
+      },
+      error: (err: any) => {
+        console.error('Failed to fetch document:', err);
+      }
+    });
+  }
+
   saveDocuments() {
     this.requestId = this.stateService.getRequestId();
+    const organizationId = this.stateService.getOrganizationId();
+    if (organizationId !== null) {
+      this.organizationId = organizationId;
+    } else {
+      console.error('Organization ID is null');
+    }
 
     const selectedDocuments = [
       ...this.requiredStateDocuments.controls,

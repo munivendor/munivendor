@@ -1,13 +1,13 @@
-<mat-stepper [linear]="false" #stepper>
+<mat-stepper #stepper>
   <mat-step label="Basics">
-    <response-basic #step1 [requestId]="requestId" [idParam]="idParam" (formValidityChange)="isStepValid = $event"></response-basic>
+      <response-basic #step1 [sourceIdParam]="sourceIdParam" [responseIdParam]="responseIdParam" (formValidityChange)="onFormValidityChange($event)"></response-basic>
     <div>
-      <button mat-button (click)="save()" matStepperNext [disabled]="!isStepValid">Next</button>
+      <button mat-button matStepperNext (click)="saveResponse()"  [disabled]="!isStepValid">Next</button>
     </div>
   </mat-step>
 
   <mat-step label="Details">
-    <response-details #step2 [requestId]="requestId" (formValidityChange)="isStepValid = $event"></response-details>
+    <response-details #step2 [sourceIdParam]="sourceIdParam"></response-details>
     <div>
       <button type="Submit" mat-button matStepperPrevious>Back</button>
       <button type="Submit" mat-button matStepperNext>Next</button>
@@ -16,19 +16,18 @@
   </mat-step>
 
   <mat-step label="Documents">
-    <response-documents [requestId]="requestId"></response-documents>
+    <response-documents [sourceIdParam]="sourceIdParam" [responseIdParam]="responseIdParam"></response-documents>
     <div>
       <button type="Submit" mat-button matStepperPrevious>Back</button>
-      <button type="Submit" mat-button matStepperNext (click)="save()">Next</button>
+      <button type="Submit" mat-button matStepperNext>Next</button>
     </div>
 
   </mat-step>
-
-<!--   <mat-step label="Review">
-    <request-review [requestId]="requestId"></request-review>
+    <mat-step label="Review">
+      <response-review [sourceIdParam]="sourceIdParam" [responseIdParam]="responseIdParam"></response-review>
     <div>
       <button type="Submit" mat-button matStepperPrevious>Back</button>
-      <button type="Submit" mat-button matStepperNext (click)="updateRequestStatusToScheduled()">Submit</button>
+      <button type="Submit" mat-button matStepperNext>Submit</button>
     </div>
-  </mat-step> -->
+  </mat-step>
 </mat-stepper>

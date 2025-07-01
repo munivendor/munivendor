@@ -71,7 +71,7 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
   requestTypes: RequestType[] | undefined;
   requestName = new FormControl<string | null>(null, [Validators.required]);
   basicsFormGroup!: FormGroup;
-  organizationId = 1;
+  organizationId = this.stateService.getOrganizationId();
   private formStatus$ = new Subject<void>();
 
   constructor(
@@ -607,7 +607,7 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     request.categoryId = formValues.category;
     request.requestTypeId = formValues.requestType;
     request.requestName = formValues.requestName;
-
+    request.organizationId = this.organizationId ?? 0;
     const publishDate = new Date(formValues.publishDate);
     const publishTime = formValues.publishTime;
     request.publishDate = this.combineDateAndTime(publishDate, publishTime);

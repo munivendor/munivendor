@@ -1,76 +1,97 @@
-<mat-card>
-    <mat-card-content>
-      <table mat-table [dataSource]="documentInstances" class="mat-elevation-z8">
-        <!-- Form Name Column -->
-        <ng-container matColumnDef="formName">
-          <th mat-header-cell *matHeaderCellDef>Form Name</th>
-          <td mat-cell *matCellDef="let form">
-            <a [routerLink]="['/form-details', form.id]">{{ form.documentName }}</a>
-          </td>
-        </ng-container>
-  
-        <!-- Notarization Required Column -->
-        <ng-container matColumnDef="notarizationRequired">
-          <th mat-header-cell *matHeaderCellDef>Notarization Required</th>
-          <td mat-cell *matCellDef="let form">
-            {{ form.notarizationRequired ? 'Yes' : 'No' }}
-          </td>
-        </ng-container>
-  
-        <!-- Download Form Column -->
-        <ng-container matColumnDef="downloadForm">
-          <th mat-header-cell *matHeaderCellDef>Download Form</th>
-          <td mat-cell *matCellDef="let form">
-            <button mat-icon-button (click)="downloadForm(form.id)">
-              <mat-icon>download</mat-icon>
-            </button>
-          </td>
-        </ng-container>
-  
-        <!-- Upload Form Column -->
-        <ng-container matColumnDef="uploadForm">
-          <th mat-header-cell *matHeaderCellDef>Upload Form</th>
-          <td mat-cell *matCellDef="let form">
-            <button mat-icon-button (click)="uploadForm(form.id)">
-              <mat-icon>upload</mat-icon>
-            </button>
-          </td>
-        </ng-container>
-  
-        <!-- Completion Status Column -->
-        <ng-container matColumnDef="completionStatus">
-          <th mat-header-cell *matHeaderCellDef>Completion Status</th>
-          <td mat-cell *matCellDef="let form">
-            {{ form.documentStatus }}
-            <span *ngIf="form.documentStatus === 'Incomplete'" matTooltip="{{ form.missingItems }}"></span>
-          </td>
-        </ng-container>
-  
-       
-        <!-- Table Rows -->
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-      </table>
+<h2>Agency Required Forms and Documents</h2>
+<table mat-table [dataSource]="requiredDocumentsDatasource" class="mat-elevation-z8">
+  <ng-container matColumnDef="formName">
+    <th mat-header-cell *matHeaderCellDef>Form Name</th>
+    <td mat-cell *matCellDef="let row">
+      {{ row.documentName }}
+    </td>
+  </ng-container>
 
-      <!-- Upload Response Button Column -->
-      <ng-container matColumnDef="uploadResponse">
-        <th mat-header-cell *matHeaderCellDef>Upload Response</th>
-        <td mat-cell *matCellDef="let form">
-          <button mat-raised-button color="primary" (click)="uploadResponse(form.id)">
-            Upload Response
+  <ng-container matColumnDef="notarizationRequired">
+    <th mat-header-cell *matHeaderCellDef>Notarization Required</th>
+    <td mat-cell *matCellDef="let row">
+      {{ row.notarizationRequired ? 'Yes' : 'No' }}
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="download">
+    <th mat-header-cell *matHeaderCellDef>Download</th>
+    <td mat-cell *matCellDef="let row">
+      <button mat-icon-button color="primary" (click)="onDownloadRequiredAgencyDocuments(row)">
+        <mat-icon>download</mat-icon>
+      </button>
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="upload">
+    <th mat-header-cell *matHeaderCellDef>Upload</th>
+    <td mat-cell *matCellDef="let row">
+      <button mat-icon-button (click)="onUploadClick(row)">
+        <mat-icon>upload</mat-icon>
+      </button>
+    </td>
+</ng-container>
+
+<!-- Hidden file input - place this somewhere in your template -->
+<input #fileInput type="file" style="display: none;" (change)="onFileSelected($event)" accept=".pdf,.doc,.docx,.txt">
+
+  <ng-container matColumnDef="status">
+    <th mat-header-cell *matHeaderCellDef>Status</th>
+    <td mat-cell *matCellDef="let row">
+      {{ row.documentStatus }}
+      <span *ngIf="row.documentStatus === 'Incomplete'" matTooltip="{{ row.missingItems }}"></span>
+    </td>
+  </ng-container>
+
+  <tr mat-header-row *matHeaderRowDef="agencyDocumentsColumns"></tr>
+  <tr mat-row *matRowDef="let row; columns: agencyDocumentsColumns;"></tr>
+</table>
+
+<br />
+
+<h2>Offeror Uploads <span style="font-size: 16px; font-weight: normal;">(Upload your response here. Include items such as your proposal, brochures, and any other offer-specific documents that are relevant to this opportunity.)</span></h2>
+<form [formGroup]="responseDocumentsFormGroup">
+  <div *ngIf="offerorOptionalDocuments.length > 0; else noOfferorOptionalDocuments">
+    <table mat-table [dataSource]="offerorDocumentsDatasource" class="mat-elevation-z8">
+      <ng-container matColumnDef="formName">
+        <th mat-header-cell *matHeaderCellDef>Form Name</th>
+        <td mat-cell *matCellDef="let row">
+          {{ row.documentName }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="download">
+        <th mat-header-cell *matHeaderCellDef>Download</th>
+        <td mat-cell *matCellDef="let row">
+          <button mat-icon-button color="primary" (click)="onDownloadOfferorDocument(row)">
+            <mat-icon>download</mat-icon>
           </button>
         </td>
       </ng-container>
 
-       <!-- Continue Button Column -->
-       <ng-container matColumnDef="continue">
-        <th mat-header-cell *matHeaderCellDef>Continue</th>
-        <td mat-cell *matCellDef="let form">
-          <button mat-raised-button color="accent" (click)="continue(form.id)">
-            Continue
+      <ng-container matColumnDef="delete">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let row">
+          <button mat-icon-button color="primary" (click)="deleteForm(row.documentId)" >
+            <mat-icon color="warn">delete</mat-icon>
           </button>
         </td>
       </ng-container>
 
-    </mat-card-content>
-  </mat-card>
+      <tr mat-header-row *matHeaderRowDef="offerorDocumentsColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: offerorDocumentsColumns;"></tr>
+    </table>
+  </div>
+
+  <ng-template #noOfferorOptionalDocuments>
+    <p style="margin-top: 1rem;">
+      Upload documents you would like to be added for this bid.
+    </p>
+  </ng-template>
+<br/>
+  <button mat-raised-button color="primary" type="button"
+    (click)="openFileUploadDialog(+(responseIdParam ?? responseIdFromStateService ?? 0))">
+    Add
+  </button>
+</form>
+<br />

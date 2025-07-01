@@ -1,75 +1,80 @@
-// import { Component, ViewChild } from '@angular/core';
-// import { CommonModule } from '@angular/common';
-// import { FormsModule, ReactiveFormsModule, FormGroup } from '@angular/forms';
-// import { MatInputModule } from '@angular/material/input';
-// import { MatFormFieldModule } from '@angular/material/form-field';
-// import { MatStepperModule } from '@angular/material/stepper';
-// import { MatButtonModule } from '@angular/material/button';
- 
-// import { ActivatedRoute } from '@angular/router';
-// import { ResponseBasicComponent } from '../response-basic.component';
-// import { ResponseDetailsComponent } from '../response-details.component';
-// import { ResponseDocumentsComponent } from '../response-documents.component';
- 
-// //import { RequestReviewComponent } from '../request-review.component';
- 
-// @Component({
-//   selector: 'response-stepper',
-//   templateUrl: 'response-stepper.component.html',
-//   styleUrls: ['response-stepper.component.css'],
-//   standalone: true,
-//   imports: [
-//     MatButtonModule,
-//     MatStepperModule,
-//     FormsModule,
-//     ReactiveFormsModule,
-//     MatFormFieldModule,
-//     MatInputModule,
-//     ResponseBasicComponent,
-//     ResponseDetailsComponent,
-//     ResponseDetailsComponent,
-//     CommonModule,
-//     ResponseDocumentsComponent
-// ],
-// })
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatStepperModule } from '@angular/material/stepper';
+import { MatButtonModule } from '@angular/material/button';
 
-// export class ResponseStepper {
-//   @ViewChild(ResponseBasicComponent) responseBasicComponent!: ResponseBasicComponent;
-//  // @ViewChild(ResponseDetailsComponent) responseDetailsComponent!: ResponseDetailsComponent;
-//   @ViewChild(ResponseDocumentsComponent) responseDocumentsComponent!: ResponseDocumentsComponent;
-//  // @ViewChild(RequestReviewComponent) requestReviewComponent!: RequestReviewComponent;
+import { ActivatedRoute } from '@angular/router';
+import { ResponseBasicComponent } from '../response-basic.component';
+import { ResponseDetailsComponent } from '../response-details.component';
+import { Subject, takeUntil } from 'rxjs';
+import { ResponseDocumentsComponent } from '../response-documents.component';
+import { ResponseReviewComponent } from '../response-review.component';
 
-//   requestId?: number;
-//   idParam?: string | undefined | null;
-//   isStepValid = false;
+@Component({
+  selector: 'response-stepper',
+  templateUrl: 'response-stepper.component.html',
+  styleUrls: ['response-stepper.component.css'],
+  standalone: true,
+  imports: [
+    MatButtonModule,
+    MatStepperModule,
+    FormsModule,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    ResponseBasicComponent,
+    ResponseDetailsComponent,
+    ResponseDetailsComponent,
+    CommonModule,
+    ResponseDocumentsComponent,
+    ResponseReviewComponent
+  ],
+})
 
-//   constructor(
-//     private route: ActivatedRoute,
-//   ) {
-//     this.route.paramMap.subscribe((params) => {
-//       this.idParam = params.get('requestId');
-//       this.requestId = this.idParam ? + this.idParam : 0;
-//     });
-//   }
+export class ResponseStepper implements OnDestroy, OnInit {
+  @ViewChild(ResponseBasicComponent) responseBasicComponent!: ResponseBasicComponent;
+  @ViewChild(ResponseDetailsComponent) responseDetailsComponent!: ResponseDetailsComponent;
+  @ViewChild(ResponseDocumentsComponent) responseDocumentsComponent!: ResponseDocumentsComponent;
+  @ViewChild(ResponseReviewComponent) responseReviewComponent!: ResponseReviewComponent;
 
-//   save1() {
-//     this.responseBasicComponent.save();
-//   }
+  private destroy$ = new Subject<void>();
 
-//   /*saveResponseDetails(): void {
-//     this. responseDocumentsComponent.save();
-//   }*/
+  requestId?: number;
+  responseId?: number;
+  sourceIdParam?: string | undefined | null;
+  responseIdParam?: string | undefined | null;
+  isEditMode = false;
+  isStepValid = false;
 
-//   save(): void {
-//     this.responseDocumentsComponent.save();
-//   }
+  constructor(private route: ActivatedRoute) {}
 
-//   /*updateRequestStatusToScheduled(): void {
-//     this.requestReviewComponent.onSubmit();
-//   }*/
-// }
+  ngOnInit(): void {
+    this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
+      this.sourceIdParam = params.get('sourceId');
+      this.requestId = this.sourceIdParam ? +this.sourceIdParam : 0;
 
+      this.responseIdParam = params.get('responseId');
+     
+    });
+  }
 
+  onFormValidityChange(valid: boolean) {
+    this.isStepValid = valid;
+  }
 
+  saveResponse() {
+    if (this.responseBasicComponent) {
+      this.responseBasicComponent.saveResponse();
+    } else {
+      console.error('Basic request component not initialized');
+    }
+  }
 
-
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+}

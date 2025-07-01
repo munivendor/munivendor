@@ -12,13 +12,13 @@
       </td>
     </ng-container>
     <ng-container matColumnDef="formName">
-      <th mat-header-cell *matHeaderCellDef> Form Name </th>
+      <th mat-header-cell *matHeaderCellDef>Form Name</th>
       <td mat-cell *matCellDef="let row" [formGroup]="row">
         {{ row.get('documentName')?.value }}
       </td>
     </ng-container>
     <ng-container matColumnDef="notarization">
-      <th mat-header-cell *matHeaderCellDef> Notarization <mat-icon
+      <th mat-header-cell *matHeaderCellDef>Notarization<mat-icon
           matTooltip="Digital Notarization: Offerors will notarize their documents digitally through MuniVendor. All notarized documents are submitted in the offeror’s digital submission packet."
           color="primary" style="font-size: large" matTooltipPosition="above">
           info_outline
@@ -33,9 +33,9 @@
       </td>
     </ng-container>
     <ng-container matColumnDef="download">
-      <th mat-header-cell *matHeaderCellDef> Download </th>
+      <th mat-header-cell *matHeaderCellDef>Download</th>
       <td mat-cell *matCellDef="let row">
-        <button mat-icon-button color="primary" (click)="onDownload(row)">
+        <button mat-icon-button color="primary" (click)="onDownloadStateDocument(row)">
           <mat-icon>download</mat-icon>
         </button>
       </td>
@@ -76,13 +76,13 @@
         </td>
       </ng-container>
       <ng-container matColumnDef="formName">
-        <th mat-header-cell *matHeaderCellDef> Form Name </th>
+        <th mat-header-cell *matHeaderCellDef>Form Name</th>
         <td mat-cell *matCellDef="let row" [formGroup]="row">
           {{ row.get('documentName')?.value }}
         </td>
       </ng-container>
       <ng-container matColumnDef="notarization">
-        <th mat-header-cell *matHeaderCellDef> Notarization <mat-icon
+        <th mat-header-cell *matHeaderCellDef>Notarization<mat-icon
             matTooltip="Digital Notarization: Offerors will notarize their documents digitally through MuniVendor. All notarized documents are submitted in the offeror’s digital submission packet."
             color="primary" style="font-size: large" matTooltipPosition="above">
             info_outline
@@ -97,9 +97,9 @@
         </td>
       </ng-container>
       <ng-container matColumnDef="download">
-        <th mat-header-cell *matHeaderCellDef> Download </th>
+        <th mat-header-cell *matHeaderCellDef>Download</th>
         <td mat-cell *matCellDef="let row">
-          <button mat-icon-button color="primary" (click)="onDownload(row)">
+          <button mat-icon-button color="primary" (click)="onDownloadStateDocument(row)">
             <mat-icon>download</mat-icon>
           </button>
         </td>
@@ -141,13 +141,13 @@
         </td>
       </ng-container>
       <ng-container matColumnDef="formName">
-        <th mat-header-cell *matHeaderCellDef> Form Name </th>
+        <th mat-header-cell *matHeaderCellDef>Form Name</th>
         <td mat-cell *matCellDef="let row" [formGroup]="row">
           {{ row.get('documentName')?.value }}
         </td>
       </ng-container>
       <ng-container matColumnDef="notarization">
-        <th mat-header-cell *matHeaderCellDef> Notarization <mat-icon
+        <th mat-header-cell *matHeaderCellDef>Notarization<mat-icon
             matTooltip="Digital Notarization: Offerors will notarize their documents digitally through MuniVendor. All notarized documents are submitted in the offeror’s digital submission packet."
             color="primary" style="font-size: large" matTooltipPosition="above">
             info_outline
@@ -162,9 +162,9 @@
         </td>
       </ng-container>
       <ng-container matColumnDef="download">
-        <th mat-header-cell *matHeaderCellDef> Download </th>
+        <th mat-header-cell *matHeaderCellDef>Download</th>
         <td mat-cell *matCellDef="let row">
-          <button mat-icon-button color="primary" (click)="onDownload(row)">
+          <button mat-icon-button color="primary" (click)="onDownloadAgencySpecificDocument(row)">
             <mat-icon>download</mat-icon>
           </button>
         </td>
@@ -192,6 +192,6 @@
   </ng-template>
 
   <br />
-  <button mat-raised-button color="primary" type="button" (click)="openFileUploadDialog(organizationId)">Add</button>
+  <button mat-raised-button color="primary" type="button" (click)="organizationId !== null && openFileUploadDialog(organizationId)">Add</button>
 </form>
 <br />

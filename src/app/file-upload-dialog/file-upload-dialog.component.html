@@ -12,7 +12,6 @@
 
   <div mat-dialog-actions>
     <button mat-button (click)="onNoClick()">Cancel</button>
-    <button mat-button (click)="onUpload(this.data.organizationId)"
-      [disabled]="!documentName || !selectedFile">Upload</button>
+    <button mat-button (click)="onUpload()" [disabled]="!documentName || !selectedFile">Upload</button>
   </div>
 </div>
