@@ -55,7 +55,7 @@ export class CreateRequestStepper implements OnDestroy {
   finalReviewFormGroup!: FormGroup;
   idParam?: string | undefined | null;
   isStepValid = false;
-  
+
   constructor(
     private route: ActivatedRoute,
   ) {
@@ -94,15 +94,15 @@ export class CreateRequestStepper implements OnDestroy {
 
   saveDocuments(): void {
     if (this.requestRequiredDocumentsComponent) {
-    this.requestRequiredDocumentsComponent.saveDocuments();
+      this.requestRequiredDocumentsComponent.saveDocuments();
     } else {
-      console.error('Request required documents component not initialized');  
+      console.error('Request required documents component not initialized');
     }
   }
 
   updateRequestStatusToScheduled(): void {
     if (this.requestReviewComponent) {
-    this.requestReviewComponent.onSubmit();
+      this.requestReviewComponent.onSubmit();
     } else {
       console.error('Request review component not initialized');
     }
