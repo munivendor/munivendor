@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, Input, OnInit, ViewChild, ElementRef, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatCardModule } from '@angular/material/card';
@@ -7,13 +7,16 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterModule } from '@angular/router';
 import { RequestService } from '../Request/services/request.service';
-import { takeUntil, Subject } from 'rxjs';
+import { takeUntil, Subject, forkJoin } from 'rxjs';
 import { FileUploadDialogComponent } from '../file-upload-dialog/file-upload-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
 import { FormGroup, FormArray, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { StateService } from '../Request/services/state.service';
 import { DocumentService } from '../shared/service/document.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { TooltipDirective } from '../shared/directive/tooltip.directive';
+import { Router } from '@angular/router';
+// import { BidProposalFormDialogComponent } from '../BidProposalForm/bid-proposal-form.component';
 @Component({
     selector: 'response-documents',
     standalone: true,
@@ -25,15 +28,18 @@ import { MatSnackBar } from '@angular/material/snack-bar';
         MatButtonModule,
         MatTooltipModule,
         RouterModule,
-        ReactiveFormsModule
+        ReactiveFormsModule,
+        TooltipDirective
     ],
     templateUrl: './response-documents.component.html',
     styleUrls: ['./response-documents.component.css'],
 })
 export class ResponseDocumentsComponent implements OnInit {
+    @Output() autoFillStatusChange = new EventEmitter<boolean>();
     @Input() sourceIdParam?: string | null | undefined;
     @Input() responseIdParam?: string | null | undefined;
-    responseIdFromStateService = this.stateService.getRequestId();
+    @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+
     agencyDocumentsColumns: string[] = [
         'formName',
         'notarizationRequired',
@@ -52,11 +58,11 @@ export class ResponseDocumentsComponent implements OnInit {
     offerorDocumentsDatasource: any[] = [];
     offerorDocuments: any[] = [];
     offerorOptionalDocuments: any[] = [];
-
     requestId?: number;
     responseDocumentsFormGroup!: FormGroup;
-
+    responseIdFromStateService = this.stateService.getRequestId();
     private destroy$ = new Subject<void>();
+    private currentRow: any;
 
     constructor(
         private requestService: RequestService,
@@ -65,53 +71,19 @@ export class ResponseDocumentsComponent implements OnInit {
         private stateService: StateService,
         private documentService: DocumentService,
         private snackBar: MatSnackBar,
+        private router: Router,
     ) { }
-
-    @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
-
-    private currentRow: any;
-
-    onUploadClick(row: any): void {
-        this.currentRow = row;
-        this.fileInput.nativeElement.click();
-    }
-
-    onFileSelected(event: Event): void {
-        const input = event.target as HTMLInputElement;
-        const file = input.files?.[0];
-        const requestId = this.responseIdParam ? Number(this.responseIdParam) : this.responseIdFromStateService;
-
-        if (file && this.currentRow) {
-
-            this.documentService.UploadDocumentInstance(
-                Number(requestId),
-                this.currentRow.requestDocumentId,
-                file
-            ).subscribe({
-                next: (response) => {
-                    this.snackBar.open('Document uploaded successfully!', '', {
-                        duration: 5000,
-                        verticalPosition: 'top'
-                    });
-                },
-                error: (error) => {
-                    console.error('Upload failed:', error);
-                    this.snackBar.open('Failed to upload document.', '', {
-                        duration: 5000,
-                        verticalPosition: 'top'
-                    });
-                },
-            });
-        }
-    }
 
     ngOnInit(): void {
         this.initializeFormGroup();
         this.initializeRequestDocuments();
 
-        if (this.responseIdParam || this.responseIdFromStateService) {
-            const requestId = this.responseIdParam ? Number(this.responseIdParam) : this.responseIdFromStateService;
-            this.initializeResponseDocuments(Number(requestId));
+        const requestId = this.responseIdParam
+            ? Number(this.responseIdParam)
+            : this.responseIdFromStateService;
+
+        if (requestId) {
+            this.initializeResponseDocuments(requestId);
         }
     }
 
@@ -160,19 +132,86 @@ export class ResponseDocumentsComponent implements OnInit {
     }
 
     initializeRequestDocuments(): void {
-        this.requestService.GetRequestRequiredDocumentsById(Number(this.sourceIdParam)).subscribe({
-            next: (response) => {
-                this.requiredDocumentsDatasource = response.documents.map((doc: { requestDocumentId: any; documentName: any; requiresNotarization: any; }) => ({
+        const requestId = Number(this.sourceIdParam);
+
+        forkJoin({
+            requiredDocs: this.requestService.GetRequestRequiredDocumentsById(requestId),
+            documentInstances: this.documentService.GetAllDocumentInstances(requestId),
+        }).subscribe({
+            next: ({ requiredDocs, documentInstances }) => {
+                const statusMap = new Map<number, number>();
+                documentInstances.documentInstances.forEach((instance: { requestDocumentId: number | null; documentInstanceStatusId: number; }) => {
+                    if (instance.requestDocumentId != null) {
+                        statusMap.set(instance.requestDocumentId, instance.documentInstanceStatusId);
+                    }
+                });
+
+                this.requiredDocumentsDatasource = requiredDocs.documents.map((doc: { documentName: any; requiresNotarization: any; requestDocumentId: number; }) => ({
+                    formName: doc.documentName,
                     notarizationRequired: doc.requiresNotarization,
-                    documentStatus: this.getDocumentStatus(doc),
+                    status: this.getStatusLabel(statusMap.get(doc.requestDocumentId)),
                     ...doc
                 }));
-                console.log('Request documents initialized successfully.', this.requiredDocumentsDatasource);
+
+                console.log('Merged document data:', this.requiredDocumentsDatasource);
             },
-            error: (error) => {
-                console.error('Error initializing request documents:', error);
+            error: (err) => {
+                console.error('Error loading documents:', err);
             }
         });
+    }
+
+    onUploadClick(row: any): void {
+        this.currentRow = row;
+        this.fileInput.nativeElement.click();
+    }
+
+    onFileSelected(event: Event): void {
+        const input = event.target as HTMLInputElement;
+        const file = input.files?.[0];
+        const requestId = this.responseIdParam ? Number(this.responseIdParam) : this.responseIdFromStateService;
+
+        if (file && this.currentRow) {
+
+            this.documentService.UploadDocumentInstance(
+                Number(requestId),
+                this.currentRow.requestDocumentId,
+                file
+            ).subscribe({
+                next: (response) => {
+                    if (response.isSuccess && this.currentRow?.requestDocumentId) {
+                        const rowToUpdate = this.requiredDocumentsDatasource.find(
+                            (doc: any) => doc.requestDocumentId === this.currentRow.requestDocumentId
+                        );
+
+                        if (rowToUpdate) {
+                            rowToUpdate.documentInstanceStatusId = 2;
+                            rowToUpdate.status = 'Complete';
+                        }
+
+                        this.snackBar.open('Document uploaded successfully!', '', {
+                            duration: 5000,
+                            verticalPosition: 'top'
+                        });
+                    }
+                },
+                error: (error) => {
+                    console.error('Upload failed:', error);
+                    this.snackBar.open('Failed to upload document.', '', {
+                        duration: 5000,
+                        verticalPosition: 'top'
+                    });
+                },
+            });
+        }
+    }
+
+    getStatusLabel(statusId?: number): string {
+        switch (statusId) {
+            case 1: return 'Incomplete';
+            case 2: return 'Complete';
+            default: return 'Unknown';
+        }
     }
 
     get optionalOfferorDocuments(): FormArray {
@@ -237,24 +276,8 @@ export class ResponseDocumentsComponent implements OnInit {
     }
 
     updateCombinedDatasource(): void {
-        // Use plain objects so template can access properties directly
         this.offerorDocumentsDatasource = this.optionalOfferorDocuments.controls.map(control => control.value);
-
-        // Update the display array for the *ngIf condition
         this.offerorOptionalDocuments = [...this.offerorDocumentsDatasource];
-
-        console.log('Combined documents updated:', this.offerorDocumentsDatasource);
-    }
-
-    // Helper method to determine document status
-    private getDocumentStatus(doc: any): string {
-        if (doc.fileName) {
-            return 'Complete';
-        } else if (doc.required) {
-            return 'Incomplete';
-        } else {
-            return 'Optional';
-        }
     }
 
     onDownloadOfferorDocument(row: { requestDocumentId: number; }): void {
@@ -302,8 +325,19 @@ export class ResponseDocumentsComponent implements OnInit {
             });
     }
 
+    goToOfferorProfilePage() {
+        this.router.navigate(['/offeror-profile']);
+    }
+
     ngOnDestroy(): void {
         this.destroy$.next();
         this.destroy$.complete();
     }
+
+    // openBidProposalDialog(): void {
+    //     this.dialog.open(BidProposalFormDialogComponent, {
+    //         width: '600px',
+    //         disableClose: true, // forces the user to take action
+    //     });
+    // }
 }
