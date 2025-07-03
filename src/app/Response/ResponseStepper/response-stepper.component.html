@@ -1,33 +1,53 @@
-<mat-stepper #stepper>
+<mat-stepper [linear]="true" #stepper>
   <mat-step label="Basics">
-      <response-basic #step1 [sourceIdParam]="sourceIdParam" [responseIdParam]="responseIdParam" (formValidityChange)="onFormValidityChange($event)"></response-basic>
-    <div>
-      <button mat-button matStepperNext (click)="saveResponse()"  [disabled]="!isStepValid">Next</button>
-    </div>
+    <ng-template matStepContent>
+      <response-basic #step1 [sourceIdParam]="sourceIdParam" [responseIdParam]="responseIdParam"
+        (formValidityChange)="onFormValidityChange($event)"></response-basic>
+      <div>
+        <button mat-button matStepperNext (click)="saveResponse()" [disabled]="!isStepValid">Next</button>
+      </div>
+    </ng-template>
   </mat-step>
 
   <mat-step label="Details">
-    <response-details #step2 [sourceIdParam]="sourceIdParam"></response-details>
-    <div>
-      <button type="Submit" mat-button matStepperPrevious>Back</button>
-      <button type="Submit" mat-button matStepperNext>Next</button>
-    </div>
-
+    <ng-template matStepContent>
+      <response-details #step2 [sourceIdParam]="sourceIdParam" [responseIdParam]="responseIdParam"
+        (autoFillStatusChange)="onAutoFillStatusChange($event)"></response-details>
+      <div>
+        <button mat-button matStepperPrevious>Back</button>
+        <button mat-button matStepperNext [disabled]="!isAutoFillComplete">Next</button>
+      </div>
+    </ng-template>
   </mat-step>
 
   <mat-step label="Documents">
-    <response-documents [sourceIdParam]="sourceIdParam" [responseIdParam]="responseIdParam"></response-documents>
-    <div>
-      <button type="Submit" mat-button matStepperPrevious>Back</button>
-      <button type="Submit" mat-button matStepperNext>Next</button>
-    </div>
-
+    <ng-template matStepContent>
+      <response-documents [sourceIdParam]="sourceIdParam" [responseIdParam]="responseIdParam"></response-documents>
+      <div>
+        <button mat-button matStepperPrevious>Back</button>
+        <button mat-button matStepperNext>Next</button>
+      </div>
+    </ng-template>
   </mat-step>
-    <mat-step label="Review">
+
+  <mat-step label="Review">
+    <ng-template matStepContent>
       <response-review [sourceIdParam]="sourceIdParam" [responseIdParam]="responseIdParam"></response-review>
-    <div>
-      <button type="Submit" mat-button matStepperPrevious>Back</button>
-      <button type="Submit" mat-button matStepperNext>Submit</button>
-    </div>
+      <div style="display: flex;">
+        <button mat-button matStepperPrevious>Back</button>
+        <div style="display: flex; align-items: center; gap: 4px;">
+          <button mat-button matStepperNext (click)="onSubmitOfferorResponse()">Submit</button>
+          <mat-icon style="font-size: medium; color: #0B74FD; cursor: pointer;" [appTooltip]="{
+            header: 'Incomplete',
+            body: 'You cannot yet submit your completed offer (submission packet), because there are forms that you still need to complete. Please make sure that your Vendor Profile page has been completed so that MuniVendor can autofill the documents and forms accordingly.',
+            actionLabel: 'Vendor Profile Page',
+            onAction: goToOfferorProfilePage,
+            width: '350px'
+            }">
+            info_outline
+          </mat-icon>
+        </div>
+      </div>
+    </ng-template>
   </mat-step>
 </mat-stepper>

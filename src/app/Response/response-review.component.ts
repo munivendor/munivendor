@@ -16,6 +16,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DocumentService } from '../shared/service/document.service';
 import { MatButtonModule } from '@angular/material/button';
+import { SubmitConfirmationDialogComponent } from './SubmitConfirmationDialog/submit-confirmation-dialog.component';
+import { MatDialog } from '@angular/material/dialog';
+import { TooltipDirective } from '../shared/directive/tooltip.directive';
+
 @Component({
     selector: 'response-review',
     standalone: true,
@@ -30,11 +34,18 @@ import { MatButtonModule } from '@angular/material/button';
         MatTableModule,
         MatIconModule,
         MatTooltipModule,
-        MatButtonModule
+        MatButtonModule,
+        TooltipDirective
     ]
 })
 
 export class ResponseReviewComponent implements OnInit, OnDestroy {
+    goToOfferorProfilePage() {
+        // Navigate to vendor profile page
+        console.log('Navigate to vendor profile');
+        this.router.navigate(['/offeror-profile']);
+      }
+      
     @Input() sourceIdParam?: string | null | undefined;
     @Input() responseIdParam?: string | null | undefined;
     responseIdFromStateService = this.stateService.getRequestId();
@@ -67,8 +78,22 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
         private router: Router,
         private snackBar: MatSnackBar,
         private categoryHierarchyService: CategoryHierarchyService,
-        private documentService: DocumentService
+        private documentService: DocumentService,
+        public dialog: MatDialog
     ) { }
+
+    onConfirmSubmission() {
+        this.openSubmitConfirmationDialog();
+    }
+
+    openSubmitConfirmationDialog(): void {
+        const requestId = this.responseIdParam ? Number(this.responseIdParam) : this.responseIdFromStateService;
+        this.dialog.open(SubmitConfirmationDialogComponent, {
+            width: '600px',
+            disableClose: true,
+            data: { responseId: requestId }
+        });
+    }
 
     onDownloadRequiredAgencyDocuments(row: { requestDocumentId: any; }): void {
         const requestDocumentId = row.requestDocumentId;
@@ -121,12 +146,11 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
     ngOnInit() {
         this.getCategoryHierarchy();
         this.initializeRequestDocuments();
-        if (this.responseIdParam || this.responseIdFromStateService)
-        {
+        if (this.responseIdParam || this.responseIdFromStateService) {
             const requestId = this.responseIdParam ? this.responseIdParam : this.responseIdFromStateService
             this.initializeResponseDocuments(Number(requestId));
         }
-        
+
 
         if (this.sourceIdParam) {
             this.getRequestObjDetails(Number(this.sourceIdParam));
@@ -230,7 +254,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
                     const { date: openDate } = this.splitDateTime(request.openDate);
                     const { date: contractStart } = this.splitDateTime(request.contractStart);
                     const { date: contractEnd } = this.splitDateTime(request.contractEnd);
-                    
+
                     this.requestFinalReviewDetails = {
                         ...request,
                         category,
@@ -253,7 +277,8 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
                         contractEnd: contractEnd
                     });
                     this.populateArrayFormControls('decisionMakers', decisionMakersMapped);
-                    this.populateArrayFormControls('requestDocuments', requiredRequestDocuments);
+                    this.populateArrayFormControls('requestDocuments', requiredRequestDocuments?.documents ?? []);
+
                 },
                 error => {
                     console.error('Error fetching data', error);
