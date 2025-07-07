@@ -85,29 +85,22 @@
       </div>
     </div>
 
-    <mat-menu #infoMenu="matMenu" class="info-menu">
-      <div mat-menu-item class="menu-content non-interactive" (mouseenter)="onMenuMouseEnter()"
-        (mouseleave)="onMenuMouseLeave()">
-        <div class="tooltip-text">
-          Please designate an authorizing official for this offer.
-          This can be done on the Offeror Profile Page.
-        </div>
-        <button mat-raised-button color="primary" (click)="navigateToProfile()">
-          Go to Profile
-        </button>
-      </div>
-    </mat-menu>
-
     <div class="field-container">
       <div class="inline-field">
-        <p>Authorizing official for this offer.<mat-icon 
-          [matMenuTriggerFor]="infoMenu" 
-          (mouseenter)="showMenu()"
-          (mouseleave)="scheduleHideMenu()"
-          color="primary" 
-          style="font-size: large; cursor: pointer; pointer-events: auto;">
-          info_outline
-        </mat-icon></p>
+        <div style="display: flex; align-items: center; gap: 4px;">
+          <span>Authorizing official for this offer.</span>
+
+          <mat-icon style="font-size: medium; color: #0B74FD; cursor: pointer;" [appTooltip]="{
+           header: 'Required',
+           body: 'Please designate an authorizing official for this offer.',
+           actionLabel: 'Vendor Profile Page',
+           onAction: goToOfferorProfilePage,
+           width: '320px',
+           }">
+            info_outline
+          </mat-icon>
+
+        </div>
         <mat-form-field appearance="fill" class="input-width">
           <mat-label>Authorizing Official</mat-label>
           <input matInput formControlName="authorizingOfficial" />

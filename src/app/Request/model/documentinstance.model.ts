@@ -5,4 +5,8 @@ export interface DocumentInstance {
     documentStatusId: number;
     documentStatus: string;
     documentName: string;
+    requestDocumentId: number;
+    documentInstanceStatusId: number; // (1=incomplete, 2= complete)
+    active: boolean;
+    documentInstanceStatus: string;
   }

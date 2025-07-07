@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RequestService } from '../Request/services/request.service';
 import { CommonModule } from '@angular/common';
@@ -17,11 +17,14 @@ import { Router } from '@angular/router';
 import { OfferorProfileService } from '../shared/service/offeror-profile.service';
 import { Response } from '../shared/model/response.model';
 import { StateService } from '../Request/services/state.service';
+import { TooltipDirective } from '../shared/directive/tooltip.directive';
+
 @Component({
   selector: 'response-basic',
   templateUrl: './response-basic.component.html',
   styleUrls: ['./response-basic.component.css'],
   standalone: true,
+  encapsulation: ViewEncapsulation.None,
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -31,7 +34,8 @@ import { StateService } from '../Request/services/state.service';
     MatCardModule,
     MatIconModule,
     MatButtonModule,
-    MatMenuModule
+    MatMenuModule,
+    TooltipDirective
   ],
   providers: [RequestService]
 })
@@ -51,10 +55,6 @@ export class ResponseBasicComponent implements OnInit {
   organizationId = this.stateService.getOrganizationId();
   responseIdFromStateService = this.stateService.getRequestId();
 
-  private hideTimeout: any;
-  private isOverMenu = false;
-  private isOverIcon = false;
-
   constructor(
     private requestService: RequestService,
     private fb: FormBuilder,
@@ -67,42 +67,6 @@ export class ResponseBasicComponent implements OnInit {
       responseName: ['', Validators.required],
       authorizingOfficial: [{ value: '', disabled: true }, Validators.required],
     });
-  }
-
-  showMenu() {
-    this.isOverIcon = true;
-    clearTimeout(this.hideTimeout);
-
-    if (!this.menuTrigger.menuOpen) {
-      setTimeout(() => this.menuTrigger.openMenu(), 50);
-    }
-  }
-
-  scheduleHideMenu() {
-    this.isOverIcon = false;
-
-    this.hideTimeout = setTimeout(() => {
-      if (!this.isOverMenu && !this.isOverIcon) {
-        this.menuTrigger.closeMenu();
-      }
-    }, 150);
-  }
-
-  onMenuMouseEnter() {
-    this.isOverMenu = true;
-    clearTimeout(this.hideTimeout);
-  }
-
-  onMenuMouseLeave() {
-    this.isOverMenu = false;
-    if (!this.isOverIcon) {
-      this.menuTrigger.closeMenu();
-    }
-  }
-
-  navigateToProfile() {
-    this.menuTrigger.closeMenu();
-    this.router.navigate(['/offeror-profile']);
   }
 
   private fetchAuthorizingOfficials(): void {
@@ -223,12 +187,12 @@ export class ResponseBasicComponent implements OnInit {
     if (!dateString) return '';
 
     const date = new Date(dateString);
-    const formattedDate = date.toLocaleDateString('en-US'); // MM/DD/YYYY
+    const formattedDate = date.toLocaleDateString('en-US');
     const formattedTime = date.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
       hour12: true
-    }); // HH:mm AM/PM
+    });
     return `${formattedDate} at ${formattedTime}`;
   }
 
@@ -288,7 +252,12 @@ export class ResponseBasicComponent implements OnInit {
 
   }
 
+  goToOfferorProfilePage() {
+    this.router.navigate(['/offeror-profile']);
+  }
+
   ngOnDestroy() {
-    clearTimeout(this.hideTimeout);
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

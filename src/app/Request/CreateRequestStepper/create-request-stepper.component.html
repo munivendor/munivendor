@@ -14,8 +14,8 @@
       <request-overview #step2 [idParam]="idParam"
         (formValidityChange)="onFormValidityChange($event)"></request-overview>
       <div>
-        <button type="Submit" mat-button matStepperPrevious>Back</button>
-        <button type="Submit" mat-button matStepperNext (click)="saveSections()" [disabled]="!isStepValid">Next</button>
+        <button mat-button matStepperPrevious>Back</button>
+        <button mat-button matStepperNext (click)="saveSections()" [disabled]="!isStepValid">Next</button>
       </div>
     </ng-template>
   </mat-step>
@@ -24,8 +24,8 @@
     <ng-template matStepContent>
       <request-required-documents [idParam]="idParam"></request-required-documents>
       <div>
-        <button type="Submit" mat-button matStepperPrevious>Back</button>
-        <button type="Submit" mat-button matStepperNext (click)="saveDocuments()">Next</button>
+        <button mat-button matStepperPrevious>Back</button>
+        <button mat-button matStepperNext (click)="saveDocuments()">Next</button>
       </div>
     </ng-template>
   </mat-step>
@@ -34,8 +34,8 @@
     <ng-template matStepContent>
       <request-review [paramRequestId]="requestId"></request-review>
       <div>
-        <button type="Submit" mat-button matStepperPrevious>Back</button>
-        <button type="Submit" mat-button matStepperNext (click)="updateRequestStatusToScheduled()">Submit</button>
+        <button mat-button matStepperPrevious>Back</button>
+        <button mat-button matStepperNext (click)="updateRequestStatusToScheduled()">Submit</button>
       </div>
     </ng-template>
   </mat-step>
