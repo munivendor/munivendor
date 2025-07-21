@@ -1,0 +1,61 @@
+<b>Offerors may choose one of the following notarization options.</b>
+<p>(1) Offerors may upload scanned copies of in-person notarized documents.</p>
+<p>
+  (2) Offerors may upload digitally notarized documents using a digital notary
+  service.
+</p>
+<p>(3) Offerors may use MuniVendor’s digital notary service.</p>
+
+<div style="display: inline">
+  <div class="booking-wrapper">
+    <!-- Calendar Column -->
+    <div class="calendar-section">
+      <div>
+        <b>Available Dates for Notary</b>
+        <span>(Only available dates are shown)</span>
+      </div>
+      <br />
+      <mat-card class="calendar-container">
+        <mat-calendar
+          *ngIf="isBlockedDatesLoaded"
+          [(selected)]="selectedDate"
+          (selectedChange)="onDateChange($event)"
+          [dateFilter]="myFilter"
+        >
+        </mat-calendar>
+      </mat-card>
+    </div>
+
+    <!-- Time Slot Column -->
+
+    <div class="time-section">
+      <b>Date Selected: {{ selectedDate | date : "fullDate" }}</b>
+      <br />
+      <br />
+      <div class="slot-scroll" *ngIf="selectedDate">
+        <button
+          mat-button
+          *ngFor="let time of availableTimeSlots"
+          [color]="selectedTime === time.display ? 'primary' : ''"
+          class="time-slot-btn"
+          (click)="selectTime(time.display)"
+        >
+          {{ time.display }}
+        </button>
+      </div>
+
+      <div class="confirm-container">
+        <button
+          mat-raised-button
+          color="primary"
+          class="fade-in"
+          [disabled]="!selectedTime"
+          (click)="confirmSelection()"
+        >
+          Confirm
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<br />

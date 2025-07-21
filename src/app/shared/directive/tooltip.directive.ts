@@ -15,11 +15,14 @@ export class TooltipDirective {
     onAction?: () => void;
     onClose?: () => void;
     width: string;
+    transformStyle?: string;
+    showCloseButton?: boolean;
+    showActionButton?: boolean;
   };
 
   private tooltipDelay: any;
 
-  constructor(private el: ElementRef, private tooltipService: TooltipService) { }
+  constructor(private el: ElementRef, private tooltipService: TooltipService) {}
 
   @HostListener('mouseenter')
   onMouseEnter() {
@@ -33,8 +36,11 @@ export class TooltipDirective {
         this.tooltipData.subtext,
         this.tooltipData.subtextTwo,
         this.tooltipData.actionLabel,
+        this.tooltipData.onAction,
         this.tooltipData.onClose,
-        this.tooltipData.onAction
+        this.tooltipData.transformStyle,
+        this.tooltipData.showCloseButton ?? true,
+        this.tooltipData.showActionButton ?? true
       );
     }, 100);
   }

@@ -1,5 +1,8 @@
 import {
-  ApplicationRef, createComponent, Injectable, Injector
+  ApplicationRef,
+  createComponent,
+  Injectable,
+  Injector,
 } from '@angular/core';
 import { CustomTooltipComponent } from '../../Response/CustomTooltip/custom-tooltip.component';
 
@@ -12,7 +15,7 @@ export class TooltipService {
   private hideTimeout: any;
   private tooltipVisible = false;
 
-  constructor(private appRef: ApplicationRef, private injector: Injector) { }
+  constructor(private appRef: ApplicationRef, private injector: Injector) {}
 
   showTooltip(
     anchor: HTMLElement,
@@ -22,8 +25,11 @@ export class TooltipService {
     subtext?: string,
     subtextTwo?: string,
     actionLabel?: string,
-    onAction?: () => void,
-    onClose?: () => void
+    onAction?: (() => void) | undefined,
+    onClose?: (() => void) | undefined,
+    transformStyle?: string,
+    showCloseButton: boolean = true,
+    showActionButton: boolean = true
   ) {
     if (this.tooltipVisible) return;
 
@@ -31,7 +37,7 @@ export class TooltipService {
 
     const tooltip = createComponent(CustomTooltipComponent, {
       environmentInjector: this.appRef.injector,
-      elementInjector: this.injector
+      elementInjector: this.injector,
     });
 
     tooltip.instance.headerText = headerText;
@@ -40,6 +46,10 @@ export class TooltipService {
     tooltip.instance.subtextTwo = subtextTwo ?? '';
     tooltip.instance.actionLabel = actionLabel;
     tooltip.instance.width = width;
+    tooltip.instance.transformStyle =
+      transformStyle || 'translate(-50%, -100%)';
+    tooltip.instance.showCloseButton = showCloseButton;
+    tooltip.instance.showActionButton = showActionButton;
 
     tooltip.instance.mouseEnter.subscribe(() => {
       this.isHoveringTooltip = true;
