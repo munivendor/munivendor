@@ -1,7 +1,46 @@
-<h2>Agency Required Forms and Documents</h2>
-<table mat-table [dataSource]="requiredDocumentsDatasource" class="mat-elevation-z8">
+<!-- legend for document status 'uploaded, not uploaded...' -->
+<!-- <div style="display: flex; justify-content: end">
+  <div></div>
+  <mat-card style="width: 180px; background-color: rgb(255, 243, 207)">
+    <mat-card-content>
+      <div style="display: flex">
+        <mat-icon color="primary">upload</mat-icon>
+        <div>: No File Uploaded</div>
+      </div>
+      <div style="display: flex">
+        <mat-icon style="color: green">upload</mat-icon>
+        <div>: File Uploaded</div>
+      </div>
+
+      <div style="display: flex">
+      <mat-icon style="color: gray">upload</mat-icon>
+      <div>: Upload Disabled (MV Autofill Selected)</div>
+    </div>
+    </mat-card-content>
+  </mat-card>
+</div> -->
+<h2>Agency Required Forms & Documents</h2>
+<table
+  mat-table
+  [dataSource]="requiredDocumentsDatasource"
+  class="mat-elevation-z8"
+>
   <ng-container matColumnDef="formName">
-    <th mat-header-cell *matHeaderCellDef>Form Name</th>
+    <th mat-header-cell *matHeaderCellDef>
+      Form Name
+      <mat-icon
+        style="font-size: medium; color: #0b74fd; cursor: pointer"
+        [appTooltip]="{
+          header: 'Form Name',
+          body: 'This column indicates the name of the Agency form you, the offeror are required to complete before submitting your offer.',
+          width: 'auto',
+          showCloseButton: false,
+          showActionButton: false
+        }"
+      >
+        info_outline
+      </mat-icon>
+    </th>
     <td mat-cell *matCellDef="let row">
       <!-- <a *ngIf="row.documentName === 'Bid Proposal Form'" (click)="openBidProposalDialog()" style="cursor: pointer; text-decoration: underline; color: #0B74FD">
         {{ row.documentName }}
@@ -12,47 +51,111 @@
     </td>
   </ng-container>
 
-  <ng-container matColumnDef="notarizationRequired">
-    <th mat-header-cell *matHeaderCellDef>Notarization Required</th>
+  <ng-container matColumnDef="fileActions">
+    <th mat-header-cell *matHeaderCellDef>
+      File Actions
+      <mat-icon
+        style="font-size: medium; color: #0b74fd; cursor: pointer"
+        [appTooltip]="{
+          header: 'File Actions',
+          body: 'Clicking on each download button will download a copy of the Agency required form. Please note that depending on when you click to download this document, you may be downloading the original document, or the auto-filled version of the document.',
+          subtext:
+            'Instead of using MuniVendor’s Autofill AI, you may upload a manually completed copy of each respective form.',
+          width: '500px',
+          showCloseButton: false,
+          showActionButton: false
+        }"
+      >
+        info_outline
+      </mat-icon>
+    </th>
     <td mat-cell *matCellDef="let row">
-      {{ row.notarizationRequired ? 'Yes' : 'No' }}
-    </td>
-  </ng-container>
-
-  <ng-container matColumnDef="download">
-    <th mat-header-cell *matHeaderCellDef>Download</th>
-    <td mat-cell *matCellDef="let row">
-      <button mat-icon-button color="primary" (click)="onDownloadRequiredAgencyDocuments(row)">
+      <button
+        style="margin-left: -12px"
+        mat-icon-button
+        color="primary"
+        (click)="onDownloadRequiredAgencyDocuments(row)"
+      >
         <mat-icon>download</mat-icon>
       </button>
-    </td>
-  </ng-container>
-
-  <ng-container matColumnDef="upload">
-    <th mat-header-cell *matHeaderCellDef>Upload</th>
-    <td mat-cell *matCellDef="let row">
-      <button mat-icon-button (click)="onUploadClick(row)">
+      <button
+        mat-icon-button
+        (click)="onUploadClick(row, 'notarizationNotRequired')"
+      >
         <mat-icon>upload</mat-icon>
       </button>
     </td>
   </ng-container>
-  <input #fileInput type="file" style="display: none;" (change)="onFileSelected($event)" accept=".pdf,.doc,.docx,.txt">
+  <input
+    #fileInput
+    type="file"
+    style="display: none"
+    (change)="onFileSelected($event)"
+    accept=".pdf,.doc,.docx,.txt"
+  />
 
-  <ng-container matColumnDef="status">
-    <th mat-header-cell *matHeaderCellDef>Status</th>
+  <!-- <ng-container matColumnDef="autofillStatus">
+    <th mat-header-cell *matHeaderCellDef>Autofill</th>
     <td mat-cell *matCellDef="let row">
-      <div style="display: flex; align-items: center; gap: 4px;">
-        <span>{{ row.status }}</span>
-        <mat-icon *ngIf="row.status === 'Incomplete'" style="font-size: medium; color: #0B74FD; cursor: pointer;"
+      <div style="display: flex; align-items: center; gap: 4px">
+        <span>{{ row.autofillStatus }}</span>
+        <mat-icon
+          *ngIf="row.autofillStatus === 'Incomplete'"
+          style="font-size: medium; color: #0b74fd; cursor: pointer"
           [appTooltip]="{
-          header: 'Incomplete',
-          body: 'To save you time and money, MuniVendor automatically fills out all agency required forms using content from your Vendor Profile page. MuniVendor also attaches all required documents, such as your BRC, W-9, etc. to your offer (completed response/submission package). Please complete your Vendor Profile Page so that MuniVendor can auto-fill the corresponding government agency documents.',
-          subtext: 'Alternatively, you can modify/edit these documents and forms by downloading them, filling them out, and then uploading them to the appropriate location in this section.',
-          subtextTwo: 'Please note that MuniVendor is not responsible for any errors and/or omissions in your offer (submission package) resulting from documents manually edited by you.',
-          actionLabel: 'Vendor Profile Page',
-          onAction: goToOfferorProfilePage,
+            header: 'Incomplete',
+            body: 'To save you time and money, MuniVendor automatically fills out all agency required forms using content from your Vendor Profile page. MuniVendor also attaches all required documents, such as your BRC, W-9, etc. to your offer (completed response/submission package). Please complete your Vendor Profile Page so that MuniVendor can auto-fill the corresponding government agency documents.',
+            subtext:
+              'Alternatively, you can modify/edit these documents and forms by downloading them, filling them out, and then uploading them to the appropriate location in this section.',
+            subtextTwo:
+              'Please note that MuniVendor is not responsible for any errors and/or omissions in your offer (submission package) resulting from documents manually edited by you.',
+            actionLabel: 'Vendor Profile Page',
+            onAction: goToOfferorProfilePage,
+            width: '500px',
+            transformStyle: 'translate(-103%, -48%)'
+          }"
+        >
+          info_outline
+        </mat-icon>
+      </div>
+    </td>
+  </ng-container> -->
+
+  <ng-container matColumnDef="documentInstanceStatus">
+    <th mat-header-cell *matHeaderCellDef>
+      Status
+      <mat-icon
+        style="font-size: medium; color: #0b74fd; cursor: pointer"
+        [appTooltip]="{
+          header: 'Status',
+          body: 'This column indicates the current status of the respective required Agency form. Incomplete means that either the required content is missing from your Vendor Profile Page, or you have not yet uploaded your manually completed form. Uploaded means that you you have elected to use a manually completed copy of the respective form. MV Autofill AI means that you are currently using a version of this Agency form that has been completed by the MuniVendor Autofill AI.',
           width: '500px',
-          }">
+          showCloseButton: false,
+          showActionButton: false
+        }"
+      >
+        info_outline
+      </mat-icon>
+    </th>
+    <td mat-cell *matCellDef="let row">
+      <div style="display: flex; align-items: center; gap: 4px">
+        <span>{{ row.documentInstanceStatus }}</span>
+        <mat-icon
+          *ngIf="row.documentInstanceStatus === 'Incomplete'"
+          style="font-size: medium; color: #0b74fd; cursor: pointer"
+          [appTooltip]="{
+            header: 'Incomplete',
+            body: 'To save you time and money, MuniVendor automatically fills out all agency required forms using content from your Vendor Profile page. MuniVendor also attaches all required documents, such as your BRC, W-9, etc. to your offer (completed response/submission package). Please complete your Vendor Profile Page so that MuniVendor can auto-fill the corresponding government agency documents.',
+            subtext:
+              'Alternatively, you can modify/edit these documents and forms by downloading them, filling them out, and then uploading them to the appropriate location in this section.',
+            subtextTwo:
+              'Please note that MuniVendor is not responsible for any errors and/or omissions in your offer (submission package) resulting from documents manually edited by you.',
+            actionLabel: 'Vendor Profile Page',
+            onAction: goToOfferorProfilePage,
+            width: '500px',
+            transformStyle: 'translate(-103%, -48%)'
+          }"
+        >
           info_outline
         </mat-icon>
       </div>
@@ -60,15 +163,150 @@
   </ng-container>
 
   <tr mat-header-row *matHeaderRowDef="agencyDocumentsColumns"></tr>
-  <tr mat-row *matRowDef="let row; columns: agencyDocumentsColumns;"></tr>
+  <tr mat-row *matRowDef="let row; columns: agencyDocumentsColumns"></tr>
 </table>
 <br />
 
-<h2>Offeror Uploads<span style="font-size: 16px; font-weight: normal;">(Upload your response here. Include items such as
-    your proposal, brochures, and any other offer-specific documents that are relevant to this opportunity.)</span></h2>
+<h2>Agency Required Forms & Documents (Notarization Required)</h2>
+<div
+  *ngIf="
+    notarizationRequiredDocumentsDatasource.length > 0;
+    else noRequiredNotarizationDocuments
+  "
+>
+  <table
+    mat-table
+    [dataSource]="notarizationRequiredDocumentsDatasource"
+    class="mat-elevation-z8"
+  >
+    <ng-container matColumnDef="formName">
+      <th mat-header-cell *matHeaderCellDef>
+        Form Name
+        <mat-icon
+          style="font-size: medium; color: #0b74fd; cursor: pointer"
+          [appTooltip]="{
+            header: 'Form Name',
+            body: 'This column indicates the name of the Agency form you, the offeror are required to complete before submitting your offer. Notarization for each of these forms is required.',
+            width: 'auto',
+            showCloseButton: false,
+            showActionButton: false
+          }"
+        >
+          info_outline
+        </mat-icon>
+      </th>
+      <td mat-cell *matCellDef="let row">
+        <span>
+          {{ row.documentName }}
+        </span>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="fileActions">
+      <th mat-header-cell *matHeaderCellDef>
+        File Actions
+        <mat-icon
+          style="font-size: medium; color: #0b74fd; cursor: pointer"
+          [appTooltip]="{
+            header: 'File Actions',
+            body: 'Clicking on each download button will download a copy of the Agency required form. Please note that depending on when you click to download this document, you may be downloading the original document, or the auto-filled version of the document.',
+            subtext:
+              'Instead of using MuniVendor’s Autofill AI, you may upload a manually completed copy of each respective form.',
+            width: '500px',
+            showCloseButton: false,
+            showActionButton: false
+          }"
+        >
+          info_outline
+        </mat-icon>
+      </th>
+      <td mat-cell *matCellDef="let row">
+        <button
+          style="margin-left: -12px"
+          mat-icon-button
+          color="primary"
+          (click)="onDownloadRequiredAgencyDocuments(row)"
+        >
+          <mat-icon>download</mat-icon>
+        </button>
+        <button
+          mat-icon-button
+          (click)="onUploadClick(row, 'notarizationRequired')"
+        >
+          <mat-icon>upload</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="documentInstanceStatus">
+      <th mat-header-cell *matHeaderCellDef>
+        Status
+        <mat-icon
+          style="font-size: medium; color: #0b74fd; cursor: pointer"
+          [appTooltip]="{
+            header: 'Status',
+            body: 'This column indicates the current status of the respective required Agency form. Incomplete means that either the required content is missing from your Vendor Profile Page, or you have not yet uploaded your manually completed form. Uploaded means that you you have elected to use a manually completed copy of the respective form. MV Autofill AI means that you are currently using a version of this Agency form that has been completed by the MuniVendor Autofill AI.',
+            width: '500px',
+            showCloseButton: false,
+            showActionButton: false
+          }"
+        >
+          info_outline
+        </mat-icon>
+      </th>
+      <td mat-cell *matCellDef="let row">
+        <div style="display: flex; align-items: center; gap: 4px">
+          <span>{{ row.documentInstanceStatus }}</span>
+          <mat-icon
+            *ngIf="row.documentInstanceStatus === 'Incomplete'"
+            style="font-size: medium; color: #0b74fd; cursor: pointer"
+            [appTooltip]="{
+              header: 'Incomplete',
+              body: 'To save you time and money, MuniVendor automatically fills out all agency required forms using content from your Vendor Profile page. MuniVendor also attaches all required documents, such as your BRC, W-9, etc. to your offer (completed response/submission package). Please complete your Vendor Profile Page so that MuniVendor can auto-fill the corresponding government agency documents.',
+              subtext:
+                'Alternatively, you can modify/edit these documents and forms by downloading them, filling them out, and then uploading them to the appropriate location in this section.',
+              subtextTwo:
+                'Please note that MuniVendor is not responsible for any errors and/or omissions in your offer (submission package) resulting from documents manually edited by you.',
+              actionLabel: 'Vendor Profile Page',
+              onAction: goToOfferorProfilePage,
+              width: '500px',
+              transformStyle: 'translate(-103%, -48%)'
+            }"
+          >
+            info_outline
+          </mat-icon>
+        </div>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="notarizationRequiredColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: notarizationRequiredColumns"></tr>
+  </table>
+</div>
+
+<ng-template #noRequiredNotarizationDocuments>
+  <p style="margin-top: 1rem">
+    There are no documents that needs to be notarized for this request.
+  </p>
+</ng-template>
+
+<br />
+<h2>
+  Offeror Uploads<span style="font-size: 16px; font-weight: normal"
+    >(Upload your response here. Include items such as your proposal, brochures,
+    and any other offer-specific documents that are relevant to this
+    opportunity.)</span
+  >
+</h2>
 <form [formGroup]="responseDocumentsFormGroup">
-  <div *ngIf="offerorOptionalDocuments.length > 0; else noOfferorOptionalDocuments">
-    <table mat-table [dataSource]="offerorDocumentsDatasource" class="mat-elevation-z8">
+  <div
+    *ngIf="offerorOptionalDocuments.length > 0; else noOfferorOptionalDocuments"
+  >
+    <table
+      mat-table
+      [dataSource]="offerorDocumentsDatasource"
+      class="mat-elevation-z8"
+    >
       <ng-container matColumnDef="formName">
         <th mat-header-cell *matHeaderCellDef>Form Name</th>
         <td mat-cell *matCellDef="let row">
@@ -79,7 +317,11 @@
       <ng-container matColumnDef="download">
         <th mat-header-cell *matHeaderCellDef>Download</th>
         <td mat-cell *matCellDef="let row">
-          <button mat-icon-button color="primary" (click)="onDownloadOfferorDocument(row)">
+          <button
+            mat-icon-button
+            color="primary"
+            (click)="onDownloadOfferorDocument(row)"
+          >
             <mat-icon>download</mat-icon>
           </button>
         </td>
@@ -88,25 +330,37 @@
       <ng-container matColumnDef="delete">
         <th mat-header-cell *matHeaderCellDef></th>
         <td mat-cell *matCellDef="let row">
-          <button mat-icon-button color="primary" (click)="deleteForm(row.documentId)">
+          <button
+            mat-icon-button
+            color="primary"
+            (click)="deleteForm(row.documentId)"
+          >
             <mat-icon color="warn">delete</mat-icon>
           </button>
         </td>
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="offerorDocumentsColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: offerorDocumentsColumns;"></tr>
+      <tr mat-row *matRowDef="let row; columns: offerorDocumentsColumns"></tr>
     </table>
   </div>
 
   <ng-template #noOfferorOptionalDocuments>
-    <p style="margin-top: 1rem;">
+    <p style="margin-top: 1rem">
       Upload documents you would like to be added for this bid.
     </p>
   </ng-template>
   <br />
-  <button mat-raised-button color="primary" type="button"
-    (click)="openFileUploadDialog(+(responseIdParam ?? responseIdFromStateService ?? 0))">
+  <button
+    mat-raised-button
+    color="primary"
+    type="button"
+    (click)="
+      openFileUploadDialog(
+        +(responseIdParam ?? responseIdFromStateService ?? 0)
+      )
+    "
+  >
     Add
   </button>
 </form>

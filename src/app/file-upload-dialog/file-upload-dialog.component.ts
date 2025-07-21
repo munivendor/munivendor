@@ -5,7 +5,13 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { Document } from '../Request/model/document.model';
 import { RequestService } from '../Request/services/request.service';
-import { MatDialogActions, MatDialogContent, MatDialogRef, MatDialogTitle, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import {
+  MatDialogActions,
+  MatDialogContent,
+  MatDialogRef,
+  MatDialogTitle,
+  MAT_DIALOG_DATA,
+} from '@angular/material/dialog';
 
 export type FileUploadDialogData =
   | { organizationId: number; municipalityDocuments: Document[] }
@@ -22,10 +28,9 @@ export type FileUploadDialogData =
     MatButtonModule,
     MatDialogTitle,
     MatDialogContent,
-    MatDialogActions
+    MatDialogActions,
   ],
 })
-
 export class FileUploadDialogComponent {
   selectedFile!: File;
   documentName: string = '';
@@ -36,7 +41,7 @@ export class FileUploadDialogComponent {
     private requestService: RequestService,
     public dialogRef: MatDialogRef<FileUploadDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: FileUploadDialogData
-  ) { }
+  ) {}
 
   ngOnInit(): void {
     if ('municipalityDocuments' in this.data) {
@@ -63,34 +68,42 @@ export class FileUploadDialogComponent {
         documentId: null,
       };
 
-      this.requestService.SaveOrganizationDocument(this.data.organizationId, municipalityDocument, this.selectedFile)
+      this.requestService
+        .SaveOrganizationDocument(
+          this.data.organizationId,
+          municipalityDocument,
+          this.selectedFile
+        )
         .subscribe((response) => {
           console.log('Document uploaded and saved successfully:', response);
           this.dialogRef.close({
             documentId: response.documentId,
             documentName: municipalityDocument.documentName,
+            organizationDocumentId: response.organizationDocumentId,
             documentRequired: true,
             selected: true,
-            notarization: 'Not Required'
+            notarization: 'Not Required',
           });
         });
-    }
-    else if ('requestId' in this.data) {
+    } else if ('requestId' in this.data) {
       const offerorDocument = {
         requestId: this.data.responseId,
         documentName: this.documentName,
         documentId: null,
       };
 
-      this.requestService.SaveOfferorDocument(Number(this.data.requestId), offerorDocument, this.selectedFile)
+      this.requestService
+        .SaveOfferorDocument(
+          Number(this.data.requestId),
+          offerorDocument,
+          this.selectedFile
+        )
         .subscribe((response) => {
           console.log('Document uploaded and saved successfully:', response);
           this.dialogRef.close({
             documentId: response.documentId,
             documentName: this.documentName,
-            documentRequired: true,
-            selected: true,
-            notarization: 'Not Required'
+            requestDocumentId: response.requestDocumentId,
           });
         });
     }

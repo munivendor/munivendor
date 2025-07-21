@@ -1,4 +1,11 @@
-import { Component, EventEmitter, Inject, Input, OnInit, Output } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  // Inject,
+  Input,
+  OnInit,
+  Output,
+} from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RequestService } from '../Request/services/request.service';
 import { RequestSection } from '../Request/model/requestsection.model';
@@ -10,9 +17,18 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { DocumentService } from '../shared/service/document.service';
-import { delay, EMPTY, expand, of, Subject, switchMap, takeUntil } from 'rxjs';
+import {
+  // delay, EMPTY, expand, of, switchMap,
+  Subject,
+  takeUntil,
+} from 'rxjs';
 import { StateService } from '../Request/services/state.service';
-import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import {
+  // MAT_DIALOG_DATA,
+  MatDialog,
+  MatDialogModule,
+  // MatDialogRef,
+} from '@angular/material/dialog';
 
 @Component({
   selector: 'response-details',
@@ -27,16 +43,16 @@ import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angu
     MatFormFieldModule,
     MatCardModule,
     MatButtonModule,
-    MatDialogModule
+    MatDialogModule,
   ],
-
 })
 export class ResponseDetailsComponent implements OnInit {
   @Input() sourceIdParam?: string | null | undefined;
   @Input() responseIdParam?: string | null | undefined;
   @Input() requestId?: number;
   @Output() formValidityChange = new EventEmitter<boolean>();
-  @Output() autoFillStatusChange = new EventEmitter<boolean>();
+  // commented out code are all needed for autofill
+  // @Output() autoFillStatusChange = new EventEmitter<boolean>();
 
   requestSections: RequestSection[] = [];
   responseForm: FormGroup;
@@ -44,12 +60,12 @@ export class ResponseDetailsComponent implements OnInit {
 
   private destroy$ = new Subject<void>();
 
-  private dialogRef?: MatDialogRef<AutoFillStatusDialogComponent>;
-  private userClosedDialog = false;
-  private isAutoFillDone = false;
-  private hasShownDialog = false;
-  private pollFrequencyMs: number = 5000;
-  private hasShownSuccessDialog = false;
+  // private dialogRef?: MatDialogRef<AutoFillStatusDialogComponent>;
+  // private userClosedDialog = false;
+  // private isAutoFillDone = false;
+  // private hasShownDialog = false;
+  // private pollFrequencyMs: number = 5000;
+  // private hasShownSuccessDialog = false;
 
   constructor(
     private requestService: RequestService,
@@ -66,77 +82,76 @@ export class ResponseDetailsComponent implements OnInit {
   ngOnInit(): void {
     this.initializaRequestSections();
 
-    const requestId = this.responseIdParam
-      ? Number(this.responseIdParam)
-      : this.responseIdFromStateService;
+    // const requestId = this.responseIdParam
+    //   ? Number(this.responseIdParam)
+    //   : this.responseIdFromStateService;
+    // if (requestId) {
+    //   of(null)
+    //     .pipe(
+    //       switchMap(() => this.documentService.GetAutoFillStatus(requestId)),
+    //       expand(() =>
+    //         this.isAutoFillDone
+    //           ? EMPTY
+    //           : this.documentService.GetAutoFillStatus(requestId).pipe(delay(this.pollFrequencyMs))
+    //       ),
+    //       takeUntil(this.destroy$)
+    //     )
+    //     .subscribe({
+    //       next: (response) => {
+    //         const isComplete = response.isAutoFillComplete;
+    //         const frequencySeconds = response.pollFrequency ?? 5;
+    //         this.pollFrequencyMs = frequencySeconds * 1000;
+    //         this.autoFillStatusChange.emit(isComplete);
 
-    if (requestId) {
-      of(null)
-        .pipe(
-          switchMap(() => this.documentService.GetAutoFillStatus(requestId)),
-          expand(() =>
-            this.isAutoFillDone
-              ? EMPTY
-              : this.documentService.GetAutoFillStatus(requestId).pipe(delay(this.pollFrequencyMs))
-          ),
-          takeUntil(this.destroy$)
-        )
-        .subscribe({
-          next: (response) => {
-            const isComplete = response.isAutoFillComplete;
-            const frequencySeconds = response.pollFrequency ?? 5;
-            this.pollFrequencyMs = frequencySeconds * 1000;
-            this.autoFillStatusChange.emit(isComplete);
+    //         if (isComplete) {
+    //           this.isAutoFillDone = true;
 
-            if (isComplete) {
-              this.isAutoFillDone = true;
+    //           const successMessage = 'The website has completed auto-filling your forms and documents. ' +
+    //             'Click on the Next button at the bottom right to continue to Step 3.';
 
-              const successMessage = 'The website has completed auto-filling your forms and documents. ' +
-                'Click on the Next button at the bottom right to continue to Step 3.';
+    //           if (this.dialogRef && !this.userClosedDialog) {
+    //             this.dialogRef.componentInstance.data.message = successMessage;
+    //             this.hasShownSuccessDialog = true;
+    //           } else if (!this.hasShownSuccessDialog) {
+    //             this.dialogRef = this.dialog.open(AutoFillStatusDialogComponent, {
+    //               width: '400px',
+    //               disableClose: false,
+    //               data: { message: successMessage }
+    //             });
 
-              if (this.dialogRef && !this.userClosedDialog) {
-                this.dialogRef.componentInstance.data.message = successMessage;
-                this.hasShownSuccessDialog = true;
-              } else if (!this.hasShownSuccessDialog) {
-                this.dialogRef = this.dialog.open(AutoFillStatusDialogComponent, {
-                  width: '400px',
-                  disableClose: false,
-                  data: { message: successMessage }
-                });
+    //             this.hasShownSuccessDialog = true;
 
-                this.hasShownSuccessDialog = true;
+    //             this.dialogRef.afterClosed().subscribe(() => {
+    //               this.dialogRef = undefined;
+    //             });
+    //           }
+    //         } else {
+    //           const loadingMessage =
+    //             'The website is currently auto-filling your forms and documents. ' +
+    //             'This process usually takes under a minute. The Next button will be enabled once it’s complete.';
 
-                this.dialogRef.afterClosed().subscribe(() => {
-                  this.dialogRef = undefined;
-                });
-              }
-            } else {
-              const loadingMessage =
-                'The website is currently auto-filling your forms and documents. ' +
-                'This process usually takes under a minute. The Next button will be enabled once it’s complete.';
+    //           if (!this.dialogRef && !this.userClosedDialog && !this.hasShownDialog) {
+    //             this.dialogRef = this.dialog.open(AutoFillStatusDialogComponent, {
+    //               width: '400px',
+    //               disableClose: false,
+    //               data: { message: loadingMessage }
+    //             });
 
-              if (!this.dialogRef && !this.userClosedDialog && !this.hasShownDialog) {
-                this.dialogRef = this.dialog.open(AutoFillStatusDialogComponent, {
-                  width: '400px',
-                  disableClose: false,
-                  data: { message: loadingMessage }
-                });
+    //             this.hasShownDialog = true;
 
-                this.hasShownDialog = true;
-
-                this.dialogRef.afterClosed().subscribe(() => {
-                  this.userClosedDialog = true;
-                  this.dialogRef = undefined;
-                });
-              }
-            }
-          },
-          error: (err) => {
-            console.error('Polling error for auto-fill:', err);
-            this.autoFillStatusChange.emit(false);
-          }
-        });
-    }
+    //             this.dialogRef.afterClosed().subscribe(() => {
+    //               this.userClosedDialog = true;
+    //               this.dialogRef = undefined;
+    //             });
+    //           }
+    //         }
+    //       },
+    //       error: (err) => {
+    //         console.error('Polling error for auto-fill:', err);
+    //         this.autoFillStatusChange.emit(false);
+    //       }
+    //     });
+    // }
   }
 
   initializaRequestSections(): void {
@@ -146,7 +161,8 @@ export class ResponseDetailsComponent implements OnInit {
   }
 
   getRequestSectionsById(requestId: number): void {
-    this.requestService.GetRequestSections(requestId)
+    this.requestService
+      .GetRequestSections(requestId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
@@ -158,7 +174,7 @@ export class ResponseDetailsComponent implements OnInit {
         },
         complete: () => {
           console.log('Finished loading request sections.');
-        }
+        },
       });
   }
   formattedHtml(html: string): string {
@@ -171,8 +187,7 @@ export class ResponseDetailsComponent implements OnInit {
 
   downloadPDF() {
     this.documentService.downloadPDF().subscribe((response) => {
-      const blob = new Blob([response],
-        { type: 'application/pdf' });
+      const blob = new Blob([response], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -187,19 +202,19 @@ export class ResponseDetailsComponent implements OnInit {
     this.destroy$.complete();
   }
 }
-@Component({
-  selector: 'app-auto-fill-status-dialog',
-  template: `
-    <mat-dialog-content>
-    <p>{{ data.message }}</p>
-    </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>OK</button>
-    </mat-dialog-actions>
-  `,
-  standalone: true,
-  imports: [CommonModule, MatDialogModule, MatButtonModule]
-})
-export class AutoFillStatusDialogComponent {
-  constructor(@Inject(MAT_DIALOG_DATA) public data: { message: string }) { }
-}
+// @Component({
+//   selector: 'app-auto-fill-status-dialog',
+//   template: `
+//     <mat-dialog-content>
+//       <p>{{ data.message }}</p>
+//     </mat-dialog-content>
+//     <mat-dialog-actions align="end">
+//       <button mat-button mat-dialog-close>OK</button>
+//     </mat-dialog-actions>
+//   `,
+//   standalone: true,
+//   imports: [CommonModule, MatDialogModule, MatButtonModule],
+// })
+// export class AutoFillStatusDialogComponent {
+//   constructor(@Inject(MAT_DIALOG_DATA) public data: { message: string }) {}
+// }
