@@ -15,6 +15,8 @@ import { StateService } from '../../Request/services/state.service';
 import { TooltipDirective } from '../../shared/directive/tooltip.directive';
 import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+// import { ResponseNotarizationComponent } from '../response-notarization.component';
+
 @Component({
   selector: 'response-stepper',
   templateUrl: 'response-stepper.component.html',
@@ -34,15 +36,20 @@ import { MatIconModule } from '@angular/material/icon';
     ResponseDocumentsComponent,
     ResponseReviewComponent,
     TooltipDirective,
-    MatIconModule
+    MatIconModule,
+    // ResponseNotarizationComponent
   ],
 })
-
 export class ResponseStepper implements OnDestroy {
-  @ViewChild(ResponseBasicComponent) responseBasicComponent!: ResponseBasicComponent;
-  @ViewChild(ResponseDetailsComponent) responseDetailsComponent!: ResponseDetailsComponent;
-  @ViewChild(ResponseDocumentsComponent) responseDocumentsComponent!: ResponseDocumentsComponent;
-  @ViewChild(ResponseReviewComponent) responseReviewComponent!: ResponseReviewComponent;
+  @ViewChild(ResponseBasicComponent)
+  responseBasicComponent!: ResponseBasicComponent;
+  @ViewChild(ResponseDetailsComponent)
+  responseDetailsComponent!: ResponseDetailsComponent;
+  @ViewChild(ResponseDocumentsComponent)
+  responseDocumentsComponent!: ResponseDocumentsComponent;
+  @ViewChild(ResponseReviewComponent)
+  responseReviewComponent!: ResponseReviewComponent;
+  // @ViewChild(ResponseNotarizationComponent) responseNotarizationComponent!: ResponseNotarizationComponent;
 
   private destroy$ = new Subject<void>();
 
@@ -58,11 +65,14 @@ export class ResponseStepper implements OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private stateService: StateService) {
+    private stateService: StateService
+  ) {
     this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       this.sourceIdParam = params.get('sourceId');
       this.requestId = this.sourceIdParam ? +this.sourceIdParam : 0;
-      this.responseIdParam = params.get('responseId') ? params.get('responseId') : this.stateService.getRequestId()?.toString();
+      this.responseIdParam = params.get('responseId')
+        ? params.get('responseId')
+        : this.stateService.getRequestId()?.toString();
     });
   }
 

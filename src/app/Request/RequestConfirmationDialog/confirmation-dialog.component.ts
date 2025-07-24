@@ -1,7 +1,15 @@
 import { Component, Inject, EventEmitter, Output, Input } from '@angular/core';
-import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import {
+  MatDialog,
+  MatDialogRef,
+  MAT_DIALOG_DATA,
+} from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialogTitle, MatDialogContent, MatDialogActions } from '@angular/material/dialog';
+import {
+  MatDialogTitle,
+  MatDialogContent,
+  MatDialogActions,
+} from '@angular/material/dialog';
 import { FormsModule } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -29,7 +37,10 @@ export interface DialogData {
   ],
 })
 export class ConfirmationDialog {
-  @Output() cancellationRequested = new EventEmitter<{ request: any, action: string }>();
+  @Output() cancellationRequested = new EventEmitter<{
+    request: any;
+    action: string;
+  }>();
   @Input() onCancelUpdateRequestStatus!: (request: any, action: string) => void;
 
   constructor(
@@ -37,11 +48,13 @@ export class ConfirmationDialog {
     @Inject(MAT_DIALOG_DATA) public requestObjAndUserAction: DialogData,
     public dialog: MatDialog,
     private router: Router
-  ) { }
+  ) {}
 
   getConfirmationMessage(): string {
     if (this.requestObjAndUserAction.action === 'cancel') {
-      const statusDesc = this.requestObjAndUserAction.request.requestStatus?.requestStatusDesc ?? '';
+      const statusDesc =
+        this.requestObjAndUserAction.request.requestStatus?.requestStatusDesc ??
+        '';
       if (statusDesc === 'Scheduled') {
         return 'This request is scheduled to go live and canceling it will revert it back to a Draft. Are you sure you want to cancel this request?';
       } else if (statusDesc === 'Live') {
@@ -61,17 +74,25 @@ export class ConfirmationDialog {
     }
   }
 
-
   onNoClick(): void {
     this.dialogRef.close(false);
   }
 
   confirm(action: string, request: any): void {
-
-    if (this.requestObjAndUserAction.action === 'cancel' && request.requestStatus.requestStatusDesc === "Live") {
+    if (
+      this.requestObjAndUserAction.action === 'cancel' &&
+      request.requestStatus.requestStatusDesc === 'Live'
+    ) {
       this.openCancellationReasonDialog(action, request);
-    } else if (this.requestObjAndUserAction.action === 'cancel' && request.requestStatus.requestStatusDesc === "Scheduled") {
+      this.dialogRef.close(true);
+      return;
+    } else if (
+      this.requestObjAndUserAction.action === 'cancel' &&
+      request.requestStatus.requestStatusDesc === 'Scheduled'
+    ) {
       this.onCancelUpdateRequestStatus(request, action);
+      this.dialogRef.close(true);
+      return;
     }
 
     // navigates to edit view for agency requests or offeror responses
@@ -89,11 +110,13 @@ export class ConfirmationDialog {
   openCancellationReasonDialog(action: string, request: any): void {
     const cancelDialogRef = this.dialog.open(CancellationReasonDialog, {
       width: '500px',
-      data: { action, request }
+      data: { action, request },
     });
 
-    cancelDialogRef.componentInstance.cancelConfirmed.subscribe((cancelData: { request: any, action: string }) => {
-      this.cancellationRequested.emit(cancelData);
-    });
+    cancelDialogRef.componentInstance.cancelConfirmed.subscribe(
+      (cancelData: { request: any; action: string }) => {
+        this.cancellationRequested.emit(cancelData);
+      }
+    );
   }
 }

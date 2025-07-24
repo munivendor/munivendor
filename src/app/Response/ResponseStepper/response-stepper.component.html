@@ -1,28 +1,55 @@
-<mat-stepper [linear]="true" #stepper>
+<mat-stepper [linear]="true" #stepper style="margin-top: 20rem">
   <mat-step label="Basics">
     <ng-template matStepContent>
-      <response-basic #step1 [sourceIdParam]="sourceIdParam" [responseIdParam]="responseIdParam"
-        (formValidityChange)="onFormValidityChange($event)"></response-basic>
+      <response-basic
+        #step1
+        [sourceIdParam]="sourceIdParam"
+        [responseIdParam]="responseIdParam"
+        (formValidityChange)="onFormValidityChange($event)"
+      ></response-basic>
       <div>
-        <button mat-button matStepperNext (click)="saveResponse()" [disabled]="!isStepValid">Next</button>
+        <button
+          mat-button
+          matStepperNext
+          (click)="saveResponse()"
+          [disabled]="!isStepValid"
+        >
+          Next
+        </button>
+        <!-- for testing -->
+        <!-- <button mat-button matStepperNext (click)="saveResponse()">Next</button> -->
       </div>
     </ng-template>
   </mat-step>
 
   <mat-step label="Details">
     <ng-template matStepContent>
-      <response-details #step2 [sourceIdParam]="sourceIdParam" [responseIdParam]="responseIdParam"
-        (autoFillStatusChange)="onAutoFillStatusChange($event)"></response-details>
+      <response-details
+        #step2
+        [sourceIdParam]="sourceIdParam"
+        [responseIdParam]="responseIdParam"
+      ></response-details>
+      <!-- parameter for response-details (autoFillStatusChange)="onAutoFillStatusChange($event)" -->
       <div>
         <button mat-button matStepperPrevious>Back</button>
-        <button mat-button matStepperNext [disabled]="!isAutoFillComplete">Next</button>
+        <button mat-button matStepperNext [disabled]="!isAutoFillComplete">
+          Next
+        </button>
+        <!-- for testing -->
+        <!-- <button mat-button matStepperNext>Next</button> -->
       </div>
     </ng-template>
   </mat-step>
 
   <mat-step label="Documents">
     <ng-template matStepContent>
-      <response-documents [sourceIdParam]="sourceIdParam" [responseIdParam]="responseIdParam"></response-documents>
+      <!-- <response-documents
+        [sourceIdParam]="sourceIdParam"
+        [responseIdParam]="responseIdParam"
+      ></response-documents> -->
+      <response-documents
+        [responseIdParam]="responseIdParam"
+      ></response-documents>
       <div>
         <button mat-button matStepperPrevious>Back</button>
         <button mat-button matStepperNext>Next</button>
@@ -30,20 +57,42 @@
     </ng-template>
   </mat-step>
 
+  <!-- <mat-step label="Notarization Scheduler">
+    <ng-template matStepContent>
+      <response-notarization
+        [sourceIdParam]="sourceIdParam"
+        [responseIdParam]="responseIdParam"
+      ></response-notarization>
+      <div>
+        <button mat-button matStepperPrevious>Back</button>
+        <button mat-button matStepperNext>Next</button>
+      </div>
+    </ng-template>
+  </mat-step> -->
+
   <mat-step label="Review">
     <ng-template matStepContent>
-      <response-review [sourceIdParam]="sourceIdParam" [responseIdParam]="responseIdParam"></response-review>
-      <div style="display: flex;">
+      <response-review
+        [sourceIdParam]="sourceIdParam"
+        [responseIdParam]="responseIdParam"
+      ></response-review>
+      <div style="display: flex">
         <button mat-button matStepperPrevious>Back</button>
-        <div style="display: flex; align-items: center; gap: 4px;">
-          <button mat-button matStepperNext (click)="onSubmitOfferorResponse()">Submit</button>
-          <mat-icon style="font-size: medium; color: #0B74FD; cursor: pointer;" [appTooltip]="{
-            header: 'Incomplete',
-            body: 'You cannot yet submit your completed offer (submission packet), because there are forms that you still need to complete. Please make sure that your Vendor Profile page has been completed so that MuniVendor can autofill the documents and forms accordingly.',
-            actionLabel: 'Vendor Profile Page',
-            onAction: goToOfferorProfilePage,
-            width: '350px'
-            }">
+        <div style="display: flex; align-items: center; gap: 4px">
+          <button mat-button matStepperNext (click)="onSubmitOfferorResponse()">
+            Submit
+          </button>
+          <mat-icon
+            style="font-size: medium; color: #0b74fd; cursor: pointer"
+            [appTooltip]="{
+              header: 'Incomplete',
+              body: 'You cannot yet submit your completed offer (submission packet), because there are forms that you still need to complete. Please make sure that your Vendor Profile page has been completed so that MuniVendor can autofill the documents and forms accordingly.',
+              actionLabel: 'Vendor Profile Page',
+              onAction: goToOfferorProfilePage,
+              width: '350px',
+              transformStyle: 'translate(-48%, -101%)'
+            }"
+          >
             info_outline
           </mat-icon>
         </div>

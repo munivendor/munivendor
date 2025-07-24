@@ -1,4 +1,3 @@
-/* forms-grid.component.css */
 .request-card {
     margin: 20px;
     padding: 20px;
@@ -9,10 +8,10 @@
   }
   
   .mat-column-formName {
-    width: 25%;
+    width: 50%;
   }
   
-  .mat-column-notarizationRequired {
+  .mat-column-fileActions {
     width: 15%;
   }
   
@@ -22,7 +21,7 @@
     text-align: center;
   }
   
-  .mat-column-completionStatus {
+  .mat-column-documentInstanceStatus {
     width: 15%;
   }
   
@@ -33,7 +32,7 @@
   }
   
   button[mat-icon-button] {
-    color: #3f51b5; /* Primary color for icons */
+    color: #3f51b5;
   }
   
   button[mat-raised-button] {

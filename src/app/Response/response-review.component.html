@@ -1,15 +1,18 @@
 <form [formGroup]="requestFinalReviewDetailsForm" (ngSubmit)="onSubmit()">
-
-
-  <div style="display: flex; justify-content: space-between;">
+  <div style="display: flex; justify-content: space-between">
     <h2>Agency Section</h2>
-    <button mat-raised-button color="primary" [appTooltip]="{
-     header: 'Incomplete',
-     body: 'You cannot yet download your completed offer (submission packet), because there are forms that you still need to complete. Please make sure that your Vendor Profile page has been completed so that MuniVendor can autofill the documents and forms accordingly.',
-     actionLabel: 'Vendor Profile Page',
-     onAction: goToOfferorProfilePage,
-     width: '400px'
-     }">
+    <button
+      mat-raised-button
+      color="primary"
+      [appTooltip]="{
+        header: 'Incomplete',
+        body: 'You cannot yet download your completed offer (submission packet), because there are forms that you still need to complete. Please make sure that your Vendor Profile page has been completed so that MuniVendor can autofill the documents and forms accordingly.',
+        actionLabel: 'Vendor Profile Page',
+        onAction: goToOfferorProfilePage,
+        width: '400px',
+        transformStyle: 'translate(-51%, 18%)'
+      }"
+    >
       Download Entire Offer (Submission Packet)
     </button>
   </div>
@@ -18,7 +21,12 @@
     <div class="inline-field">
       <p>Agency Request Title</p>
       <mat-form-field appearance="fill" class="input-width">
-        <input matInput formControlName="requestName" readonly value={{requestFinalReviewDetails.requestName}}>
+        <input
+          matInput
+          formControlName="requestName"
+          readonly
+          value="{{ requestFinalReviewDetails.requestName }}"
+        />
       </mat-form-field>
     </div>
   </div>
@@ -27,14 +35,23 @@
     <div class="inline-field">
       <p>Request Category</p>
       <mat-form-field appearance="fill" class="input-width">
-        <input matInput formControlName="category" readonly value={{requestFinalReviewDetails.category?.name}}>
+        <input
+          matInput
+          formControlName="category"
+          readonly
+          value="{{ requestFinalReviewDetails.category?.name }}"
+        />
       </mat-form-field>
     </div>
     <div class="inline-field">
       <p>Request Type</p>
       <mat-form-field appearance="fill" class="input-width">
-        <input matInput formControlName="requestType" readonly
-          value={{requestFinalReviewDetails.requestType?.requestTypeDesc}}>
+        <input
+          matInput
+          formControlName="requestType"
+          readonly
+          value="{{ requestFinalReviewDetails.requestType?.requestTypeDesc }}"
+        />
       </mat-form-field>
     </div>
   </div>
@@ -43,14 +60,24 @@
     <div class="inline-field">
       <p>Publish Date and Time</p>
       <mat-form-field appearance="fill" class="input-width">
-        <input matInput formControlName="publishDate" readonly value={{requestFinalReviewDetails?.publishDate}}>
+        <input
+          matInput
+          formControlName="publishDate"
+          readonly
+          value="{{ requestFinalReviewDetails?.publishDate }}"
+        />
       </mat-form-field>
     </div>
 
     <div class="inline-field">
       <p>Open Date and Time</p>
       <mat-form-field appearance="fill" class="input-width">
-        <input matInput formControlName="openDate" readonly value={{requestFinalReviewDetails?.openDate}}>
+        <input
+          matInput
+          formControlName="openDate"
+          readonly
+          value="{{ requestFinalReviewDetails?.openDate }}"
+        />
       </mat-form-field>
     </div>
   </div>
@@ -59,24 +86,41 @@
     <div class="inline-field">
       <p>Contract Start Date</p>
       <mat-form-field appearance="fill" class="input-width">
-        <input matInput formControlName="contractStart" readonly value={{requestFinalReviewDetails.contractStart}}>
+        <input
+          matInput
+          formControlName="contractStart"
+          readonly
+          value="{{ requestFinalReviewDetails.contractStart }}"
+        />
       </mat-form-field>
     </div>
 
     <div class="inline-field">
       <p>Contract End Date</p>
       <mat-form-field appearance="fill" class="input-width">
-        <input matInput formControlName="contractEnd" readonly value={{requestFinalReviewDetails.contractEnd}}>
+        <input
+          matInput
+          formControlName="contractEnd"
+          readonly
+          value="{{ requestFinalReviewDetails.contractEnd }}"
+        />
       </mat-form-field>
     </div>
   </div>
+</form>
 
+<form [formGroup]="offerorFinalReviewDetailsForm" (ngSubmit)="onSubmit()">
   <h2>Offeror Section</h2>
   <div class="field-container">
     <div class="inline-field">
       <p>Offeror Response Title:</p>
       <mat-form-field appearance="fill" class="input-width">
-        <input matInput formControlName="requestName" readonly value={{requestFinalReviewDetails.requestName}}>
+        <input
+          matInput
+          formControlName="responseName"
+          readonly
+          [value]="offerorFinalReviewDetailsForm.get('responseName')?.value"
+        />
       </mat-form-field>
     </div>
   </div>
@@ -95,7 +139,11 @@
 
 <section>
   <h2>Agency Documents</h2>
-  <table mat-table [dataSource]="requiredDocumentsDatasource" class="mat-elevation-z8">
+  <table
+    mat-table
+    [dataSource]="requiredDocumentsDatasource"
+    class="mat-elevation-z8"
+  >
     <ng-container matColumnDef="formName">
       <th mat-header-cell *matHeaderCellDef>Form Name</th>
       <td mat-cell *matCellDef="let row">
@@ -106,35 +154,46 @@
     <ng-container matColumnDef="notarizationRequired">
       <th mat-header-cell *matHeaderCellDef>Notarization Required</th>
       <td mat-cell *matCellDef="let row">
-        {{ row.notarizationRequired ? 'Yes' : 'No' }}
+        {{ row.requiresNotarization ? "Yes" : "No" }}
       </td>
     </ng-container>
 
     <ng-container matColumnDef="download">
       <th mat-header-cell *matHeaderCellDef>Download</th>
       <td mat-cell *matCellDef="let row">
-        <button mat-icon-button color="primary" (click)="onDownloadRequiredAgencyDocuments(row)">
+        <button
+          mat-icon-button
+          color="primary"
+          (click)="onDownloadRequiredAgencyDocuments(row)"
+        >
           <mat-icon>download</mat-icon>
         </button>
       </td>
     </ng-container>
 
-    <ng-container matColumnDef="status">
+    <ng-container matColumnDef="documentInstanceStatus">
       <th mat-header-cell *matHeaderCellDef>Status</th>
       <td mat-cell *matCellDef="let row">
-        {{ row.documentStatus }}
-        <span *ngIf="row.documentStatus === 'Incomplete'" matTooltip="{{ row.missingItems }}"></span>
+        {{ row.documentInstanceStatus }}
+        <span
+          *ngIf="row.documentInstanceStatus === 'Incomplete'"
+          matTooltip="{{ row.missingItems }}"
+        ></span>
       </td>
     </ng-container>
 
     <tr mat-header-row *matHeaderRowDef="agencyDocumentsColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: agencyDocumentsColumns;"></tr>
+    <tr mat-row *matRowDef="let row; columns: agencyDocumentsColumns"></tr>
   </table>
 </section>
 <br />
 <section>
   <h2>Offeror Documents</h2>
-  <table mat-table [dataSource]="offerorDocumentsDatasource" class="mat-elevation-z8">
+  <table
+    mat-table
+    [dataSource]="offerorDocumentsDatasource"
+    class="mat-elevation-z8"
+  >
     <ng-container matColumnDef="formName">
       <th mat-header-cell *matHeaderCellDef>Form Name</th>
       <td mat-cell *matCellDef="let row">
@@ -145,14 +204,18 @@
     <ng-container matColumnDef="download">
       <th mat-header-cell *matHeaderCellDef>Download</th>
       <td mat-cell *matCellDef="let row">
-        <button mat-icon-button color="primary" (click)="onDownloadOfferorDocument(row)">
+        <button
+          mat-icon-button
+          color="primary"
+          (click)="onDownloadOfferorDocument(row)"
+        >
           <mat-icon>download</mat-icon>
         </button>
       </td>
     </ng-container>
 
     <tr mat-header-row *matHeaderRowDef="offerorDocumentsColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: offerorDocumentsColumns;"></tr>
+    <tr mat-row *matRowDef="let row; columns: offerorDocumentsColumns"></tr>
   </table>
 </section>
 <br />
