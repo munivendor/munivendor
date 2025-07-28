@@ -1,0 +1,49 @@
+table {
+  width: 100%;
+}
+
+.mat-mdc-form-field {
+  font-size: 14px;
+  width: 100%;
+}
+
+td, th {
+  width: 25%;
+}
+
+.field-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.inline-field {
+  flex: 1;
+  min-width: 200px;
+}
+
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.filter-row mat-form-field {
+  flex: 1 1 200px;
+  min-width: 200px;
+}
+
+.checkboxes {
+  align-items: center;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-right: 2rem;
+}
+
