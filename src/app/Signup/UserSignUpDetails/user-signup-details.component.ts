@@ -62,7 +62,8 @@ export class UserSignUpDetails
             if (user) {
                 const userId = user
                 if (userId) {
-                    this.getUserDetails(userId);
+                    //  -- get the munivendor id from the socialuser userid.
+                    this.getUserDetails(userId); //-- ML removed temporarily
                 } else {
                     console.error('No user ID available in authentication state');
                 }

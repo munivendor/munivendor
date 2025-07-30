@@ -40,7 +40,7 @@ export class RoleVerificationComponent implements OnInit {
       if (user) {
         const userId = user;
         if (userId) {
-          this.getUserDetails(userId);
+          this.getUserDetails(userId); 
         } else {
           console.error('No user ID available in authentication state');
         }

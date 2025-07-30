@@ -63,7 +63,7 @@ export class GovernmentAgencyDetailsComponent implements OnInit {
       if (user) {
         const userId = user
         if (userId) {
-          this.userId = userId;
+         this.userId = userId;
           this.getUserDetails(userId);
         } else {
           console.error('No user ID available in authentication state');

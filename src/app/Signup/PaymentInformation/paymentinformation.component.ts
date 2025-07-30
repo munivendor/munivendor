@@ -71,8 +71,8 @@ export class BillingProfileComponent implements OnInit, OnDestroy {
       if (user) {
         const userId = user
         if (userId) {
-          this.getUserDetails(userId);
-          this.userId = userId;
+         /* this.getUserDetails(userId);
+          this.userId = userId;*/ // -- ML removed temporarily
         } else {
           console.error('No user ID available in authentication state');
         }

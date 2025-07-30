@@ -112,7 +112,7 @@ export class DesignationSelectionComponent implements OnInit, OnDestroy {
       ).subscribe({
         next: currentUser => {
           const user: User = {
-            userId: currentUser,
+           userId: currentUser ?? undefined,  
             DesignationIds: selectedDesignationIds
           };
           this.userService.updateUser(user)
@@ -120,14 +120,14 @@ export class DesignationSelectionComponent implements OnInit, OnDestroy {
             .subscribe({
               next: response => {
                 console.log('Designation saved successfully:', response);
-                this.flowProgressService.saveFlowProgress(currentUser, 1, this.framePageNumber).subscribe({
+                this.flowProgressService.saveFlowProgress(Number(currentUser), 1, this.framePageNumber).subscribe({
                   next: () => {
                     this.router.navigate(['/payment-plan-confirmation']);
                   },
                   error: (err) => {
                     console.error('Error saving flow progress:', err);
-                  }
-                });
+                  }  
+                }); 
 
               },
               error: error => {
