@@ -521,29 +521,29 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
     });
   }
 
-  onSubmit() {
-    const requestIdToUse = this.stateService.getRequestId();
-    if (!requestIdToUse) {
-      console.error('Error: No valid requestId found.');
-      return;
-    }
+  // onSubmit() {
+  //   const requestIdToUse = this.stateService.getRequestId();
+  //   if (!requestIdToUse) {
+  //     console.error('Error: No valid requestId found.');
+  //     return;
+  //   }
 
-    // Update the request status to 'Scheduled' once users finalize review
-    this.requestService
-      .UpdateRequestStatus(requestIdToUse, 2)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response) => {
-          console.log('Request status updated successfully:', response);
-          this.snackBar.open('Request successfully submitted!', '', {
-            duration: 5000,
-            verticalPosition: 'top',
-          });
-          this.router.navigate(['/requests-view']);
-        },
-        error: (err) => {
-          console.error('Failed to update request status:', err);
-        },
-      });
-  }
+  //   // Update the request status to 'Scheduled' once users finalize review
+  //   this.requestService
+  //     .UpdateRequestStatus(requestIdToUse, 9)
+  //     .pipe(takeUntil(this.destroy$))
+  //     .subscribe({
+  //       next: (response) => {
+  //         console.log('Request status updated successfully:', response);
+  //         this.snackBar.open('Request successfully submitted!', '', {
+  //           duration: 5000,
+  //           verticalPosition: 'top',
+  //         });
+  //         this.router.navigate(['/requests-view']);
+  //       },
+  //       error: (err) => {
+  //         console.error('Failed to update request status:', err);
+  //       },
+  //     });
+  // }
 }

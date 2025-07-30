@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { DecisionMaker } from '../model/decisionmaker.model';
@@ -224,5 +224,49 @@ export class RequestService {
     return this.http.get<DocumentInstance[]>(
       `${this.url}InstanceDocuments/${requestId}`
     );
+  }
+
+  GetRequestsOfferorView(params: {
+    requestId?: number;
+    requestTypeId?: number;
+    requestStatusId?: number;
+    organizationId?: number;
+    categoryId?: number;
+    referenceId?: string;
+    requestName?: string;
+    startCloseDate?: string; // ISO string format recommended
+    endCloseDate?: string;
+    startPublishDate?: string;
+    endPublishDate?: string;
+    limit?: number;
+    offset?: number;
+  }): Observable<any> {
+    const httpParams = new HttpParams({ fromObject: { ...params } });
+
+    return this.http.get<any>(`${this.url}api/requests/offeror-grid`, {
+      params: httpParams,
+    });
+  }
+
+  GetRequestsAgencyView(params: {
+    requestId?: number;
+    requestTypeId?: number;
+    requestStatusId?: number;
+    organizationId?: number;
+    categoryId?: number;
+    referenceId?: string;
+    requestName?: string;
+    startCloseDate?: string; // ISO string format recommended
+    endCloseDate?: string;
+    startPublishDate?: string;
+    endPublishDate?: string;
+    limit?: number;
+    offset?: number;
+  }): Observable<any> {
+    const httpParams = new HttpParams({ fromObject: { ...params } });
+
+    return this.http.get<any>(`${this.url}api/requests/agency-grid`, {
+      params: httpParams,
+    });
   }
 }

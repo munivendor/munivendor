@@ -1,30 +1,47 @@
 <form [formGroup]="requestFinalReviewDetailsForm" (ngSubmit)="onSubmit()">
-  <h2>Please review the following selections before submitting your request:</h2>
+  <h2>
+    Please review the following selections before submitting your request:
+  </h2>
   <div class="field-container">
     <div class="inline-field">
       <p>Category:</p>
       <mat-form-field appearance="fill" class="input-width">
-        <input matInput formControlName="category" readonly placeholder="Chosen Category"
-          value={{requestFinalReviewDetails.category?.name}}>
+        <input
+          matInput
+          formControlName="category"
+          readonly
+          placeholder="Chosen Category"
+          value="{{ requestFinalReviewDetails.category?.name }}"
+        />
       </mat-form-field>
     </div>
 
     <div class="inline-field">
-      <p>Request Type:</p>
+      <p>Solicitation Type:</p>
       <mat-form-field appearance="fill" class="input-width">
-        <input matInput formControlName="requestType" readonly placeholder="Chosen Request Type"
-          value={{requestFinalReviewDetails.requestType?.requestTypeDesc}}>
+        <input
+          matInput
+          formControlName="requestType"
+          readonly
+          placeholder="Chosen Solicitation Type"
+          value="{{ requestFinalReviewDetails.requestType?.requestTypeDesc }}"
+        />
       </mat-form-field>
     </div>
   </div>
 
-  <h2>Request Details</h2>
+  <h2>Solicitation Details</h2>
   <div class="field-container">
     <div class="inline-field">
-      <p>Request Name:</p>
+      <p>Solicitation Name:</p>
       <mat-form-field appearance="fill" class="input-width">
-        <input matInput formControlName="requestName" readonly placeholder="Chosen Request Name"
-          value={{requestFinalReviewDetails.requestName}}>
+        <input
+          matInput
+          formControlName="requestName"
+          readonly
+          placeholder="Chosen Solicitation Name"
+          value="{{ requestFinalReviewDetails.requestName }}"
+        />
       </mat-form-field>
     </div>
     <div class="inline-field"></div>
@@ -34,34 +51,56 @@
     <div class="inline-field">
       <p>Publish Date:</p>
       <mat-form-field appearance="fill" class="input-width">
-        <input matInput formControlName="publishDate" readonly placeholder="Chosen Publish Date"
-          value={{requestFinalReviewDetails.publishDate}}>
+        <input
+          matInput
+          formControlName="publishDate"
+          readonly
+          placeholder="Chosen Publish Date"
+          value="{{ requestFinalReviewDetails.publishDate }}"
+        />
       </mat-form-field>
     </div>
 
     <div class="inline-field">
       <p>Publish Time:</p>
       <mat-form-field appearance="fill" class="input-width">
-        <input matInput type="time" formControlName="publishTime" readonly placeholder="Chosen Publish Time"
-          value={{requestFinalReviewDetails.publishTime}}>
+        <input
+          matInput
+          type="time"
+          formControlName="publishTime"
+          readonly
+          placeholder="Chosen Publish Time"
+          value="{{ requestFinalReviewDetails.publishTime }}"
+        />
       </mat-form-field>
     </div>
   </div>
 
   <div class="field-container">
     <div class="inline-field">
-      <p>Open Date:</p>
+      <p>Close Date:</p>
       <mat-form-field appearance="fill" class="input-width">
-        <input matInput formControlName="openDate" readonly placeholder="Chosen Open Date"
-          value={{requestFinalReviewDetails.openDate}}>
+        <input
+          matInput
+          formControlName="openDate"
+          readonly
+          placeholder="Chosen Close Date"
+          value="{{ requestFinalReviewDetails.openDate }}"
+        />
       </mat-form-field>
     </div>
 
     <div class="inline-field">
-      <p>Open Time:</p>
+      <p>Close Time:</p>
       <mat-form-field appearance="fill" class="input-width">
-        <input matInput type="time" formControlName="openTime" readonly placeholder="Chosen Open Time"
-          value={{requestFinalReviewDetails.openTime}}>
+        <input
+          matInput
+          type="time"
+          formControlName="openTime"
+          readonly
+          placeholder="Chosen Close Time"
+          value="{{ requestFinalReviewDetails.openTime }}"
+        />
       </mat-form-field>
     </div>
   </div>
@@ -70,26 +109,47 @@
     <div class="inline-field">
       <p>Contract Start:</p>
       <mat-form-field appearance="fill" class="input-width">
-        <input matInput formControlName="contractStart" readonly placeholder="Chosen Contract Start"
-          value={{requestFinalReviewDetails.contractStart}}>
+        <input
+          matInput
+          formControlName="contractStart"
+          readonly
+          placeholder="Chosen Contract Start"
+          value="{{ requestFinalReviewDetails.contractStart }}"
+        />
       </mat-form-field>
     </div>
 
     <div class="inline-field">
       <p>Contract End:</p>
       <mat-form-field appearance="fill" class="input-width">
-        <input matInput formControlName="contractEnd" readonly placeholder="Chosen Contract End"
-          value={{requestFinalReviewDetails.contractEnd}}>
+        <input
+          matInput
+          formControlName="contractEnd"
+          readonly
+          placeholder="Chosen Contract End"
+          value="{{ requestFinalReviewDetails.contractEnd }}"
+        />
       </mat-form-field>
     </div>
   </div>
 
   <div class="field-container">
-    <div *ngFor="let decisionMaker of requestFinalReviewDetails.decisionMakers; let i = index" class="inline-field">
+    <div
+      *ngFor="
+        let decisionMaker of requestFinalReviewDetails.decisionMakers;
+        let i = index
+      "
+      class="inline-field"
+    >
       <p *ngIf="i === 0">Decision Makers:</p>
-      <p *ngIf="i > 0" style="visibility: hidden;">&nbsp;</p>
+      <p *ngIf="i > 0" style="visibility: hidden">&nbsp;</p>
       <mat-form-field appearance="fill" class="single-input-width">
-        <input matInput readonly placeholder="Chosen Decision Maker(s)" [value]="decisionMaker.decisionMakerName">
+        <input
+          matInput
+          readonly
+          placeholder="Chosen Decision Maker(s)"
+          [value]="decisionMaker.decisionMakerName"
+        />
       </mat-form-field>
     </div>
   </div>
@@ -97,24 +157,35 @@
   <div>
     <h3><b>Digital Notarization</b></h3>
     <mat-checkbox [checked]="true" [disabled]="true">
-      Proposers will submit digitally notarized documents using the MuniVendor platform with one of our certified notaries. Completed and digitally notarized documents will be included in the proposer's digital submission package.
+      Proposers will submit digitally notarized documents using the MuniVendor
+      platform with one of our certified notaries. Completed and digitally
+      notarized documents will be included in the proposer's digital submission
+      package.
     </mat-checkbox>
   </div>
 
-  <br>
+  <br />
 
-  <h2>The Bid Checklist that proposers will complete for this opportunity will include a list of the following forms.
-    Any documents that require notarization will be digitally notarized and included in the proposer’s submission.</h2>
-  <div *ngFor="let requestDocument of requestFinalReviewDetails.requestDocuments">
-    <mat-checkbox [checked]="true" [disabled]="true"> {{
-      requestDocument.documentName }}</mat-checkbox>
+  <h2>
+    The Bid Checklist that proposers will complete for this solicitation will
+    include a list of the following forms. Any documents that require
+    notarization will be digitally notarized and included in the proposer’s
+    submission.
+  </h2>
+  <div
+    *ngFor="let requestDocument of requestFinalReviewDetails.requestDocuments"
+  >
+    <mat-checkbox [checked]="true" [disabled]="true">
+      {{ requestDocument.documentName }}</mat-checkbox
+    >
   </div>
 
   <br />
 
   <!-- display ONLY if user has not uploaded any documents for organization -->
-  <p *ngIf="requestFinalReviewDetails.requestDocuments === null">Note: You have not uploaded/selected any additional
-    documents.</p>
+  <p *ngIf="requestFinalReviewDetails.requestDocuments === null">
+    Note: You have not uploaded/selected any additional documents.
+  </p>
 
   <h2>You have uploaded the following request:</h2>
   <!-- the PDF of the proposals step (all sections that have been filled out by user compiled into a PDF) -->

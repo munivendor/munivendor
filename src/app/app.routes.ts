@@ -17,7 +17,8 @@ import { PaymentPlanConfirmationComponent } from './Signup/PaymentInformation/pa
 import { BillingProfileComponent } from './Signup/PaymentInformation/paymentinformation.component';
 
 import { DashboardComponent } from './dashboard/dashboard.component';
-import { TableDetailsComponent } from './Request/TableDetails/request-tabledetails.component';
+import { AgencyTableDetailsComponent } from './Request/TableDetails/request-tabledetails.component';
+import { OfferorTableDetailsComponent } from './Request/TableDetails/offeror-request-tabledetails.component';
 import { CreateRequestStepper } from './Request/CreateRequestStepper/create-request-stepper.component';
 import { CategoryTreeComponent } from './CategoryTree/category-tree.component';
 
@@ -30,19 +31,76 @@ export const routes: Routes = [
   { path: 'email-verification', component: EmailVerification },
   { path: 'validateuser', component: TokenValidationComponent },
 
-  { path: 'role-verification', component: RoleVerificationComponent, canActivate: [AuthGuard] },
-  { path: 'government-agency-details', component: GovernmentAgencyDetailsComponent, canActivate: [AuthGuard] },
-  { path: 'user-details', component: UserSignUpDetails, canActivate: [AuthGuard] },
-  { path: 'user-designation', component: DesignationSelectionComponent, canActivate: [AuthGuard] },
-  { path: 'payment-plan-confirmation', component: PaymentPlanConfirmationComponent, canActivate: [AuthGuard] },
-  { path: 'billing-profile', component: BillingProfileComponent, canActivate: [AuthGuard] },
+  {
+    path: 'role-verification',
+    component: RoleVerificationComponent,
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'government-agency-details',
+    component: GovernmentAgencyDetailsComponent,
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'user-details',
+    component: UserSignUpDetails,
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'user-designation',
+    component: DesignationSelectionComponent,
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'payment-plan-confirmation',
+    component: PaymentPlanConfirmationComponent,
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'billing-profile',
+    component: BillingProfileComponent,
+    canActivate: [AuthGuard],
+  },
 
-  { path: 'dashboard-component', component: DashboardComponent, canActivate: [AuthGuard] },
-  { path: 'create-request-view', component: CreateRequestStepper, canActivate: [AuthGuard] },
-  { path: 'requests-view', component: TableDetailsComponent, canActivate: [AuthGuard] },
-  { path: 'edit-request-view/:requestId', component: CreateRequestStepper, canActivate: [AuthGuard] },
-  { path: 'categories', component: CategoryTreeComponent, canActivate: [AuthGuard] },
+  {
+    path: 'dashboard-component',
+    component: DashboardComponent,
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'create-request-view',
+    component: CreateRequestStepper,
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'requests-view',
+    component: AgencyTableDetailsComponent,
+    // canActivate: [AuthGuard],
+  },
+  {
+    path: 'offeror-requests-view',
+    component: OfferorTableDetailsComponent,
+    // canActivate: [AuthGuard],
+  },
+  {
+    path: 'edit-request-view/:requestId',
+    component: CreateRequestStepper,
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'categories',
+    component: CategoryTreeComponent,
+    canActivate: [AuthGuard],
+  },
 
-  { path: 'response-basic/:sourceId', component: ResponseStepper, canActivate: [AuthGuard] },
-  { path: 'response-basic/:sourceId/edit/:responseId', component: ResponseStepper, canActivate: [AuthGuard] },
+  {
+    path: 'response-basic/:sourceId',
+    component: ResponseStepper,
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'response-basic/:sourceId/edit/:responseId',
+    component: ResponseStepper,
+    canActivate: [AuthGuard],
+  },
 ];

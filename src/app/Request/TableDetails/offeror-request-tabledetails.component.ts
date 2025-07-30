@@ -15,6 +15,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatNativeDateModule } from '@angular/material/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 
 interface Actions {
   value: string;
@@ -40,6 +41,7 @@ interface Actions {
     MatNativeDateModule,
     ReactiveFormsModule,
     MatButtonModule,
+    MatAutocompleteModule,
   ],
 })
 export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
@@ -52,6 +54,10 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
     publishDateTo: [null],
     closeDateFrom: [null],
     closeDateTo: [null],
+    live: [false],
+    closed: [false],
+    canceled: [false],
+    opened: [false],
     inProgress: [false],
     submitted: [false],
     none: [false],
@@ -94,22 +100,17 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
   ) {}
 
   readonly requestTypeMap = {
-    rfq: 1,
-    rfp: 2,
-    rfi: 3,
+    rfi: 1,
+    rfq: 2,
+    rfp: 3,
     bid: 4,
   };
 
-  readonly agencyStatusMap = {
-    draft: 1,
-    scheduled: 2,
+  readonly requestStatusMap = {
     live: 3,
     closed: 4,
     canceled: 5,
     opened: 6,
-  };
-
-  readonly offerorStatusMap = {
     none: 7,
     inProgress: 8,
     submitted: 9,
@@ -122,19 +123,11 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
       .filter(([key]) => this.filterForm.get(key)?.value)
       .map(([, value]) => value);
 
-    const selectedRequestStatus = Object.entries(this.agencyStatusMap)
-      .filter(([key]) => this.filterForm.get(key)?.value)
-      .map(([, value]) => value);
-
-    const selectedOfferorStatus = Object.entries(this.offerorStatusMap)
+    const selectedRequestStatus = Object.entries(this.requestStatusMap)
       .filter(([key]) => this.filterForm.get(key)?.value)
       .map(([, value]) => value);
 
     const params: any = {};
-
-    if (formValues.categoryName?.trim()) {
-      params.categoryName = formValues.categoryName.trim();
-    }
 
     if (formValues.requestId) {
       params.requestId = Number(formValues.requestId);
@@ -158,16 +151,12 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
       params.endCloseDate = new Date(formValues.closeDateTo).toISOString();
     }
 
-    if (selectedRequestType.length === 1) {
-      params.requestTypeId = selectedRequestType[0];
+    if (selectedRequestType.length > 0) {
+      params.requestTypeId = selectedRequestType;
     }
 
-    if (selectedRequestStatus.length === 1) {
-      params.requestStatusId = selectedRequestStatus[0];
-    }
-
-    if (selectedOfferorStatus.length === 1) {
-      params.requestStatusId = selectedOfferorStatus[0];
+    if (selectedRequestStatus.length > 0) {
+      params.requestStatusId = selectedRequestStatus;
     }
 
     this.loadAndJoinRequestData(params);
@@ -198,10 +187,6 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
             const requestType = requestTypes.find(
               (r) => r.requestTypeId === request.requestTypeId
             );
-            const offerorRequestStatus = requestStatuses.find(
-              (rs: { requestStatusId: any }) =>
-                rs.requestStatusId === request.offerorRequestStatusId
-            );
             const agencyRequestStatus = requestStatuses.find(
               (rs: { requestStatusId: any }) =>
                 rs.requestStatusId === request.agencyRequestStatusId
@@ -211,12 +196,12 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
               ...request,
               category,
               requestType,
-              offerorRequestStatus,
               agencyRequestStatus,
             });
           });
 
           this.dataSource = new MatTableDataSource(combinedData);
+
           this.dataSource.paginator = this.paginator;
           this.dataSource.sort = this.sort;
         },
@@ -238,62 +223,6 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
       }
     }
     return null;
-  }
-
-  getRequestObjDetails() {
-    const requests$ = this.requestService.GetRequestsOfferorView({});
-    const categories$ = this.categoryHierarchyService.GetCategoryHierarchy();
-    const requestTypes$ = this.requestService.GetRequestTypes();
-    const requestStatuses$ = this.requestService.GetRequestStatuses();
-    const combinedData: any[] = [];
-
-    forkJoin([requests$, categories$, requestTypes$, requestStatuses$])
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(
-        ([requests, categories, requestTypes, requestStatuses]) => {
-          requests.requests.forEach(
-            (request: {
-              categoryId: any;
-              requestTypeId: number;
-              offerorRequestStatusId: any;
-              agencyRequestStatusId: any;
-            }) => {
-              const category = this.findCategoryById(
-                categories,
-                request.categoryId
-              );
-              const requestType = requestTypes.find(
-                (r) => r.requestTypeId === request.requestTypeId
-              );
-              const offerorRequestStatus = requestStatuses.find(
-                (rs: { requestStatusId: any }) =>
-                  rs.requestStatusId === request.offerorRequestStatusId
-              );
-
-              const agencyRequestStatus = requestStatuses.find(
-                (rs: { requestStatusId: any }) =>
-                  rs.requestStatusId === request.agencyRequestStatusId
-              );
-
-              combinedData.push({
-                ...request,
-                category,
-                requestType,
-                offerorRequestStatus,
-                agencyRequestStatus,
-              });
-            }
-          );
-
-          this.joinedRequestData.push(...combinedData);
-          this.dataSource = new MatTableDataSource(this.joinedRequestData);
-          this.dataSource.paginator = this.paginator;
-          this.dataSource.sort = this.sort;
-        },
-        (error) => {
-          console.error('Error fetching data', error);
-        }
-      );
   }
 
   applyFilter(event: Event) {

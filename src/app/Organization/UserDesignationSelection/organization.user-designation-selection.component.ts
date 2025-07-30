@@ -27,8 +27,8 @@ import { FlowProgressService } from '../../shared/service/flow-progress.service'
     MatFormFieldModule,
     MatInputModule,
     MatCheckboxModule,
-    MatButtonModule
-  ]
+    MatButtonModule,
+  ],
 })
 export class DesignationSelectionComponent implements OnInit, OnDestroy {
   designeeSelectionForm: FormGroup;
@@ -42,15 +42,16 @@ export class DesignationSelectionComponent implements OnInit, OnDestroy {
     private userService: UserService,
     private router: Router,
     private authService: AuthService,
-    private flowProgressService: FlowProgressService) {
-    this.designeeSelectionForm = this.fb.group(
-      {
-        selectedDesignees: this.fb.array([], this.minSelectedCheckboxes(1))
-      });
+    private flowProgressService: FlowProgressService
+  ) {
+    this.designeeSelectionForm = this.fb.group({
+      selectedDesignees: this.fb.array([], this.minSelectedCheckboxes(1)),
+    });
   }
 
   ngOnInit(): void {
-    this.userService.getDesigneeTypes()
+    this.userService
+      .getDesigneeTypes()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (designations: Designation[]) => {
@@ -59,14 +60,18 @@ export class DesignationSelectionComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error fetching designations:', error);
-        }
+        },
       });
   }
 
   updateSelectedDesigneesFormArray(): void {
-    const selectedDesignationsArray = this.designeeSelectionForm.get('selectedDesignees') as FormArray;
+    const selectedDesignationsArray = this.designeeSelectionForm.get(
+      'selectedDesignees'
+    ) as FormArray;
     selectedDesignationsArray.clear();
-    this.designations!.forEach(() => selectedDesignationsArray.push(this.fb.control(false)));
+    this.designations!.forEach(() =>
+      selectedDesignationsArray.push(this.fb.control(false))
+    );
   }
 
   get selectedDesignees(): FormArray {
@@ -78,11 +83,16 @@ export class DesignationSelectionComponent implements OnInit, OnDestroy {
     if (index === noneOfTheAboveIndex) {
       if (this.selectedDesignees.at(index).value) {
         this.selectedDesignees.controls.forEach((control, i) => {
-          if (i !== noneOfTheAboveIndex) { control.setValue(false); control.disable(); }
+          if (i !== noneOfTheAboveIndex) {
+            control.setValue(false);
+            control.disable();
+          }
         });
       } else {
         this.selectedDesignees.controls.forEach((control, i) => {
-          if (i !== noneOfTheAboveIndex) { control.enable(); }
+          if (i !== noneOfTheAboveIndex) {
+            control.enable();
+          }
         });
       }
     } else {
@@ -95,7 +105,9 @@ export class DesignationSelectionComponent implements OnInit, OnDestroy {
 
   minSelectedCheckboxes(min: number) {
     const validator: Validators = (formArray: FormArray) => {
-      const totalSelected = formArray.controls.map(control => control.value).reduce((prev, next) => next ? prev + 1 : prev, 0);
+      const totalSelected = formArray.controls
+        .map((control) => control.value)
+        .reduce((prev, next) => (next ? prev + 1 : prev), 0);
       return totalSelected >= min ? null : { required: true };
     };
     return validator;
@@ -103,42 +115,54 @@ export class DesignationSelectionComponent implements OnInit, OnDestroy {
 
   onSubmit(): void {
     if (this.designeeSelectionForm.valid) {
-      const selectedDesignationIds = (this.designeeSelectionForm.get('selectedDesignees') as FormArray).controls
-        .map((control, i) => (control.value ? this.designations[i].designationId : null))
-        .filter(value => value !== null) as number[];
-      this.authService.user$.pipe(
-        filter(user => !!user),
-        takeUntil(this.destroy$)
-      ).subscribe({
-        next: currentUser => {
-          const user: User = {
-            userId: currentUser,
-            DesignationIds: selectedDesignationIds
-          };
-          this.userService.updateUser(user)
-            .pipe(takeUntil(this.destroy$))
-            .subscribe({
-              next: response => {
-                console.log('Designation saved successfully:', response);
-                this.flowProgressService.saveFlowProgress(currentUser, 1, this.framePageNumber).subscribe({
-                  next: () => {
-                    this.router.navigate(['/payment-plan-confirmation']);
-                  },
-                  error: (err) => {
-                    console.error('Error saving flow progress:', err);
-                  }
-                });
-
-              },
-              error: error => {
-                console.error('Error updating user:', error);
-              }
-            });
-        },
-        error: error => {
-          console.error('Error getting current user:', error);
-        }
-      });
+      const selectedDesignationIds = (
+        this.designeeSelectionForm.get('selectedDesignees') as FormArray
+      ).controls
+        .map((control, i) =>
+          control.value ? this.designations[i].designationId : null
+        )
+        .filter((value) => value !== null) as number[];
+      this.authService.user$
+        .pipe(
+          filter((user) => !!user),
+          takeUntil(this.destroy$)
+        )
+        .subscribe({
+          next: (currentUser) => {
+            const user: User = {
+              userId: currentUser,
+              DesignationIds: selectedDesignationIds,
+            };
+            this.userService
+              .updateUser(user)
+              .pipe(takeUntil(this.destroy$))
+              .subscribe({
+                next: (response) => {
+                  console.log('Designation saved successfully:', response);
+                  this.flowProgressService
+                    .saveFlowProgress(
+                      currentUser ?? undefined,
+                      1,
+                      this.framePageNumber
+                    )
+                    .subscribe({
+                      next: () => {
+                        this.router.navigate(['/payment-plan-confirmation']);
+                      },
+                      error: (err) => {
+                        console.error('Error saving flow progress:', err);
+                      },
+                    });
+                },
+                error: (error) => {
+                  console.error('Error updating user:', error);
+                },
+              });
+          },
+          error: (error) => {
+            console.error('Error getting current user:', error);
+          },
+        });
     }
   }
 

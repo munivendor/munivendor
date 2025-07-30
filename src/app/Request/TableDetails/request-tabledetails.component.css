@@ -1,22 +1,14 @@
 table {
   border-collapse: collapse;
+}
+
+.mat-mdc-form-field {
+  font-size: 14px;
   width: 100%;
-  border: 1px solid black;
 }
 
-th,
-td {
-  border: 1px solid black;
-  padding: 8px;
-  text-align: left;
-}
-
-th {
-  background-color: #f2f2f2;
-}
-
-button {
-  width: 100%;
+td, th {
+  width: 25%;
 }
 
 .action-button-container {
@@ -28,4 +20,40 @@ button {
 
 .mat-mdc-table {
   table-layout: fixed;
+}
+
+.field-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.inline-field {
+  flex: 1;
+  min-width: 200px;
+}
+
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.filter-row mat-form-field {
+  flex: 1 1 200px;
+  min-width: 200px;
+}
+
+.checkboxes {
+  align-items: center;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-right: 2rem;
 }

@@ -29,6 +29,22 @@
     >Email Verification</a
   >
 
+  <a
+    routerLink="/requests-view"
+    routerLinkActive="active"
+    ariaCurrentWhenActive="page"
+    *ngIf="!(user$ | async)"
+    >Solicitations</a
+  >
+
+  <a
+    routerLink="/offeror-requests-view"
+    routerLinkActive="active"
+    ariaCurrentWhenActive="page"
+    *ngIf="!(user$ | async)"
+    >Offeror Solicitations</a
+  >
+
   <!-- Authorized -->
   <a
     routerLink="/role-verification"
@@ -97,13 +113,19 @@
         mat-list-item
         routerLink="create-request-view"
         routerLinkActive="active"
-        >Create New Request</a
+        >Create New Solicitation</a
       >
       <a mat-list-item routerLink="request-component" routerLinkActive="active"
         >Create from Templates</a
       >
       <a mat-list-item routerLink="requests-view" routerLinkActive="active"
-        >Requests</a
+        >Solicitations</a
+      >
+      <a
+        mat-list-item
+        routerLink="offeror-requests-view"
+        routerLinkActive="active"
+        >Offeror Responses</a
       >
       <!-- for testing offeror workflow since offeror grid does not exist yet -->
       <a

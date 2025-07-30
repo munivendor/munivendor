@@ -1,46 +1,310 @@
-<h1>Requests</h1>
-<div class="mat-elevation-z8">
-  <table mat-table [dataSource]="dataSource">
-    <ng-container matColumnDef="actions">
-      <th mat-header-cell *matHeaderCellDef></th>
-      <td mat-cell *matCellDef="let request">
-        <div class="action-button-container" style="align-items: center;">
-          <button *ngIf="canEdit(request)" (click)="openConfirmationDialog('edit', request)">Edit</button>
-          <button *ngIf="canDelete(request)" (click)="openConfirmationDialog('delete', request)">Delete</button>
-          <button *ngIf="canCancel(request)" (click)="openConfirmationDialog('cancel', request)">Cancel</button>
+<div style="margin-top: 1195rem">
+  <mat-form-field>
+    <mat-label>Filter</mat-label>
+    <input
+      matInput
+      (keyup)="applyFilter($event)"
+      placeholder="Ex. REQUEST FOR QUALIFICATIONS TECHNOLOGY SUPPORT SERVICES"
+      #input
+    />
+  </mat-form-field>
+
+  <mat-card style="margin-bottom: 1rem">
+    <mat-card-content>
+      <form [formGroup]="filterForm" (ngSubmit)="onSearch()">
+        <div class="field-container">
+          <div class="inline-field">
+            <mat-form-field appearance="outline">
+              <mat-label>Filter by Category Name</mat-label>
+              <input matInput formControlName="categoryName" />
+            </mat-form-field>
+          </div>
+
+          <div class="inline-field">
+            <mat-form-field appearance="outline">
+              <mat-label>Publish Date From</mat-label>
+              <input
+                matInput
+                [matDatepicker]="pubFrom"
+                formControlName="publishDateFrom"
+              />
+              <mat-datepicker-toggle
+                matSuffix
+                [for]="pubFrom"
+              ></mat-datepicker-toggle>
+              <mat-datepicker #pubFrom></mat-datepicker>
+            </mat-form-field>
+          </div>
+
+          <div class="inline-field">
+            <mat-form-field appearance="outline">
+              <mat-label>Publish Date To</mat-label>
+              <input
+                matInput
+                [matDatepicker]="pubTo"
+                formControlName="publishDateTo"
+              />
+              <mat-datepicker-toggle
+                matSuffix
+                [for]="pubTo"
+              ></mat-datepicker-toggle>
+              <mat-datepicker #pubTo></mat-datepicker>
+            </mat-form-field>
+          </div>
         </div>
-      </td>
-    </ng-container>
 
-    <ng-container matColumnDef="requestName">
-      <th mat-header-cell *matHeaderCellDef> Request Name </th>
-      <td mat-cell *matCellDef="let request"> {{ request.requestName }} </td>
-    </ng-container>
+        <div class="field-container">
+          <div class="inline-field">
+            <mat-form-field appearance="outline">
+              <mat-label>Filter by Solicitation ID</mat-label>
+              <input matInput formControlName="requestId" />
+            </mat-form-field>
+          </div>
 
-    <ng-container matColumnDef="requestType">
-      <th mat-header-cell *matHeaderCellDef> Type </th>
-      <td mat-cell *matCellDef="let request"> {{ request.requestType.requestTypeDesc }} </td>
-    </ng-container>
+          <div class="inline-field">
+            <mat-form-field appearance="outline">
+              <mat-label>Close Date From</mat-label>
+              <input
+                matInput
+                [matDatepicker]="closeFrom"
+                formControlName="closeDateFrom"
+              />
+              <mat-datepicker-toggle
+                matSuffix
+                [for]="closeFrom"
+              ></mat-datepicker-toggle>
+              <mat-datepicker #closeFrom></mat-datepicker>
+            </mat-form-field>
+          </div>
 
-    <ng-container matColumnDef="category">
-      <th mat-header-cell *matHeaderCellDef> Category </th>
-      <td mat-cell *matCellDef="let request"> {{ request.category?.name }} </td>
-    </ng-container>
+          <div class="inline-field">
+            <mat-form-field appearance="outline">
+              <mat-label>Close Date To</mat-label>
+              <input
+                matInput
+                [matDatepicker]="closeTo"
+                formControlName="closeDateTo"
+              />
+              <mat-datepicker-toggle
+                matSuffix
+                [for]="closeTo"
+              ></mat-datepicker-toggle>
+              <mat-datepicker #closeTo></mat-datepicker>
+            </mat-form-field>
+          </div>
+        </div>
 
-    <ng-container matColumnDef="publishDate">
-      <th mat-header-cell *matHeaderCellDef> Publish Date </th>
-      <td mat-cell *matCellDef="let request"> {{ request.publishDate | date }} </td>
-    </ng-container>
+        <div class="field-container">
+          <div class="inline-field">
+            <div class="checkbox-group">
+              <strong>Solicitation Status</strong>
+              <mat-checkbox color="primary" formControlName="draft"
+                >Draft</mat-checkbox
+              >
+              <mat-checkbox color="primary" formControlName="scheduled"
+                >Scheduled</mat-checkbox
+              >
+              <mat-checkbox color="primary" formControlName="live"
+                >Live</mat-checkbox
+              >
+              <mat-checkbox color="primary" formControlName="closed"
+                >Closed</mat-checkbox
+              >
+              <mat-checkbox color="primary" formControlName="opened"
+                >Opened</mat-checkbox
+              >
+              <mat-checkbox color="primary" formControlName="canceled"
+                >Canceled</mat-checkbox
+              >
+            </div>
+          </div>
+        </div>
 
-    <ng-container matColumnDef="requestStatus">
-      <th mat-header-cell *matHeaderCellDef> Status </th>
-      <td mat-cell *matCellDef="let request"> {{ request.requestStatus.requestStatusDesc }} </td>
-    </ng-container>
+        <div class="field-container">
+          <div class="inline-field">
+            <div class="checkbox-group">
+              <strong>Type</strong>
+              <mat-checkbox color="primary" formControlName="rfq"
+                >RFQ</mat-checkbox
+              >
+              <mat-checkbox color="primary" formControlName="rfp"
+                >RFP</mat-checkbox
+              >
+              <mat-checkbox color="primary" formControlName="rfi"
+                >RFI</mat-checkbox
+              >
+              <mat-checkbox color="primary" formControlName="bid"
+                >BID</mat-checkbox
+              >
+            </div>
+          </div>
 
-    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-  </table>
+          <div class="inline-field">
+            <button
+              mat-raised-button
+              color="primary"
+              type="submit"
+              style="margin-left: auto; display: block"
+            >
+              Search
+            </button>
+          </div>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
 
-  <mat-paginator [length]="100" [pageSize]="10" [pageSizeOptions]="[5, 10, 25, 100]" aria-label="Select page">
-  </mat-paginator>
+  <h1>Solicitations</h1>
+  <div class="mat-elevation-z8">
+    <table mat-table [dataSource]="dataSource">
+      <ng-container matColumnDef="requestName">
+        <th mat-header-cell *matHeaderCellDef>Solicitation Name</th>
+        <td mat-cell *matCellDef="let request">{{ request.requestName }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="requestId">
+        <th mat-header-cell *matHeaderCellDef>Solicitation ID</th>
+        <td mat-cell *matCellDef="let request">{{ request.requestId }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="requestType">
+        <th mat-header-cell *matHeaderCellDef>Type</th>
+        <td mat-cell *matCellDef="let request">
+          {{ request.requestType.requestTypeDesc }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="category">
+        <th mat-header-cell *matHeaderCellDef>Category</th>
+        <td mat-cell *matCellDef="let request">{{ request.category?.name }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="publishDate">
+        <th mat-header-cell *matHeaderCellDef>Publish Date</th>
+        <td mat-cell *matCellDef="let request">
+          {{ request.publishDate | date : "MM/dd/yyyy" }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="closeDateAndTime">
+        <th mat-header-cell *matHeaderCellDef>Close Date & Time</th>
+        <td mat-cell *matCellDef="let request">
+          {{ request.closeDate | date : "MM/dd/yyyy, h:mm a" }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="requestStatus">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let request">
+          {{ request.agencyRequestStatus?.requestStatusDesc ?? "Draft" }}
+        </td>
+      </ng-container>
+
+      <!-- <ng-container matColumnDef="numberOfOffers">
+        <th mat-header-cell *matHeaderCellDef>Offers</th>
+        <td mat-cell *matCellDef="let request">
+          <span
+            (click)="openOffersDialog(request)"
+            style="cursor: pointer; text-decoration: underline; color: #3f51b5"
+          >
+            1
+          </span>
+        </td>
+      </ng-container> -->
+
+      <ng-container matColumnDef="numberOfOffers">
+        <th mat-header-cell *matHeaderCellDef>Offers</th>
+        <td mat-cell *matCellDef="let request">
+          <span
+            *ngIf="request.submittedOffersCount > 0"
+            (click)="openOffersDialog(request)"
+            style="cursor: pointer; text-decoration: underline; color: #3f51b5"
+          >
+            {{ request.submittedOffersCount }}
+          </span>
+          <span *ngIf="request.submittedOffersCount === 0">0</span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let request">
+          <div class="action-button-container" style="align-items: center">
+            <mat-form-field style="margin-top: 10px; margin-bottom: -12px">
+              <mat-label>Select</mat-label>
+              <mat-select>
+                <mat-option *ngIf="canEdit(request)"> Edit </mat-option>
+
+                <mat-option *ngIf="canDelete(request)"> Delete </mat-option>
+
+                <mat-option *ngIf="canCancel(request)"> Cancel </mat-option>
+              </mat-select>
+              <!-- <button
+                *ngIf="canEdit(request)"
+                (click)="openConfirmationDialog('edit', request)"
+              >
+                Edit
+              </button>
+              <button
+                *ngIf="canDelete(request)"
+                (click)="openConfirmationDialog('delete', request)"
+              >
+                Delete
+              </button>
+              <button
+                *ngIf="canCancel(request)"
+                (click)="openConfirmationDialog('cancel', request)"
+              >
+                Cancel
+              </button> -->
+            </mat-form-field>
+          </div>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+    </table>
+
+    <mat-paginator
+      [length]="100"
+      [pageSize]="10"
+      [pageSizeOptions]="[5, 10, 25, 100]"
+      aria-label="Select page"
+    >
+    </mat-paginator>
+  </div>
 </div>
+
+<mat-card>
+  <ng-template #offersDialog let-data>
+    <h2 mat-dialog-title>Offers for "{{ data.requestName }}"</h2>
+
+    <mat-dialog-content>
+      <div *ngIf="data.offers?.length; else noOffers">
+        <table style="width: 100%">
+          <thead>
+            <tr>
+              <th align="left">Offeror</th>
+              <th align="left">Submitted On</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let offer of data.offers">
+              <td>{{ offer.offerorName }}</td>
+              <td>{{ offer.submittedDate | date : "MM/dd/yyyy, h:mm a" }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <ng-template #noOffers>
+        <p>No offers available.</p>
+      </ng-template>
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+      <button mat-button mat-dialog-close>Close</button>
+    </mat-dialog-actions>
+  </ng-template>
+</mat-card>
