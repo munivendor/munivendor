@@ -33,7 +33,6 @@ td, th {
   min-width: 200px;
 }
 
-
 .filter-row {
   display: flex;
   flex-wrap: wrap;
@@ -55,5 +54,4 @@ td, th {
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
-  margin-right: 2rem;
 }

@@ -1,4 +1,12 @@
-import { Component, EventEmitter, Input, OnInit, Output, ViewChild, ViewEncapsulation } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+  ViewChild,
+  ViewEncapsulation,
+} from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RequestService } from '../Request/services/request.service';
 import { CommonModule } from '@angular/common';
@@ -8,7 +16,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { CategoryHierarchyService } from '../Request/services/category-hierarchy.service'
+import { CategoryHierarchyService } from '../Request/services/category-hierarchy.service';
 import { Subject, takeUntil, forkJoin } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuTrigger } from '@angular/material/menu';
@@ -35,11 +43,10 @@ import { TooltipDirective } from '../shared/directive/tooltip.directive';
     MatIconModule,
     MatButtonModule,
     MatMenuModule,
-    TooltipDirective
+    TooltipDirective,
   ],
-  providers: [RequestService]
+  providers: [RequestService],
 })
-
 export class ResponseBasicComponent implements OnInit {
   @ViewChild(MatMenuTrigger) menuTrigger!: MatMenuTrigger;
   @Input() sourceIdParam?: string | null | undefined;
@@ -48,7 +55,7 @@ export class ResponseBasicComponent implements OnInit {
   @Input() isEditMode = false;
   @Input() responseIdParam?: string | undefined | null;
   requestForm!: FormGroup;
-  request: Response | undefined
+  request: Response | undefined;
   responseForm: FormGroup;
   private destroy$ = new Subject<void>();
   authorizingOfficialId: number | null = null;
@@ -61,7 +68,7 @@ export class ResponseBasicComponent implements OnInit {
     private categoryHierarchyService: CategoryHierarchyService,
     private router: Router,
     private stateService: StateService,
-    private offerorProfileService: OfferorProfileService,
+    private offerorProfileService: OfferorProfileService
   ) {
     this.responseForm = this.fb.group({
       responseName: ['', Validators.required],
@@ -70,13 +77,18 @@ export class ResponseBasicComponent implements OnInit {
   }
 
   private fetchAuthorizingOfficials(): void {
-    this.offerorProfileService.GetOfferorAuthorizingOfficials(Number(this.organizationId))
+    this.offerorProfileService
+      .GetOfferorAuthorizingOfficials(Number(this.organizationId))
       .pipe(takeUntil(this.destroy$))
       .subscribe(
         (officials) => {
-          this.authorizingOfficialId = officials?.[0].vendorAuthorizingOfficialId || null;
+          this.authorizingOfficialId =
+            officials?.[0].vendorAuthorizingOfficialId || null;
           if (officials) {
-            this.responseForm.patchValue({ authorizingOfficial: officials[0].firstName + ' ' + officials[0].lastName });
+            this.responseForm.patchValue({
+              authorizingOfficial:
+                officials[0].firstName + ' ' + officials[0].lastName,
+            });
           }
           console.log('Response form after patching:', this.responseForm.value);
         },
@@ -116,21 +128,58 @@ export class ResponseBasicComponent implements OnInit {
       .pipe(takeUntil(this.destroy$))
       .subscribe(
         ([request, categories, requestTypes]) => {
-          const category = this.findCategoryById(categories, request.categoryId);
-          const requestType = requestTypes.find((r: { requestTypeId: number }) => r.requestTypeId === request.requestTypeId);
+          const category = this.findCategoryById(
+            categories,
+            request.categoryId
+          );
+          const requestType = requestTypes.find(
+            (r: { requestTypeId: number }) =>
+              r.requestTypeId === request.requestTypeId
+          );
 
           this.requestForm = this.fb.group({
             requestName: [{ value: request?.requestName, disabled: true }],
-            requestCategory: [{ value: category?.categoryName || category?.name, disabled: true }],
-            requestType: [{ value: requestType?.requestTypeDesc, disabled: true }],
-            publishDateAndTime: [{ value: this.formatDateTime(request.publishDate), disabled: true }],
+            requestCategory: [
+              {
+                value: category?.categoryName || category?.name,
+                disabled: true,
+              },
+            ],
+            requestType: [
+              { value: requestType?.requestTypeDesc, disabled: true },
+            ],
+            publishDateAndTime: [
+              {
+                value: this.formatDateTime(request.publishDate),
+                disabled: true,
+              },
+            ],
             publishDate: [{ value: request.publishDate, disabled: true }],
-            publishTime: [{ value: this.convertUtcToLocalTimeOnly(request.publishDate), disabled: true }],
-            openDateAndTime: [{ value: this.formatDateTime(request.openDate), disabled: true }],
+            publishTime: [
+              {
+                value: this.convertUtcToLocalTimeOnly(request.publishDate),
+                disabled: true,
+              },
+            ],
+            openDateAndTime: [
+              { value: this.formatDateTime(request.openDate), disabled: true },
+            ],
             openDate: [{ value: request.openDate, disabled: true }],
-            openTime: [{ value: this.convertUtcToLocalTimeOnly(request.openDate), disabled: true }],
-            contractStartDate: [{ value: this.getDateOnly(request.contractStart), disabled: true }],
-            contractEndDate: [{ value: this.getDateOnly(request.contractEnd), disabled: true }],
+            openTime: [
+              {
+                value: this.convertUtcToLocalTimeOnly(request.openDate),
+                disabled: true,
+              },
+            ],
+            contractStartDate: [
+              {
+                value: this.getDateOnly(request.contractStart),
+                disabled: true,
+              },
+            ],
+            contractEndDate: [
+              { value: this.getDateOnly(request.contractEnd), disabled: true },
+            ],
           });
         },
         (error: any) => {
@@ -147,20 +196,25 @@ export class ResponseBasicComponent implements OnInit {
 
   private loadResponseRequest(responseId: number): void {
     const request$ = this.requestService.GetRequestDetailsById(responseId);
-    const authorizingOfficials$ = this.offerorProfileService.GetOfferorAuthorizingOfficials(Number(this.organizationId));
+    const authorizingOfficials$ =
+      this.offerorProfileService.GetOfferorAuthorizingOfficials(
+        Number(this.organizationId)
+      );
     forkJoin([request$, authorizingOfficials$])
       .pipe(takeUntil(this.destroy$))
       .subscribe(
         ([response, authorizingOfficials]) => {
           const authorizingOfficial = authorizingOfficials.find(
             (official: { vendorAuthorizingOfficialId: number }) =>
-              official.vendorAuthorizingOfficialId === response.authorizingOfficialId
+              official.vendorAuthorizingOfficialId ===
+              response.authorizingOfficialId
           );
 
           this.responseForm.patchValue({
             responseName: response.requestName,
-            authorizingOfficial: authorizingOfficial ?
-              `${authorizingOfficial.firstName} ${authorizingOfficial.lastName}` : ''
+            authorizingOfficial: authorizingOfficial
+              ? `${authorizingOfficial.firstName} ${authorizingOfficial.lastName}`
+              : '',
           });
         },
         (error: any) => {
@@ -191,7 +245,7 @@ export class ResponseBasicComponent implements OnInit {
     const formattedTime = date.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
-      hour12: true
+      hour12: true,
     });
     return `${formattedDate} at ${formattedTime}`;
   }
@@ -203,7 +257,7 @@ export class ResponseBasicComponent implements OnInit {
     const localTime = utcDate.toLocaleTimeString(undefined, {
       hour: '2-digit',
       minute: '2-digit',
-      hour12: false
+      hour12: false,
     });
     return localTime;
   }
@@ -224,8 +278,10 @@ export class ResponseBasicComponent implements OnInit {
     };
 
     if (this.responseIdFromStateService || this.responseIdParam) {
-      const requestId = this.responseIdFromStateService || Number(this.responseIdParam);
-      this.requestService.UpdateRequest(Number(requestId), request)
+      const requestId =
+        this.responseIdFromStateService || Number(this.responseIdParam);
+      this.requestService
+        .UpdateRequest(Number(requestId), request)
         .pipe(takeUntil(this.destroy$))
         .subscribe(
           (responseRequestId: number) => {
@@ -233,23 +289,32 @@ export class ResponseBasicComponent implements OnInit {
             this.stateService.setRequestId(responseRequestId);
             this.stateService.setRequestHasBeenSaved(true);
           },
-          error => {
+          (error) => {
             console.error('Error updating Request:', error);
           }
         );
-    }
-    else if (!this.responseIdFromStateService || !this.responseIdParam) {
+    } else if (!this.responseIdFromStateService || !this.responseIdParam) {
       this.requestService.CreateRequest(request).subscribe(
         (response) => {
           console.log('Response saved successfully:', response);
-          this.stateService.setRequestId(response);
+          this.requestService.UpdateRequestStatus(response, 8).subscribe(
+            (statusResponse) => {
+              console.log(
+                'Request status updated successfully:',
+                statusResponse
+              );
+              this.stateService.setRequestId(response);
+            },
+            (error) => {
+              console.error('Error updating request status:', error);
+            }
+          );
         },
         (error) => {
           console.error('Error saving response:', error);
         }
       );
     }
-
   }
 
   goToOfferorProfilePage() {

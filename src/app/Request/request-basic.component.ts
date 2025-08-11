@@ -1,6 +1,22 @@
-import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  Input,
+  Output,
+  EventEmitter,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { FormGroup, FormBuilder, FormArray, ReactiveFormsModule, Validators, FormControl, FormsModule } from '@angular/forms';
+import {
+  FormGroup,
+  FormBuilder,
+  FormArray,
+  ReactiveFormsModule,
+  Validators,
+  FormControl,
+  FormsModule,
+} from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RequestService } from './services/request.service';
 import { StateService } from './services/state.service';
@@ -11,7 +27,10 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDatepickerInputEvent, MatDatepickerModule } from '@angular/material/datepicker';
+import {
+  MatDatepickerInputEvent,
+  MatDatepickerModule,
+} from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { NgxMatTimepickerModule } from 'ngx-mat-timepicker';
 import { MatIconModule } from '@angular/material/icon';
@@ -19,7 +38,12 @@ import { BehaviorSubject, forkJoin, Subject, takeUntil } from 'rxjs';
 import { MatTreeModule } from '@angular/material/tree';
 import { CategoryHierarchyService } from './services/category-hierarchy.service';
 import { CategoryNode } from '../shared/model/category-tree.model';
-import { debounceTime, distinctUntilChanged, filter, tap } from 'rxjs/operators';
+import {
+  debounceTime,
+  distinctUntilChanged,
+  filter,
+  tap,
+} from 'rxjs/operators';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 
 interface FlattenedCategoryNode {
@@ -49,14 +73,15 @@ interface FlattenedCategoryNode {
     NgxMatTimepickerModule,
     MatIconModule,
     MatTreeModule,
-    MatAutocompleteModule
+    MatAutocompleteModule,
   ],
 })
-
 export class BasicRequestComponent implements OnInit, OnDestroy {
   @Input() requestId?: number;
   @Input() idParam?: string | null | undefined;
-  @Output() deleteDropdown = new EventEmitter<{ decisionMakerId: number | null }>();
+  @Output() deleteDropdown = new EventEmitter<{
+    decisionMakerId: number | null;
+  }>();
   @Output() formValidityChange = new EventEmitter<boolean>();
 
   filteredCategoriesSubject = new BehaviorSubject<FlattenedCategoryNode[]>([]);
@@ -96,7 +121,7 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
           debounceTime(100),
           takeUntil(this.destroy$),
           filter(() => this.basicsFormGroup.valid !== lastStatus),
-          tap(() => lastStatus = this.basicsFormGroup.valid)
+          tap(() => (lastStatus = this.basicsFormGroup.valid))
         )
         .subscribe(() => {
           this.formValidityChange.emit(this.basicsFormGroup.valid);
@@ -150,7 +175,7 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     }
 
     // Show matching nodes + parents, but respect toggles for visibility
-    const matched = this.flattenedCategories.filter(cat =>
+    const matched = this.flattenedCategories.filter((cat) =>
       cat.name.toLowerCase().includes(filterValue)
     );
 
@@ -165,7 +190,7 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     this.addParentsOfFilteredNodes(Array.from(relevantNodes), relevantNodes);
 
     // Filter based on toggle visibility within the relevant nodes
-    const finalFiltered = Array.from(relevantNodes).filter(node => {
+    const finalFiltered = Array.from(relevantNodes).filter((node) => {
       const isMatched = matched.includes(node);
       const isParentOfMatched = this.isParentOfMatchedNodes(node, matched);
       if (isMatched || isParentOfMatched) {
@@ -175,35 +200,49 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     });
 
     finalFiltered.sort((a, b) => {
-      const indexA = this.flattenedCategories.findIndex(cat => cat.categoryId === a.categoryId);
-      const indexB = this.flattenedCategories.findIndex(cat => cat.categoryId === b.categoryId);
+      const indexA = this.flattenedCategories.findIndex(
+        (cat) => cat.categoryId === a.categoryId
+      );
+      const indexB = this.flattenedCategories.findIndex(
+        (cat) => cat.categoryId === b.categoryId
+      );
       return indexA - indexB;
     });
 
     this.filteredCategoriesSubject.next(finalFiltered);
   }
 
-  private addParentsOfFilteredNodes(filtered: FlattenedCategoryNode[], result: Set<FlattenedCategoryNode>): void {
+  private addParentsOfFilteredNodes(
+    filtered: FlattenedCategoryNode[],
+    result: Set<FlattenedCategoryNode>
+  ): void {
     const parentsToAdd: Set<string> = new Set();
     // Collect all parent IDs that need to be visible
     for (const node of filtered) {
       let currentParentId = node.parentId;
       while (currentParentId) {
         parentsToAdd.add(currentParentId);
-        const parentNode = this.flattenedCategories.find(cat => cat.categoryId === currentParentId);
+        const parentNode = this.flattenedCategories.find(
+          (cat) => cat.categoryId === currentParentId
+        );
         currentParentId = parentNode?.parentId;
       }
     }
     // Add parent nodes to result set
     for (const parentId of parentsToAdd) {
-      const parentNode = this.flattenedCategories.find(cat => cat.categoryId === parentId);
+      const parentNode = this.flattenedCategories.find(
+        (cat) => cat.categoryId === parentId
+      );
       if (parentNode) {
         result.add(parentNode);
       }
     }
   }
 
-  private collectAllDescendants(parentId: number, result: Set<FlattenedCategoryNode>) {
+  private collectAllDescendants(
+    parentId: number,
+    result: Set<FlattenedCategoryNode>
+  ) {
     for (const node of this.flattenedCategories) {
       if (node.parentId === parentId.toString()) {
         result.add(node);
@@ -219,7 +258,9 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
       let currentParentId = node.parentId;
       while (currentParentId) {
         toExpand.add(currentParentId);
-        const parentNode = this.flattenedCategories.find(cat => cat.categoryId === currentParentId);
+        const parentNode = this.flattenedCategories.find(
+          (cat) => cat.categoryId === currentParentId
+        );
         currentParentId = parentNode?.parentId;
       }
     }
@@ -229,15 +270,21 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     }
 
     for (const id of toExpand) {
-      const parentNode = this.flattenedCategories.find(cat => cat.categoryId === id);
+      const parentNode = this.flattenedCategories.find(
+        (cat) => cat.categoryId === id
+      );
       if (parentNode && !filtered.includes(parentNode)) {
         filtered.push(parentNode);
       }
     }
 
     filtered.sort((a, b) => {
-      const indexA = this.flattenedCategories.findIndex(cat => cat.categoryId === a.categoryId);
-      const indexB = this.flattenedCategories.findIndex(cat => cat.categoryId === b.categoryId);
+      const indexA = this.flattenedCategories.findIndex(
+        (cat) => cat.categoryId === a.categoryId
+      );
+      const indexB = this.flattenedCategories.findIndex(
+        (cat) => cat.categoryId === b.categoryId
+      );
       return indexA - indexB;
     });
   }
@@ -255,41 +302,54 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
       if (!this.expandedNodes.has(parentId)) {
         return false;
       }
-      const parent = this.flattenedCategories.find(cat => cat.categoryId === parentId);
+      const parent = this.flattenedCategories.find(
+        (cat) => cat.categoryId === parentId
+      );
       parentId = parent?.parentId;
     }
     return true;
   }
 
-  prepareCategoriesForTreeRendering(categories: CategoryNode[], level: number = 0): CategoryNode[] {
+  prepareCategoriesForTreeRendering(
+    categories: CategoryNode[],
+    level: number = 0
+  ): CategoryNode[] {
     return categories
-      .filter(cat => !cat.deleted)
-      .map(category => ({
+      .filter((cat) => !cat.deleted)
+      .map((category) => ({
         ...category,
         categoryId: category.id?.toString() ?? '',
         level,
         expandable: !!category.children?.length,
         children: category.children?.length
           ? this.prepareCategoriesForTreeRendering(category.children, level + 1)
-          : undefined
+          : undefined,
       }));
   }
 
-  private isParentOfMatchedNodes(node: FlattenedCategoryNode, matched: FlattenedCategoryNode[]): boolean {
-    return matched.some(matchedNode => {
+  private isParentOfMatchedNodes(
+    node: FlattenedCategoryNode,
+    matched: FlattenedCategoryNode[]
+  ): boolean {
+    return matched.some((matchedNode) => {
       let parentId = matchedNode.parentId;
       while (parentId) {
         if (parentId === node.categoryId) {
           return true;
         }
-        const parent = this.flattenedCategories.find(cat => cat.categoryId === parentId);
+        const parent = this.flattenedCategories.find(
+          (cat) => cat.categoryId === parentId
+        );
         parentId = parent?.parentId;
       }
       return false;
     });
   }
 
-  private isNodeVisibleInFilterMode(node: FlattenedCategoryNode, relevantNodes: Set<FlattenedCategoryNode>): boolean {
+  private isNodeVisibleInFilterMode(
+    node: FlattenedCategoryNode,
+    relevantNodes: Set<FlattenedCategoryNode>
+  ): boolean {
     if (node.level === 0) return true;
 
     let parentId = node.parentId;
@@ -297,21 +357,27 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
       if (!this.expandedNodes.has(parentId)) {
         return false;
       }
-      const parent = this.flattenedCategories.find(cat => cat.categoryId === parentId);
+      const parent = this.flattenedCategories.find(
+        (cat) => cat.categoryId === parentId
+      );
       parentId = parent?.parentId;
     }
     return true;
   }
 
-  private processCategoryLevel(categories: CategoryNode[], level = 0, parentId: string | null = null): void {
-    categories.forEach(category => {
+  private processCategoryLevel(
+    categories: CategoryNode[],
+    level = 0,
+    parentId: string | null = null
+  ): void {
+    categories.forEach((category) => {
       const catId = category.categoryId ?? '';
       const flatNode: FlattenedCategoryNode = {
         name: category.name,
         categoryId: catId,
         level: level,
         expandable: !!category.children?.length,
-        parentId: parentId ?? undefined
+        parentId: parentId ?? undefined,
       };
 
       this.flattenedCategories.push(flatNode);
@@ -357,7 +423,9 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
       openTime: [data?.openTime || '', Validators.required],
       contractStartDate: [data?.contractStartDate || '', Validators.required],
       contractEndDate: [data?.contractEndDate || '', Validators.required],
-      dropdowns: this.fb.array(data?.dropdowns || [this.createDropdownControl()]),
+      dropdowns: this.fb.array(
+        data?.dropdowns || [this.createDropdownControl()]
+      ),
     });
   }
 
@@ -367,7 +435,7 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
 
     categoryControl.valueChanges
       .pipe(debounceTime(200), distinctUntilChanged())
-      .subscribe(value => {
+      .subscribe((value) => {
         if (!value) {
           categoryControl.setValue('', { emitEvent: false });
           this.isFiltering = false;
@@ -386,7 +454,7 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
         debounceTime(100),
         takeUntil(this.formStatus$),
         filter(() => this.basicsFormGroup.valid !== lastValid),
-        tap(() => lastValid = this.basicsFormGroup.valid)
+        tap(() => (lastValid = this.basicsFormGroup.valid))
       )
       .subscribe(() => {
         Promise.resolve().then(() => {
@@ -406,7 +474,9 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
       return '';
     }
 
-    const match = this.flattenedCategories.find(cat => cat.categoryId === value);
+    const match = this.flattenedCategories.find(
+      (cat) => cat.categoryId === value
+    );
     if (match) {
       return match.name;
     }
@@ -415,33 +485,41 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
   };
 
   private fetchInitialData(): void {
-    this.categoryHierarchyService.GetCategoryHierarchy()
+    this.categoryHierarchyService
+      .GetCategoryHierarchy()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (categories) => {
-          this.hierarchicalCategories = this.prepareCategoriesForTreeRendering(categories);
+          this.hierarchicalCategories =
+            this.prepareCategoriesForTreeRendering(categories);
           this.flattenCategories();
         },
-        error: err => console.error('Error fetching categories:', err)
+        error: (err) => console.error('Error fetching categories:', err),
       });
 
-    this.requestService.GetDecisionMakers()
+    this.requestService
+      .GetDecisionMakers()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (decisionMakers: DecisionMaker[]) => this.decisionMakers = decisionMakers,
-        error: err => console.error('Error fetching decision makers:', err)
+        next: (decisionMakers: DecisionMaker[]) =>
+          (this.decisionMakers = decisionMakers),
+        error: (err) => console.error('Error fetching decision makers:', err),
       });
 
-    this.requestService.GetRequestTypes()
+    this.requestService
+      .GetRequestTypes()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (requestTypes: RequestType[]) => this.requestTypes = requestTypes,
-        error: err => console.error('Error fetching request types:', err)
+        next: (requestTypes: RequestType[]) =>
+          (this.requestTypes = requestTypes),
+        error: (err) => console.error('Error fetching request types:', err),
       });
   }
 
   selectCategory(categoryId: string, categoryName: string): void {
-    this.basicsFormGroup.get('category')?.setValue(categoryId, { emitEvent: true });
+    this.basicsFormGroup
+      .get('category')
+      ?.setValue(categoryId, { emitEvent: true });
     setTimeout(() => this.cdr.markForCheck());
   }
 
@@ -469,12 +547,22 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(
         ([request, categories, requestTypes, decisionMakers]) => {
-          const category = this.findCategoryById(categories, request.categoryId);
-          const requestType = requestTypes.find((r: { requestTypeId: number }) => r.requestTypeId === request.requestTypeId);
-          const decisionMakersMapped = request.decisionMakerSelections.map(
-            (selection: { decisionMakerId: number }) =>
-              decisionMakers.find((dm: { decisionMakerId: number }) => dm.decisionMakerId === selection.decisionMakerId)
-          ).filter((dm: any) => dm);
+          const category = this.findCategoryById(
+            categories,
+            request.categoryId
+          );
+          const requestType = requestTypes.find(
+            (r: { requestTypeId: number }) =>
+              r.requestTypeId === request.requestTypeId
+          );
+          const decisionMakersMapped = request.decisionMakerSelections
+            .map((selection: { decisionMakerId: number }) =>
+              decisionMakers.find(
+                (dm: { decisionMakerId: number }) =>
+                  dm.decisionMakerId === selection.decisionMakerId
+              )
+            )
+            .filter((dm: any) => dm);
 
           const formData = {
             category: category?.id,
@@ -486,18 +574,23 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
             openTime: this.convertUtcToLocalTimeOnly(request.openDate),
             contractStartDate: request.contractStart,
             contractEndDate: request.contractEnd,
-            dropdowns: this.createDecisionMakerDropdownControls(decisionMakersMapped),
+            dropdowns:
+              this.createDecisionMakerDropdownControls(decisionMakersMapped),
           };
 
           this.initializeForm(formData);
           if (category) {
-            this.basicsFormGroup.get('category')?.setValue(category.id, { emitEvent: true });
+            this.basicsFormGroup
+              .get('category')
+              ?.setValue(category.id, { emitEvent: true });
             if (category.id !== null) {
               this.selectCategory(category.id.toString(), category.name);
             }
 
             setTimeout(() => {
-              const categoryInput = document.querySelector('input[formControlName="category"]');
+              const categoryInput = document.querySelector(
+                'input[formControlName="category"]'
+              );
               if (categoryInput) {
                 (categoryInput as HTMLInputElement).value = category.name;
               }
@@ -519,7 +612,10 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
   private createDecisionMakerDropdownControls(decisionMakers: any[]): any[] {
     return decisionMakers.map((decisionMaker) =>
       this.fb.group({
-        decisionMaker: [decisionMaker?.decisionMakerId || '', Validators.required],
+        decisionMaker: [
+          decisionMaker?.decisionMakerId || '',
+          Validators.required,
+        ],
       })
     );
   }
@@ -539,14 +635,24 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     const decisionMakerId = dropdownControl.get('decisionMaker')?.value;
 
     if (decisionMakerId && (this.requestId || this.idParam)) {
-      this.requestService.DeleteDecisionMaker(this.requestId ?? Number(this.idParam), decisionMakerId)
+      this.requestService
+        .DeleteDecisionMaker(
+          this.requestId ?? Number(this.idParam),
+          decisionMakerId
+        )
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: () => {
             this.dropdowns.removeAt(index);
-            console.log(`Decision Maker with ID ${decisionMakerId} removed successfully.`);
+            console.log(
+              `Decision Maker with ID ${decisionMakerId} removed successfully.`
+            );
           },
-          error: (error) => console.error(`Error removing Decision Maker with ID ${decisionMakerId}:`, error),
+          error: (error) =>
+            console.error(
+              `Error removing Decision Maker with ID ${decisionMakerId}:`,
+              error
+            ),
         });
     } else {
       this.dropdowns.removeAt(index);
@@ -557,11 +663,15 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     const selectedDecisionMakerIds = new Set(
       this.dropdowns.controls
         .filter((_, i) => i !== index)
-        .map(control => control.get('decisionMaker')?.value)
-        .filter(value => value !== null)
+        .map((control) => control.get('decisionMaker')?.value)
+        .filter((value) => value !== null)
     );
 
-    return this.decisionMakers?.filter(dm => !selectedDecisionMakerIds.has(dm.decisionMakerId)) ?? [];
+    return (
+      this.decisionMakers?.filter(
+        (dm) => !selectedDecisionMakerIds.has(dm.decisionMakerId)
+      ) ?? []
+    );
   }
 
   saveRequest() {
@@ -569,7 +679,8 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     const requestIdFromStateService = this.stateService.getRequestId();
 
     if (this.idParam || requestIdFromStateService) {
-      this.requestService.UpdateRequest(Number(this.idParam), request)
+      this.requestService
+        .UpdateRequest(Number(this.idParam), request)
         .pipe(takeUntil(this.destroy$))
         .subscribe(
           (responseRequestId: number) => {
@@ -578,22 +689,22 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
             this.stateService.setRequestId(responseRequestId);
             this.stateService.setRequestHasBeenSaved(true);
           },
-          error => {
+          (error) => {
             console.error('Error updating Request:', error);
           }
         );
-    }
-    else if (!this.idParam || !requestIdFromStateService) {
-      this.requestService.CreateRequest(request)
+    } else if (!this.idParam || !requestIdFromStateService) {
+      this.requestService
+        .CreateRequest(request)
         .pipe(takeUntil(this.destroy$))
         .subscribe(
           (responseRequestId: number) => {
             console.log('Request created successfully:', responseRequestId);
             this.requestId = responseRequestId;
-            this.stateService.setRequestId(responseRequestId)
+            this.stateService.setRequestId(responseRequestId);
             this.cdr.detectChanges();
           },
-          error => {
+          (error) => {
             console.error('Error creating request:', error);
           }
         );
@@ -618,10 +729,12 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
 
     request.contractStart = new Date(formValues.contractStartDate);
     request.contractEnd = new Date(formValues.contractEndDate);
-    request.decisionMakerSelections = formValues.dropdowns.map((control: any, index: number) => ({
-      decisionMakerNumber: index + 1,
-      decisionMakerId: control.decisionMaker
-    }));
+    request.decisionMakerSelections = formValues.dropdowns.map(
+      (control: any, index: number) => ({
+        decisionMakerNumber: index + 1,
+        decisionMakerId: control.decisionMaker,
+      })
+    );
 
     return request;
   }
@@ -640,7 +753,7 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     const localTime = utcDate.toLocaleTimeString(undefined, {
       hour: '2-digit',
       minute: '2-digit',
-      hour12: false
+      hour12: false,
     });
     return localTime;
   }
@@ -648,13 +761,15 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
   onSelectDate(controlName: string, event: MatDatepickerInputEvent<Date>) {
     if (event.value) {
       const selectedDate = event.value as Date;
-      this.basicsFormGroup.get(controlName)?.setValue(
-        new Date(
-          selectedDate.getFullYear(),
-          selectedDate.getMonth(),
-          selectedDate.getDate()
-        )
-      );
+      this.basicsFormGroup
+        .get(controlName)
+        ?.setValue(
+          new Date(
+            selectedDate.getFullYear(),
+            selectedDate.getMonth(),
+            selectedDate.getDate()
+          )
+        );
     }
   }
 

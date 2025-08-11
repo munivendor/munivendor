@@ -47,7 +47,7 @@ export class SubmitConfirmationDialogComponent implements OnDestroy {
             duration: 5000,
             verticalPosition: 'top',
           });
-          this.router.navigate(['/requests-view']);
+          this.router.navigate(['/offeror-requests-view']);
           this.dialogRef.close(true);
         },
         error: (err: any) => {

@@ -197,13 +197,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.getCategoryHierarchy();
     this.initializeDocuments();
-    // this.initializeRequestDocuments();
-    // if (this.responseIdParam || this.responseIdFromStateService) {
-    //   const requestId = this.responseIdParam
-    //     ? this.responseIdParam
-    //     : this.responseIdFromStateService;
-    //   this.initializeResponseDocuments(Number(requestId));
-    // }
 
     if (this.sourceIdParam) {
       this.getRequestObjDetails(Number(this.sourceIdParam));
@@ -275,61 +268,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
         },
       });
   }
-
-  //   initializeRequestDocuments(): void {
-  //     this.requestService
-  //       .GetRequestRequiredDocumentsById(Number(this.sourceIdParam))
-  //       .subscribe({
-  //         next: (response) => {
-  //           this.requiredDocumentsDatasource = response.documents.map(
-  //             (doc: {
-  //               requestDocumentId: any;
-  //               documentName: any;
-  //               requiresNotarization: any;
-  //               documentInstanceStatus?: string;
-  //             }) => ({
-  //               id: doc.requestDocumentId,
-  //               notarizationRequired: doc.requiresNotarization,
-  //               documentStatus: doc.documentInstanceStatus ?? 'Incomplete',
-  //               ...doc,
-  //             })
-  //           );
-  //           console.log(
-  //             'Request documents initialized successfully.',
-  //             this.requiredDocumentsDatasource
-  //           );
-  //         },
-  //         error: (error) => {
-  //           console.error('Error initializing request documents:', error);
-  //         },
-  //       });
-  //   }
-
-  //   initializeResponseDocuments(requestId: number): void {
-  //     this.requestService.GetRequestRequiredDocumentsById(requestId).subscribe({
-  //       next: (response) => {
-  //         const documents = response.documents || [];
-  //         const offerorDocs = documents.filter(
-  //           (doc: any) => doc.sourceRequestDocumentId === null
-  //         );
-
-  //         this.offerorDocumentsDatasource = offerorDocs;
-
-  //         // this.offerorDocumentsDatasource = response.documents.map(
-  //         //   (doc: any) => ({
-  //         //     ...doc,
-  //         //   })
-  //         // );
-  //         console.log(
-  //           'Offeror documents initialized successfully.',
-  //           this.offerorDocumentsDatasource
-  //         );
-  //       },
-  //       error: (error) => {
-  //         console.error('Error initializing offeror documents:', error);
-  //       },
-  //     });
-  //   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
@@ -520,30 +458,4 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
       controlArray.push(this.fb.control(item.name || item));
     });
   }
-
-  // onSubmit() {
-  //   const requestIdToUse = this.stateService.getRequestId();
-  //   if (!requestIdToUse) {
-  //     console.error('Error: No valid requestId found.');
-  //     return;
-  //   }
-
-  //   // Update the request status to 'Scheduled' once users finalize review
-  //   this.requestService
-  //     .UpdateRequestStatus(requestIdToUse, 9)
-  //     .pipe(takeUntil(this.destroy$))
-  //     .subscribe({
-  //       next: (response) => {
-  //         console.log('Request status updated successfully:', response);
-  //         this.snackBar.open('Request successfully submitted!', '', {
-  //           duration: 5000,
-  //           verticalPosition: 'top',
-  //         });
-  //         this.router.navigate(['/requests-view']);
-  //       },
-  //       error: (err) => {
-  //         console.error('Failed to update request status:', err);
-  //       },
-  //     });
-  // }
 }

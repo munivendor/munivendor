@@ -4,6 +4,7 @@ import {
   OnDestroy,
   ViewChild,
   TemplateRef,
+  Input,
 } from '@angular/core';
 import { forkJoin, Subject, takeUntil } from 'rxjs';
 import { CommonModule } from '@angular/common';
@@ -17,7 +18,7 @@ import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatSort, MatSortModule } from '@angular/material/sort';
-import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -25,11 +26,26 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatIconModule } from '@angular/material/icon';
+import { CustomCategoryDropdownComponent } from '../../shared/CustomCategoryDropdown/custom-category-dropdown.component';
 
-interface Actions {
-  value: string;
-  viewValue: string;
-}
+const ACTION_PERMISSIONS: {
+  [status: string]: {
+    edit?: boolean;
+    delete?: boolean;
+    cancel?: boolean;
+    open?: boolean;
+    noneDisabled?: boolean;
+  };
+} = {
+  Draft: { edit: true, delete: true },
+  Scheduled: { edit: true, delete: true },
+  Live: { cancel: true },
+  Closed: { open: true },
+  Canceled: { noneDisabled: true },
+  Opened: { noneDisabled: true },
+};
 
 @Component({
   selector: 'request-tabledetails',
@@ -52,13 +68,26 @@ interface Actions {
     MatButtonModule,
     MatAutocompleteModule,
     MatDialogModule,
+    MatMenuModule,
+    MatIconModule,
+    CustomCategoryDropdownComponent,
   ],
 })
 export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
+  @Input() categoryControl!: FormControl<number | null>;
+
+  canPerformAction(
+    request: any,
+    action: 'edit' | 'delete' | 'cancel' | 'open'
+  ): boolean {
+    const status = request.agencyRequestStatus?.requestStatusDesc;
+    return !!ACTION_PERMISSIONS[status]?.[action];
+  }
 
   filterForm = this.fb.group({
-    categoryName: [''],
+    requestName: [''],
+    category: new FormControl<string | number | null>(null),
     requestId: [''],
     publishDateFrom: [null],
     publishDateTo: [null],
@@ -78,12 +107,6 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     rfi: [false],
     bid: [false],
   });
-
-  actions: Actions[] = [
-    { value: '1', viewValue: 'Respond' },
-    { value: '2', viewValue: 'Continue' },
-    { value: '3', viewValue: 'Delete' },
-  ];
 
   displayedColumns: string[] = [
     'requestName',
@@ -129,6 +152,14 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     opened: 6,
   };
 
+  readonly AVAILABLE_ACTIONS = ['edit', 'delete', 'cancel', 'open'] as const;
+
+  getAvailableActions(request: any): string[] {
+    const status = request.agencyRequestStatus?.requestStatusDesc;
+    const actionsForStatus = ACTION_PERMISSIONS[status] || {};
+    return this.AVAILABLE_ACTIONS.filter((action) => actionsForStatus[action]);
+  }
+
   onSearch(): void {
     const formValues = this.filterForm.value;
 
@@ -141,6 +172,14 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
       .map(([, value]) => value);
 
     const params: any = {};
+
+    if (formValues.requestName) {
+      params.requestName = formValues.requestName.trim();
+    }
+
+    if (formValues.category) {
+      params.categoryId = Number(formValues.category);
+    }
 
     if (formValues.requestId) {
       params.requestId = Number(formValues.requestId);
@@ -165,11 +204,11 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     }
 
     if (selectedRequestType.length > 0) {
-      params.requestTypeId = selectedRequestType;
+      params.requestTypeIds = selectedRequestType;
     }
 
     if (selectedRequestStatus.length > 0) {
-      params.requestStatusId = selectedRequestStatus;
+      params.requestStatusIds = selectedRequestStatus;
     }
 
     this.loadAndJoinRequestData(params);
@@ -205,7 +244,6 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
                 rs.requestStatusId === request.agencyRequestStatusId
             );
 
-            // 👇 Count submitted responses (offerorRequestStatusId === 9)
             const submittedOffersCount = (request.responses || []).filter(
               (r: any) => r.offerorRequestStatusId === 9
             ).length;
@@ -215,50 +253,29 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
               category,
               requestType,
               agencyRequestStatus,
-              submittedOffersCount, // <- Add this field
+              submittedOffersCount,
             });
           });
 
           this.dataSource = new MatTableDataSource(combinedData);
-
           this.dataSource.paginator = this.paginator;
           this.dataSource.sort = this.sort;
         },
         (error) => {
           console.error('Error loading request data:', error);
+          this.dataSource = new MatTableDataSource<any>([]);
         }
       );
   }
 
-  applyFilter(event: Event) {
-    const filterValue = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = filterValue.trim().toLowerCase();
+  // future for dynamic filtering of solicitation name
+  // applyFilter(event: Event) {
+  //   const filterValue = (event.target as HTMLInputElement).value;
+  //   this.dataSource.filter = filterValue.trim().toLowerCase();
 
-    if (this.dataSource.paginator) {
-      this.dataSource.paginator.firstPage();
-    }
-  }
-
-  // openOffersDialog(request: any): void {
-  //   const mockOffers = [
-  //     {
-  //       offerorName: 'Acme Corp',
-  //       submittedDate: new Date('2024-11-10T10:30:00'),
-  //     },
-  //     {
-  //       offerorName: 'Beta Solutions',
-  //       submittedDate: new Date('2024-11-12T15:45:00'),
-  //     },
-  //   ];
-
-  //   this.dialog.open(this.offersDialog, {
-  //     width: '600px',
-  //     data: {
-  //       requestId: request.requestId,
-  //       requestName: request.requestName,
-  //       offers: mockOffers,
-  //     },
-  //   });
+  //   if (this.dataSource.paginator) {
+  //     this.dataSource.paginator.firstPage();
+  //   }
   // }
 
   openOffersDialog(request: any): void {
@@ -267,8 +284,8 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     );
 
     const formattedOffers = submittedOffers.map((offer: any) => ({
-      offerorName: 'Offeror Org ' + offer.organizationId,
-      submittedDate: new Date(), // replace with actual submission date if available
+      offerorName: offer.organizationName,
+      submittedDate: offer.submittedDate,
     }));
 
     this.dialog.open(this.offersDialog, {
@@ -298,24 +315,6 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
       }
     }
     return null;
-  }
-
-  canDelete(joinedRequest: any): boolean {
-    return (
-      joinedRequest.agencyRequestStatus?.requestStatusDesc === 'Draft' ||
-      joinedRequest.agencyRequestStatus?.requestStatusDesc === 'Scheduled'
-    );
-  }
-
-  canEdit(joinedRequest: any): boolean {
-    return (
-      joinedRequest.agencyRequestStatus?.requestStatusDesc === 'Draft' ||
-      joinedRequest.agencyRequestStatus?.requestStatusDesc === 'Scheduled'
-    );
-  }
-
-  canCancel(joinedRequest: any): boolean {
-    return joinedRequest.agencyRequestStatus?.requestStatusDesc === 'Live';
   }
 
   openConfirmationDialog(action: string, request: any): void {
@@ -350,25 +349,19 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
         if (result && action === 'delete') {
           this.deleteRequest(request);
         }
-        // if (result && action === "edit") {
-        //   this.editRequest(request, action);
-        // }
       });
   }
 
   deleteRequest(request: any): void {
     this.requestService
-      .DeleteRequest(request.requestId)
+      .DeleteRequest(request.requestId, request.organizationId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
           console.log(
             `Request with ID ${request.requestId} deleted successfully.`
           );
-          this.joinedRequestData = this.joinedRequestData.filter(
-            (i) => i.requestId !== request.requestId
-          );
-          this.dataSource.data = this.joinedRequestData;
+          this.loadAndJoinRequestData();
         },
         error: (error) => {
           console.error('Error deleting the request:', error);

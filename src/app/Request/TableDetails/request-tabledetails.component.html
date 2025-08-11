@@ -1,23 +1,22 @@
-<div style="margin-top: 1195rem">
-  <mat-form-field>
-    <mat-label>Filter</mat-label>
-    <input
-      matInput
-      (keyup)="applyFilter($event)"
-      placeholder="Ex. REQUEST FOR QUALIFICATIONS TECHNOLOGY SUPPORT SERVICES"
-      #input
-    />
-  </mat-form-field>
-
+<div style="margin-top: 20rem">
   <mat-card style="margin-bottom: 1rem">
     <mat-card-content>
       <form [formGroup]="filterForm" (ngSubmit)="onSearch()">
+        <mat-form-field appearance="outline">
+          <mat-label>Filter by Solicitation Name</mat-label>
+          <input
+            matInput
+            placeholder="Ex. REQUEST FOR QUALIFICATIONS TECHNOLOGY SUPPORT SERVICES"
+            #input
+            formControlName="requestName"
+          />
+        </mat-form-field>
         <div class="field-container">
           <div class="inline-field">
-            <mat-form-field appearance="outline">
-              <mat-label>Filter by Category Name</mat-label>
-              <input matInput formControlName="categoryName" />
-            </mat-form-field>
+            <custom-category-dropdown
+              [categoryControl]="$any(filterForm.get('category'))"
+            >
+            </custom-category-dropdown>
           </div>
 
           <div class="inline-field">
@@ -117,11 +116,6 @@
                 >Canceled</mat-checkbox
               >
             </div>
-          </div>
-        </div>
-
-        <div class="field-container">
-          <div class="inline-field">
             <div class="checkbox-group">
               <strong>Type</strong>
               <mat-checkbox color="primary" formControlName="rfq"
@@ -138,7 +132,9 @@
               >
             </div>
           </div>
+        </div>
 
+        <div class="field-container">
           <div class="inline-field">
             <button
               mat-raised-button
@@ -200,18 +196,6 @@
         </td>
       </ng-container>
 
-      <!-- <ng-container matColumnDef="numberOfOffers">
-        <th mat-header-cell *matHeaderCellDef>Offers</th>
-        <td mat-cell *matCellDef="let request">
-          <span
-            (click)="openOffersDialog(request)"
-            style="cursor: pointer; text-decoration: underline; color: #3f51b5"
-          >
-            1
-          </span>
-        </td>
-      </ng-container> -->
-
       <ng-container matColumnDef="numberOfOffers">
         <th mat-header-cell *matHeaderCellDef>Offers</th>
         <td mat-cell *matCellDef="let request">
@@ -230,40 +214,41 @@
         <th mat-header-cell *matHeaderCellDef>Actions</th>
         <td mat-cell *matCellDef="let request">
           <div class="action-button-container" style="align-items: center">
-            <mat-form-field style="margin-top: 10px; margin-bottom: -12px">
-              <mat-label>Select</mat-label>
-              <mat-select>
-                <mat-option *ngIf="canEdit(request)"> Edit </mat-option>
+            <button
+              mat-raised-button
+              [ngStyle]="
+                getAvailableActions(request).length > 0
+                  ? { 'background-color': 'rgb(43, 104, 207)', color: 'white' }
+                  : {}
+              "
+              [matMenuTriggerFor]="menu"
+              [disabled]="getAvailableActions(request).length === 0"
+              aria-label="Actions menu"
+            >
+              {{ getAvailableActions(request).length > 0 ? "Select" : "None" }}
+            </button>
 
-                <mat-option *ngIf="canDelete(request)"> Delete </mat-option>
-
-                <mat-option *ngIf="canCancel(request)"> Cancel </mat-option>
-              </mat-select>
-              <!-- <button
-                *ngIf="canEdit(request)"
-                (click)="openConfirmationDialog('edit', request)"
-              >
-                Edit
-              </button>
-              <button
-                *ngIf="canDelete(request)"
-                (click)="openConfirmationDialog('delete', request)"
-              >
-                Delete
-              </button>
-              <button
-                *ngIf="canCancel(request)"
-                (click)="openConfirmationDialog('cancel', request)"
-              >
-                Cancel
-              </button> -->
-            </mat-form-field>
+            <mat-menu #menu="matMenu">
+              <ng-container *ngFor="let action of getAvailableActions(request)">
+                <button
+                  *ngIf="action !== 'noneDisabled'"
+                  mat-menu-item
+                  (click)="openConfirmationDialog(action, request)"
+                >
+                  <span>{{ action | titlecase }}</span>
+                </button>
+              </ng-container>
+            </mat-menu>
           </div>
         </td>
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell" colspan="9">No data matching the filter</td>
+      </tr>
     </table>
 
     <mat-paginator

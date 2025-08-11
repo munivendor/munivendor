@@ -118,31 +118,15 @@
       <a mat-list-item routerLink="request-component" routerLinkActive="active"
         >Create from Templates</a
       >
-      <a mat-list-item routerLink="requests-view" routerLinkActive="active"
-        >Solicitations</a
-      >
       <a
         mat-list-item
-        routerLink="offeror-requests-view"
+        [routerLink]="
+          organizationTypeId === 1 ? 'requests-view' : 'offeror-requests-view'
+        "
         routerLinkActive="active"
-        >Offeror Responses</a
       >
-      <!-- for testing offeror workflow since offeror grid does not exist yet -->
-      <a
-        mat-list-item
-        routerLink="response-basic/331/edit/332"
-        routerLinkActive="active"
-        >ReqID 331 and 332 Offeror Response</a
-      >
-      <a mat-list-item routerLink="response-basic/334" routerLinkActive="active"
-        >ReqID 334 Create Response 335</a
-      >
-      <a
-        mat-list-item
-        routerLink="response-basic/334/edit/335"
-        routerLinkActive="active"
-        >ReqID 334 Edit Response 335</a
-      >
+        Solicitations
+      </a>
       <a mat-list-item routerLink="/create-component" routerLinkActive="active"
         >Submissions</a
       >

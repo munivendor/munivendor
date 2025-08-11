@@ -64,8 +64,10 @@ export class RequestService {
     return this.http.post<void>(url, formData);
   }
 
-  DeleteRequest(requestId: number): Observable<void> {
-    return this.http.delete<void>(`${this.url}Requests/${requestId}`);
+  DeleteRequest(requestId: number, organizationId: number): Observable<void> {
+    return this.http.delete<void>(
+      `${this.url}Requests/${requestId}?organizationId=${organizationId}`
+    );
   }
 
   UpdateRequestStatus(
@@ -229,12 +231,13 @@ export class RequestService {
   GetRequestsOfferorView(params: {
     requestId?: number;
     requestTypeId?: number;
-    requestStatusId?: number;
+    agencyRequestStatusIds?: number;
+    offerorRequestStatusIds?: number;
     organizationId?: number;
     categoryId?: number;
     referenceId?: string;
     requestName?: string;
-    startCloseDate?: string; // ISO string format recommended
+    startCloseDate?: string;
     endCloseDate?: string;
     startPublishDate?: string;
     endPublishDate?: string;
@@ -250,13 +253,13 @@ export class RequestService {
 
   GetRequestsAgencyView(params: {
     requestId?: number;
-    requestTypeId?: number;
-    requestStatusId?: number;
+    requestTypeIds?: number;
+    requestStatusIds?: number;
     organizationId?: number;
     categoryId?: number;
     referenceId?: string;
     requestName?: string;
-    startCloseDate?: string; // ISO string format recommended
+    startCloseDate?: string;
     endCloseDate?: string;
     startPublishDate?: string;
     endPublishDate?: string;
