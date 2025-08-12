@@ -24,8 +24,10 @@ import { StateService } from '../Request/services/state.service';
 export class AuthService {
   private _snackBar = inject(MatSnackBar);
   private url = environment.apiUrl;
-  private userSubject = new BehaviorSubject<SocialUser | null>(null);
-  user$: Observable<SocialUser | null> = this.userSubject.asObservable();
+  /*private userSubject = new BehaviorSubject<SocialUser | null>(null);
+  user$: Observable<SocialUser | null> = this.userSubject.asObservable();*/
+    private userSubject = new BehaviorSubject<number | null>(null);
+  user$: Observable<number | null> = this.userSubject.asObservable();
   authState = new BehaviorSubject<boolean>(false);
   isAuthenticated$ = this.authState.asObservable();
   private skipNextAuthStateSubject = new BehaviorSubject<boolean>(false);
@@ -171,7 +173,7 @@ export class AuthService {
   }
 
   private completeLoginProcess(userId: number, email: string): void {
-    this.userSubject.next(userId);
+    this.userSubject.next(userId);  
     this.flowNavigationService.navigateAfterLogin(userId, email).subscribe({
       next: () => {
         this.setAuthenticated(true, userId);

@@ -59,20 +59,24 @@ export class UserSignUpDetails implements OnInit {
     });
   }
 
-  ngOnInit(): void {
-    this.authService.user$.pipe(takeUntil(this.destroy$)).subscribe((user) => {
-      if (user) {
-        const userId = user;
-        if (userId) {
-          this.getUserDetails(userId);
-        } else {
-          console.error('No user ID available in authentication state');
-        }
-      } else {
-        this.router.navigate(['/login']);
-      }
-    });
-  }
+
+    ngOnInit(): void {
+        this.authService.user$.pipe(
+            takeUntil(this.destroy$)
+        ).subscribe(user => {
+            if (user) {
+                const userId = user
+                if (userId) {
+                   
+                    this.getUserDetails(userId);  
+                } else {
+                    console.error('No user ID available in authentication state');
+                }
+            } else {
+                this.router.navigate(['/login']);
+            }
+        });
+    }
 
   getUserDetails(userId: number): void {
     this.userService.getUser(userId).subscribe(

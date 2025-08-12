@@ -35,7 +35,8 @@ import { firstValueFrom } from 'rxjs';
 })
 export class AppComponent {
   title = 'munivendor';
-  user$: Observable<SocialUser | null>;
+  //user$: Observable<SocialUser | null>;
+   user$: Observable<number | null>;
   showSidenav: boolean = true;
   userId: number | null = null;
   organizationTypeId: number | null = null;
@@ -69,11 +70,9 @@ export class AppComponent {
     });
   }
 
-  private shouldShowSidenav(
-    user: SocialUser | null,
-    isLoggingIn: boolean,
-    currentRoute: string
-  ): boolean {
+
+  private shouldShowSidenav(user: number | null, isLoggingIn: boolean, currentRoute: string): boolean {
+
     const routesToHideSidenav = [
       '/role-verification',
       '/validateuser',
