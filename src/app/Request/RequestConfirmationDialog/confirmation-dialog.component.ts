@@ -56,21 +56,29 @@ export class ConfirmationDialog {
         this.requestObjAndUserAction.request.requestStatus?.requestStatusDesc ??
         '';
       if (statusDesc === 'Scheduled') {
-        return 'This request is scheduled to go live and canceling it will revert it back to a Draft. Are you sure you want to cancel this request?';
+        return 'This solicitation is scheduled to go live and canceling it will revert it back to a Draft. Are you sure you want to cancel this solicitation?';
       } else if (statusDesc === 'Live') {
-        return 'By law, you will need to provide your reasoning for canceling a live request. Are you sure you want to cancel this request?';
+        return 'By law, you will need to provide your reasoning for canceling a live solicitation. Are you sure you want to cancel this solicitation?';
       } else {
-        return 'Are you sure you want to cancel this request?';
+        return 'Are you sure you want to cancel this solicitation?';
       }
     }
 
     switch (this.requestObjAndUserAction.action) {
       case 'delete':
-        return 'If you delete this request your progress will not be saved. Are you sure you want to delete this request?';
+        if (!this.requestObjAndUserAction.request?.sourceRequestId) {
+          return 'If you delete this solicitation your progress will not be saved. Are you sure you want to delete this solicitation?';
+        } else {
+          return 'If you delete your response, it will be permanently removed. Are you sure you want to delete your response to this solicitation?';
+        }
       case 'edit':
-        return 'Are you sure you want to edit this request?';
+        return 'Are you sure you want to edit this solicitation?';
+      case 'respond':
+        return 'Are you sure you want to respond to this solicitation?';
+      case 'continue':
+        return 'Are you sure you want to continue working on your response to this solicitation?';
       default:
-        return `Are you sure you want to ${this.requestObjAndUserAction.action} this request?`;
+        return `Are you sure you want to ${this.requestObjAndUserAction.action} this solicitation?`;
     }
   }
 
@@ -81,14 +89,14 @@ export class ConfirmationDialog {
   confirm(action: string, request: any): void {
     if (
       this.requestObjAndUserAction.action === 'cancel' &&
-      request.requestStatus.requestStatusDesc === 'Live'
+      request.requestStatus?.requestStatusDesc === 'Live'
     ) {
       this.openCancellationReasonDialog(action, request);
       this.dialogRef.close(true);
       return;
     } else if (
       this.requestObjAndUserAction.action === 'cancel' &&
-      request.requestStatus.requestStatusDesc === 'Scheduled'
+      request.requestStatus?.requestStatusDesc === 'Scheduled'
     ) {
       this.onCancelUpdateRequestStatus(request, action);
       this.dialogRef.close(true);
@@ -96,12 +104,23 @@ export class ConfirmationDialog {
     }
 
     // navigates to edit view for agency requests or offeror responses
-    if (request.requestTypeId === 4) {
-      const sourceId = request.sourceRequestId;
-      const responseId = request.requestId;
-      this.router.navigate(['/response-basic', sourceId, 'edit', responseId]);
-    } else {
-      this.router.navigate(['/edit-request-view', request.requestId]);
+    if (action === 'edit' || action === 'continue') {
+      const sourceId = request.requestId;
+      const responseId = request.offerorRequestId;
+      if (responseId) {
+        this.router.navigate(['/response-basic', sourceId, 'edit', responseId]);
+      } else {
+        this.router.navigate(['/edit-request-view', sourceId]);
+      }
+    }
+
+    if (this.requestObjAndUserAction.action === 'respond') {
+      const sourceId = request.requestId;
+      this.router.navigate(['/response-basic', sourceId]);
+    }
+
+    if (this.requestObjAndUserAction.action === 'open') {
+      // wip
     }
 
     this.dialogRef.close(true);

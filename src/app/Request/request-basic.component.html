@@ -2,32 +2,64 @@
   <ng-template matStepLabel>Basics</ng-template>
   <div *ngIf="basicsFormGroup">
     <div class="field-container">
-      
       <div class="inline-field">
         <p>What category are you looking to create?</p>
         <mat-form-field appearance="fill" class="input-width">
           <mat-label>Category</mat-label>
-          <input type="text" placeholder="Choose Category" aria-label="Category" matInput required
-            (focus)="onCategoryFocus()" formControlName="category" [matAutocomplete]="auto">
-          <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayCategoryName">
+          <input
+            type="text"
+            placeholder="Choose Category"
+            aria-label="Category"
+            matInput
+            required
+            (focus)="onCategoryFocus()"
+            formControlName="category"
+            [matAutocomplete]="auto"
+          />
+          <mat-autocomplete
+            #auto="matAutocomplete"
+            [displayWith]="displayCategoryName"
+          >
             @for (option of filteredCategories | async; track option) {
-            <mat-option [value]="option.categoryId"
-              (onSelectionChange)="$event.isUserInput && selectCategory(option.categoryId, option.name)">
-              <div class="tree-node" [ngStyle]="{ 'padding-left.px': getNodeIndent(option.level)}">
-                <button *ngIf="option.expandable" mat-icon-button (click)="toggleExpand(+option.categoryId, $event)"
-                  class="toggle-button">
+            <mat-option
+              [value]="option.categoryId"
+              (onSelectionChange)="
+                $event.isUserInput &&
+                  selectCategory(option.categoryId, option.name)
+              "
+            >
+              <div
+                class="tree-node"
+                [ngStyle]="{ 'padding-left.px': getNodeIndent(option.level) }"
+              >
+                <button
+                  *ngIf="option.expandable"
+                  mat-icon-button
+                  (click)="toggleExpand(+option.categoryId, $event)"
+                  class="toggle-button"
+                >
                   <mat-icon>
-                    {{ isExpanded(option.categoryId) ? 'expand_more' : 'chevron_right' }}
+                    {{
+                      isExpanded(option.categoryId)
+                        ? "expand_more"
+                        : "chevron_right"
+                    }}
                   </mat-icon>
                 </button>
-                <span *ngIf="!option.expandable" class="toggle-spacer" [ngStyle]="{ 'width.px': 40 }">
+                <span
+                  *ngIf="!option.expandable"
+                  class="toggle-spacer"
+                  [ngStyle]="{ 'width.px': 40 }"
+                >
                 </span>
                 <span class="category-name">{{ option.name }}</span>
               </div>
             </mat-option>
             }
           </mat-autocomplete>
-          <mat-error *ngIf="basicsFormGroup?.get('category')?.hasError('required')">
+          <mat-error
+            *ngIf="basicsFormGroup?.get('category')?.hasError('required')"
+          >
             Category is required.
           </mat-error>
         </mat-form-field>
@@ -36,14 +68,22 @@
       <div class="inline-field">
         <p>Please choose the request type below</p>
         <mat-form-field appearance="fill" class="input-width">
-          <mat-label>Request Type</mat-label>
-          <mat-select formControlName="requestType" placeholder="Choose Request Type">
-            <mat-option *ngFor="let requestType of requestTypes" [value]="requestType.requestTypeId">
+          <mat-label>Solicitation Type</mat-label>
+          <mat-select
+            formControlName="requestType"
+            placeholder="Choose Solicitation Type"
+          >
+            <mat-option
+              *ngFor="let requestType of requestTypes"
+              [value]="requestType.requestTypeId"
+            >
               {{ requestType.requestTypeDesc }}
             </mat-option>
           </mat-select>
-          <mat-error *ngIf="basicsFormGroup?.get('requestType')?.hasError('required')">
-            Request Type is required.
+          <mat-error
+            *ngIf="basicsFormGroup?.get('requestType')?.hasError('required')"
+          >
+            Solicitation Type is required.
           </mat-error>
         </mat-form-field>
       </div>
@@ -51,12 +91,14 @@
 
     <div class="field-container">
       <div class="inline-field">
-        <p>Request Name</p>
+        <p>Solicitation Name</p>
         <mat-form-field appearance="fill" class="input-width">
-          <mat-label>Request Name</mat-label>
-          <input matInput formControlName="requestName">
-          <mat-error *ngIf="basicsFormGroup?.get('requestName')?.hasError('required')">
-            Request Name is required.
+          <mat-label>Solicitation Name</mat-label>
+          <input matInput formControlName="requestName" />
+          <mat-error
+            *ngIf="basicsFormGroup?.get('requestName')?.hasError('required')"
+          >
+            Solicitation Name is required.
           </mat-error>
         </mat-form-field>
       </div>
@@ -68,11 +110,20 @@
         <p>What is the Publish Date?</p>
         <mat-form-field appearance="fill" class="input-width">
           <mat-label>Publish Date</mat-label>
-          <input matInput [matDatepicker]="publishDatePicker" formControlName="publishDate"
-            (dateChange)="onSelectDate('publishDate', $event)">
-          <mat-datepicker-toggle matSuffix [for]="publishDatePicker"></mat-datepicker-toggle>
+          <input
+            matInput
+            [matDatepicker]="publishDatePicker"
+            formControlName="publishDate"
+            (dateChange)="onSelectDate('publishDate', $event)"
+          />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="publishDatePicker"
+          ></mat-datepicker-toggle>
           <mat-datepicker #publishDatePicker></mat-datepicker>
-          <mat-error *ngIf="basicsFormGroup?.get('publishDate')?.hasError('required')">
+          <mat-error
+            *ngIf="basicsFormGroup?.get('publishDate')?.hasError('required')"
+          >
             Publish Date is required.
           </mat-error>
         </mat-form-field>
@@ -82,8 +133,10 @@
         <p>What is the Publish Time?</p>
         <mat-form-field appearance="fill" class="input-width">
           <mat-label>Publish Time</mat-label>
-          <input matInput type="time" formControlName="publishTime">
-          <mat-error *ngIf="basicsFormGroup?.get('publishTime')?.hasError('required')">
+          <input matInput type="time" formControlName="publishTime" />
+          <mat-error
+            *ngIf="basicsFormGroup?.get('publishTime')?.hasError('required')"
+          >
             Publish Time is required.
           </mat-error>
         </mat-form-field>
@@ -92,26 +145,37 @@
 
     <div class="field-container">
       <div class="inline-field">
-        <p>What is the Open Date?</p>
+        <p>What is the Close Date?</p>
         <mat-form-field appearance="fill" class="input-width">
-          <mat-label>Open Date</mat-label>
-          <input matInput [matDatepicker]="openDatePicker" formControlName="openDate"
-            (dateChange)="onSelectDate('openDate', $event)">
-          <mat-datepicker-toggle matSuffix [for]="openDatePicker"></mat-datepicker-toggle>
+          <mat-label>Close Date</mat-label>
+          <input
+            matInput
+            [matDatepicker]="openDatePicker"
+            formControlName="openDate"
+            (dateChange)="onSelectDate('openDate', $event)"
+          />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="openDatePicker"
+          ></mat-datepicker-toggle>
           <mat-datepicker #openDatePicker></mat-datepicker>
-          <mat-error *ngIf="basicsFormGroup?.get('openDate')?.hasError('required')">
-            Open Date is required.
+          <mat-error
+            *ngIf="basicsFormGroup?.get('openDate')?.hasError('required')"
+          >
+            Close Date is required.
           </mat-error>
         </mat-form-field>
       </div>
 
       <div class="inline-field">
-        <p>What is the Open Time?</p>
+        <p>What is the Close Time?</p>
         <mat-form-field appearance="fill" class="input-width">
-          <mat-label>Open Time</mat-label>
-          <input matInput type="time" formControlName="openTime">
-          <mat-error *ngIf="basicsFormGroup?.get('openTime')?.hasError('required')">
-            Open Time is required.
+          <mat-label>Close Time</mat-label>
+          <input matInput type="time" formControlName="openTime" />
+          <mat-error
+            *ngIf="basicsFormGroup?.get('openTime')?.hasError('required')"
+          >
+            Close Time is required.
           </mat-error>
         </mat-form-field>
       </div>
@@ -122,11 +186,22 @@
         <p>Contract Start Date</p>
         <mat-form-field appearance="fill" class="input-width">
           <mat-label>Contract Start Date</mat-label>
-          <input matInput [matDatepicker]="contractStartDatePicker" formControlName="contractStartDate"
-            (dateChange)="onSelectDate('contractStartDate', $event)">
-          <mat-datepicker-toggle matSuffix [for]="contractStartDatePicker"></mat-datepicker-toggle>
+          <input
+            matInput
+            [matDatepicker]="contractStartDatePicker"
+            formControlName="contractStartDate"
+            (dateChange)="onSelectDate('contractStartDate', $event)"
+          />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="contractStartDatePicker"
+          ></mat-datepicker-toggle>
           <mat-datepicker #contractStartDatePicker></mat-datepicker>
-          <mat-error *ngIf="basicsFormGroup?.get('contractStartDate')?.hasError('required')">
+          <mat-error
+            *ngIf="
+              basicsFormGroup?.get('contractStartDate')?.hasError('required')
+            "
+          >
             Contract Start Date is required.
           </mat-error>
         </mat-form-field>
@@ -136,11 +211,22 @@
         <p>Contract End Date</p>
         <mat-form-field appearance="fill" class="input-width">
           <mat-label>Contract End Date</mat-label>
-          <input matInput [matDatepicker]="contractEndDatePicker" formControlName="contractEndDate"
-            (dateChange)="onSelectDate('contractEndDate', $event)">
-          <mat-datepicker-toggle matSuffix [for]="contractEndDatePicker"></mat-datepicker-toggle>
+          <input
+            matInput
+            [matDatepicker]="contractEndDatePicker"
+            formControlName="contractEndDate"
+            (dateChange)="onSelectDate('contractEndDate', $event)"
+          />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="contractEndDatePicker"
+          ></mat-datepicker-toggle>
           <mat-datepicker #contractEndDatePicker></mat-datepicker>
-          <mat-error *ngIf="basicsFormGroup?.get('contractEndDate')?.hasError('required')">
+          <mat-error
+            *ngIf="
+              basicsFormGroup?.get('contractEndDate')?.hasError('required')
+            "
+          >
             Contract End Date is required.
           </mat-error>
         </mat-form-field>
@@ -151,23 +237,40 @@
       <div class="inline-field">
         <p>Choose who will be the decision maker on this proposal.</p>
         <div formArrayName="dropdowns">
-          <div *ngFor="let dropdown of dropdowns.controls; let i = index" [formGroupName]="i">
+          <div
+            *ngFor="let dropdown of dropdowns.controls; let i = index"
+            [formGroupName]="i"
+          >
             <div class="form-with-button">
               <mat-form-field appearance="fill" class="input-width">
                 <mat-label>Decision Maker</mat-label>
-                <mat-select formControlName="decisionMaker" placeholder="Choose Decision Maker">
-                  <mat-option *ngFor="let decisionMaker of getFilteredDecisionMakers(i)"
-                    [value]="decisionMaker.decisionMakerId">
+                <mat-select
+                  formControlName="decisionMaker"
+                  placeholder="Choose Decision Maker"
+                >
+                  <mat-option
+                    *ngFor="let decisionMaker of getFilteredDecisionMakers(i)"
+                    [value]="decisionMaker.decisionMakerId"
+                  >
                     {{ decisionMaker.decisionMakerName }}
                   </mat-option>
                 </mat-select>
-                <mat-error *ngIf="dropdown?.get('decisionMaker')?.hasError('required')">
+                <mat-error
+                  *ngIf="dropdown?.get('decisionMaker')?.hasError('required')"
+                >
                   Decision Maker is required.
                 </mat-error>
               </mat-form-field>
 
-              <button *ngIf="i > 0" mat-icon-button aria-label="delete" type="button" color="warn"
-                style="margin-bottom: 20px;" (click)="removeDropdown(i)">
+              <button
+                *ngIf="i > 0"
+                mat-icon-button
+                aria-label="delete"
+                type="button"
+                color="warn"
+                style="margin-bottom: 20px"
+                (click)="removeDropdown(i)"
+              >
                 <mat-icon>delete</mat-icon>
               </button>
             </div>
@@ -176,7 +279,12 @@
       </div>
       <div class="inline-field"></div>
     </div>
-    <button mat-raised-button style="margin-bottom: 8px; margin-top: 8px;" color="primary" (click)="addDropdown()">
+    <button
+      mat-raised-button
+      style="margin-bottom: 8px; margin-top: 8px"
+      color="primary"
+      (click)="addDropdown()"
+    >
       Add Decision Maker
     </button>
   </div>

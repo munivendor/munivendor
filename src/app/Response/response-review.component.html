@@ -1,4 +1,4 @@
-<form [formGroup]="requestFinalReviewDetailsForm" (ngSubmit)="onSubmit()">
+<form [formGroup]="requestFinalReviewDetailsForm">
   <div style="display: flex; justify-content: space-between">
     <h2>Agency Section</h2>
     <button
@@ -19,7 +19,7 @@
 
   <div class="field-container">
     <div class="inline-field">
-      <p>Agency Request Title</p>
+      <p>Agency Solicitation Title</p>
       <mat-form-field appearance="fill" class="input-width">
         <input
           matInput
@@ -33,7 +33,7 @@
 
   <div class="field-container">
     <div class="inline-field">
-      <p>Request Category</p>
+      <p>Solicitation Category</p>
       <mat-form-field appearance="fill" class="input-width">
         <input
           matInput
@@ -44,7 +44,7 @@
       </mat-form-field>
     </div>
     <div class="inline-field">
-      <p>Request Type</p>
+      <p>Solicitation Type</p>
       <mat-form-field appearance="fill" class="input-width">
         <input
           matInput
@@ -70,7 +70,7 @@
     </div>
 
     <div class="inline-field">
-      <p>Open Date and Time</p>
+      <p>Close Date and Time</p>
       <mat-form-field appearance="fill" class="input-width">
         <input
           matInput
@@ -109,7 +109,7 @@
   </div>
 </form>
 
-<form [formGroup]="offerorFinalReviewDetailsForm" (ngSubmit)="onSubmit()">
+<form [formGroup]="offerorFinalReviewDetailsForm">
   <h2>Offeror Section</h2>
   <div class="field-container">
     <div class="inline-field">

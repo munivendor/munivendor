@@ -1,94 +1,53 @@
 <form [formGroup]="requestDocumentsFormGroup">
   <h2>State of New Jersey Required Forms</h2>
-  <div *ngIf="requiredStateDocumentsDatasource.length > 0; else noRequiredStateDocuments">
-  <table mat-table [dataSource]="requiredStateDocumentsDatasource" class="mat-elevation-z8"
-    formArrayName="requiredStateDocuments">
-    <ng-container matColumnDef="select">
-      <th mat-header-cell *matHeaderCellDef></th>
-      <td mat-cell *matCellDef="let row">
-        <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? selection.toggle(row) : null"
-          [checked]="row.get('selected')?.value" [disabled]="true">
-        </mat-checkbox>
-      </td>
-    </ng-container>
-    <ng-container matColumnDef="formName">
-      <th mat-header-cell *matHeaderCellDef>Form Name</th>
-      <td mat-cell *matCellDef="let row" [formGroup]="row">
-        {{ row.get('documentName')?.value }}
-      </td>
-    </ng-container>
-    <ng-container matColumnDef="notarization">
-      <th mat-header-cell *matHeaderCellDef>Notarization<mat-icon
-          matTooltip="Digital Notarization: Offerors will notarize their documents digitally through MuniVendor. All notarized documents are submitted in the offeror’s digital submission packet."
-          color="primary" style="font-size: large" matTooltipPosition="above">
-          info_outline
-        </mat-icon> </th>
-      <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
-        <mat-form-field appearance="fill" style="width: 80%; margin-top: 1rem;" (click)="$event.stopPropagation()">
-          <mat-select formControlName="requiresNotarization">
-            <mat-option [value]="false">Not Required</mat-option>
-            <mat-option [value]="true">Required</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </td>
-    </ng-container>
-    <ng-container matColumnDef="download">
-      <th mat-header-cell *matHeaderCellDef>Download</th>
-      <td mat-cell *matCellDef="let row">
-        <button mat-icon-button color="primary" (click)="onDownloadStateDocument(row)">
-          <mat-icon>download</mat-icon>
-        </button>
-      </td>
-    </ng-container>
-    <ng-container matColumnDef="delete">
-      <th mat-header-cell *matHeaderCellDef></th>
-      <td mat-cell *matCellDef="let row">
-        <button mat-icon-button style="visibility: hidden;">
-          <mat-icon>delete</mat-icon>
-        </button>
-      </td>
-    </ng-container>
-    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="selection.toggle(row)">
-    </tr>
-  </table>
-</div>
-    <!-- Fallback when no documents -->
-    <ng-template #noRequiredStateDocuments>
-      <p style="margin-top: 1rem;">
-        No documents available for this request.
-      </p>
-    </ng-template>
-
-  <br />
-
-  <h2>State of New Jersey Optional Forms</h2>
-  <div *ngIf="optionalStateDocumentsDatasource.length > 0; else noOptionalStateDocuments">
-    <table mat-table [dataSource]="optionalStateDocumentsDatasource" class="mat-elevation-z8"
-      formArrayName="optionalStateDocuments">
+  <div
+    *ngIf="
+      requiredStateDocumentsDatasource.length > 0;
+      else noRequiredStateDocuments
+    "
+  >
+    <table
+      mat-table
+      [dataSource]="requiredStateDocumentsDatasource"
+      class="mat-elevation-z8"
+      formArrayName="requiredStateDocuments"
+    >
       <ng-container matColumnDef="select">
         <th mat-header-cell *matHeaderCellDef></th>
-        <td mat-cell *matCellDef="let row; let i = index">
-          <mat-checkbox color="primary" (click)="$event.stopPropagation()"
-            (change)="onCheckboxChange(optionalStateDocuments, i, $event.checked)"
-            [checked]="row.get('selected')?.value">
+        <td mat-cell *matCellDef="let row">
+          <mat-checkbox
+            color="primary"
+            (click)="$event.stopPropagation()"
+            (change)="$event ? selection.toggle(row) : null"
+            [checked]="row.get('selected')?.value"
+            [disabled]="true"
+          >
           </mat-checkbox>
         </td>
       </ng-container>
       <ng-container matColumnDef="formName">
         <th mat-header-cell *matHeaderCellDef>Form Name</th>
         <td mat-cell *matCellDef="let row" [formGroup]="row">
-          {{ row.get('documentName')?.value }}
+          {{ row.get("documentName")?.value }}
         </td>
       </ng-container>
       <ng-container matColumnDef="notarization">
-        <th mat-header-cell *matHeaderCellDef>Notarization<mat-icon
+        <th mat-header-cell *matHeaderCellDef>
+          Notarization<mat-icon
             matTooltip="Digital Notarization: Offerors will notarize their documents digitally through MuniVendor. All notarized documents are submitted in the offeror’s digital submission packet."
-            color="primary" style="font-size: large" matTooltipPosition="above">
+            color="primary"
+            style="font-size: large"
+            matTooltipPosition="above"
+          >
             info_outline
-          </mat-icon> </th>
+          </mat-icon>
+        </th>
         <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
-          <mat-form-field appearance="fill" style="width: 80%; margin-top: 1rem;" (click)="$event.stopPropagation()">
+          <mat-form-field
+            appearance="fill"
+            style="width: 80%; margin-top: 1rem"
+            (click)="$event.stopPropagation()"
+          >
             <mat-select formControlName="requiresNotarization">
               <mat-option [value]="false">Not Required</mat-option>
               <mat-option [value]="true">Required</mat-option>
@@ -99,7 +58,11 @@
       <ng-container matColumnDef="download">
         <th mat-header-cell *matHeaderCellDef>Download</th>
         <td mat-cell *matCellDef="let row">
-          <button mat-icon-button color="primary" (click)="onDownloadStateDocument(row)">
+          <button
+            mat-icon-button
+            color="primary"
+            (click)="onDownloadStateDocument(row)"
+          >
             <mat-icon>download</mat-icon>
           </button>
         </td>
@@ -107,53 +70,169 @@
       <ng-container matColumnDef="delete">
         <th mat-header-cell *matHeaderCellDef></th>
         <td mat-cell *matCellDef="let row">
-          <button mat-icon-button style="visibility: hidden;">
+          <button mat-icon-button style="visibility: hidden">
             <mat-icon>delete</mat-icon>
           </button>
         </td>
       </ng-container>
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="selection.toggle(row)">
-      </tr>
+      <tr
+        mat-row
+        *matRowDef="let row; columns: displayedColumns"
+        (click)="selection.toggle(row)"
+      ></tr>
+    </table>
+  </div>
+  <!-- Fallback when no documents -->
+  <ng-template #noRequiredStateDocuments>
+    <p style="margin-top: 1rem">No documents available for this request.</p>
+  </ng-template>
+
+  <br />
+
+  <h2>State of New Jersey Optional Forms</h2>
+  <div
+    *ngIf="
+      optionalStateDocumentsDatasource.length > 0;
+      else noOptionalStateDocuments
+    "
+  >
+    <table
+      mat-table
+      [dataSource]="optionalStateDocumentsDatasource"
+      class="mat-elevation-z8"
+      formArrayName="optionalStateDocuments"
+    >
+      <ng-container matColumnDef="select">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let row; let i = index">
+          <mat-checkbox
+            color="primary"
+            (click)="$event.stopPropagation()"
+            (change)="
+              onCheckboxChange(optionalStateDocuments, i, $event.checked)
+            "
+            [checked]="row.get('selected')?.value"
+          >
+          </mat-checkbox>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="formName">
+        <th mat-header-cell *matHeaderCellDef>Form Name</th>
+        <td mat-cell *matCellDef="let row" [formGroup]="row">
+          {{ row.get("documentName")?.value }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="notarization">
+        <th mat-header-cell *matHeaderCellDef>
+          Notarization<mat-icon
+            matTooltip="Digital Notarization: Offerors will notarize their documents digitally through MuniVendor. All notarized documents are submitted in the offeror’s digital submission packet."
+            color="primary"
+            style="font-size: large"
+            matTooltipPosition="above"
+          >
+            info_outline
+          </mat-icon>
+        </th>
+        <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+          <mat-form-field
+            appearance="fill"
+            style="width: 80%; margin-top: 1rem"
+            (click)="$event.stopPropagation()"
+          >
+            <mat-select formControlName="requiresNotarization">
+              <mat-option [value]="false">Not Required</mat-option>
+              <mat-option [value]="true">Required</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="download">
+        <th mat-header-cell *matHeaderCellDef>Download</th>
+        <td mat-cell *matCellDef="let row">
+          <button
+            mat-icon-button
+            color="primary"
+            (click)="onDownloadStateDocument(row)"
+          >
+            <mat-icon>download</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="delete">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let row">
+          <button mat-icon-button style="visibility: hidden">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr
+        mat-row
+        *matRowDef="let row; columns: displayedColumns"
+        (click)="selection.toggle(row)"
+      ></tr>
     </table>
   </div>
 
   <!-- Fallback when no documents -->
   <ng-template #noOptionalStateDocuments>
-    <p style="margin-top: 1rem;">
-      No documents available for this request.
-    </p>
+    <p style="margin-top: 1rem">No documents available for this request.</p>
   </ng-template>
 
   <br />
 
   <h2>Agency (Municipality) Specific Forms</h2>
-  <div *ngIf="optionalMunicipalityDocuments.length > 0; else noOptionalMunicipalityDocuments">
-    <table mat-table [dataSource]="optionalMunicipalityDocumentsDatasource" class="mat-elevation-z8"
-      formArrayName="optionalMunicipalityDocuments">
+  <div
+    *ngIf="
+      optionalMunicipalityDocuments.length > 0;
+      else noOptionalMunicipalityDocuments
+    "
+  >
+    <table
+      mat-table
+      [dataSource]="optionalMunicipalityDocumentsDatasource"
+      class="mat-elevation-z8"
+      formArrayName="optionalMunicipalityDocuments"
+    >
       <ng-container matColumnDef="select">
         <th mat-header-cell *matHeaderCellDef></th>
         <td mat-cell *matCellDef="let row; let i = index">
-          <mat-checkbox color="primary" (click)="$event.stopPropagation()"
-            (change)="onCheckboxChange(optionalMunicipalityDocuments, i, $event.checked)"
-            [checked]="row.get('selected')?.value">
+          <mat-checkbox
+            color="primary"
+            (click)="$event.stopPropagation()"
+            (change)="
+              onCheckboxChange(optionalMunicipalityDocuments, i, $event.checked)
+            "
+            [checked]="row.get('selected')?.value"
+          >
           </mat-checkbox>
         </td>
       </ng-container>
       <ng-container matColumnDef="formName">
         <th mat-header-cell *matHeaderCellDef>Form Name</th>
         <td mat-cell *matCellDef="let row" [formGroup]="row">
-          {{ row.get('documentName')?.value }}
+          {{ row.get("documentName")?.value }}
         </td>
       </ng-container>
       <ng-container matColumnDef="notarization">
-        <th mat-header-cell *matHeaderCellDef>Notarization<mat-icon
+        <th mat-header-cell *matHeaderCellDef>
+          Notarization<mat-icon
             matTooltip="Digital Notarization: Offerors will notarize their documents digitally through MuniVendor. All notarized documents are submitted in the offeror’s digital submission packet."
-            color="primary" style="font-size: large" matTooltipPosition="above">
+            color="primary"
+            style="font-size: large"
+            matTooltipPosition="above"
+          >
             info_outline
-          </mat-icon> </th>
+          </mat-icon>
+        </th>
         <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
-          <mat-form-field appearance="fill" style="width: 80%; margin-top: 1rem;" (click)="$event.stopPropagation()">
+          <mat-form-field
+            appearance="fill"
+            style="width: 80%; margin-top: 1rem"
+            (click)="$event.stopPropagation()"
+          >
             <mat-select formControlName="requiresNotarization">
               <mat-option [value]="false">Not Required</mat-option>
               <mat-option [value]="true">Required</mat-option>
@@ -164,7 +243,11 @@
       <ng-container matColumnDef="download">
         <th mat-header-cell *matHeaderCellDef>Download</th>
         <td mat-cell *matCellDef="let row">
-          <button mat-icon-button color="primary" (click)="onDownloadAgencySpecificDocument(row)">
+          <button
+            mat-icon-button
+            color="primary"
+            (click)="onDownloadAgencySpecificDocument(row)"
+          >
             <mat-icon>download</mat-icon>
           </button>
         </td>
@@ -172,26 +255,40 @@
       <ng-container matColumnDef="delete">
         <th mat-header-cell *matHeaderCellDef></th>
         <td mat-cell *matCellDef="let row">
-          <button mat-icon-button color="primary" (click)="deleteOrganizationDocument(row.get('documentId')?.value)"
-            color="warn">
+          <button
+            mat-icon-button
+            color="primary"
+            (click)="deleteOrganizationDocument(row.get('documentId')?.value)"
+            color="warn"
+          >
             <mat-icon>delete</mat-icon>
           </button>
         </td>
       </ng-container>
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="selection.toggle(row)">
-      </tr>
+      <tr
+        mat-row
+        *matRowDef="let row; columns: displayedColumns"
+        (click)="selection.toggle(row)"
+      ></tr>
     </table>
   </div>
 
   <!-- Fallback when no documents -->
   <ng-template #noOptionalMunicipalityDocuments>
-    <p style="margin-top: 1rem;">
+    <p style="margin-top: 1rem">
       Upload documents you would like to be required for this request.
     </p>
   </ng-template>
 
   <br />
-  <button mat-raised-button color="primary" type="button" (click)="organizationId !== null && openFileUploadDialog(organizationId)">Add</button>
+  <button
+    mat-raised-button
+    color="primary"
+    type="button"
+    (click)="organizationId !== null && openFileUploadDialog(organizationId)"
+  >
+    Add
+  </button>
 </form>
 <br />

@@ -1,5 +1,5 @@
 table {
-  border-collapse: collapse;
+  width: 100%;
 }
 
 .mat-mdc-form-field {
@@ -9,17 +9,6 @@ table {
 
 td, th {
   width: 25%;
-}
-
-.action-button-container {
-  display: flex;
-  flex-direction: column;
-  row-gap: 8px;
-  align-items: center;
-}
-
-.mat-mdc-table {
-  table-layout: fixed;
 }
 
 .field-container {

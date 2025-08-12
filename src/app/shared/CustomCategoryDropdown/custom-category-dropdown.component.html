@@ -1,0 +1,47 @@
+<mat-form-field appearance="outline" style="width: 100%">
+  <mat-label>Filter by Category Name</mat-label>
+  <input
+    type="text"
+    aria-label="Category"
+    matInput
+    [formControl]="categoryControl"
+    (focus)="onCategoryFocus()"
+    [matAutocomplete]="auto"
+  />
+  <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayCategoryName">
+    @for (option of filteredCategories | async; track option) {
+    <mat-option
+      [value]="option.categoryId"
+      (onSelectionChange)="
+        $event.isUserInput && selectCategory(+option.categoryId, option.name)
+      "
+    >
+      <div
+        class="tree-node"
+        [ngStyle]="{
+          'padding-left.px': getNodeIndent(option.level)
+        }"
+      >
+        <button
+          *ngIf="option.expandable"
+          mat-icon-button
+          (click)="toggleExpand(+option.categoryId, $event)"
+          class="toggle-button"
+        >
+          <mat-icon>
+            {{
+              isExpanded(option.categoryId) ? "expand_more" : "chevron_right"
+            }}
+          </mat-icon>
+        </button>
+        <span
+          *ngIf="!option.expandable"
+          class="toggle-spacer"
+          [ngStyle]="{ 'width.px': 40 }"
+        ></span>
+        <span style="vertical-align: super">{{ option.name }}</span>
+      </div>
+    </mat-option>
+    }
+  </mat-autocomplete>
+</mat-form-field>
