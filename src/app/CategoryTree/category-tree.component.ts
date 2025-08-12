@@ -1,4 +1,10 @@
-import { Component, ElementRef, OnInit, QueryList, ViewChildren } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  OnInit,
+  QueryList,
+  ViewChildren,
+} from '@angular/core';
 import { MatTreeNestedDataSource, MatTreeModule } from '@angular/material/tree';
 import { NestedTreeControl } from '@angular/cdk/tree';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,41 +14,59 @@ import { FormsModule } from '@angular/forms';
 import { CategoryHierarchyService } from '../Request/services/category-hierarchy.service';
 import { CategoryNode } from '../shared/model/category-tree.model';
 import { ChangeDetectorRef } from '@angular/core';
+
+// TODO: use treeNode to keep an internal state of all nodes and their collapsed state and save to session storage
+//       on load, restore the state from session storage
+//       this will allow the tree to maintain its state across page reloads
+//       and will also allow the user to collapse/expand nodes without losing their state
 @Component({
   selector: 'app-category-tree',
   templateUrl: './category-tree.component.html',
   styleUrls: ['./category-tree.component.css'],
   standalone: true,
-  imports: [MatTreeModule, MatButtonModule, MatIconModule, CommonModule, FormsModule],
+  imports: [
+    MatTreeModule,
+    MatButtonModule,
+    MatIconModule,
+    CommonModule,
+    FormsModule,
+  ],
 })
 export class CategoryTreeComponent implements OnInit {
   @ViewChildren('treeNode') treeNodes: QueryList<ElementRef> | undefined;
 
-  treeControl = new NestedTreeControl<CategoryNode>(node => node.children || []);
+  treeControl = new NestedTreeControl<CategoryNode>(
+    (node) => node.children || []
+  );
   dataSource = new MatTreeNestedDataSource<CategoryNode>();
   categoryHierarchy: CategoryNode[] = [];
   newlyCreatedNode: CategoryNode | null = null;
   editedNode: CategoryNode | null = null;
+  collapsedStateTree: { [key: string]: boolean } = {};
 
   constructor(
     private categoryHierarchyService: CategoryHierarchyService,
     private cdr: ChangeDetectorRef
-  ) { }
+  ) {}
 
   ngOnInit() {
     this.loadCategoryHierarchy();
   }
 
   isAnyNodeEditing(): boolean {
-    return !!this.editedNode || this.categoryHierarchy.some(node => this.checkEditing(node));
+    return (
+      !!this.editedNode ||
+      this.categoryHierarchy.some((node) => this.checkEditing(node))
+    );
   }
 
   private checkEditing(node: CategoryNode): boolean {
     if (node.isEditing) return true;
-    return node.children?.some(child => this.checkEditing(child)) ?? false;
+    return node.children?.some((child) => this.checkEditing(child)) ?? false;
   }
 
-  hasChild = (_: number, node: CategoryNode) => !!node.children && node.children.length > 0;
+  hasChild = (_: number, node: CategoryNode) =>
+    !!node.children && node.children.length > 0;
 
   getNodeIndent(level: number | undefined): number {
     return (level ?? 0) * 30;
@@ -55,10 +79,19 @@ export class CategoryTreeComponent implements OnInit {
         this.categoryHierarchy = categories;
         this.dataSource.data = categories;
         this.treeControl.dataNodes = categories;
+
+        this.loadFromSessionStorage();
+        if (this.collapsedStateTree) {
+          this.restoreExpandedNodes(
+            Object.keys(this.collapsedStateTree)
+              .filter((key) => !this.collapsedStateTree[key])
+              .map((key) => (isNaN(Number(key)) ? key : Number(key)))
+          );
+        }
       },
       error: (error) => {
         console.error('Error fetching categories:', error);
-      }
+      },
     });
   }
 
@@ -82,9 +115,10 @@ export class CategoryTreeComponent implements OnInit {
       isEditing: true,
       isNew: true,
       level,
-      children: []
+      children: [],
     };
   }
+
   addRootCategory() {
     const newRoot = this.createNewNode(0);
 
@@ -92,6 +126,7 @@ export class CategoryTreeComponent implements OnInit {
     this.updateCategoryHierarchy();
     this.updateTreeData();
   }
+
   addChild(parentNode: CategoryNode) {
     this.treeControl.expand(parentNode);
     const expandedNodeIds = this.getExpandedNodeIds();
@@ -109,7 +144,7 @@ export class CategoryTreeComponent implements OnInit {
     if (!this.treeControl.isExpanded(parentNode)) {
       this.treeControl.expand(parentNode);
     }
-      this.restoreExpandedNodes(expandedNodeIds);
+    this.restoreExpandedNodes(expandedNodeIds);
   }
 
   editNode(node: CategoryNode): void {
@@ -128,7 +163,7 @@ export class CategoryTreeComponent implements OnInit {
     this.cdr.detectChanges();
     setTimeout(() => {
       const inputs = document.querySelectorAll('.edit-input');
-      inputs.forEach(input => {
+      inputs.forEach((input) => {
         if (input instanceof HTMLInputElement) {
           input.focus();
         }
@@ -152,25 +187,28 @@ export class CategoryTreeComponent implements OnInit {
     this.updateTreeData();
     this.restoreExpandedNodes(expandedNodeIds);
 
-    parentPath.forEach(parent => {
+    parentPath.forEach((parent) => {
       this.treeControl.expand(parent);
     });
     this.cdr.markForCheck();
     this.cdr.detectChanges();
   }
 
-  private findParentPath(nodes: CategoryNode[], targetNode: CategoryNode, currentPath: CategoryNode[] = []): CategoryNode[] {
+  private findParentPath(
+    nodes: CategoryNode[],
+    targetNode: CategoryNode,
+    currentPath: CategoryNode[] = []
+  ): CategoryNode[] {
     for (const node of nodes) {
       if (node === targetNode) {
         return currentPath;
       }
 
       if (node.children && node.children.length > 0) {
-        const foundPath = this.findParentPath(
-          node.children,
-          targetNode,
-          [...currentPath, node]
-        );
+        const foundPath = this.findParentPath(node.children, targetNode, [
+          ...currentPath,
+          node,
+        ]);
 
         if (foundPath.length > 0) {
           return foundPath;
@@ -189,14 +227,17 @@ export class CategoryTreeComponent implements OnInit {
     this.updateTreeData();
     this.restoreExpandedNodes(expandedNodeIds);
 
-    parentPath.forEach(parent => {
+    parentPath.forEach((parent) => {
       this.treeControl.expand(parent);
     });
   }
 
-  private markAndUpdateDeletedNode(nodeId: number | null, nodes: CategoryNode[]) {
+  private markAndUpdateDeletedNode(
+    nodeId: number | null,
+    nodes: CategoryNode[]
+  ) {
     if (!nodeId) return;
-    nodes.forEach(node => {
+    nodes.forEach((node) => {
       if (node.id === nodeId) {
         node.deleted = true;
       } else if (node.children?.length) {
@@ -209,29 +250,69 @@ export class CategoryTreeComponent implements OnInit {
     return {
       ...node,
       id: (node.id ?? 0) < 0 ? null : node.id,
-      children: node.children?.map(child => this.cleanNode(child)) || []
+      children: node.children?.map((child) => this.cleanNode(child)) || [],
     };
   }
 
-  saveCategoryHierarchy(): void {
-    const cleanedCategoryHierarchy = this.categoryHierarchy.map(node => this.cleanNode(node));
-    const categoryHierarchyString = JSON.stringify(cleanedCategoryHierarchy);
+  private buildCollapsedStateTree() {
+    const traverse = (nodes: CategoryNode[]) => {
+      nodes.forEach((node) => {
+        // Use node.id as key; fallback to a unique string if id is null
+        const key =
+          node.id !== null && node.id !== undefined
+            ? node.id.toString()
+            : `temp_${Math.random()}`;
+        this.collapsedStateTree[key] = !this.treeControl.isExpanded(node);
+        if (node.children && node.children.length) {
+          traverse(node.children);
+        }
+      });
+    };
+    this.collapsedStateTree = {};
+    traverse(this.dataSource.data);
+  }
 
-    this.categoryHierarchyService.SaveCategoryHierarchy(categoryHierarchyString).subscribe({
-      next: (response) => {
-        console.log('Category hierarchy saved successfully!');
-        this.loadCategoryHierarchy();
-        const expandedNodeIds = this.getExpandedNodeIds();
-        this.restoreExpandedNodes(expandedNodeIds);
-      },
-      error: (error) => {
-        console.error('Error saving category hierarchy:', error);
-      }
-    });
+  private saveToSessionStorage() {
+    sessionStorage.setItem(
+      'collapsedStateTree',
+      JSON.stringify(this.collapsedStateTree)
+    );
+  }
+
+  private loadFromSessionStorage() {
+    const storedState = sessionStorage.getItem('collapsedStateTree');
+    if (storedState) {
+      this.collapsedStateTree = JSON.parse(storedState);
+    } else {
+      this.collapsedStateTree = {};
+    }
+  }
+
+  saveCategoryHierarchy(): void {
+    const cleanedCategoryHierarchy = this.categoryHierarchy.map((node) =>
+      this.cleanNode(node)
+    );
+    const categoryHierarchyString = JSON.stringify(cleanedCategoryHierarchy);
+    this.buildCollapsedStateTree();
+    this.saveToSessionStorage();
+
+    this.categoryHierarchyService
+      .SaveCategoryHierarchy(categoryHierarchyString)
+      .subscribe({
+        next: (response) => {
+          console.log('Category hierarchy saved successfully!');
+          this.loadCategoryHierarchy();
+          const expandedNodeIds = this.getExpandedNodeIds();
+          this.restoreExpandedNodes(expandedNodeIds);
+        },
+        error: (error) => {
+          console.error('Error saving category hierarchy:', error);
+        },
+      });
   }
 
   private updateNodeLevels(nodes: CategoryNode[], parentLevel: number = 0) {
-    nodes.forEach(node => {
+    nodes.forEach((node) => {
       node.level = parentLevel;
       if (node.children && node.children.length) {
         this.updateNodeLevels(node.children, parentLevel + 1);
@@ -242,7 +323,7 @@ export class CategoryTreeComponent implements OnInit {
   private getExpandedNodeIds(): (number | string | null)[] {
     const expandedNodeIds: (number | string | null)[] = [];
     const checkNode = (nodes: CategoryNode[]) => {
-      nodes.forEach(node => {
+      nodes.forEach((node) => {
         if (this.treeControl.isExpanded(node)) {
           const nodeId = node.id ?? null;
           if (nodeId !== undefined) {
@@ -260,7 +341,7 @@ export class CategoryTreeComponent implements OnInit {
 
   private restoreExpandedNodes(expandedNodeIds: (number | string | null)[]) {
     const expandNode = (nodes: CategoryNode[]) => {
-      nodes.forEach(node => {
+      nodes.forEach((node) => {
         const nodeId = node.id ?? null;
         if (nodeId !== undefined && expandedNodeIds.includes(nodeId)) {
           this.treeControl.expand(node);
