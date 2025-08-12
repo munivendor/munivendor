@@ -1,11 +1,16 @@
 <div>
-  <div style="float: right; margin-top: 8px;">
-    <button mat-flat-button color="primary" (click)="downloadPDF()">Download Request</button>
+  <div style="float: right; margin-top: 8px">
+    <button mat-flat-button color="primary" (click)="downloadPDF()">
+      Download Solicitation
+    </button>
   </div>
   <div class="content">
     <div *ngFor="let section of requestSections">
       <h2>{{ section.requestSectionTitle }}</h2>
-      <div [innerHTML]="section.requestSectionContent" class="content-display"></div>
+      <div
+        [innerHTML]="section.requestSectionContent"
+        class="content-display"
+      ></div>
     </div>
   </div>
 </div>

@@ -1,6 +1,14 @@
 import { inject, Injectable } from '@angular/core';
 import { SocialAuthService, SocialUser } from '@abacritt/angularx-social-login';
-import { BehaviorSubject, catchError, filter, Observable, tap, throwError, withLatestFrom } from 'rxjs';
+import {
+  BehaviorSubject,
+  catchError,
+  filter,
+  Observable,
+  tap,
+  throwError,
+  withLatestFrom,
+} from 'rxjs';
 import { Router } from '@angular/router';
 import { UserLogin } from '../shared/model/user-login.model';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
@@ -42,93 +50,102 @@ export class AuthService {
   }
 
   private initializeAuthListener(): void {
-    this.socialAuthService.authState.pipe(
-      withLatestFrom(this.skipNextAuthState$),
-      filter(([user, skipNext]) => !!user && !skipNext)
-    ).subscribe({
-      next: ([user, _]) => {
-        console.log("Google Auth State Changed:", user);
-        if (user && user.id) {
-          const userLogin: UserLogin = {
-            userIdentity: user.id,
-            username: user.email
-          };
+    this.socialAuthService.authState
+      .pipe(
+        withLatestFrom(this.skipNextAuthState$),
+        filter(([user, skipNext]) => !!user && !skipNext)
+      )
+      .subscribe({
+        next: ([user, _]) => {
+          console.log('Google Auth State Changed:', user);
+          if (user && user.id) {
+            const userLogin: UserLogin = {
+              userIdentity: user.id,
+              username: user.email,
+            };
 
-          this.login(userLogin).subscribe({
-            next: (userId) => {
-              this.completeLoginProcess(userId, user.email);
-            },
-            error: (error) => {
-              this.safeResetAuthState();
-              this._snackBar.open('Login failed: Invalid email, password, or unauthorized email.', 'Close', {
-                verticalPosition: 'top',
-              });
-            }
-          });
-        }
-      }
-    });
+            this.login(userLogin).subscribe({
+              next: (userId) => {
+                this.completeLoginProcess(userId, user.email);
+              },
+              error: (error) => {
+                this.safeResetAuthState();
+                this._snackBar.open(
+                  'Login failed: Invalid email, password, or unauthorized email.',
+                  'Close',
+                  {
+                    verticalPosition: 'top',
+                  }
+                );
+              },
+            });
+          }
+        },
+      });
   }
 
   login(userLogin: UserLogin): Observable<any> {
     this.isLoggingIn.next(true);
-    return this.http.post<{ UserId: number; Token: string }>(
-      `${this.url}login`, userLogin, { withCredentials: true }
-    ).pipe(
-      tap(userId => {
-        if (userId) {
-          this.userSubject.next(userId as any);
-          this.userService.getUser(Number(userId)).subscribe(
-            (user: User) => {
-              console.log('User data fetched successfully:', user);
-              if (user.organizationId !== undefined) {
-                this.stateService.setOrganizationId(user.organizationId);
-              } else {
-                console.warn('Organization ID is undefined.');
-              }
-
-            },
-            (error) => {
-              console.error('Error fetching user data:', error);
-            }
-          );
-        }
-      }),
-      catchError((error: HttpErrorResponse) => {
-        this.isLoggingIn.next(false);
-        return throwError(() => error);
+    return this.http
+      .post<{ UserId: number; Token: string }>(`${this.url}login`, userLogin, {
+        withCredentials: true,
       })
-    );
+      .pipe(
+        tap((userId) => {
+          if (userId) {
+            this.userSubject.next(userId as any);
+            this.userService.getUser(Number(userId)).subscribe(
+              (user: User) => {
+                console.log('User data fetched successfully:', user);
+                if (user.organizationId !== undefined) {
+                  this.stateService.setOrganizationId(user.organizationId);
+                } else {
+                  console.warn('Organization ID is undefined.');
+                }
+              },
+              (error) => {
+                console.error('Error fetching user data:', error);
+              }
+            );
+          }
+        }),
+        catchError((error: HttpErrorResponse) => {
+          this.isLoggingIn.next(false);
+          return throwError(() => error);
+        })
+      );
   }
 
   logout(): void {
     if (!this.authState.value) {
-      console.warn("User is already logged out, skipping redundant logout.");
+      console.warn('User is already logged out, skipping redundant logout.');
       return;
     }
 
-    this.http.post(`${this.url}logout`, {}, { withCredentials: true }).subscribe({
-      next: async () => {
-        try {
-          if (this.userSubject.value) {
-            await this.socialAuthService.signOut();
+    this.http
+      .post(`${this.url}logout`, {}, { withCredentials: true })
+      .subscribe({
+        next: async () => {
+          try {
+            if (this.userSubject.value) {
+              await this.socialAuthService.signOut();
+            }
+          } catch (error) {
+            console.error('Google Sign-Out Error:', error);
+          } finally {
+            this.safeResetAuthState();
           }
-        } catch (error) {
-          console.error('Google Sign-Out Error:', error);
-        } finally {
+        },
+        error: (error) => {
+          console.error('Logout Error:', error);
           this.safeResetAuthState();
-        }
-      },
-      error: (error) => {
-        console.error('Logout Error:', error);
-        this.safeResetAuthState();
-      }
-    });
+        },
+      });
   }
 
   private safeResetAuthState(): void {
     if (!this.authState.value) {
-      console.warn("Auth state is already reset. Skipping duplicate reset.");
+      console.warn('Auth state is already reset. Skipping duplicate reset.');
       return;
     }
 
@@ -165,7 +182,7 @@ export class AuthService {
         console.error('Navigation error:', error);
         this.setAuthenticated(true, userId);
         this.router.navigate(['/role-verification']);
-      }
+      },
     });
   }
 }
