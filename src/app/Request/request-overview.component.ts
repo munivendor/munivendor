@@ -38,6 +38,7 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
     height: 300,
     menubar: false,
     plugins: 'lists code',
+    
   };
 
   proposalsOverviewFormGroup!: FormGroup;
