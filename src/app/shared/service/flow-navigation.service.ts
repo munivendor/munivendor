@@ -6,7 +6,7 @@ import { UserService } from './user.service';
 import { User } from '../model/user.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class FlowNavigationService {
   private readonly FLOW_ROUTES = {
@@ -15,11 +15,11 @@ export class FlowNavigationService {
       routes: {
         0: '/government-agency-details',
         2: '/user-details',
-        3: '/user-designation',
-        4: '/payment-plan-confirmation',
-        5: '/billing-profile',
-        6: '/dashboard-component'
-      }
+        // 3: '/user-designation',
+        // 4: '/payment-plan-confirmation',
+        // 5: '/billing-profile',
+        6: '/requests-view',
+      },
     },
     agency: {
       flowId: 1,
@@ -27,32 +27,32 @@ export class FlowNavigationService {
         0: '/role-verification',
         1: '/government-agency-details',
         2: '/user-details',
-        3: '/user-designation',
-        4: '/payment-plan-confirmation',
-        5: '/billing-profile',
-        6: '/dashboard-component'
-      }
+        // 3: '/user-designation',
+        // 4: '/payment-plan-confirmation',
+        // 5: '/billing-profile',
+        6: '/requests-view',
+      },
     },
     offeror: {
       flowId: 2,
       routes: {
         0: '/role-verification',
         1: '/user-details',
-        3: '/payment-plan-confirmation',
-        5: '/billing-profile',
-        6: '/dashboard-component'
-      }
-    }
+        // 3: '/payment-plan-confirmation',
+        // 5: '/billing-profile',
+        6: '/offeror-requests-view',
+      },
+    },
   };
 
   constructor(
     private router: Router,
     private flowProgressService: FlowProgressService,
     private userService: UserService
-  ) { }
+  ) {}
 
   navigateAfterLogin(userId: number, email: string): Observable<void> {
-    return new Observable(observer => {
+    return new Observable((observer) => {
       const isGovEmail = email.toLowerCase().endsWith('.gov');
 
       if (isGovEmail) {
@@ -68,7 +68,7 @@ export class FlowNavigationService {
         error: (error) => {
           console.error('Error fetching user data:', error);
           observer.error(error);
-        }
+        },
       });
     });
   }
@@ -79,20 +79,25 @@ export class FlowNavigationService {
     observer: any
   ): void {
     const flowConfig = this.FLOW_ROUTES[flowType];
-    this.flowProgressService.getFlowProgress(userId, flowConfig.flowId).subscribe({
-      next: (progress) => {
-        this.navigateBasedOnProgress(progress, flowConfig.routes);
-        observer.next();
-        observer.complete();
-      },
-      error: (err) => {
-        console.error('Error fetching flow progress:', err);
-        observer.error(err);
-      }
-    });
+    this.flowProgressService
+      .getFlowProgress(userId, flowConfig.flowId)
+      .subscribe({
+        next: (progress) => {
+          this.navigateBasedOnProgress(progress, flowConfig.routes);
+          observer.next();
+          observer.complete();
+        },
+        error: (err) => {
+          console.error('Error fetching flow progress:', err);
+          observer.error(err);
+        },
+      });
   }
 
-  private getFlowType(isGovEmail: boolean, organizationTypeId?: number): 'government' | 'agency' | 'offeror' {
+  private getFlowType(
+    isGovEmail: boolean,
+    organizationTypeId?: number
+  ): 'government' | 'agency' | 'offeror' {
     if (isGovEmail) {
       return 'government';
     } else if (organizationTypeId === 1) {
@@ -101,7 +106,10 @@ export class FlowNavigationService {
     return 'offeror';
   }
 
-  private navigateBasedOnProgress(progress: any, routes: Record<number, string>): void {
+  private navigateBasedOnProgress(
+    progress: any,
+    routes: Record<number, string>
+  ): void {
     const pageId = progress?.lastCompletedPageId ?? 0;
     const route = routes[pageId];
 
