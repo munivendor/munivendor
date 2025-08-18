@@ -246,7 +246,7 @@ export class RequestService {
   }): Observable<any> {
     const httpParams = new HttpParams({ fromObject: { ...params } });
 
-    return this.http.get<any>(`${this.url}api/requests/offeror-grid`, {
+    return this.http.get<any>(`${this.url}requests/offeror-grid`, {
       params: httpParams,
     });
   }
@@ -268,7 +268,7 @@ export class RequestService {
   }): Observable<any> {
     const httpParams = new HttpParams({ fromObject: { ...params } });
 
-    return this.http.get<any>(`${this.url}api/requests/agency-grid`, {
+    return this.http.get<any>(`${this.url}requests/agency-grid`, {
       params: httpParams,
     });
   }
