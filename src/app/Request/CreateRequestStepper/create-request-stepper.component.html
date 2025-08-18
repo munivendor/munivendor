@@ -1,73 +1,75 @@
-<mat-stepper [linear]="true" #stepper>
-  <mat-step label="Basics">
-    <ng-template matStepContent>
-      <request-basic
-        #step1
-        [requestId]="requestId"
-        [idParam]="idParam"
-        (formValidityChange)="onFormValidityChange($event)"
-      ></request-basic>
-      <div>
-        <button
-          mat-button
-          (click)="saveRequest()"
-          matStepperNext
-          [disabled]="!isStepValid"
-        >
-          Next
-        </button>
-      </div>
-    </ng-template>
-  </mat-step>
+<mat-card>
+  <mat-stepper [linear]="true" #stepper style="border-radius: 8px">
+    <mat-step label="Basics">
+      <ng-template matStepContent>
+        <request-basic
+          #step1
+          [requestId]="requestId"
+          [idParam]="idParam"
+          (formValidityChange)="onFormValidityChange($event)"
+        ></request-basic>
+        <div>
+          <button
+            mat-button
+            (click)="saveRequest()"
+            matStepperNext
+            [disabled]="!isStepValid"
+          >
+            Next
+          </button>
+        </div>
+      </ng-template>
+    </mat-step>
 
-  <mat-step label="Proposals">
-    <ng-template matStepContent>
-      <request-overview
-        #step2
-        [idParam]="idParam"
-        (formValidityChange)="onFormValidityChange($event)"
-      ></request-overview>
-      <div>
-        <button mat-button matStepperPrevious>Back</button>
-        <button
-          mat-button
-          matStepperNext
-          (click)="saveSections()"
-          [disabled]="!isStepValid"
-        >
-          Next
-        </button>
-      </div>
-    </ng-template>
-  </mat-step>
+    <mat-step label="Proposals">
+      <ng-template matStepContent>
+        <request-overview
+          #step2
+          [idParam]="idParam"
+          (formValidityChange)="onFormValidityChange($event)"
+        ></request-overview>
+        <div>
+          <button mat-button matStepperPrevious>Back</button>
+          <button
+            mat-button
+            matStepperNext
+            (click)="saveSections()"
+            [disabled]="!isStepValid"
+          >
+            Next
+          </button>
+        </div>
+      </ng-template>
+    </mat-step>
 
-  <mat-step label="Documents">
-    <ng-template matStepContent>
-      <request-required-documents
-        [idParam]="idParam"
-      ></request-required-documents>
-      <div>
-        <button mat-button matStepperPrevious>Back</button>
-        <button mat-button matStepperNext (click)="saveDocuments()">
-          Next
-        </button>
-      </div>
-    </ng-template>
-  </mat-step>
+    <mat-step label="Documents">
+      <ng-template matStepContent>
+        <request-required-documents
+          [idParam]="idParam"
+        ></request-required-documents>
+        <div>
+          <button mat-button matStepperPrevious>Back</button>
+          <button mat-button matStepperNext (click)="saveDocuments()">
+            Next
+          </button>
+        </div>
+      </ng-template>
+    </mat-step>
 
-  <mat-step label="Review">
-    <ng-template matStepContent>
-      <request-review [paramRequestId]="requestId"></request-review>
-      <div>
-        <button mat-button matStepperPrevious>Back</button>
-        <button
-          mat-button
-          matStepperNext
-          (click)="updateRequestStatusToScheduled()"
-        >
-          Submit
-        </button>
-      </div>
-    </ng-template>
-  </mat-step>
-</mat-stepper>
+    <mat-step label="Review">
+      <ng-template matStepContent>
+        <request-review [paramRequestId]="requestId"></request-review>
+        <div>
+          <button mat-button matStepperPrevious>Back</button>
+          <button
+            mat-button
+            matStepperNext
+            (click)="updateRequestStatusToScheduled()"
+          >
+            Submit
+          </button>
+        </div>
+      </ng-template>
+    </mat-step>
+  </mat-stepper>
+</mat-card>

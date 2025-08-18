@@ -14,6 +14,7 @@ import { RequestReviewComponent } from '../request-review.component';
 import { Request } from '../model/request.model';
 import { RequestSection } from '../model/requestsection.model';
 import { Subject, takeUntil } from 'rxjs';
+import { MatCardModule } from '@angular/material/card';
 @Component({
   selector: 'create-request-stepper',
   templateUrl: 'create-request-stepper.component.html',
@@ -30,14 +31,19 @@ import { Subject, takeUntil } from 'rxjs';
     RequestOverviewComponent,
     RequestRequiredDocumentsComponent,
     RequestReviewComponent,
-    CommonModule
+    CommonModule,
+    MatCardModule,
   ],
 })
 export class CreateRequestStepper implements OnDestroy {
-  @ViewChild(BasicRequestComponent) basicRequestComponent!: BasicRequestComponent;
-  @ViewChild(RequestOverviewComponent) requestOverViewComponent!: RequestOverviewComponent;
-  @ViewChild(RequestRequiredDocumentsComponent) requestRequiredDocumentsComponent!: RequestRequiredDocumentsComponent;
-  @ViewChild(RequestReviewComponent) requestReviewComponent!: RequestReviewComponent;
+  @ViewChild(BasicRequestComponent)
+  basicRequestComponent!: BasicRequestComponent;
+  @ViewChild(RequestOverviewComponent)
+  requestOverViewComponent!: RequestOverviewComponent;
+  @ViewChild(RequestRequiredDocumentsComponent)
+  requestRequiredDocumentsComponent!: RequestRequiredDocumentsComponent;
+  @ViewChild(RequestReviewComponent)
+  requestReviewComponent!: RequestReviewComponent;
 
   private destroy$ = new Subject<void>();
 
@@ -56,15 +62,11 @@ export class CreateRequestStepper implements OnDestroy {
   idParam?: string | undefined | null;
   isStepValid = false;
 
-  constructor(
-    private route: ActivatedRoute,
-  ) {
-    this.route.paramMap
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((params) => {
-        this.idParam = params.get('requestId');
-        this.requestId = this.idParam ? + this.idParam : 0;
-      });
+  constructor(private route: ActivatedRoute) {
+    this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
+      this.idParam = params.get('requestId');
+      this.requestId = this.idParam ? +this.idParam : 0;
+    });
   }
 
   onFormValidityChange(valid: boolean) {

@@ -2,22 +2,18 @@
   width: 100%;
 }
 
-.center-text {
-  text-align: center;
-}
-
-mat-card {
-  padding: 2rem;
-}
-
-mat-card-title {
-  font-size: 1.5rem;
-  padding-bottom: 1rem;
+.center-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  width: 100vw;
 }
 
 mat-card-header {
   display: flex;
   justify-content: center;
+  margin-bottom: 1rem;
 }
 
 mat-card-title {
@@ -44,5 +40,3 @@ mat-card-actions > * {
   border-bottom: 1px solid #363636;
   margin: 0 10px;
 }
-
-

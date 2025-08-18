@@ -1,118 +1,220 @@
-<mat-card class="signup-card">
-  <mat-card-header>
-    <mat-card-title>Welcome to Munivendor</mat-card-title>
-  </mat-card-header>
-  <mat-card-content>
-    <form [formGroup]="signupFormGoogle">
-      <mat-form-field class="full-width">
-        <mat-label>Organization Type</mat-label>
-        <mat-select formControlName="organizationTypeId" placeholder="Select your organization">
-          <mat-option *ngFor="let organizationType of organizationTypes" [value]="organizationType.organizationTypeId">
-            {{ organizationType.organizationTypeDescription }}
-          </mat-option>
-        </mat-select>
-        <mat-error *ngIf="signupFormGoogle.get('organizationTypeId')?.hasError('required')">
-          Organization Type is required
-        </mat-error>
-      </mat-form-field>
-    
-      <br />
-    
-      <!-- Show the button only if organization is selected -->
-      <div
-        *ngIf="signupFormGoogle.get('organizationTypeId')?.valid && signupFormGoogle.get('organizationTypeId')?.value !== null">
-        <asl-google-signin-button type='standard' size='medium' text='signup_with' theme='filled_blue' (click)="prepareGoogleSignIn()">
-        </asl-google-signin-button>
-      </div>
-    
-      <!-- Show disabled state when organization is not selected -->
-      <div
-        *ngIf="!signupFormGoogle.get('organizationTypeId')?.valid || signupFormGoogle.get('organizationTypeId')?.value === null">
-        <div class="disabled-button">
-          <asl-google-signin-button type='standard' size='medium' text='signup_with' theme='filled_blue'>
+<div class="center-container">
+  <mat-card class="signup-card">
+    <mat-card-header>
+      <mat-card-title>Welcome to Munivendor</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="signupFormGoogle">
+        <mat-form-field class="full-width">
+          <mat-label>Organization Type</mat-label>
+          <mat-select
+            formControlName="organizationTypeId"
+            placeholder="Select your organization"
+          >
+            <mat-option
+              *ngFor="let organizationType of organizationTypes"
+              [value]="organizationType.organizationTypeId"
+            >
+              {{ organizationType.organizationTypeDescription }}
+            </mat-option>
+          </mat-select>
+          <mat-error
+            *ngIf="
+              signupFormGoogle.get('organizationTypeId')?.hasError('required')
+            "
+          >
+            Organization Type is required
+          </mat-error>
+        </mat-form-field>
+
+        <br />
+
+        <!-- Show the button only if organization is selected -->
+        <div
+          *ngIf="
+            signupFormGoogle.get('organizationTypeId')?.valid &&
+            signupFormGoogle.get('organizationTypeId')?.value !== null
+          "
+        >
+          <asl-google-signin-button
+            type="standard"
+            size="medium"
+            text="signup_with"
+            theme="filled_blue"
+            (click)="prepareGoogleSignIn()"
+          >
           </asl-google-signin-button>
-          <div class="disabled-overlay"></div>
         </div>
+
+        <!-- Show disabled state when organization is not selected -->
+        <div
+          *ngIf="
+            !signupFormGoogle.get('organizationTypeId')?.valid ||
+            signupFormGoogle.get('organizationTypeId')?.value === null
+          "
+        >
+          <div class="disabled-button">
+            <asl-google-signin-button
+              type="standard"
+              size="medium"
+              text="signup_with"
+              theme="filled_blue"
+            >
+            </asl-google-signin-button>
+            <div class="disabled-overlay"></div>
+          </div>
+        </div>
+      </form>
+      <div class="separator">
+        <span>OR</span>
       </div>
-    </form>
-    <div class="separator">
-      <span>OR</span>
-    </div>
 
-    <form [formGroup]="signupFormEmail" (ngSubmit)="onSubmitByEmail()">
-      <mat-form-field class="full-width">
-        <mat-label>First Name</mat-label>
-        <input matInput type="text" formControlName="firstname" placeholder="Enter your First Name">
-        <mat-error *ngIf="signupFormEmail.get('firstname')?.hasError('required')">
-          First Name is required.
-        </mat-error>
-        <mat-error *ngIf="signupFormEmail.get('firstname')?.hasError('pattern')">
-          First Name must be at least 3 characters long and contain only letters, spaces, hyphens, or apostrophes.
-        </mat-error>
-      </mat-form-field>
+      <form [formGroup]="signupFormEmail" (ngSubmit)="onSubmitByEmail()">
+        <mat-form-field class="full-width">
+          <mat-label>First Name</mat-label>
+          <input
+            matInput
+            type="text"
+            formControlName="firstname"
+            placeholder="Enter your First Name"
+          />
+          <mat-error
+            *ngIf="signupFormEmail.get('firstname')?.hasError('required')"
+          >
+            First Name is required.
+          </mat-error>
+          <mat-error
+            *ngIf="signupFormEmail.get('firstname')?.hasError('pattern')"
+          >
+            First Name must be at least 3 characters long and contain only
+            letters, spaces, hyphens, or apostrophes.
+          </mat-error>
+        </mat-form-field>
 
-      <mat-form-field class="full-width">
-        <mat-label>Last Name</mat-label>
-        <input matInput type="text" formControlName="lastname" placeholder="Enter your Last Name">
-        <mat-error *ngIf="signupFormEmail.get('lastname')?.hasError('required')">
-          Last Name is required.
-        </mat-error>
-        <mat-error *ngIf="signupFormEmail.get('firstname')?.hasError('pattern')">
-          Last Name must be at least 3 characters long and contain only letters, spaces, hyphens, or apostrophes.
-        </mat-error>
-      </mat-form-field>
+        <mat-form-field class="full-width">
+          <mat-label>Last Name</mat-label>
+          <input
+            matInput
+            type="text"
+            formControlName="lastname"
+            placeholder="Enter your Last Name"
+          />
+          <mat-error
+            *ngIf="signupFormEmail.get('lastname')?.hasError('required')"
+          >
+            Last Name is required.
+          </mat-error>
+          <mat-error
+            *ngIf="signupFormEmail.get('lastname')?.hasError('pattern')"
+          >
+            Last Name must be at least 3 characters long and contain only
+            letters, spaces, hyphens, or apostrophes.
+          </mat-error>
+        </mat-form-field>
 
-      <mat-form-field class="full-width">
-        <mat-label>Organization Type</mat-label>
-        <mat-select formControlName="organizationTypeId" placeholder="Select your organization" [disabled]="isLGA">
-          <mat-option *ngFor="let organizationType of organizationTypes" [value]="organizationType.organizationTypeId">
-            {{ organizationType.organizationTypeDescription }}
-          </mat-option>
-        </mat-select>
-        <mat-error *ngIf="signupFormEmail.get('organizationTypeId')?.hasError('required')">
-          Organization Type is required
-        </mat-error>
-      </mat-form-field>
+        <mat-form-field class="full-width">
+          <mat-label>Organization Type</mat-label>
+          <mat-select
+            formControlName="organizationTypeId"
+            placeholder="Select your organization"
+            [disabled]="isLGA"
+          >
+            <mat-option
+              *ngFor="let organizationType of organizationTypes"
+              [value]="organizationType.organizationTypeId"
+            >
+              {{ organizationType.organizationTypeDescription }}
+            </mat-option>
+          </mat-select>
+          <mat-error
+            *ngIf="
+              signupFormEmail.get('organizationTypeId')?.hasError('required')
+            "
+          >
+            Organization Type is required
+          </mat-error>
+        </mat-form-field>
 
-      <mat-form-field class="full-width">
-        <mat-label>Work Email/Username</mat-label>
-        <input matInput type="email" formControlName="email" placeholder="Enter your work email">
-        <mat-error *ngIf="signupFormEmail.get('email')?.hasError('required')">
-          Work Email/Username is required.
-        </mat-error>
-        <mat-error *ngIf="signupFormEmail.get('email')?.hasError('email')">
-          Invalid email format.
-        </mat-error>
-        <mat-error *ngIf="signupFormEmail.get('email')?.hasError('pattern')">
-          Please enter a valid email address.
-        </mat-error>
-      </mat-form-field>
+        <mat-form-field class="full-width">
+          <mat-label>Work Email/Username</mat-label>
+          <input
+            matInput
+            type="email"
+            formControlName="email"
+            placeholder="Enter your work email"
+          />
+          <mat-error *ngIf="signupFormEmail.get('email')?.hasError('required')">
+            Work Email/Username is required.
+          </mat-error>
+          <mat-error
+            *ngIf="
+              signupFormEmail.get('email')?.hasError('email') ||
+              signupFormEmail.get('email')?.hasError('pattern')
+            "
+          >
+            Please enter a valid email address.
+          </mat-error>
+        </mat-form-field>
 
-      <mat-form-field class="full-width">
-        <mat-label>Password</mat-label>
-        <input matInput type="password" formControlName="password" placeholder="Enter your password">
-        <mat-error *ngIf="signupFormEmail.get('password')?.invalid && signupFormEmail.get('password')?.touched">
-          {{ getPasswordErrorMessage() }}
-        </mat-error>
-      </mat-form-field>
+        <mat-form-field class="full-width">
+          <mat-label>Password</mat-label>
+          <input
+            matInput
+            type="password"
+            formControlName="password"
+            placeholder="Enter your password"
+          />
+          <mat-error
+            *ngIf="
+              signupFormEmail.get('password')?.invalid &&
+              signupFormEmail.get('password')?.touched
+            "
+          >
+            {{ getPasswordErrorMessage() }}
+          </mat-error>
+        </mat-form-field>
 
-      <mat-form-field class="full-width">
-        <mat-label>Confirm Password</mat-label>
-        <input matInput type="password" formControlName="confirmPassword" placeholder="Confirm your password"
-          (cut)="$event.preventDefault()" (copy)="$event.preventDefault()" (paste)="$event.preventDefault()">
-        <mat-error *ngIf="signupFormEmail.get('confirmPassword')?.hasError('required')">
-          Password is required.
-        </mat-error>
-        <mat-error
-          *ngIf="signupFormEmail.hasError('passwordMismatch') && signupFormEmail.get('confirmPassword')?.touched">
-          Passwords do not match.
-        </mat-error>
-      </mat-form-field>
+        <mat-form-field class="full-width">
+          <mat-label>Confirm Password</mat-label>
+          <input
+            matInput
+            type="password"
+            formControlName="confirmPassword"
+            placeholder="Confirm your password"
+            (cut)="$event.preventDefault()"
+            (copy)="$event.preventDefault()"
+            (paste)="$event.preventDefault()"
+          />
+          <mat-error
+            *ngIf="signupFormEmail.get('confirmPassword')?.hasError('required')"
+          >
+            Password is required.
+          </mat-error>
+          <mat-error
+            *ngIf="
+              signupFormEmail.hasError('passwordMismatch') &&
+              signupFormEmail.get('confirmPassword')?.touched
+            "
+          >
+            Passwords do not match.
+          </mat-error>
+        </mat-form-field>
 
-      <button style="margin-top: 1rem; margin-bottom: 1rem;" class="full-width" mat-raised-button color="primary"
-        type="submit">Sign Up</button>
+        <button
+          style="margin-bottom: 1rem"
+          class="full-width"
+          mat-raised-button
+          color="primary"
+          type="submit"
+        >
+          Sign Up
+        </button>
 
-      <span>Already have an account? Click here to <a [routerLink]="['/login']">log in</a>.</span>
-    </form>
-  </mat-card-content>
-</mat-card>
+        <span
+          >Already have an account? Click here to
+          <a [routerLink]="['/login']">log in</a>.</span
+        >
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

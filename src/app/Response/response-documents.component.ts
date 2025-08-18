@@ -297,7 +297,7 @@ export class ResponseDocumentsComponent implements OnInit {
                   doc.requestDocumentId === this.currentRow.requestDocumentId
               );
               if (rowToUpdate) {
-                rowToUpdate.documentInstanceStatus = 'Autofill AI';
+                rowToUpdate.documentInstanceStatus = 'Complete';
                 console.log(`Updated ${this.currentSource} row:`, rowToUpdate);
               }
 

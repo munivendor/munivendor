@@ -1,4 +1,4 @@
-<div style="margin-top: 20rem">
+<div>
   <mat-card style="margin-bottom: 1rem">
     <mat-card-content>
       <form [formGroup]="filterForm" (ngSubmit)="onSearch()">
@@ -97,12 +97,6 @@
           <div class="inline-field">
             <div class="checkbox-group">
               <strong>Solicitation Status</strong>
-              <mat-checkbox color="primary" formControlName="draft"
-                >Draft</mat-checkbox
-              >
-              <mat-checkbox color="primary" formControlName="scheduled"
-                >Scheduled</mat-checkbox
-              >
               <mat-checkbox color="primary" formControlName="live"
                 >Live</mat-checkbox
               >

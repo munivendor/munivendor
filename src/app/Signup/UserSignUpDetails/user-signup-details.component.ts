@@ -34,7 +34,8 @@ export class UserSignUpDetails implements OnInit {
   organizationTypeId: number | undefined;
   private destroy$ = new Subject<void>();
   userId!: number;
-  framePageNumber = 3;
+  // should initially lead to 3, but user designation, payment plan confirmation, billing profile are commented out
+  framePageNumber = 6;
 
   constructor(
     private fb: FormBuilder,
@@ -59,24 +60,20 @@ export class UserSignUpDetails implements OnInit {
     });
   }
 
-
-    ngOnInit(): void {
-        this.authService.user$.pipe(
-            takeUntil(this.destroy$)
-        ).subscribe(user => {
-            if (user) {
-                const userId = user
-                if (userId) {
-                   
-                    this.getUserDetails(userId);  
-                } else {
-                    console.error('No user ID available in authentication state');
-                }
-            } else {
-                this.router.navigate(['/login']);
-            }
-        });
-    }
+  ngOnInit(): void {
+    this.authService.user$.pipe(takeUntil(this.destroy$)).subscribe((user) => {
+      if (user) {
+        const userId = user;
+        if (userId) {
+          this.getUserDetails(userId);
+        } else {
+          console.error('No user ID available in authentication state');
+        }
+      } else {
+        this.router.navigate(['/login']);
+      }
+    });
+  }
 
   getUserDetails(userId: number): void {
     this.userService.getUser(userId).subscribe(
@@ -116,33 +113,37 @@ export class UserSignUpDetails implements OnInit {
       };
       this.updateUser(updatedUser);
 
-      const flowMap: { [key: number]: string } = {
-        1: '/user-designation',
-        2: '/payment-plan-confirmation',
-      };
+      // const flowMap: { [key: number]: string } = {
+      //   1: '/user-designation',
+      //   2: '/payment-plan-confirmation',
+      // };
 
-      const nextRoute =
-        this.organizationTypeId !== undefined
-          ? flowMap[this.organizationTypeId]
-          : undefined;
+      // const nextRoute =
+      //   this.organizationTypeId !== undefined
+      //     ? flowMap[this.organizationTypeId]
+      //     : undefined;
       const flowId = this.organizationTypeId === 1 ? 1 : 2;
 
-      if (nextRoute) {
-        this.flowProgressService
-          .saveFlowProgress(this.userId, flowId, this.framePageNumber)
-          .subscribe({
-            next: () => {
-              this.router.navigate([nextRoute]);
-            },
-            error: (err) => {
-              console.error('Error saving flow progress:', err);
-            },
-          });
-      } else {
-        console.warn(
-          `No flow mapping found for organizationTypeId: ${this.organizationTypeId}`
-        );
-      }
+      // if (nextRoute) {
+      this.flowProgressService
+        .saveFlowProgress(this.userId, flowId, this.framePageNumber)
+        .subscribe({
+          next: () => {
+            if (flowId === 1) {
+              this.router.navigate(['/requests-view']);
+            } else {
+              this.router.navigate(['/offeror-requests-view']);
+            }
+          },
+          error: (err) => {
+            console.error('Error saving flow progress:', err);
+          },
+        });
+      //   } else {
+      //     console.warn(
+      //       `No flow mapping found for organizationTypeId: ${this.organizationTypeId}`
+      //     );
+      //   }
     } else {
       console.error('Form is invalid or user data is not loaded yet.');
     }
