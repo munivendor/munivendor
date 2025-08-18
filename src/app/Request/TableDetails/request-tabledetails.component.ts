@@ -37,6 +37,7 @@ const ACTION_PERMISSIONS: {
     cancel?: boolean;
     open?: boolean;
     noneDisabled?: boolean;
+    redownload?: boolean;
   };
 } = {
   Draft: { edit: true, delete: true },
@@ -44,7 +45,7 @@ const ACTION_PERMISSIONS: {
   Live: { cancel: true },
   Closed: { open: true },
   Canceled: { noneDisabled: true },
-  Opened: { noneDisabled: true },
+  Opened: { redownload: true },
 };
 
 @Component({
@@ -79,7 +80,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
 
   canPerformAction(
     request: any,
-    action: 'edit' | 'delete' | 'cancel' | 'open'
+    action: 'edit' | 'delete' | 'cancel' | 'open' | 'redownload'
   ): boolean {
     const status = request.agencyRequestStatus?.requestStatusDesc;
     return !!ACTION_PERMISSIONS[status]?.[action];
@@ -152,7 +153,13 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     opened: 6,
   };
 
-  readonly AVAILABLE_ACTIONS = ['edit', 'delete', 'cancel', 'open'] as const;
+  readonly AVAILABLE_ACTIONS = [
+    'edit',
+    'delete',
+    'cancel',
+    'open',
+    'redownload',
+  ] as const;
 
   getAvailableActions(request: any): string[] {
     const status = request.agencyRequestStatus?.requestStatusDesc;
@@ -326,6 +333,19 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     dialogRef.componentInstance.onCancelUpdateRequestStatus =
       this.onCancelUpdateRequestStatus.bind(this);
 
+    // Add this new subscription for status updates
+    dialogRef.componentInstance.statusUpdated
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (updateData: any) => {
+          this.updateRequestStatusInTable(
+            updateData.requestId,
+            updateData.newStatusId,
+            updateData.newStatusDesc
+          );
+        },
+      });
+
     dialogRef.componentInstance.cancellationRequested
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -350,6 +370,30 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
           this.deleteRequest(request);
         }
       });
+  }
+
+  // Add this new method to update the table data:
+  private updateRequestStatusInTable(
+    requestId: number,
+    newStatusId: number,
+    newStatusDesc: string
+  ): void {
+    const currentData = this.dataSource.data;
+    const updatedData = currentData.map((item: any) => {
+      if (item.requestId === requestId) {
+        return {
+          ...item,
+          agencyRequestStatus: {
+            ...item.agencyRequestStatus,
+            requestStatusId: newStatusId,
+            requestStatusDesc: newStatusDesc,
+          },
+        };
+      }
+      return item;
+    });
+
+    this.dataSource.data = updatedData;
   }
 
   deleteRequest(request: any): void {

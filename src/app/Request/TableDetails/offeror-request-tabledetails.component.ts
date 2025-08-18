@@ -62,6 +62,10 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
     const offerorStatus = request.offerorRequestStatus?.requestStatusDesc ?? '';
     const actions: string[] = [];
 
+    if (agencyStatus === 'Closed' || offerorStatus === 'Submitted') {
+      return actions;
+    }
+
     if (agencyStatus === 'Live') {
       if (offerorStatus === 'None') {
         actions.push('respond');
@@ -69,12 +73,11 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
         actions.push('continue', 'delete');
       }
     } else if (
-      ['Closed', 'Canceled', 'Opened'].includes(agencyStatus) &&
+      ['Canceled', 'Opened'].includes(agencyStatus) &&
       offerorStatus === 'Submitted'
     ) {
       actions.push('noneDisabled');
     }
-
     return actions;
   }
 

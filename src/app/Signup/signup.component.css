@@ -2,35 +2,22 @@
   width: 100%;
 }
 
-.signup-card {
-  width: 100%;
-  max-width: 500px;
-  margin-top: 5rem;
-}
-
-.form-container {
-  width: 45%;
-  margin: 0 auto;
+.center-container {
   display: flex;
   justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  width: 100vw;
 }
 
-.center-text {
-  text-align: center;
-}
-
-mat-card {
-  padding: 1rem;
-}
-
-mat-card-title {
-  font-size: 1.5rem;
-  padding-bottom: 1rem;
+.signup-card {
+  max-width: 695px;
 }
 
 mat-card-header {
   display: flex;
   justify-content: center;
+  margin-bottom: 1rem;
 }
 
 mat-card-title {

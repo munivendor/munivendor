@@ -1,13 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  NavigationEnd,
-  Router,
-  RouterLink,
-  RouterLinkActive,
-  RouterOutlet,
-} from '@angular/router';
-import { SocialUser } from '@abacritt/angularx-social-login';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { AuthService } from './authorization/auth.service';
 import { filter, Observable } from 'rxjs';
 import { MatSidenavModule } from '@angular/material/sidenav';
@@ -17,6 +10,7 @@ import { combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { UserService } from './shared/service/user.service';
 import { firstValueFrom } from 'rxjs';
+import { SidenavExample } from './Sidenav/sidenav.component';
 
 @Component({
   selector: 'app-root',
@@ -26,17 +20,15 @@ import { firstValueFrom } from 'rxjs';
   imports: [
     CommonModule,
     RouterOutlet,
-    RouterLink,
-    RouterLinkActive,
     MatSidenavModule,
     MatToolbarModule,
     MatListModule,
+    SidenavExample,
   ],
 })
 export class AppComponent {
   title = 'munivendor';
-  //user$: Observable<SocialUser | null>;
-   user$: Observable<number | null>;
+  user$: Observable<number | null>;
   showSidenav: boolean = true;
   userId: number | null = null;
   organizationTypeId: number | null = null;
@@ -70,17 +62,19 @@ export class AppComponent {
     });
   }
 
-
-  private shouldShowSidenav(user: number | null, isLoggingIn: boolean, currentRoute: string): boolean {
-
+  private shouldShowSidenav(
+    user: number | null,
+    isLoggingIn: boolean,
+    currentRoute: string
+  ): boolean {
     const routesToHideSidenav = [
       '/role-verification',
       '/validateuser',
       '/government-agency-details',
       '/user-details',
-      '/user-designation',
-      '/payment-plan-confirmation',
-      '/billing-profile',
+      // '/user-designation',
+      // '/payment-plan-confirmation',
+      // '/billing-profile',
     ];
     return (
       !!user &&

@@ -63,4 +63,19 @@ export class DocumentService {
       pollFrequency: number;
     }>(`${this.url}DocumentInstances/AutoFillStatus/${requestId}`);
   }
+
+  GetCombinedDocumentsContent(
+    requestId: number,
+    active?: boolean
+  ): Observable<Blob> {
+    let params = new HttpParams();
+    if (active !== undefined) {
+      params = params.set('active', active);
+    }
+
+    return this.http.get(`${this.url}CombinedDocuments/Content/${requestId}`, {
+      params,
+      responseType: 'blob',
+    });
+  }
 }

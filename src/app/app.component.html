@@ -1,26 +1,5 @@
-<div class="topnav">
-  <!-- Non-authorized-->
-  <a
-    routerLink="/signup"
-    routerLinkActive="active"
-    ariaCurrentWhenActive="page"
-    *ngIf="!(user$ | async)"
-    >Sign Up</a
-  >
-  <a
-    routerLink="/login"
-    routerLinkActive="active"
-    ariaCurrentWhenActive="page"
-    *ngIf="!(user$ | async)"
-    >Log In</a
-  >
-  <a
-    routerLink="/forgot-password"
-    routerLinkActive="active"
-    ariaCurrentWhenActive="page"
-    *ngIf="!(user$ | async)"
-    >Forgot Password</a
-  >
+<!-- <div class="topnav">
+  Not Authenticated
   <a
     routerLink="/email-verification"
     routerLinkActive="active"
@@ -28,24 +7,8 @@
     *ngIf="!(user$ | async)"
     >Email Verification</a
   >
-
-  <a
-    routerLink="/requests-view"
-    routerLinkActive="active"
-    ariaCurrentWhenActive="page"
-    *ngIf="!(user$ | async)"
-    >Solicitations</a
-  >
-
-  <a
-    routerLink="/offeror-requests-view"
-    routerLinkActive="active"
-    ariaCurrentWhenActive="page"
-    *ngIf="!(user$ | async)"
-    >Offeror Solicitations</a
-  >
-
-  <!-- Authorized -->
+  
+  Authenticated
   <a
     routerLink="/role-verification"
     routerLinkActive="active"
@@ -88,94 +51,11 @@
     *ngIf="user$ | async"
     >Billing Profile</a
   >
+</div> -->
 
-  <a
-    routerLink="/dashboard-component"
-    routerLinkActive="active"
-    ariaCurrentWhenActive="page"
-    *ngIf="user$ | async"
-    >Dashboard</a
-  >
-  <a (click)="onLogOut()" *ngIf="user$ | async">Sign Out</a>
+<custom-sidenav *ngIf="showSidenav" [organizationTypeId]="organizationTypeId">
+</custom-sidenav>
+
+<div *ngIf="!showSidenav">
+  <router-outlet></router-outlet>
 </div>
-
-<mat-sidenav-container>
-  <!-- Conditional Side Navigation (Visible only when sidenav should be shown) -->
-  <mat-sidenav *ngIf="showSidenav" mode="side" opened class="sidenav">
-    <mat-nav-list>
-      <a
-        mat-list-item
-        routerLink="dashboard-component"
-        routerLinkActive="active"
-        >Dashboard</a
-      >
-      <a
-        mat-list-item
-        routerLink="create-request-view"
-        routerLinkActive="active"
-        >Create New Solicitation</a
-      >
-      <a mat-list-item routerLink="request-component" routerLinkActive="active"
-        >Create from Templates</a
-      >
-      <a
-        mat-list-item
-        [routerLink]="
-          organizationTypeId === 1 ? 'requests-view' : 'offeror-requests-view'
-        "
-        routerLinkActive="active"
-      >
-        Solicitations
-      </a>
-      <a mat-list-item routerLink="/create-component" routerLinkActive="active"
-        >Submissions</a
-      >
-      <a mat-list-item routerLink="/create-component" routerLinkActive="active"
-        >Applications</a
-      >
-      <a mat-list-item routerLink="/create-component" routerLinkActive="active"
-        >Forms</a
-      >
-      <a mat-list-item routerLink="/create-component" routerLinkActive="active"
-        >People</a
-      >
-      <a mat-list-item routerLink="/create-component" routerLinkActive="active"
-        >Decision Makers</a
-      >
-      <a mat-list-item routerLink="categories" routerLinkActive="active"
-        >Categories</a
-      >
-      <a mat-list-item routerLink="/create-component" routerLinkActive="active"
-        >Users</a
-      >
-      <a mat-list-item routerLink="/create-component" routerLinkActive="active"
-        >Reports</a
-      >
-      <a mat-list-item routerLink="/create-component" routerLinkActive="active"
-        >Definitions</a
-      >
-      <a mat-list-item routerLink="/create-component" routerLinkActive="active"
-        >My Profile</a
-      >
-      <a mat-list-item routerLink="/create-component" routerLinkActive="active"
-        >Government Agency Profile</a
-      >
-      <a mat-list-item routerLink="/create-component" routerLinkActive="active"
-        >Search</a
-      >
-      <a mat-list-item routerLink="/create-component" routerLinkActive="active"
-        >Log out</a
-      >
-    </mat-nav-list>
-  </mat-sidenav>
-
-  <mat-sidenav-content
-    class="main-content"
-    [ngClass]="{
-      'sidenav-visible': (user$ | async) && showSidenav,
-      'sidenav-hidden': !(user$ | async) || !showSidenav
-    }"
-  >
-    <router-outlet></router-outlet>
-  </mat-sidenav-content>
-</mat-sidenav-container>
