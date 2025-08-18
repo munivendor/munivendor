@@ -16,6 +16,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { CancellationReasonDialog } from '../CancellationReasonDialog/cancellation-reason-dialog.component';
 import { Request } from '../model/request.model';
 import { Router } from '@angular/router';
+import { DocumentService } from '../../shared/service/document.service';
+import { RequestService } from '../services/request.service';
 
 export interface DialogData {
   action: string;
@@ -43,11 +45,19 @@ export class ConfirmationDialog {
   }>();
   @Input() onCancelUpdateRequestStatus!: (request: any, action: string) => void;
 
+  @Output() statusUpdated = new EventEmitter<{
+    requestId: number;
+    newStatusId: number;
+    newStatusDesc: string;
+  }>();
+
   constructor(
     public dialogRef: MatDialogRef<ConfirmationDialog>,
     @Inject(MAT_DIALOG_DATA) public requestObjAndUserAction: DialogData,
     public dialog: MatDialog,
-    private router: Router
+    private router: Router,
+    private documentService: DocumentService,
+    private requestService: RequestService
   ) {}
 
   getConfirmationMessage(): string {
@@ -77,6 +87,8 @@ export class ConfirmationDialog {
         return 'Are you sure you want to respond to this solicitation?';
       case 'continue':
         return 'Are you sure you want to continue working on your response to this solicitation?';
+      case 'redownload':
+        return 'Are you sure you want to redownload the proposal documents for this solicitation?';
       default:
         return `Are you sure you want to ${this.requestObjAndUserAction.action} this solicitation?`;
     }
@@ -120,10 +132,41 @@ export class ConfirmationDialog {
     }
 
     if (this.requestObjAndUserAction.action === 'open') {
-      // wip
+      this.requestService.UpdateRequestStatus(request.requestId, 6).subscribe({
+        next: (res) => {
+          console.log('Status updated successfully:', res);
+          this.statusUpdated.emit({
+            requestId: request.requestId,
+            newStatusId: 6,
+            newStatusDesc: 'Opened',
+          });
+
+          this.downloadCombinedDocuments(request.requestId, true);
+        },
+        error: (err) => {
+          console.error('Failed to update status:', err);
+        },
+      });
+    }
+
+    if (this.requestObjAndUserAction.action === 'redownload') {
+      this.downloadCombinedDocuments(request.requestId, true);
     }
 
     this.dialogRef.close(true);
+  }
+
+  downloadCombinedDocuments(requestId: number, active?: boolean) {
+    this.documentService
+      .GetCombinedDocumentsContent(requestId, active)
+      .subscribe((zipBlob) => {
+        const blobUrl = window.URL.createObjectURL(zipBlob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = `Proposals_${requestId}.zip`;
+        link.click();
+        window.URL.revokeObjectURL(blobUrl);
+      });
   }
 
   openCancellationReasonDialog(action: string, request: any): void {
