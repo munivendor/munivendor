@@ -3,13 +3,13 @@
         <div *ngFor="let proposalSection of proposalSections.controls; let i = index" [formGroupName]="i">
             <mat-form-field class="title-width">
                 <mat-label>Enter title</mat-label>
-                <input matInput formControlName="requestSectionTitle">
+                <input matInput formControlName="requestSectionTitle" title="requestSectionTitle" />
                 <mat-error
                     *ngIf="proposalSection.get('requestSectionTitle')?.hasError('required') && proposalSection.get('requestSectionTitle')?.touched">
                     Title is required.
                 </mat-error>
             </mat-form-field>
-            <editor [init]="editorConfig" formControlName="requestSectionContent"></editor>
+            <editor [init]="editorConfig" apiKey="a324t4ybx6koh3hx9tyklbrofvbrlrtca89oye9rito78fv3" formControlName="requestSectionContent"></editor>
             <ul
                 *ngIf="proposalSection.get('requestSectionTitle')?.value === 'Technical Proposal Standard Requirements'">
                 <li>Note: N.J.S.A 52:32-44 provides that government agencies may not enter into a contract for goods or
