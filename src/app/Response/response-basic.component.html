@@ -1,13 +1,13 @@
 <div>
   <ng-template matStepLabel>Basics</ng-template>
-  <h1>Offeror Response to Agency Request</h1>
+  <h1>Offeror Response to Agency Solicitation</h1>
   <h2>Agency Section</h2>
   <form [formGroup]="requestForm" *ngIf="requestForm">
     <div class="field-container">
       <div class="inline-field">
-        <p>Agency Request Title</p>
+        <p>Agency Solicitation Title</p>
         <mat-form-field appearance="fill" class="input-width">
-          <mat-label>Agency Request Title</mat-label>
+          <mat-label>Agency Solicitation Title</mat-label>
           <input matInput formControlName="requestName" [readonly]="true" />
         </mat-form-field>
       </div>
@@ -16,17 +16,17 @@
     <div *ngIf="requestForm">
       <div class="field-container">
         <div class="inline-field">
-          <p>Request Category</p>
+          <p>Solicitation Category</p>
           <mat-form-field appearance="fill" class="input-width">
-            <mat-label>Request Category</mat-label>
+            <mat-label>Solicitation Category</mat-label>
             <input matInput formControlName="requestCategory" />
           </mat-form-field>
         </div>
 
         <div class="inline-field">
-          <p>Request Type</p>
+          <p>Solicitation Type</p>
           <mat-form-field appearance="fill" class="input-width">
-            <mat-label>Request Type</mat-label>
+            <mat-label>Solicitation Type</mat-label>
             <input matInput formControlName="requestType" />
           </mat-form-field>
         </div>
@@ -42,9 +42,9 @@
         </div>
 
         <div class="inline-field">
-          <p>Open Date and Time</p>
+          <p>Close Date and Time</p>
           <mat-form-field appearance="fill" class="input-width">
-            <mat-label>Open Date and Time</mat-label>
+            <mat-label>Close Date and Time</mat-label>
             <input matInput formControlName="openDateAndTime" />
           </mat-form-field>
         </div>
@@ -77,8 +77,14 @@
         <p>Offeror Response Title (the name of your response)</p>
         <mat-form-field appearance="fill" class="input-width">
           <mat-label>Offeror Response Title</mat-label>
-          <input matInput formControlName="responseName" placeholder="Enter Response Name" />
-          <mat-error *ngIf="responseForm.get('responseName')?.hasError('required')">
+          <input
+            matInput
+            formControlName="responseName"
+            placeholder="Enter Response Name"
+          />
+          <mat-error
+            *ngIf="responseForm.get('responseName')?.hasError('required')"
+          >
             This field is required.
           </mat-error>
         </mat-form-field>
@@ -87,25 +93,31 @@
 
     <div class="field-container">
       <div class="inline-field">
-        <div style="display: flex; align-items: center; gap: 4px;">
+        <div style="display: flex; align-items: center; gap: 4px">
           <span>Authorizing official for this offer.</span>
 
-          <mat-icon style="font-size: medium; color: #0B74FD; cursor: pointer;" [appTooltip]="{
-           header: 'Required',
-           body: 'Please designate an authorizing official for this offer.',
-           actionLabel: 'Vendor Profile Page',
-           width: '320px',
-           onAction: goToOfferorProfilePage,
-           transformStyle: 'translate(-50%, -102%)'
-           }">
+          <mat-icon
+            style="font-size: medium; color: #0b74fd; cursor: pointer"
+            [appTooltip]="{
+              header: 'Required',
+              body: 'Please designate an authorizing official for this offer.',
+              actionLabel: 'Vendor Profile Page',
+              width: '320px',
+              onAction: goToOfferorProfilePage,
+              transformStyle: 'translate(-50%, -102%)'
+            }"
+          >
             info_outline
           </mat-icon>
-
         </div>
         <mat-form-field appearance="fill" class="input-width">
           <mat-label>Authorizing Official</mat-label>
           <input matInput formControlName="authorizingOfficial" />
-          <mat-error *ngIf="responseForm.get('authorizingOfficial')?.hasError('required')">
+          <mat-error
+            *ngIf="
+              responseForm.get('authorizingOfficial')?.hasError('required')
+            "
+          >
             This field is required.
           </mat-error>
         </mat-form-field>
@@ -113,3 +125,4 @@
       <div class="inline-field"></div>
     </div>
   </form>
+</div>

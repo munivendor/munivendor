@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { DecisionMaker } from '../model/decisionmaker.model';
@@ -64,8 +64,10 @@ export class RequestService {
     return this.http.post<void>(url, formData);
   }
 
-  DeleteRequest(requestId: number): Observable<void> {
-    return this.http.delete<void>(`${this.url}Requests/${requestId}`);
+  DeleteRequest(requestId: number, organizationId: number): Observable<void> {
+    return this.http.delete<void>(
+      `${this.url}Requests/${requestId}?organizationId=${organizationId}`
+    );
   }
 
   UpdateRequestStatus(
@@ -224,5 +226,50 @@ export class RequestService {
     return this.http.get<DocumentInstance[]>(
       `${this.url}InstanceDocuments/${requestId}`
     );
+  }
+
+  GetRequestsOfferorView(params: {
+    requestId?: number;
+    requestTypeId?: number;
+    agencyRequestStatusIds?: number;
+    offerorRequestStatusIds?: number;
+    organizationId?: number;
+    categoryId?: number;
+    referenceId?: string;
+    requestName?: string;
+    startCloseDate?: string;
+    endCloseDate?: string;
+    startPublishDate?: string;
+    endPublishDate?: string;
+    limit?: number;
+    offset?: number;
+  }): Observable<any> {
+    const httpParams = new HttpParams({ fromObject: { ...params } });
+
+    return this.http.get<any>(`${this.url}api/requests/offeror-grid`, {
+      params: httpParams,
+    });
+  }
+
+  GetRequestsAgencyView(params: {
+    requestId?: number;
+    requestTypeIds?: number;
+    requestStatusIds?: number;
+    organizationId?: number;
+    categoryId?: number;
+    referenceId?: string;
+    requestName?: string;
+    startCloseDate?: string;
+    endCloseDate?: string;
+    startPublishDate?: string;
+    endPublishDate?: string;
+    limit?: number;
+    offset?: number;
+  }): Observable<any> {
+    const httpParams = new HttpParams({ fromObject: { ...params } });
+
+    return this.http.get<any>(`${this.url}api/requests/agency-grid`, {
+      params: httpParams,
+    });
   }
 }

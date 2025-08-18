@@ -9,7 +9,11 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialogTitle, MatDialogContent, MatDialogActions } from '@angular/material/dialog';
+import {
+  MatDialogTitle,
+  MatDialogContent,
+  MatDialogActions,
+} from '@angular/material/dialog';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -27,9 +31,16 @@ export interface DialogData {
 }
 
 export class MyErrorStateMatcher implements ErrorStateMatcher {
-  isErrorState(control: FormControl | null, form: FormGroupDirective | NgForm | null): boolean {
+  isErrorState(
+    control: FormControl | null,
+    form: FormGroupDirective | NgForm | null
+  ): boolean {
     const isSubmitted = form && form.submitted;
-    return !!(control && control.invalid && (control.dirty || control.touched || isSubmitted));
+    return !!(
+      control &&
+      control.invalid &&
+      (control.dirty || control.touched || isSubmitted)
+    );
   }
 }
 
@@ -48,24 +59,30 @@ export class MyErrorStateMatcher implements ErrorStateMatcher {
     MatDialogTitle,
     MatDialogContent,
     MatDialogActions,
-    CommonModule
+    CommonModule,
   ],
 })
 export class CancellationReasonDialog implements OnInit {
-  cancellationReasonId = new FormControl<number | null>(null, [Validators.required]);
+  cancellationReasonId = new FormControl<number | null>(null, [
+    Validators.required,
+  ]);
   cancellationReasonNote = new FormControl({ value: '', disabled: true }); // Initially disabled
   requestCancellationReasons: CancellationReasons[] = [];
 
   matcher = new MyErrorStateMatcher();
 
-  @Output() cancelConfirmed = new EventEmitter<{ request: any, action: string, reasonId: number, reasonNote: string }>();
-
+  @Output() cancelConfirmed = new EventEmitter<{
+    request: any;
+    action: string;
+    reasonId: number;
+    reasonNote: string;
+  }>();
 
   constructor(
     public dialogRef: MatDialogRef<CancellationReasonDialog>,
     @Inject(MAT_DIALOG_DATA) public data: DialogData,
     private requestService: RequestService
-  ) { }
+  ) {}
 
   ngOnInit(): void {
     this.getCancellationReasons();
@@ -103,7 +120,12 @@ export class CancellationReasonDialog implements OnInit {
     this.dialogRef.close(false);
   }
 
-  onConfirmCancelRequest(request: any, action: string, value: any, reasonNote: string): void {
+  onConfirmCancelRequest(
+    request: any,
+    action: string,
+    value: any,
+    reasonNote: string
+  ): void {
     const reasonId = Number(value);
     this.cancelConfirmed.emit({ request, action, reasonId, reasonNote });
     this.dialogRef.close(true);

@@ -1,31 +1,56 @@
 <mat-stepper [linear]="true" #stepper>
   <mat-step label="Basics">
     <ng-template matStepContent>
-      <request-basic #step1 [requestId]="requestId" [idParam]="idParam"
-        (formValidityChange)="onFormValidityChange($event)"></request-basic>
+      <request-basic
+        #step1
+        [requestId]="requestId"
+        [idParam]="idParam"
+        (formValidityChange)="onFormValidityChange($event)"
+      ></request-basic>
       <div>
-        <button mat-button (click)="saveRequest()" matStepperNext [disabled]="!isStepValid">Next</button>
+        <button
+          mat-button
+          (click)="saveRequest()"
+          matStepperNext
+          [disabled]="!isStepValid"
+        >
+          Next
+        </button>
       </div>
     </ng-template>
   </mat-step>
 
   <mat-step label="Proposals">
     <ng-template matStepContent>
-      <request-overview #step2 [idParam]="idParam"
-        (formValidityChange)="onFormValidityChange($event)"></request-overview>
+      <request-overview
+        #step2
+        [idParam]="idParam"
+        (formValidityChange)="onFormValidityChange($event)"
+      ></request-overview>
       <div>
         <button mat-button matStepperPrevious>Back</button>
-        <button mat-button matStepperNext (click)="saveSections()" [disabled]="!isStepValid">Next</button>
+        <button
+          mat-button
+          matStepperNext
+          (click)="saveSections()"
+          [disabled]="!isStepValid"
+        >
+          Next
+        </button>
       </div>
     </ng-template>
   </mat-step>
 
   <mat-step label="Documents">
     <ng-template matStepContent>
-      <request-required-documents [idParam]="idParam"></request-required-documents>
+      <request-required-documents
+        [idParam]="idParam"
+      ></request-required-documents>
       <div>
         <button mat-button matStepperPrevious>Back</button>
-        <button mat-button matStepperNext (click)="saveDocuments()">Next</button>
+        <button mat-button matStepperNext (click)="saveDocuments()">
+          Next
+        </button>
       </div>
     </ng-template>
   </mat-step>
@@ -35,7 +60,13 @@
       <request-review [paramRequestId]="requestId"></request-review>
       <div>
         <button mat-button matStepperPrevious>Back</button>
-        <button mat-button matStepperNext (click)="updateRequestStatusToScheduled()">Submit</button>
+        <button
+          mat-button
+          matStepperNext
+          (click)="updateRequestStatusToScheduled()"
+        >
+          Submit
+        </button>
       </div>
     </ng-template>
   </mat-step>

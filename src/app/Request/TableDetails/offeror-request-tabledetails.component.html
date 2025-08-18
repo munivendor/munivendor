@@ -117,6 +117,18 @@
               >
             </div>
             <div class="checkbox-group">
+              <strong>Offeror Status</strong>
+              <mat-checkbox color="primary" formControlName="inProgress"
+                >In Progress</mat-checkbox
+              >
+              <mat-checkbox color="primary" formControlName="submitted"
+                >Submitted</mat-checkbox
+              >
+              <mat-checkbox color="primary" formControlName="none"
+                >None</mat-checkbox
+              >
+            </div>
+            <div class="checkbox-group">
               <strong>Type</strong>
               <mat-checkbox color="primary" formControlName="rfq"
                 >RFQ</mat-checkbox
@@ -150,63 +162,59 @@
     </mat-card-content>
   </mat-card>
 
-  <h1>Solicitations</h1>
   <div class="mat-elevation-z8">
-    <table mat-table [dataSource]="dataSource">
+    <table mat-table [dataSource]="dataSource" matSort>
       <ng-container matColumnDef="requestName">
-        <th mat-header-cell *matHeaderCellDef>Solicitation Name</th>
-        <td mat-cell *matCellDef="let request">{{ request.requestName }}</td>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>
+          Solicitation Name
+        </th>
+        <td mat-cell *matCellDef="let row">{{ row.requestName }}</td>
       </ng-container>
 
       <ng-container matColumnDef="requestId">
-        <th mat-header-cell *matHeaderCellDef>Solicitation ID</th>
-        <td mat-cell *matCellDef="let request">{{ request.requestId }}</td>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>
+          Solicitation ID
+        </th>
+        <td mat-cell *matCellDef="let row">{{ row.requestId }}</td>
       </ng-container>
 
       <ng-container matColumnDef="requestType">
-        <th mat-header-cell *matHeaderCellDef>Type</th>
-        <td mat-cell *matCellDef="let request">
-          {{ request.requestType.requestTypeDesc }}
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Type</th>
+        <td mat-cell *matCellDef="let row">
+          {{ row.requestType.requestTypeDesc }}
         </td>
       </ng-container>
 
       <ng-container matColumnDef="category">
-        <th mat-header-cell *matHeaderCellDef>Category</th>
-        <td mat-cell *matCellDef="let request">{{ request.category?.name }}</td>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Category</th>
+        <td mat-cell *matCellDef="let row">{{ row.category?.name }}</td>
       </ng-container>
 
       <ng-container matColumnDef="publishDate">
         <th mat-header-cell *matHeaderCellDef>Publish Date</th>
-        <td mat-cell *matCellDef="let request">
-          {{ request.publishDate | date : "MM/dd/yyyy" }}
+        <td mat-cell *matCellDef="let row">
+          {{ row.publishDate | date : "MM/dd/yyyy" }}
         </td>
       </ng-container>
 
       <ng-container matColumnDef="closeDateAndTime">
         <th mat-header-cell *matHeaderCellDef>Close Date & Time</th>
-        <td mat-cell *matCellDef="let request">
-          {{ request.closeDate | date : "MM/dd/yyyy, h:mm a" }}
+        <td mat-cell *matCellDef="let row">
+          {{ row.openDate | date : "MM/dd/yyyy, h:mm a" }}
         </td>
       </ng-container>
 
-      <ng-container matColumnDef="requestStatus">
-        <th mat-header-cell *matHeaderCellDef>Status</th>
-        <td mat-cell *matCellDef="let request">
-          {{ request.agencyRequestStatus?.requestStatusDesc ?? "Draft" }}
+      <ng-container matColumnDef="offerorRequestStatus">
+        <th mat-header-cell *matHeaderCellDef>Offeror Status</th>
+        <td mat-cell *matCellDef="let row">
+          {{ row.offerorRequestStatus?.requestStatusDesc ?? "None" }}
         </td>
       </ng-container>
 
-      <ng-container matColumnDef="numberOfOffers">
-        <th mat-header-cell *matHeaderCellDef>Offers</th>
-        <td mat-cell *matCellDef="let request">
-          <span
-            *ngIf="request.submittedOffersCount > 0"
-            (click)="openOffersDialog(request)"
-            style="cursor: pointer; text-decoration: underline; color: #3f51b5"
-          >
-            {{ request.submittedOffersCount }}
-          </span>
-          <span *ngIf="request.submittedOffersCount === 0">0</span>
+      <ng-container matColumnDef="agencyRequestStatus">
+        <th mat-header-cell *matHeaderCellDef>Agency Status</th>
+        <td mat-cell *matCellDef="let row">
+          {{ row.agencyRequestStatus?.requestStatusDesc ?? "Draft" }}
         </td>
       </ng-container>
 
@@ -252,44 +260,9 @@
     </table>
 
     <mat-paginator
-      [length]="100"
       [pageSize]="10"
       [pageSizeOptions]="[5, 10, 25, 100]"
-      aria-label="Select page"
-    >
-    </mat-paginator>
+      aria-label="Select page of users"
+    ></mat-paginator>
   </div>
 </div>
-
-<mat-card>
-  <ng-template #offersDialog let-data>
-    <h2 mat-dialog-title>Offers for "{{ data.requestName }}"</h2>
-
-    <mat-dialog-content>
-      <div *ngIf="data.offers?.length; else noOffers">
-        <table style="width: 100%">
-          <thead>
-            <tr>
-              <th align="left">Offeror</th>
-              <th align="left">Submitted On</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let offer of data.offers">
-              <td>{{ offer.offerorName }}</td>
-              <td>{{ offer.submittedDate | date : "MM/dd/yyyy, h:mm a" }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <ng-template #noOffers>
-        <p>No offers available.</p>
-      </ng-template>
-    </mat-dialog-content>
-
-    <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Close</button>
-    </mat-dialog-actions>
-  </ng-template>
-</mat-card>
