@@ -1,0 +1,40 @@
+<mat-drawer-container class="sidenav-container">
+  <mat-drawer
+    #drawer
+    class="sidenav"
+    [class.collapsed]="!isExpanded"
+    mode="side"
+    opened="true"
+  >
+    <div class="sidenav-header">
+      <button
+        mat-icon-button
+        (click)="toggleSidenav()"
+        style="margin-left: 8px"
+      >
+        <mat-icon>{{ isExpanded ? "chevron_left" : "chevron_right" }}</mat-icon>
+      </button>
+      <span *ngIf="isExpanded" style="font-size: larger"
+        ><b>MuniVendor</b></span
+      >
+    </div>
+
+    <mat-nav-list class="nav-list">
+      <mat-list-item
+        *ngFor="let item of menuItems"
+        class="nav-item"
+        [class.active]="isActiveRoute(item.route)"
+        (click)="onMenuClick(item)"
+      >
+        <mat-icon matListItemIcon style="margin-left: 20px">{{
+          item.icon
+        }}</mat-icon>
+        <span matListItemTitle *ngIf="isExpanded">{{ item.label }}</span>
+      </mat-list-item>
+    </mat-nav-list>
+  </mat-drawer>
+
+  <div class="main-content">
+    <router-outlet></router-outlet>
+  </div>
+</mat-drawer-container>
