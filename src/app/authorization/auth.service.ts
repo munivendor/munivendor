@@ -18,15 +18,15 @@ import { FlowNavigationService } from '../shared/service/flow-navigation.service
 import { UserService } from '../shared/service/user.service';
 import { User } from '../shared/model/user.model';
 import { StateService } from '../Request/services/state.service';
+
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
   private _snackBar = inject(MatSnackBar);
   private url = environment.apiUrl;
-  /*private userSubject = new BehaviorSubject<SocialUser | null>(null);
-  user$: Observable<SocialUser | null> = this.userSubject.asObservable();*/
-    private userSubject = new BehaviorSubject<number | null>(null);
+  private userSubject = new BehaviorSubject<number | null>(null);
+
   user$: Observable<number | null> = this.userSubject.asObservable();
   authState = new BehaviorSubject<boolean>(false);
   isAuthenticated$ = this.authState.asObservable();
@@ -47,6 +47,23 @@ export class AuthService {
     private stateService: StateService
   ) {
     this.initializeAuthListener();
+    this.checkAuthCookieOnInit();
+  }
+
+  private checkAuthCookieOnInit(): void {
+    this.http
+      .get<{ userId: number; email: string }>(`${this.url}me`, {
+        withCredentials: true,
+      })
+      .subscribe({
+        next: (response) => {
+          this.authState.next(true);
+          this.completeLoginProcess(response.userId, response.email);
+        },
+        error: (err) => {
+          this.setAuthenticated(false);
+        },
+      });
   }
 
   private initializeAuthListener(): void {
@@ -173,7 +190,7 @@ export class AuthService {
   }
 
   private completeLoginProcess(userId: number, email: string): void {
-    this.userSubject.next(userId);  
+    this.userSubject.next(userId);
     this.flowNavigationService.navigateAfterLogin(userId, email).subscribe({
       next: () => {
         this.setAuthenticated(true, userId);
