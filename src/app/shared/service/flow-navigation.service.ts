@@ -13,7 +13,7 @@ export class FlowNavigationService {
     government: {
       flowId: 1,
       routes: {
-        0: '/government-agency-details',
+        0: '/organization-details',
         2: '/user-details',
         // 3: '/user-designation',
         // 4: '/payment-plan-confirmation',
@@ -25,7 +25,7 @@ export class FlowNavigationService {
       flowId: 1,
       routes: {
         0: '/role-verification',
-        1: '/government-agency-details',
+        1: '/organization-details',
         2: '/user-details',
         // 3: '/user-designation',
         // 4: '/payment-plan-confirmation',
@@ -37,7 +37,8 @@ export class FlowNavigationService {
       flowId: 2,
       routes: {
         0: '/role-verification',
-        1: '/user-details',
+        1: '/organization-details',
+        2: '/user-details',
         // 3: '/payment-plan-confirmation',
         // 5: '/billing-profile',
         6: '/offeror-requests-view',

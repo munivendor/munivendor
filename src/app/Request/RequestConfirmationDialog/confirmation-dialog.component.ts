@@ -141,7 +141,7 @@ export class ConfirmationDialog {
             newStatusDesc: 'Opened',
           });
 
-          this.downloadCombinedDocuments(request.requestId, true);
+          this.downloadZipDocuments(request);
         },
         error: (err) => {
           console.error('Failed to update status:', err);
@@ -150,20 +150,29 @@ export class ConfirmationDialog {
     }
 
     if (this.requestObjAndUserAction.action === 'redownload') {
-      this.downloadCombinedDocuments(request.requestId, true);
+      this.downloadZipDocuments(request);
     }
 
     this.dialogRef.close(true);
   }
 
-  downloadCombinedDocuments(requestId: number, active?: boolean) {
+  downloadZipDocuments(request: any) {
     this.documentService
-      .GetCombinedDocumentsContent(requestId, active)
+      .GetZipDocuments(request.requestId)
       .subscribe((zipBlob) => {
+        // Convert publishDate -> MMddyyyy
+        const date = new Date(request.publishDate);
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const year = date.getFullYear();
+        const formattedDate = `${month}${day}${year}`;
+
+        const fileName = `${request.requestName}_${formattedDate}.zip`;
+
         const blobUrl = window.URL.createObjectURL(zipBlob);
         const link = document.createElement('a');
         link.href = blobUrl;
-        link.download = `Proposals_${requestId}.zip`;
+        link.download = fileName;
         link.click();
         window.URL.revokeObjectURL(blobUrl);
       });

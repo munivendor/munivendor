@@ -1,4 +1,5 @@
 <div>
+  <h1>Solicitations</h1>
   <mat-card style="margin-bottom: 1rem">
     <mat-card-content>
       <form [formGroup]="filterForm" (ngSubmit)="onSearch()">
@@ -150,7 +151,6 @@
     </mat-card-content>
   </mat-card>
 
-  <h1>Solicitations</h1>
   <div class="mat-elevation-z8">
     <table mat-table [dataSource]="dataSource">
       <ng-container matColumnDef="requestName">

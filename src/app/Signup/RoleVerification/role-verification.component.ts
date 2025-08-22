@@ -9,15 +9,14 @@ import { UserService } from '../../shared/service/user.service';
 import { Organization } from '../../Organization/Details/model/organization.model';
 import { User } from '../../shared/model/user.model';
 import { FlowProgressService } from '../../shared/service/flow-progress.service';
+import { MatCardModule } from '@angular/material/card';
+
 @Component({
   selector: 'role-verification',
   templateUrl: './role-verification.component.html',
   styleUrls: ['./role-verification.component.css'],
   standalone: true,
-  imports: [
-    MatButtonModule,
-    CommonModule
-  ]
+  imports: [MatButtonModule, CommonModule, MatCardModule],
 })
 export class RoleVerificationComponent implements OnInit {
   private destroy$ = new Subject<void>();
@@ -31,16 +30,14 @@ export class RoleVerificationComponent implements OnInit {
     private authService: AuthService,
     private userService: UserService,
     private flowProgressService: FlowProgressService
-  ) { }
+  ) {}
 
   ngOnInit(): void {
-    this.authService.user$.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(user => {
+    this.authService.user$.pipe(takeUntil(this.destroy$)).subscribe((user) => {
       if (user) {
         const userId = user;
         if (userId) {
-          this.getUserDetails(userId); 
+          this.getUserDetails(userId);
         } else {
           console.error('No user ID available in authentication state');
         }
@@ -77,19 +74,26 @@ export class RoleVerificationComponent implements OnInit {
     this.organizationService.updateOrganization(organization).subscribe({
       next: (response) => {
         const flowId = this.organizationId === 1 ? 1 : 2;
-        this.flowProgressService.saveFlowProgress(this.userId, flowId, this.framePageNumber).subscribe({
-          next: () => {
-            const route = role === 'governmentAgency' ? '/government-agency-details' : '/user-details';
-            this.router.navigate([route]);
-          },
-          error: (err) => {
-            console.error('Error saving flow progress:', err);
-          }
-        });
+        this.flowProgressService
+          .saveFlowProgress(this.userId, flowId, this.framePageNumber)
+          .subscribe({
+            next: () => {
+              // const route =
+              //   role === 'governmentAgency'
+              //     ? '/organization-details'
+              //     : '/user-details';
+              // whether user clicks on offeror or agency, they will be
+              // redirected to organization details page
+              this.router.navigate(['/organization-details']);
+            },
+            error: (err) => {
+              console.error('Error saving flow progress:', err);
+            },
+          });
       },
       error: (error) => {
         console.log(`Error updating organization type to ${role}:`, error);
-      }
+      },
     });
   }
 

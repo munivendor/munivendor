@@ -78,4 +78,39 @@ export class DocumentService {
       responseType: 'blob',
     });
   }
+
+  GetZipDocuments(
+    requestId: number,
+    requestTypeId?: number,
+    requestStatusId?: number,
+    organizationId?: number,
+    limit?: number,
+    offset?: number
+  ): Observable<Blob> {
+    let params = new HttpParams();
+
+    if (requestTypeId !== undefined) {
+      params = params.set('requestTypeId', requestTypeId.toString());
+    }
+    if (requestStatusId !== undefined) {
+      params = params.set('requestStatusId', requestStatusId.toString());
+    }
+    if (organizationId !== undefined) {
+      params = params.set('organizationId', organizationId.toString());
+    }
+    if (limit !== undefined) {
+      params = params.set('limit', limit.toString());
+    }
+    if (offset !== undefined) {
+      params = params.set('offset', offset.toString());
+    }
+
+    return this.http.get(
+      `${this.url}Documents/DocumentContent/Response/Zip/${requestId}`,
+      {
+        params,
+        responseType: 'blob',
+      }
+    );
+  }
 }

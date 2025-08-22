@@ -1,4 +1,4 @@
-<mat-stepper [linear]="true" #stepper style="margin-top: 20rem">
+<mat-stepper [linear]="true" #stepper>
   <mat-step label="Basics">
     <ng-template matStepContent>
       <response-basic
@@ -16,8 +16,6 @@
         >
           Next
         </button>
-        <!-- for testing -->
-        <!-- <button mat-button matStepperNext (click)="saveResponse()">Next</button> -->
       </div>
     </ng-template>
   </mat-step>
@@ -35,7 +33,6 @@
         <!-- <button mat-button matStepperNext [disabled]="!isAutoFillComplete">
           Next
         </button> -->
-        <!-- for testing -->
         <button mat-button matStepperNext>Next</button>
       </div>
     </ng-template>

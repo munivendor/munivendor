@@ -70,7 +70,7 @@ export class AppComponent {
     const routesToHideSidenav = [
       '/role-verification',
       '/validateuser',
-      '/government-agency-details',
+      '/organization-details',
       '/user-details',
       // '/user-designation',
       // '/payment-plan-confirmation',

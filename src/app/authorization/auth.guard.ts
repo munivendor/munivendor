@@ -8,9 +8,9 @@ export const AuthGuard: CanActivateFn = (): Observable<boolean> => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-    if (environment.disableAuthGuard) {
-      return of(true);
-    }
+  if (environment.disableAuthGuard) {
+    return of(true);
+  }
 
   return authService.isAuthenticated$.pipe(
     map((isAuthenticated) => {
