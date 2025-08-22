@@ -25,6 +25,7 @@ import { CategoryTreeComponent } from './CategoryTree/category-tree.component';
 import { ResponseStepper } from './Response/ResponseStepper/response-stepper.component';
 
 export const routes: Routes = [
+  { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: 'signup', component: SignupComponent },
   { path: 'login', component: LoginComponent },
   { path: 'forgot-password', component: ForgotPasswordComponent },

@@ -41,17 +41,13 @@ export class AppComponent {
     this.user$ = this.authService.user$;
     combineLatest([
       this.authService.user$,
-      this.authService.isLoggingIn,
+      this.authService.isAuthenticated$,
       this.router.events.pipe(
         filter((event) => event instanceof NavigationEnd),
         map(() => this.router.url)
       ),
-    ]).subscribe(([user, isLoggingIn, currentRoute]) => {
-      this.showSidenav = this.shouldShowSidenav(
-        user,
-        isLoggingIn,
-        currentRoute
-      );
+    ]).subscribe(([user, isLoggedIn, currentRoute]) => {
+      this.showSidenav = this.shouldShowSidenav(user, isLoggedIn, currentRoute);
       if (user) {
         firstValueFrom(this.userService.getUser(user)).then((userData) => {
           this.organizationTypeId = userData.organizationTypeId ?? null;
@@ -78,7 +74,7 @@ export class AppComponent {
     ];
     return (
       !!user &&
-      !isLoggingIn &&
+      !!isLoggingIn &&
       !routesToHideSidenav.some((route) => currentRoute.includes(route))
     );
   }
