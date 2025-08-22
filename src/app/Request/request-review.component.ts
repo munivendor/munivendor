@@ -1,6 +1,11 @@
 import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { FormGroup, FormBuilder, ReactiveFormsModule, FormArray } from '@angular/forms';
+import {
+  FormGroup,
+  FormBuilder,
+  ReactiveFormsModule,
+  FormArray,
+} from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatCheckbox } from '@angular/material/checkbox';
 import { MatFormField } from '@angular/material/form-field';
@@ -24,10 +29,9 @@ import { CategoryHierarchyService } from './services/category-hierarchy.service'
     CommonModule,
     MatCheckbox,
     MatFormField,
-    MatInputModule
-  ]
+    MatInputModule,
+  ],
 })
-
 export class RequestReviewComponent implements OnInit, OnDestroy {
   @Input() paramRequestId?: number;
   private destroy$ = new Subject<void>();
@@ -45,16 +49,18 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
     private router: Router,
     private snackBar: MatSnackBar,
     private categoryHierarchyService: CategoryHierarchyService
-  ) { }
+  ) {}
 
   private getCategoryHierarchy() {
-    this.categoryHierarchyService.GetCategoryHierarchy()
+    this.categoryHierarchyService
+      .GetCategoryHierarchy()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (categories) => {
-          this.hierarchicalCategories = this.prepareCategoriesForTreeRendering(categories);
+          this.hierarchicalCategories =
+            this.prepareCategoriesForTreeRendering(categories);
         },
-        error: err => console.error('Error fetching categories:', err)
+        error: (err) => console.error('Error fetching categories:', err),
       });
   }
 
@@ -88,7 +94,7 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
       contractStart: [''],
       contractEnd: [''],
       decisionMakers: this.fb.array([]),
-      requestDocuments: this.fb.array([])
+      requestDocuments: this.fb.array([]),
     });
   }
 
@@ -101,24 +107,44 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
     const request$ = this.requestService.GetRequestDetailsById(requestId);
     const requestTypes$ = this.requestService.GetRequestTypes();
     const decisionMakers$ = this.requestService.GetDecisionMakers();
-    const requiredRequestDocuments$ = this.requestService.GetRequestRequiredDocumentsById(requestId);
+    const requiredRequestDocuments$ =
+      this.requestService.GetRequestRequiredDocumentsById(requestId);
 
-    forkJoin([request$, requestTypes$, decisionMakers$, requiredRequestDocuments$])
+    forkJoin([
+      request$,
+      requestTypes$,
+      decisionMakers$,
+      requiredRequestDocuments$,
+    ])
       .pipe(takeUntil(this.destroy$))
       .subscribe(
         ([request, requestTypes, decisionMakers, requiredRequestDocuments]) => {
           const category = this.findCategoryById(request.categoryId);
-          const requestType = requestTypes.find((r: { requestTypeId: number }) => r.requestTypeId === request.requestTypeId);
+          const requestType = requestTypes.find(
+            (r: { requestTypeId: number }) =>
+              r.requestTypeId === request.requestTypeId
+          );
 
-          const decisionMakersMapped = request.decisionMakerSelections.map((selection: { decisionMakerId: number }) =>
-            decisionMakers.find((dm: { decisionMakerId: number }) => dm.decisionMakerId === selection.decisionMakerId)
-          ).filter((dm: any) => dm);
+          const decisionMakersMapped = request.decisionMakerSelections
+            .map((selection: { decisionMakerId: number }) =>
+              decisionMakers.find(
+                (dm: { decisionMakerId: number }) =>
+                  dm.decisionMakerId === selection.decisionMakerId
+              )
+            )
+            .filter((dm: any) => dm);
 
           const requestDocuments = requiredRequestDocuments.documents;
 
-          const { date: publishDate, time: publishTime } = this.splitDateTime(request.publishDate);
-          const { date: openDate, time: openTime } = this.splitDateTime(request.openDate);
-          const { date: contractStart } = this.splitDateTime(request.contractStart);
+          const { date: publishDate, time: publishTime } = this.splitDateTime(
+            request.publishDate
+          );
+          const { date: openDate, time: openTime } = this.splitDateTime(
+            request.openDate
+          );
+          const { date: contractStart } = this.splitDateTime(
+            request.contractStart
+          );
           const { date: contractEnd } = this.splitDateTime(request.contractEnd);
 
           this.requestFinalReviewDetails = {
@@ -132,7 +158,7 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
             contractStart,
             contractEnd,
             openTime,
-            publishTime
+            publishTime,
           };
 
           this.requestFinalReviewDetailsForm.patchValue({
@@ -144,13 +170,19 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
             openDate: openDate,
             openTime: openTime,
             contractStart: contractStart,
-            contractEnd: contractEnd
+            contractEnd: contractEnd,
           });
 
-          this.populateArrayFormControls('decisionMakers', decisionMakersMapped);
-          this.populateArrayFormControls('requestDocuments', requiredRequestDocuments);
+          this.populateArrayFormControls(
+            'decisionMakers',
+            decisionMakersMapped
+          );
+          this.populateArrayFormControls(
+            'requestDocuments',
+            requiredRequestDocuments
+          );
         },
-        error => {
+        (error) => {
           console.error('Error fetching data', error);
         }
       );
@@ -159,7 +191,7 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
   findCategoryById(categoryId: number): CategoryNode | null {
     if (!categoryId) return null;
     const categoryIdToFind = categoryId.toString();
-  
+
     const search = (categories: CategoryNode[]): CategoryNode | null => {
       for (const category of categories) {
         if (
@@ -175,21 +207,24 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
       }
       return null;
     };
-  
+
     return search(this.hierarchicalCategories);
   }
 
-  prepareCategoriesForTreeRendering(categories: CategoryNode[], level: number = 0): CategoryNode[] {
+  prepareCategoriesForTreeRendering(
+    categories: CategoryNode[],
+    level: number = 0
+  ): CategoryNode[] {
     return categories
-      .filter(cat => !cat.deleted)
-      .map(category => ({
+      .filter((cat) => !cat.deleted)
+      .map((category) => ({
         ...category,
         categoryId: category.id?.toString() ?? '',
         level,
         expandable: !!category.children?.length,
         children: category.children?.length
           ? this.prepareCategoriesForTreeRendering(category.children, level + 1)
-          : undefined
+          : undefined,
       }));
   }
 
@@ -203,18 +238,20 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
     const timeOptions: Intl.DateTimeFormatOptions = {
       hour: '2-digit',
       minute: '2-digit',
-      hour12: false
+      hour12: false,
     };
     return {
       date: new Intl.DateTimeFormat('en-US', dateOptions).format(utcDate),
-      time: utcDate.toLocaleTimeString(undefined, timeOptions), // Convert to local time
+      time: utcDate.toLocaleTimeString(undefined, timeOptions),
     };
   }
 
   populateArrayFormControls(controlName: string, items: any[]) {
-    const controlArray = this.requestFinalReviewDetailsForm.get(controlName) as FormArray;
+    const controlArray = this.requestFinalReviewDetailsForm.get(
+      controlName
+    ) as FormArray;
     controlArray.clear();
-    items?.forEach(item => {
+    items?.forEach((item) => {
       controlArray.push(this.fb.control(item.name || item));
     });
   }
@@ -227,20 +264,21 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
     }
 
     // Update the request status to 'Scheduled' once users finalize review
-    this.requestService.UpdateRequestStatus(requestIdToUse, 2)
+    this.requestService
+      .UpdateRequestStatus(requestIdToUse, 2)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
           console.log('Request status updated successfully:', response);
           this.snackBar.open('Request successfully submitted!', '', {
             duration: 5000,
-            verticalPosition: 'top'
+            verticalPosition: 'top',
           });
           this.router.navigate(['/requests-view']);
         },
         error: (err) => {
           console.error('Failed to update request status:', err);
-        }
+        },
       });
   }
 }

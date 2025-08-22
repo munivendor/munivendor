@@ -78,6 +78,7 @@ export class RoleVerificationComponent implements OnInit {
           .saveFlowProgress(this.userId, flowId, this.framePageNumber)
           .subscribe({
             next: () => {
+              // to be used when profile pages are ready
               // const route =
               //   role === 'governmentAgency'
               //     ? '/organization-details'
