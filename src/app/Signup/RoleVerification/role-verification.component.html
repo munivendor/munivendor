@@ -1,11 +1,33 @@
-<div>
-  <h1>Are you an Offeror or Government Agency?</h1>
-  <div class="button-container">
-    <div>
-      <button mat-raised-button color="primary" (click)="selectRole('offeror')">Offeror</button>
-    </div>
-    <div>
-      <button mat-raised-button color="primary" (click)="selectRole('governmentAgency')">Government Agency</button>
-    </div>
-  </div>
+<div class="center-container">
+  <mat-card style="width: 500px">
+    <mat-card-content>
+      <h1 style="text-align: center">Welcome to MuniVendor</h1>
+      <p>
+        Are you a vendor, or are you a local government organization (LGO)? A
+        local government organization includes municipalities, authorities,
+        commissions, public libraries, school districts, and other local
+        government to organizations.
+      </p>
+    </mat-card-content>
+    <mat-card-actions style="justify-content: space-evenly">
+      <div>
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="selectRole('offeror')"
+        >
+          Offeror
+        </button>
+      </div>
+      <div>
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="selectRole('governmentAgency')"
+        >
+          Agency
+        </button>
+      </div>
+    </mat-card-actions>
+  </mat-card>
 </div>

@@ -4,13 +4,13 @@ import { AuthGuard } from './authorization/auth.guard';
 // Non-authorized pages
 import { SignupComponent } from './Signup/signup.component';
 import { LoginComponent } from './Login/login.component';
-import { ForgotPasswordComponent } from './Login/ForgotPassword/forgot-password.component';
+import { ForgotPasswordComponent } from './ForgotPassword/forgot-password.component';
 import { EmailVerification } from './Signup/Verification/verification.component';
 import { TokenValidationComponent } from './Signup/token-validation.component';
 
 // Authorized pages
 import { RoleVerificationComponent } from './Signup/RoleVerification/role-verification.component';
-import { GovernmentAgencyDetailsComponent } from './Organization/Details/organization.details.component';
+import { OrganizationDetailsComponent } from './Organization/Details/organization.details.component';
 import { UserSignUpDetails } from './Signup/UserSignUpDetails/user-signup-details.component';
 // import { DesignationSelectionComponent } from './Organization/UserDesignationSelection/organization.user-designation-selection.component';
 // import { PaymentPlanConfirmationComponent } from './Signup/PaymentInformation/paymentplanconfirmation.component';
@@ -37,8 +37,8 @@ export const routes: Routes = [
     canActivate: [AuthGuard],
   },
   {
-    path: 'government-agency-details',
-    component: GovernmentAgencyDetailsComponent,
+    path: 'organization-details',
+    component: OrganizationDetailsComponent,
     canActivate: [AuthGuard],
   },
   {

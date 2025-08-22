@@ -41,7 +41,7 @@ export class SidenavExample implements OnInit {
   private subscription = new Subscription();
 
   agencyMenuItems = [
-    { icon: 'person', label: 'Agency Profile Page', route: '/profile' },
+    // { icon: 'person', label: 'Agency Profile', route: '/profile' },
     {
       icon: 'add_box',
       label: 'Create Solicitations',
@@ -53,7 +53,7 @@ export class SidenavExample implements OnInit {
   ];
 
   offerorMenuItems = [
-    { icon: 'person', label: 'Offeror Profile', route: '/offeror-profile' },
+    // { icon: 'person', label: 'Offeror Profile', route: '/offeror-profile' },
     { icon: 'help_outline', label: 'Definitions', route: '/definitions' },
     { icon: 'logout', label: 'Log Out', route: '/logout', action: 'logout' },
   ];

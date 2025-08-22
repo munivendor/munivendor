@@ -1,77 +1,151 @@
-<h3 style="max-width: 600px;">
-  Thank you for verifying your email! Let's setup your account! We will need additional information before moving onto
-  the next step.
-</h3>
-<mat-card>
-    <mat-card-title>Government Agency Details</mat-card-title>
-  <mat-card-content>
-    <form [formGroup]="organizationDetailForm" class="full-width" (ngSubmit)="onSubmit()">
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Name</mat-label>
-        <input matInput formControlName="organizationName" required placeholder="Enter Government Agency Name Ex. Linden">
-        <mat-error *ngIf="organizationDetailForm.get('organizationName')?.hasError('required')">
-          Government Agency Name is required.
-        </mat-error>
-        <mat-error *ngIf="organizationDetailForm.get('organizationName')?.hasError('minlength')">
-          Government Agency Name must be at least 3 characters long.
-        </mat-error>
-      </mat-form-field>
+<div class="center-container">
+  <mat-card>
+    <mat-card-header style="margin-bottom: 10px"
+      >Thank you for verifying your email. Let’s setup your account! We will
+      need additional information before moving onto the next
+      step.</mat-card-header
+    >
+    <mat-card-title *ngIf="organizationTypeId !== null">
+      {{
+        organizationTypeId === 1
+          ? "Government Agency Details"
+          : "Offeror Details"
+      }}
+    </mat-card-title>
+    <mat-card-content>
+      <form
+        [formGroup]="organizationDetailForm"
+        class="full-width"
+        (ngSubmit)="onSubmit()"
+      >
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Name</mat-label>
+          <input
+            matInput
+            formControlName="organizationName"
+            required
+            placeholder="Enter Organization Name"
+          />
+          <mat-error
+            *ngIf="
+              organizationDetailForm
+                .get('organizationName')
+                ?.hasError('required')
+            "
+          >
+            Organization Name is required.
+          </mat-error>
+          <mat-error
+            *ngIf="
+              organizationDetailForm
+                .get('organizationName')
+                ?.hasError('minlength')
+            "
+          >
+            Organization Name must be at least 3 characters long.
+          </mat-error>
+        </mat-form-field>
 
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Address</mat-label>
-        <input matInput formControlName="address" required placeholder="Enter Address">
-        <mat-error *ngIf="organizationDetailForm.get('address')?.hasError('required')">
-          Address is required.
-        </mat-error>
-        <mat-error *ngIf="organizationDetailForm.get('address')?.hasError('minlength')">
-          Address must be at least 3 characters long.
-        </mat-error>
-      </mat-form-field>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Address</mat-label>
+          <input
+            matInput
+            formControlName="address"
+            required
+            placeholder="Enter Address"
+          />
+          <mat-error
+            *ngIf="organizationDetailForm.get('address')?.hasError('required')"
+          >
+            Address is required.
+          </mat-error>
+          <mat-error
+            *ngIf="organizationDetailForm.get('address')?.hasError('minlength')"
+          >
+            Address must be at least 3 characters long.
+          </mat-error>
+        </mat-form-field>
 
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Address 2</mat-label>
-        <input matInput formControlName="address2" placeholder="Enter Address">
-        <mat-error *ngIf="organizationDetailForm.get('address2')?.hasError('minlength')">
-          Address must be at least 3 characters long.
-        </mat-error>
-      </mat-form-field>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Address 2</mat-label>
+          <input
+            matInput
+            formControlName="address2"
+            placeholder="Enter Address"
+          />
+          <mat-error
+            *ngIf="
+              organizationDetailForm.get('address2')?.hasError('minlength')
+            "
+          >
+            Address must be at least 3 characters long.
+          </mat-error>
+        </mat-form-field>
 
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>City</mat-label>
-        <input matInput formControlName="city" required placeholder="Enter City">
-        <mat-error *ngIf="organizationDetailForm.get('city')?.hasError('required')">
-          City is required.
-        </mat-error>
-        <mat-error *ngIf="organizationDetailForm.get('city')?.hasError('minlength')">
-          City must be at least 3 characters long.
-        </mat-error>
-      </mat-form-field>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>City</mat-label>
+          <input
+            matInput
+            formControlName="city"
+            required
+            placeholder="Enter City"
+          />
+          <mat-error
+            *ngIf="organizationDetailForm.get('city')?.hasError('required')"
+          >
+            City is required.
+          </mat-error>
+          <mat-error
+            *ngIf="organizationDetailForm.get('city')?.hasError('minlength')"
+          >
+            City must be at least 3 characters long.
+          </mat-error>
+        </mat-form-field>
 
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>State</mat-label>
-        <mat-select formControlName="stateId" required>
-          <mat-option *ngFor="let state of states" [value]="state.codeId">
-            {{ state.codeDesc }} ({{ state.codeName}})
-          </mat-option>
-        </mat-select>
-        <mat-error *ngIf="organizationDetailForm.get('stateId')?.hasError('required')">
-          State is required.
-        </mat-error>
-      </mat-form-field>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>State</mat-label>
+          <mat-select formControlName="stateId" required>
+            <mat-option *ngFor="let state of states" [value]="state.codeId">
+              {{ state.codeDesc }} ({{ state.codeName }})
+            </mat-option>
+          </mat-select>
+          <mat-error
+            *ngIf="organizationDetailForm.get('stateId')?.hasError('required')"
+          >
+            State is required.
+          </mat-error>
+        </mat-form-field>
 
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Zip Code</mat-label>
-        <input matInput formControlName="zipCode" required placeholder="Enter Zip Code">
-        <mat-error *ngIf="organizationDetailForm.get('zipCode')?.hasError('required')">
-          Zip Code is required.
-        </mat-error>
-        <mat-error *ngIf="organizationDetailForm.get('zipCode')?.hasError('pattern')">
-          Enter a valid 5-digit ZIP code or ZIP+4 format (e.g., 12345 or 12345-6789).
-        </mat-error>
-      </mat-form-field>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Zip Code</mat-label>
+          <input
+            matInput
+            formControlName="zipCode"
+            required
+            placeholder="Enter Zip Code"
+          />
+          <mat-error
+            *ngIf="organizationDetailForm.get('zipCode')?.hasError('required')"
+          >
+            Zip Code is required.
+          </mat-error>
+          <mat-error
+            *ngIf="organizationDetailForm.get('zipCode')?.hasError('pattern')"
+          >
+            Enter a valid 5-digit ZIP code or ZIP+4 format (e.g., 12345 or
+            12345-6789).
+          </mat-error>
+        </mat-form-field>
 
-      <button mat-raised-button color="primary" type="submit"
-        [disabled]="!organizationDetailForm.valid">Continue</button>
-    </form>
-  </mat-card-content>
-</mat-card>
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="!organizationDetailForm.valid"
+        >
+          Continue
+        </button>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>
