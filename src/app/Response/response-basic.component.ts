@@ -161,13 +161,13 @@ export class ResponseBasicComponent implements OnInit {
                 disabled: true,
               },
             ],
-            openDateAndTime: [
-              { value: this.formatDateTime(request.openDate), disabled: true },
+            closeDateAndTime: [
+              { value: this.formatDateTime(request.closeDate), disabled: true },
             ],
-            openDate: [{ value: request.openDate, disabled: true }],
-            openTime: [
+            closeDate: [{ value: request.closeDate, disabled: true }],
+            closeTime: [
               {
-                value: this.convertUtcToLocalTimeOnly(request.openDate),
+                value: this.convertUtcToLocalTimeOnly(request.closeDate),
                 disabled: true,
               },
             ],

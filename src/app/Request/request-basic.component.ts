@@ -419,8 +419,8 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
       requestName: [data?.requestName || '', Validators.required],
       publishDate: [data?.publishDate || '', Validators.required],
       publishTime: [data?.publishTime || '', Validators.required],
-      openDate: [data?.openDate || '', Validators.required],
-      openTime: [data?.openTime || '', Validators.required],
+      closeDate: [data?.closeDate || '', Validators.required],
+      closeTime: [data?.closeTime || '', Validators.required],
       contractStartDate: [data?.contractStartDate || '', Validators.required],
       contractEndDate: [data?.contractEndDate || '', Validators.required],
       dropdowns: this.fb.array(
@@ -570,8 +570,8 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
             requestName: request.requestName,
             publishDate: request.publishDate,
             publishTime: this.convertUtcToLocalTimeOnly(request.publishDate),
-            openDate: request.openDate,
-            openTime: this.convertUtcToLocalTimeOnly(request.openDate),
+            closeDate: request.closeDate,
+            closeTime: this.convertUtcToLocalTimeOnly(request.closeDate),
             contractStartDate: request.contractStart,
             contractEndDate: request.contractEnd,
             dropdowns:
@@ -723,9 +723,9 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     const publishTime = formValues.publishTime;
     request.publishDate = this.combineDateAndTime(publishDate, publishTime);
 
-    const openDate = new Date(formValues.openDate);
-    const openTime = formValues.openTime;
-    request.openDate = this.combineDateAndTime(openDate, openTime);
+    const closeDate = new Date(formValues.closeDate);
+    const closeTime = formValues.closeTime;
+    request.closeDate = this.combineDateAndTime(closeDate, closeTime);
 
     request.contractStart = new Date(formValues.contractStartDate);
     request.contractEnd = new Date(formValues.contractEndDate);

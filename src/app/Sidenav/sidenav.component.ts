@@ -40,6 +40,7 @@ export class SidenavExample implements OnInit {
   user$: Observable<number | null>;
   private subscription = new Subscription();
 
+  // profiles are commented out for MVP
   agencyMenuItems = [
     // { icon: 'person', label: 'Agency Profile', route: '/profile' },
     {
@@ -49,13 +50,11 @@ export class SidenavExample implements OnInit {
     },
     { icon: 'dns', label: 'Categories', route: '/categories' },
     { icon: 'help_outline', label: 'Definitions', route: '/definitions' },
-    { icon: 'logout', label: 'Log Out', route: '/logout', action: 'logout' },
   ];
 
   offerorMenuItems = [
     // { icon: 'person', label: 'Offeror Profile', route: '/offeror-profile' },
     { icon: 'help_outline', label: 'Definitions', route: '/definitions' },
-    { icon: 'logout', label: 'Log Out', route: '/logout', action: 'logout' },
   ];
 
   constructor(
@@ -140,14 +139,11 @@ export class SidenavExample implements OnInit {
   }
 
   onMenuClick(item: any) {
-    console.log('Navigate to:', item.route);
-
-    if (item.action === 'logout') {
-      this.handleLogout();
-      return;
-    }
-
     this.router.navigate([item.route]);
+  }
+
+  onLogout() {
+    this.handleLogout();
   }
 
   isActiveRoute(route: string): boolean {
