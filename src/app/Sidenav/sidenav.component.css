@@ -1,3 +1,9 @@
+::ng-deep .mat-drawer-inner-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 .sidenav-container {
   width: 100%;
   height: 100vh;
@@ -8,6 +14,9 @@
   background-color: #c5d4ed;
   border-right: 1px solid #e0e0e0;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .sidenav.collapsed {
@@ -15,7 +24,6 @@
 }
 
 .sidenav-header {
-  display: flex;
   align-items: center;
   border-bottom: 1px solid #cdcdcd;
   min-height: 64px;
@@ -23,8 +31,9 @@
 }
 
 .nav-list {
+  flex-grow: 1;
+  overflow-y: auto;
   padding: 0;
-  flex: 1;
 }
 
 .nav-item {
@@ -74,4 +83,26 @@
 .nav-item.active span {
   color: #4285f4;
   font-weight: 500;
+}
+
+.sidenav-bottom {
+  margin-top: auto;
+}
+
+.logout-item {
+  border-bottom: none;
+}
+
+.toggle-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 0;
+  cursor: pointer;
+  color: #666;
+}
+
+.toggle-button.float-right {
+  justify-content: flex-end;
+  padding-right: 16px;
 }
