@@ -98,10 +98,41 @@ export class OrganizationDetailsComponent implements OnInit {
   private initializeForm(): void {
     this.organizationDetailForm = this.fb.group({
       organizationId: [this.organizationId],
-      organizationName: ['', [Validators.required, Validators.minLength(3)]],
-      address: ['', [Validators.required, Validators.minLength(3)]],
-      address2: ['', [Validators.minLength(3)]],
-      city: ['', [Validators.required, Validators.minLength(3)]],
+      organizationName: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(3),
+          Validators.maxLength(100),
+          Validators.pattern(/^[A-Za-z ]+$/),
+        ],
+      ],
+      address: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(3),
+          Validators.maxLength(200),
+          Validators.pattern(/^[A-Za-z0-9\s.,#-]+$/),
+        ],
+      ],
+      address2: [
+        '',
+        [
+          Validators.minLength(3),
+          Validators.maxLength(200),
+          Validators.pattern(/^[A-Za-z0-9\s.,#-]+$/),
+        ],
+      ],
+      city: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(2),
+          Validators.maxLength(100),
+          Validators.pattern(/^[A-Za-z ]+$/),
+        ],
+      ],
       stateId: ['', Validators.required],
       zipCode: [
         '',
