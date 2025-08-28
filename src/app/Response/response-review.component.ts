@@ -228,8 +228,8 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
       requestType: [''],
       publishDate: [''],
       publishTime: [''],
-      openDate: [''],
-      openTime: [''],
+      closeDate: [''],
+      closeTime: [''],
       contractStart: [''],
       contractEnd: [''],
       requestDocuments: this.fb.array([]),
@@ -346,7 +346,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
           );
 
           const { date: publishDate } = this.splitDateTime(request.publishDate);
-          const { date: openDate } = this.splitDateTime(request.openDate);
+          const { date: closeDate } = this.splitDateTime(request.closeDate);
           const { date: contractStart } = this.splitDateTime(
             request.contractStart
           );
@@ -356,7 +356,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
             ...request,
             category,
             requestType,
-            openDate,
+            closeDate,
             publishDate,
             contractStart,
             contractEnd,
@@ -367,7 +367,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
             category: category?.name || '',
             requestType: requestType?.requestTypeDesc || '',
             publishDate: this.formatDateTime(request.publishDate),
-            openDate: this.formatDateTime(request.openDate),
+            closeDate: this.formatDateTime(request.closeDate),
             contractStart: contractStart,
             contractEnd: contractEnd,
           });

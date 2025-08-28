@@ -150,17 +150,17 @@
           <mat-label>Close Date</mat-label>
           <input
             matInput
-            [matDatepicker]="openDatePicker"
-            formControlName="openDate"
-            (dateChange)="onSelectDate('openDate', $event)"
+            [matDatepicker]="closeDatePicker"
+            formControlName="closeDate"
+            (dateChange)="onSelectDate('closeDate', $event)"
           />
           <mat-datepicker-toggle
             matSuffix
-            [for]="openDatePicker"
+            [for]="closeDatePicker"
           ></mat-datepicker-toggle>
-          <mat-datepicker #openDatePicker></mat-datepicker>
+          <mat-datepicker #closeDatePicker></mat-datepicker>
           <mat-error
-            *ngIf="basicsFormGroup?.get('openDate')?.hasError('required')"
+            *ngIf="basicsFormGroup?.get('closeDate')?.hasError('required')"
           >
             Close Date is required.
           </mat-error>
@@ -171,9 +171,9 @@
         <p>What is the Close Time?</p>
         <mat-form-field appearance="fill" class="input-width">
           <mat-label>Close Time</mat-label>
-          <input matInput type="time" formControlName="openTime" />
+          <input matInput type="time" formControlName="closeTime" />
           <mat-error
-            *ngIf="basicsFormGroup?.get('openTime')?.hasError('required')"
+            *ngIf="basicsFormGroup?.get('closeTime')?.hasError('required')"
           >
             Close Time is required.
           </mat-error>
