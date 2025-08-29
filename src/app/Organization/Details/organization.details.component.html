@@ -24,7 +24,7 @@
             matInput
             formControlName="organizationName"
             required
-            placeholder="Enter Organization Name"
+            placeholder="Enter Organization Name Ex. ABC Corporation"
           />
           <mat-error
             *ngIf="
@@ -44,6 +44,24 @@
           >
             Organization Name must be at least 3 characters long.
           </mat-error>
+          <mat-error
+            *ngIf="
+              organizationDetailForm
+                .get('organizationName')
+                ?.hasError('maxlength')
+            "
+          >
+            Organization Name cannot exceed 100 characters.
+          </mat-error>
+          <mat-error
+            *ngIf="
+              organizationDetailForm
+                .get('organizationName')
+                ?.hasError('pattern')
+            "
+          >
+            Organization Name can only contain letters and spaces.
+          </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
@@ -52,7 +70,7 @@
             matInput
             formControlName="address"
             required
-            placeholder="Enter Address"
+            placeholder="Enter Address Ex. 123 Main Street"
           />
           <mat-error
             *ngIf="organizationDetailForm.get('address')?.hasError('required')"
@@ -64,6 +82,17 @@
           >
             Address must be at least 3 characters long.
           </mat-error>
+          <mat-error
+            *ngIf="organizationDetailForm.get('address')?.hasError('maxlength')"
+          >
+            Address cannot exceed 200 characters.
+          </mat-error>
+          <mat-error
+            *ngIf="organizationDetailForm.get('address')?.hasError('pattern')"
+          >
+            Address can only contain letters, numbers, spaces, and characters
+            like . , # -
+          </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
@@ -71,14 +100,27 @@
           <input
             matInput
             formControlName="address2"
-            placeholder="Enter Address"
+            placeholder="Enter Address Ex. Apt 4B or Suite 210"
           />
           <mat-error
             *ngIf="
               organizationDetailForm.get('address2')?.hasError('minlength')
             "
           >
-            Address must be at least 3 characters long.
+            Address 2 must be at least 3 characters long.
+          </mat-error>
+          <mat-error
+            *ngIf="
+              organizationDetailForm.get('address2')?.hasError('maxlength')
+            "
+          >
+            Address 2 cannot exceed 200 characters.
+          </mat-error>
+          <mat-error
+            *ngIf="organizationDetailForm.get('address2')?.hasError('pattern')"
+          >
+            Address 2 can only contain letters, numbers, spaces, and characters
+            like . , # -
           </mat-error>
         </mat-form-field>
 
@@ -88,7 +130,7 @@
             matInput
             formControlName="city"
             required
-            placeholder="Enter City"
+            placeholder="Ex. San Francisco"
           />
           <mat-error
             *ngIf="organizationDetailForm.get('city')?.hasError('required')"
@@ -98,7 +140,17 @@
           <mat-error
             *ngIf="organizationDetailForm.get('city')?.hasError('minlength')"
           >
-            City must be at least 3 characters long.
+            City must be at least 2 characters long.
+          </mat-error>
+          <mat-error
+            *ngIf="organizationDetailForm.get('city')?.hasError('maxlength')"
+          >
+            City cannot exceed 100 characters.
+          </mat-error>
+          <mat-error
+            *ngIf="organizationDetailForm.get('city')?.hasError('pattern')"
+          >
+            City can only contain letters and spaces.
           </mat-error>
         </mat-form-field>
 
@@ -122,7 +174,7 @@
             matInput
             formControlName="zipCode"
             required
-            placeholder="Enter Zip Code"
+            placeholder="Enter Zip Code Ex. 12345 or 12345-6789"
           />
           <mat-error
             *ngIf="organizationDetailForm.get('zipCode')?.hasError('required')"
@@ -132,8 +184,7 @@
           <mat-error
             *ngIf="organizationDetailForm.get('zipCode')?.hasError('pattern')"
           >
-            Enter a valid 5-digit ZIP code or ZIP+4 format (e.g., 12345 or
-            12345-6789).
+            Enter a valid ZIP code (e.g., 12345 or 12345-6789).
           </mat-error>
         </mat-form-field>
 
