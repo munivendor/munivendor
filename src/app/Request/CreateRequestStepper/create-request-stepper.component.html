@@ -58,7 +58,9 @@
 
     <mat-step label="Review">
       <ng-template matStepContent>
-        <request-review [paramRequestId]="requestId"></request-review>
+        <request-review
+          [paramRequestId]="requestId ?? undefined"
+        ></request-review>
         <div>
           <button mat-button matStepperPrevious>Back</button>
           <button

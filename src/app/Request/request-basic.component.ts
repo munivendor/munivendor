@@ -77,7 +77,7 @@ interface FlattenedCategoryNode {
   ],
 })
 export class BasicRequestComponent implements OnInit, OnDestroy {
-  @Input() requestId?: number;
+  @Input() requestId?: number | null;
   @Input() idParam?: string | null | undefined;
   @Output() deleteDropdown = new EventEmitter<{
     decisionMakerId: number | null;
@@ -110,6 +110,7 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.stateService.setRequestId(null);
     if (this.idParam) {
       this.getRequestById(Number(this.idParam));
     } else {
@@ -693,7 +694,7 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
             console.error('Error updating Request:', error);
           }
         );
-    } else if (!this.idParam || !requestIdFromStateService) {
+    } else if (!this.idParam || !this.requestId) {
       this.requestService
         .CreateRequest(request)
         .pipe(takeUntil(this.destroy$))
@@ -757,6 +758,19 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     });
     return localTime;
   }
+
+  // Block past dates + weekends
+  disableWeekendsAndPastDates = (date: Date | null): boolean => {
+    if (!date) return false;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const isFutureOrToday = date >= today; // only today or future
+    const isWeekday = date.getDay() !== 0 && date.getDay() !== 6; // block Sat/Sun
+
+    return isFutureOrToday && isWeekday;
+  };
 
   onSelectDate(controlName: string, event: MatDatepickerInputEvent<Date>) {
     if (event.value) {

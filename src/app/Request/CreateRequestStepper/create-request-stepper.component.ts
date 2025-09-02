@@ -53,19 +53,19 @@ export class CreateRequestStepper implements OnDestroy {
   proposalsOverview!: FormGroup;
   requestDocumentsFormGroup!: FormGroup;
   organizationId = 1;
-  requestId?: number;
+  requestId?: number | null;
   proposalsOverviewFormGroup!: FormGroup;
   requiredDocuments: Document[] = [];
   optionalDocuments: Document[] = [];
   municipalityDocuments: Document[] = [];
   finalReviewFormGroup!: FormGroup;
-  idParam?: string | undefined | null;
+  idParam?: string | null;
   isStepValid = false;
 
   constructor(private route: ActivatedRoute) {
     this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       this.idParam = params.get('requestId');
-      this.requestId = this.idParam ? +this.idParam : 0;
+      this.requestId = this.idParam ? +this.idParam : null;
     });
   }
 
