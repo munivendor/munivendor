@@ -113,8 +113,10 @@
           <input
             matInput
             [matDatepicker]="publishDatePicker"
+            [matDatepickerFilter]="disableWeekendsAndPastDates"
             formControlName="publishDate"
             (dateChange)="onSelectDate('publishDate', $event)"
+            readonly
           />
           <mat-datepicker-toggle
             matSuffix
@@ -151,8 +153,10 @@
           <input
             matInput
             [matDatepicker]="closeDatePicker"
+            [matDatepickerFilter]="disableWeekendsAndPastDates"
             formControlName="closeDate"
             (dateChange)="onSelectDate('closeDate', $event)"
+            readonly
           />
           <mat-datepicker-toggle
             matSuffix
@@ -189,8 +193,10 @@
           <input
             matInput
             [matDatepicker]="contractStartDatePicker"
+            [matDatepickerFilter]="disableWeekendsAndPastDates"
             formControlName="contractStartDate"
             (dateChange)="onSelectDate('contractStartDate', $event)"
+            readonly
           />
           <mat-datepicker-toggle
             matSuffix
@@ -214,8 +220,10 @@
           <input
             matInput
             [matDatepicker]="contractEndDatePicker"
+            [matDatepickerFilter]="disableWeekendsAndPastDates"
             formControlName="contractEndDate"
             (dateChange)="onSelectDate('contractEndDate', $event)"
+            readonly
           />
           <mat-datepicker-toggle
             matSuffix

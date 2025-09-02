@@ -12,7 +12,7 @@ export class StateService {
 
   private requestIdSource = new BehaviorSubject<number | null>(null);
   currentRequestId$ = this.requestIdSource.asObservable();
-    
+
   private requestHasBeenSaved = new BehaviorSubject<boolean>(false);
   currentRequestHasBeenSaved$ = this.requestHasBeenSaved.asObservable();
 
@@ -35,7 +35,7 @@ export class StateService {
     return this.userIdSource.getValue();
   }
 
-  setRequestId(requestId: number) {
+  setRequestId(requestId: number | null) {
     this.requestIdSource.next(requestId);
   }
 
@@ -46,11 +46,11 @@ export class StateService {
   setRequestHasBeenSaved(hasBeenSaved: boolean) {
     this.requestHasBeenSaved.next(hasBeenSaved);
   }
-  
+
   getRequestHasBeenSaved(): boolean {
     return this.requestHasBeenSaved.getValue();
   }
-  
+
   setOrganizationId(organizationId: number) {
     this.organizationIdSource.next(organizationId);
   }
