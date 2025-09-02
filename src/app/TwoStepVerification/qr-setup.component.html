@@ -1,0 +1,48 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <h2>Setup Google Authenticator</h2>
+
+    <div *ngIf="!mfaSetup" class="loading">
+      <p>Generating QR code...</p>
+    </div>
+
+    <div *ngIf="mfaSetup && !isVerified">
+      <div class="setup-instructions">
+        <h3>Step 1: Install Google Authenticator</h3>
+        <p>Download Google Authenticator app on your mobile device.</p>
+
+        <h3>Step 2: Scan QR Code</h3>
+        <div class="qr-code">
+          <img [src]="mfaSetup.qrCodeUrl" alt="MFA QR Code" />
+        </div>
+
+        <h3>Step 3: Enter Verification Code</h3>
+        <form [formGroup]="verificationForm" (ngSubmit)="onVerify()">
+          <div class="form-group">
+            <label for="code">Enter 6-digit code from your app</label>
+            <input
+              type="text"
+              id="code"
+              formControlName="code"
+              class="form-control"
+              placeholder="000000"
+              maxlength="6"
+              [class.error]="isFieldInvalid('code')"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('code')">
+              Please enter a valid 6-digit code
+            </div>
+          </div>
+
+          <div class="error-message" *ngIf="errorMessage">
+            {{ errorMessage }}
+          </div>
+
+          <button type="submit" class="btn btn-primary" [disabled]="isLoading">
+            {{ isLoading ? "Verifying..." : "Verify & Complete Setup" }}
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

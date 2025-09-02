@@ -20,6 +20,12 @@ import { FlowNavigationService } from '../shared/service/flow-navigation.service
 import { UserService } from '../shared/service/user.service';
 import { User } from '../shared/model/user.model';
 import { StateService } from '../Request/services/state.service';
+import { UserProfile } from '../shared/model/user-profile.model';
+
+export interface MfaSetupResponse {
+  qrCodeUrl: string;
+  secret: string;
+}
 
 export interface ForgotPasswordResponse {
   message?: string;
@@ -32,8 +38,10 @@ export class AuthService {
   private _snackBar = inject(MatSnackBar);
   private url = environment.apiUrl;
   private userSubject = new BehaviorSubject<number | null>(null);
+  private userProfile = new BehaviorSubject<UserProfile | null>(null);
 
   user$: Observable<number | null> = this.userSubject.asObservable();
+  userProfile$ = this.userProfile.asObservable();
   authState = new BehaviorSubject<boolean>(false);
   isAuthenticated$ = this.authState.asObservable();
   private skipNextAuthStateSubject = new BehaviorSubject<boolean>(false);
@@ -59,6 +67,7 @@ export class AuthService {
     this.initializeAuthListener();
   }
 
+<<<<<<< HEAD
   // Initialize the app and check for existing auth cookie
   public initializeApp(): Observable<any> {
     return this.checkAuthCookieOnInit().pipe(
@@ -76,6 +85,11 @@ export class AuthService {
   private checkAuthCookieOnInit(): Observable<any> {
     return this.http
       .get<{ userId: number; email: string }>(`${this.url}me`, {
+=======
+  private checkAuthCookieOnInit(): void {
+    this.http
+      .get<UserProfile>(`${this.url}me`, {
+>>>>>>> 3ed754f (add two-step verification)
         withCredentials: true,
       })
       .pipe(
@@ -233,12 +247,23 @@ export class AuthService {
 
   private completeLoginProcess(userId: number, email: string): void {
     this.userSubject.next(userId);
-    this.flowNavigationService.navigateAfterLogin(userId, email).subscribe({
-      next: () => {
-        this.setAuthenticated(true, userId);
+    this.getUserProfile().subscribe({
+      next: (profile) => {
+        this.userProfile.next(profile);
+        this.flowNavigationService.navigateAfterLogin(userId, email).subscribe({
+          next: () => {
+            this.setAuthenticated(true, userId);
+          },
+          error: (error: any) => {
+            console.error('Navigation error:', error);
+            this.setAuthenticated(true, userId);
+            this.router.navigate(['/role-verification']);
+          },
+        });
       },
-      error: (error: any) => {
-        console.error('Navigation error:', error);
+      error: (error) => {
+        console.error('Error fetching user profile:', error);
+        // still continue with navigation even if profile fails
         this.setAuthenticated(true, userId);
         this.router.navigate(['/role-verification']);
       },
@@ -282,5 +307,33 @@ export class AuthService {
         },
       }
     );
+  }
+  setupMfa(): Observable<MfaSetupResponse> {
+    return this.http.post<MfaSetupResponse>(
+      `${this.url}auth/setup-mfa`,
+      {},
+      { withCredentials: true }
+    );
+  }
+
+  verifyMfa(code: string): Observable<any> {
+    return this.http.post(
+      `${this.url}auth/verify-mfa`,
+      { code },
+      { withCredentials: true }
+    );
+  }
+
+  getUserProfile(): Observable<UserProfile> {
+    return this.http
+      .get<UserProfile>(`${this.url}me`, { withCredentials: true })
+      .pipe(
+        tap((profile) => {
+          this.userProfile.next(profile);
+        }),
+        catchError((error: HttpErrorResponse) => {
+          return throwError(() => error);
+        })
+      );
   }
 }

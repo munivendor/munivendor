@@ -1,0 +1,185 @@
+.two-step-verification-card {
+  max-width: 500px;
+  min-height: 50vh;
+  margin: 0 auto;
+  background-color: #fefefe;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.two-step-verification-card .card-header {
+  padding: 16px 24px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.two-step-verification-card .card-header .back-button {
+  color: #666;
+}
+
+.two-step-verification-card .card-header .back-button:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.two-step-verification-card .card-header .card-title {
+  font-size: 20px;
+  font-weight: 500;
+  color: #333;
+  margin: 0;
+}
+
+.two-step-verification-card .card-content .setup-section {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.two-step-verification-card .card-content .status-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.two-step-verification-card .card-content .status-section .status-label {
+  font-size: 14px;
+  color: #666;
+  font-weight: 400;
+}
+
+.two-step-verification-card .card-content .status-section .status-value {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.two-step-verification-card
+  .card-content
+  .status-section
+  .status-value.not-active {
+  color: #d32f2f;
+}
+
+.two-step-verification-card .card-content .status-section .status-value.active {
+  color: #2e7d32;
+}
+
+.two-step-verification-card
+  .card-content
+  .description-section
+  .description-text {
+  font-size: 14px;
+  color: #333;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.two-step-verification-card .card-content .action-section .activate-button {
+  padding: 8px 24px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: 1px solid #1976d2;
+  color: #1976d2;
+  background-color: transparent;
+}
+
+.two-step-verification-card
+  .card-content
+  .action-section
+  .activate-button:hover {
+  background-color: rgba(25, 118, 210, 0.04);
+}
+
+.two-step-verification-card
+  .card-content
+  .action-section
+  .activate-button:focus {
+  outline: 2px solid rgba(25, 118, 210, 0.2);
+  outline-offset: 2px;
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+  .two-step-verification-card {
+    margin: 16px;
+    max-width: none;
+  }
+
+  .two-step-verification-card .card-header {
+    padding: 12px 16px 0;
+  }
+
+  .two-step-verification-card .card-content {
+    padding: 16px;
+  }
+}
+
+.authenticator-section {
+  margin-bottom: 32px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #212529;
+  margin-bottom: 16px;
+}
+
+.authenticator-card {
+  background-color: white;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.authenticator-icon {
+  width: 40px;
+  height: 40px;
+  background-color: transparent;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+}
+
+.authenticator-info {
+  flex: 1;
+}
+
+.authenticator-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #212529;
+  margin: 0 0 4px 0;
+}
+
+.authenticator-status {
+  font-size: 12px;
+  color: #6c757d;
+  margin: 0;
+}
+
+.setup-button {
+  width: 100%;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.setup-button:hover {
+  background-color: #0056b3;
+}
+
+.setup-button:active {
+  background-color: #004085;
+}

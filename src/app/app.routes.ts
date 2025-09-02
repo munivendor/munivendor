@@ -23,6 +23,7 @@ import { CreateRequestStepper } from './Request/CreateRequestStepper/create-requ
 import { CategoryTreeComponent } from './CategoryTree/category-tree.component';
 
 import { ResponseStepper } from './Response/ResponseStepper/response-stepper.component';
+import { TwoStepVerificationComponent } from './TwoStepVerification/two-step-verification.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -102,6 +103,11 @@ export const routes: Routes = [
   {
     path: 'response-basic/:sourceId/edit/:responseId',
     component: ResponseStepper,
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'two-step-verification',
+    component: TwoStepVerificationComponent,
     canActivate: [AuthGuard],
   },
 ];
