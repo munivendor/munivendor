@@ -1,4 +1,13 @@
-import { Component, ViewChild, OnInit, Input } from '@angular/core';
+import {
+  Component,
+  ViewChild,
+  OnInit,
+  Input,
+  AfterViewInit,
+  Inject,
+  PLATFORM_ID,
+} from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatIconModule } from '@angular/material/icon';
@@ -31,7 +40,7 @@ import { UserService } from '../shared/service/user.service';
   ],
   standalone: true,
 })
-export class SidenavExample implements OnInit {
+export class Sidenav implements OnInit, AfterViewInit {
   @ViewChild('drawer') drawer!: MatDrawer;
   @Input() organizationTypeId: number | null = null;
 
@@ -60,7 +69,8 @@ export class SidenavExample implements OnInit {
   constructor(
     private router: Router,
     private authService: AuthService,
-    private userService: UserService
+    private userService: UserService,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.user$ = this.authService.user$;
   }
@@ -76,6 +86,7 @@ export class SidenavExample implements OnInit {
         )
         .subscribe((event: NavigationEnd) => {
           this.activeRoute = event.urlAfterRedirects;
+          this.forceLayoutRecalculation();
         })
     );
 
@@ -87,6 +98,7 @@ export class SidenavExample implements OnInit {
               this.userService.getUser(user)
             );
             this.organizationTypeId = userData.organizationTypeId ?? null;
+            this.forceLayoutRecalculation();
           } catch (error) {
             console.error('Error fetching user data:', error);
           }
@@ -95,10 +107,44 @@ export class SidenavExample implements OnInit {
         }
       })
     );
+
+    if (isPlatformBrowser(this.platformId)) {
+      setTimeout(() => {
+        this.forceLayoutRecalculation();
+      }, 0);
+
+      window.addEventListener('load', () => {
+        this.forceLayoutRecalculation();
+      });
+    }
+  }
+
+  ngAfterViewInit() {
+    if (isPlatformBrowser(this.platformId)) {
+      setTimeout(() => {
+        this.forceLayoutRecalculation();
+        if (this.drawer && this.drawer._container) {
+          this.drawer._container?.updateContentMargins();
+        }
+      }, 100);
+    }
   }
 
   ngOnDestroy() {
     this.subscription.unsubscribe();
+  }
+
+  private forceLayoutRecalculation() {
+    if (isPlatformBrowser(this.platformId)) {
+      document.body.offsetHeight;
+      window.dispatchEvent(new Event('resize'));
+
+      if (this.drawer && this.drawer._container) {
+        setTimeout(() => {
+          this.drawer._container?.updateContentMargins();
+        }, 0);
+      }
+    }
   }
 
   get baseMenuItems() {
@@ -147,27 +193,39 @@ export class SidenavExample implements OnInit {
   }
 
   isActiveRoute(route: string): boolean {
+    const currentUrl = this.router.url;
+
     if (route === '/logout') {
       return false;
     }
 
     if (route === '/requests-view' || route === '/offeror-requests-view') {
       const isOnRoot =
-        this.activeRoute === '/' ||
-        this.activeRoute === '' ||
-        this.activeRoute === '/home';
+        currentUrl === '/' || currentUrl === '' || currentUrl === '/home';
+
       const isDashboardForUserType =
         (route === '/requests-view' && this.organizationTypeId === 1) ||
         (route === '/offeror-requests-view' &&
           this.organizationTypeId !== 1 &&
           this.organizationTypeId !== null);
 
-      return this.activeRoute === route || (isOnRoot && isDashboardForUserType);
+      return (
+        this.router.isActive(route, {
+          paths: 'exact',
+          queryParams: 'ignored',
+          fragment: 'ignored',
+          matrixParams: 'ignored',
+        }) ||
+        (isOnRoot && isDashboardForUserType)
+      );
     }
 
-    return (
-      this.activeRoute === route || this.activeRoute.startsWith(route + '/')
-    );
+    return this.router.isActive(route, {
+      paths: 'exact',
+      queryParams: 'ignored',
+      fragment: 'ignored',
+      matrixParams: 'ignored',
+    });
   }
 
   private handleLogout() {
