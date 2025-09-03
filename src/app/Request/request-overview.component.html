@@ -40,7 +40,7 @@
           time that it submits its proposal. MuniVendor automatically inserts
           your business registration certificate from your MuniVendor vendor
           profile. If you plan to utilize subcontractors, then please include
-          copies of those subcontractor’s business registration certificates in
+          copies of those subcontractor's business registration certificates in
           your technical proposal upload. The contracting party must also
           collect the state use tax where applicable.
         </li>
@@ -48,11 +48,20 @@
       <hr class="propsal-divider" style="margin-top: 20px" />
     </div>
   </div>
+
+  <div
+    *ngIf="hasAtLeastOneFieldError"
+    class="validation-error"
+    style="color: #f44336; font-size: 12px; margin-top: 8px"
+  >
+    At least one section must have content filled in.
+  </div>
 </div>
+
 <button
   mat-fab
   color="primary"
-  style="margin-bottom: 16px"
+  style="margin-bottom: 16px; margin-top: 16px"
   extended
   (click)="addSection()"
 >

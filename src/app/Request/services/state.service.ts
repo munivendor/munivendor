@@ -58,4 +58,8 @@ export class StateService {
   getOrganizationId(): number | null {
     return this.organizationIdSource.getValue();
   }
+
+  clearOrganizationId(): void {
+    this.organizationIdSource.next(null);
+  }
 }

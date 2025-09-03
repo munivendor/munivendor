@@ -10,7 +10,7 @@ import { combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { UserService } from './shared/service/user.service';
 import { firstValueFrom } from 'rxjs';
-import { SidenavExample } from './Sidenav/sidenav.component';
+import { Sidenav } from './Sidenav/sidenav.component';
 
 @Component({
   selector: 'app-root',
@@ -23,7 +23,7 @@ import { SidenavExample } from './Sidenav/sidenav.component';
     MatSidenavModule,
     MatToolbarModule,
     MatListModule,
-    SidenavExample,
+    Sidenav,
   ],
 })
 export class AppComponent {

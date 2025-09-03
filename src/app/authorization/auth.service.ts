@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { SocialAuthService, SocialUser } from '@abacritt/angularx-social-login';
+import { SocialAuthService } from '@abacritt/angularx-social-login';
 import {
   BehaviorSubject,
   catchError,
@@ -8,6 +8,8 @@ import {
   tap,
   throwError,
   withLatestFrom,
+  switchMap,
+  of,
 } from 'rxjs';
 import { Router } from '@angular/router';
 import { UserLogin } from '../shared/model/user-login.model';
@@ -34,6 +36,10 @@ export class AuthService {
   skipNextAuthState$ = this.skipNextAuthStateSubject.asObservable();
   public isLoggingIn = new BehaviorSubject<boolean>(false);
 
+  // Add a subject to track app initialization
+  private appInitialized = new BehaviorSubject<boolean>(false);
+  public appInitialized$ = this.appInitialized.asObservable();
+
   setSkipNextAuthState(value: boolean): void {
     this.skipNextAuthStateSubject.next(value);
   }
@@ -47,23 +53,53 @@ export class AuthService {
     private stateService: StateService
   ) {
     this.initializeAuthListener();
-    this.checkAuthCookieOnInit();
+    this.initializeApp();
   }
 
-  private checkAuthCookieOnInit(): void {
-    this.http
+  // Initialize the app and check for existing auth cookie
+  private initializeApp(): void {
+    this.checkAuthCookieOnInit().subscribe({
+      next: () => {
+        this.appInitialized.next(true);
+      },
+      error: () => {
+        this.appInitialized.next(true);
+      },
+    });
+  }
+
+  private checkAuthCookieOnInit(): Observable<any> {
+    return this.http
       .get<{ userId: number; email: string }>(`${this.url}me`, {
         withCredentials: true,
       })
-      .subscribe({
-        next: (response) => {
+      .pipe(
+        switchMap((response) => {
           this.authState.next(true);
-          this.completeLoginProcess(response.userId, response.email);
-        },
-        error: (err) => {
+          this.userSubject.next(response.userId);
+
+          return this.userService.getUser(response.userId).pipe(
+            tap((user: User) => {
+              if (user.organizationId !== undefined) {
+                this.stateService.setOrganizationId(user.organizationId);
+              } else {
+                console.warn(
+                  'Organization ID is undefined during restoration.'
+                );
+              }
+            }),
+            catchError((userError) => {
+              console.error('Error fetching user data during init:', userError);
+              return of(null);
+            })
+          );
+        }),
+        catchError((err) => {
+          console.log('User not authenticated on init');
           this.setAuthenticated(false);
-        },
-      });
+          return throwError(() => err);
+        })
+      );
   }
 
   private initializeAuthListener(): void {
@@ -169,6 +205,7 @@ export class AuthService {
     this.userSubject.next(null);
     this.authState.next(false);
     this.isLoggingIn.next(false);
+    this.stateService.clearOrganizationId();
 
     if (this.router.url !== '/login') {
       this.router.navigate(['/login']);
@@ -201,5 +238,32 @@ export class AuthService {
         this.router.navigate(['/role-verification']);
       },
     });
+  }
+
+  getCurrentUserId(): number | null {
+    return this.userSubject.value;
+  }
+
+  restoreOrganizationId(): Observable<User | null> {
+    const userId = this.getCurrentUserId();
+    if (!userId) {
+      return of(null);
+    }
+
+    return this.userService.getUser(userId).pipe(
+      tap((user: User) => {
+        if (user && user.organizationId !== undefined) {
+          this.stateService.setOrganizationId(user.organizationId);
+          console.log(
+            'Organization ID manually restored:',
+            user.organizationId
+          );
+        }
+      }),
+      catchError((error) => {
+        console.error('Error manually restoring organization ID:', error);
+        return of(null);
+      })
+    );
   }
 }
