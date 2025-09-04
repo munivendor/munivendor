@@ -26,7 +26,6 @@ import { EditorModule } from '@tinymce/tinymce-angular';
 import { RequestService } from './services/request.service';
 import { StateService } from './services/state.service';
 import { Subject, takeUntil } from 'rxjs';
-import { AuthService } from '../authorization/auth.service';
 
 function atLeastOneFieldFilledValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
@@ -92,26 +91,9 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private requestService: RequestService,
     private cdr: ChangeDetectorRef,
-    private stateService: StateService,
-    private authService: AuthService
+    private stateService: StateService
   ) {
-    // Wait for app initialization before setting organizationId
-    this.authService.appInitialized$.subscribe((initialized) => {
-      if (initialized) {
-        this.organizationId = this.stateService.getOrganizationId() ?? 0;
-        console.log('Organization ID after init:', this.organizationId);
-
-        // If still no organizationId and user is authenticated, try to restore it
-        if (!this.organizationId && this.authService.getCurrentUserId()) {
-          this.authService.restoreOrganizationId().subscribe((user) => {
-            if (user) {
-              this.organizationId = this.stateService.getOrganizationId() ?? 0;
-              this.cdr.detectChanges();
-            }
-          });
-        }
-      }
-    });
+    this.organizationId = this.stateService.getOrganizationId() ?? 0;
   }
 
   ngOnInit(): void {

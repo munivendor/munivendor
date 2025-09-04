@@ -22,7 +22,6 @@ import { ConfirmationDialog } from '../RequestConfirmationDialog/confirmation-di
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CustomCategoryDropdownComponent } from '../../shared/CustomCategoryDropdown/custom-category-dropdown.component';
 import { StateService } from '../services/state.service';
-import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'offeror-request-tabledetails',
@@ -191,6 +190,10 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
     submitted: 9,
   };
 
+  ngOnInit(): void {
+    this.loadAndJoinRequestData();
+  }
+
   onSearch(): void {
     const formValues = this.filterForm.value;
 
@@ -257,58 +260,71 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
     this.loadAndJoinRequestData(params);
   }
 
-  ngOnInit(): void {
-    this.loadAndJoinRequestData();
-  }
+  private async loadAndJoinRequestData(params?: any): Promise<void> {
+    try {
+      const organizationId = await this.stateService.getOrganizationId();
+      if (!organizationId) {
+        console.error('Organization ID not found');
+        this.dataSource = new MatTableDataSource<any>([]);
+        return;
+      }
 
-  private loadAndJoinRequestData(params?: any): void {
-    const combinedData: any[] = [];
+      const requestParams = {
+        organizationId: organizationId,
+        ...(params || {}),
+      };
 
-    forkJoin([
-      this.requestService.GetRequestsOfferorView(params || {}),
-      this.categoryHierarchyService.GetCategoryHierarchy(),
-      this.requestService.GetRequestTypes(),
-      this.requestService.GetRequestStatuses(),
-    ])
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(
-        ([requests, categories, requestTypes, requestStatuses]) => {
-          requests.requests.forEach((request: any) => {
-            const category = this.findCategoryById(
-              categories,
-              request.categoryId
-            );
-            const requestType = requestTypes.find(
-              (r) => r.requestTypeId === request.requestTypeId
-            );
-            const agencyRequestStatus = requestStatuses.find(
-              (rs: { requestStatusId: any }) =>
-                rs.requestStatusId === request.agencyRequestStatusId
-            );
+      const combinedData: any[] = [];
 
-            const offerorRequestStatus = requestStatuses.find(
-              (rs: { requestStatusId: any }) =>
-                rs.requestStatusId === request.offerorRequestStatusId
-            );
+      forkJoin([
+        this.requestService.GetRequestsOfferorView(requestParams || {}),
+        this.categoryHierarchyService.GetCategoryHierarchy(),
+        this.requestService.GetRequestTypes(),
+        this.requestService.GetRequestStatuses(),
+      ])
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(
+          ([requests, categories, requestTypes, requestStatuses]) => {
+            requests.requests.forEach((request: any) => {
+              const category = this.findCategoryById(
+                categories,
+                request.categoryId
+              );
+              const requestType = requestTypes.find(
+                (r) => r.requestTypeId === request.requestTypeId
+              );
+              const agencyRequestStatus = requestStatuses.find(
+                (rs: { requestStatusId: any }) =>
+                  rs.requestStatusId === request.agencyRequestStatusId
+              );
 
-            combinedData.push({
-              ...request,
-              category,
-              requestType,
-              agencyRequestStatus,
-              offerorRequestStatus,
+              const offerorRequestStatus = requestStatuses.find(
+                (rs: { requestStatusId: any }) =>
+                  rs.requestStatusId === request.offerorRequestStatusId
+              );
+
+              combinedData.push({
+                ...request,
+                category,
+                requestType,
+                agencyRequestStatus,
+                offerorRequestStatus,
+              });
             });
-          });
 
-          this.dataSource = new MatTableDataSource(combinedData);
-          this.dataSource.paginator = this.paginator;
-          this.dataSource.sort = this.sort;
-        },
-        (error) => {
-          console.error('Error loading request data:', error);
-          this.dataSource = new MatTableDataSource<any>([]);
-        }
-      );
+            this.dataSource = new MatTableDataSource(combinedData);
+            this.dataSource.paginator = this.paginator;
+            this.dataSource.sort = this.sort;
+          },
+          (error) => {
+            console.error('Error loading request data:', error);
+            this.dataSource = new MatTableDataSource<any>([]);
+          }
+        );
+    } catch (error) {
+      console.error('Error getting organization ID:', error);
+      this.dataSource = new MatTableDataSource<any>([]);
+    }
   }
 
   private findCategoryById(categories: any[], targetId: number): any {
