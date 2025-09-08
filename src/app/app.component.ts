@@ -11,6 +11,7 @@ import { map } from 'rxjs/operators';
 import { UserService } from './shared/service/user.service';
 import { firstValueFrom } from 'rxjs';
 import { Sidenav } from './Sidenav/sidenav.component';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-root',
@@ -19,6 +20,7 @@ import { Sidenav } from './Sidenav/sidenav.component';
   templateUrl: './app.component.html',
   imports: [
     CommonModule,
+    FormsModule,
     RouterOutlet,
     MatSidenavModule,
     MatToolbarModule,
@@ -48,6 +50,12 @@ export class AppComponent {
       ),
     ]).subscribe(([user, isLoggedIn, currentRoute]) => {
       this.showSidenav = this.shouldShowSidenav(user, isLoggedIn, currentRoute);
+      if (
+        this.authService.isMfaRequired() &&
+        !this.authService.isMfaVerified()
+      ) {
+        this.showSidenav = false;
+      }
       if (user) {
         firstValueFrom(this.userService.getUser(user)).then((userData) => {
           this.organizationTypeId = userData.organizationTypeId ?? null;

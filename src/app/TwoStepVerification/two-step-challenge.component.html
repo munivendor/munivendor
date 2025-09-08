@@ -1,0 +1,19 @@
+<div class="challenge-container">
+  <h2>Two-Step Verification</h2>
+  <p>Please enter the 6-digit code from your authenticator app:</p>
+
+  <form (ngSubmit)="submit()" class="challenge-form">
+    <input
+      type="text"
+      maxlength="6"
+      [(ngModel)]="code"
+      name="code"
+      placeholder="Enter code"
+      required
+    />
+
+    <button type="submit" [disabled]="loading()">
+      {{ loading() ? "Verifying..." : "Verify" }}
+    </button>
+  </form>
+</div>

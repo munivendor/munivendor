@@ -24,6 +24,7 @@ import { CategoryTreeComponent } from './CategoryTree/category-tree.component';
 
 import { ResponseStepper } from './Response/ResponseStepper/response-stepper.component';
 import { TwoStepVerificationComponent } from './TwoStepVerification/two-step-verification.component';
+import { TwoStepChallengeComponent } from './TwoStepVerification/two-step-challenge.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -108,6 +109,11 @@ export const routes: Routes = [
   {
     path: 'two-step-verification',
     component: TwoStepVerificationComponent,
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'two-step-challenge',
+    component: TwoStepChallengeComponent,
     canActivate: [AuthGuard],
   },
 ];

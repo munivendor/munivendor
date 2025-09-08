@@ -15,6 +15,10 @@ export const AuthGuard: CanActivateFn = (): Observable<boolean> => {
   return authService.isAuthenticated$.pipe(
     map((isAuthenticated) => {
       if (isAuthenticated) {
+        if (authService.isMfaRequired() && !authService.isMfaVerified()) {
+          router.navigate(['/two-step-challenge']);
+          return false;
+        }
         return true;
       } else {
         router.navigate(['/login']);

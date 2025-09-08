@@ -113,6 +113,14 @@
             <div class="authenticator-info">
               <h3 class="authenticator-title">Google Authenticator</h3>
             </div>
+            <button
+              mat-icon-button
+              class="deactivate-icon"
+              (click)="onDeactivate()"
+              aria-label="Deactivate Two-Step Verification"
+            >
+              <mat-icon>close</mat-icon>
+            </button>
           </div>
         </div>
       </div>

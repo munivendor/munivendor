@@ -27,6 +27,11 @@ export interface MfaSetupResponse {
   secret: string;
 }
 
+export interface MfaVerifyResponse {
+  message: string;
+  userId: number;
+}
+
 export interface ForgotPasswordResponse {
   message?: string;
 }
@@ -39,6 +44,10 @@ export class AuthService {
   private url = environment.apiUrl;
   private userSubject = new BehaviorSubject<number | null>(null);
   private userProfile = new BehaviorSubject<UserProfile | null>(null);
+  private mfaRequired = new BehaviorSubject<boolean>(false);
+  requiresMfa$ = this.mfaRequired.asObservable();
+  private mfaVerified = new BehaviorSubject<boolean>(false);
+  mfaVerified$ = this.mfaVerified.asObservable();
 
   user$: Observable<number | null> = this.userSubject.asObservable();
   userProfile$ = this.userProfile.asObservable();
@@ -67,7 +76,6 @@ export class AuthService {
     this.initializeAuthListener();
   }
 
-<<<<<<< HEAD
   // Initialize the app and check for existing auth cookie
   public initializeApp(): Observable<any> {
     return this.checkAuthCookieOnInit().pipe(
@@ -84,12 +92,7 @@ export class AuthService {
 
   private checkAuthCookieOnInit(): Observable<any> {
     return this.http
-      .get<{ userId: number; email: string }>(`${this.url}me`, {
-=======
-  private checkAuthCookieOnInit(): void {
-    this.http
       .get<UserProfile>(`${this.url}me`, {
->>>>>>> 3ed754f (add two-step verification)
         withCredentials: true,
       })
       .pipe(
@@ -156,6 +159,22 @@ export class AuthService {
       });
   }
 
+  setMfaVerified(value: boolean): void {
+    this.mfaVerified.next(value);
+    sessionStorage.setItem('mfaVerified', String(value));
+  }
+
+  isMfaVerified(): boolean {
+    const storedValue = sessionStorage.getItem('mfaVerified');
+    return (
+      this.mfaVerified.value || sessionStorage.getItem('mfaVerified') === 'true'
+    );
+  }
+
+  isMfaRequired(): boolean {
+    return this.mfaRequired.value;
+  }
+
   login(userLogin: UserLogin): Observable<any> {
     this.isLoggingIn.next(true);
     return this.http
@@ -207,6 +226,9 @@ export class AuthService {
           } finally {
             this.safeResetAuthState();
           }
+
+          sessionStorage.removeItem('mfaVerified');
+          this.mfaVerified.next(false);
         },
         error: (error) => {
           console.error('Logout Error:', error);
@@ -250,16 +272,23 @@ export class AuthService {
     this.getUserProfile().subscribe({
       next: (profile) => {
         this.userProfile.next(profile);
-        this.flowNavigationService.navigateAfterLogin(userId, email).subscribe({
-          next: () => {
-            this.setAuthenticated(true, userId);
-          },
-          error: (error: any) => {
-            console.error('Navigation error:', error);
-            this.setAuthenticated(true, userId);
-            this.router.navigate(['/role-verification']);
-          },
-        });
+        if (profile.isMfaEnabled && !this.isMfaVerified()) {
+          this.mfaRequired.next(profile.isMfaEnabled);
+          this.router.navigate(['/two-step-challenge']);
+        } else {
+          this.flowNavigationService
+            .navigateAfterLogin(userId, email)
+            .subscribe({
+              next: () => {
+                this.setAuthenticated(true, userId);
+              },
+              error: (error: any) => {
+                console.error('Navigation error:', error);
+                this.setAuthenticated(true, userId);
+                this.router.navigate(['/role-verification']);
+              },
+            });
+        }
       },
       error: (error) => {
         console.error('Error fetching user profile:', error);
@@ -316,10 +345,18 @@ export class AuthService {
     );
   }
 
-  verifyMfa(code: string): Observable<any> {
-    return this.http.post(
+  verifyMfa(code: string): Observable<MfaVerifyResponse> {
+    return this.http.post<MfaVerifyResponse>(
       `${this.url}auth/verify-mfa`,
       { code },
+      { withCredentials: true }
+    );
+  }
+
+  deactivateMfa(): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(
+      `${this.url}auth/deactivate-mfa`,
+      {},
       { withCredentials: true }
     );
   }

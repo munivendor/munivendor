@@ -60,14 +60,12 @@ export class Sidenav implements OnInit, AfterViewInit {
     { icon: 'dns', label: 'Categories', route: '/categories' },
     { icon: 'help_outline', label: 'Definitions', route: '/definitions' },
     { icon: 'phonelink', label: 'MFA', route: '/two-step-verification' },
-    { icon: 'logout', label: 'Log Out', route: '/logout', action: 'logout' },
   ];
 
   offerorMenuItems = [
     // { icon: 'person', label: 'Offeror Profile', route: '/offeror-profile' },
     { icon: 'help_outline', label: 'Definitions', route: '/definitions' },
     { icon: 'phonelink', label: 'MFA', route: '/two-step-verification' },
-    { icon: 'logout', label: 'Log Out', route: '/logout', action: 'logout' },
   ];
 
   constructor(

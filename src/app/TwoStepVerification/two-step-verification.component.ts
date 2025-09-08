@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../authorization/auth.service';
 import { CdkDragPlaceholder } from '@angular/cdk/drag-drop';
 import { QrSetupComponent } from './qr-setup.component';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 export interface TwoStepVerificationStatus {
   isActive: boolean;
@@ -31,7 +32,10 @@ export class TwoStepVerificationComponent implements OnInit {
   isActivated = false;
   isSetupStarted = false;
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private snackBar: MatSnackBar
+  ) {}
 
   ngOnInit(): void {
     this.authService.userProfile$.pipe().subscribe((profile) => {
@@ -60,6 +64,33 @@ export class TwoStepVerificationComponent implements OnInit {
   onSetupComplete(isActive: any): void {
     this.isMfaSetup = isActive;
     this.updateVerificationStatus(isActive);
+  }
+
+  onDeactivate(): void {
+    this.authService.deactivateMfa().subscribe({
+      next: (res) => {
+        this.snackBar.open(
+          'Two-step verification has been deactivated.',
+          'Close',
+          {
+            verticalPosition: 'top',
+          }
+        );
+        this.isMfaSetup = false;
+        this.isActivated = false;
+        this.isSetupStarted = false;
+      },
+      error: (err) => {
+        console.error('Failed to deactivate MFA', err);
+        this.snackBar.open(
+          'Failed to deactivate MFA. Please try again.',
+          'Close',
+          {
+            verticalPosition: 'top',
+          }
+        );
+      },
+    });
   }
 
   // Method to update verification status (for parent component to call)
