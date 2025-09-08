@@ -21,6 +21,10 @@ import { UserService } from '../shared/service/user.service';
 import { User } from '../shared/model/user.model';
 import { StateService } from '../Request/services/state.service';
 
+export interface ForgotPasswordResponse {
+  message?: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -53,19 +57,20 @@ export class AuthService {
     private stateService: StateService
   ) {
     this.initializeAuthListener();
-    this.initializeApp();
   }
 
   // Initialize the app and check for existing auth cookie
-  private initializeApp(): void {
-    this.checkAuthCookieOnInit().subscribe({
-      next: () => {
+  public initializeApp(): Observable<any> {
+    return this.checkAuthCookieOnInit().pipe(
+      tap(() => {
         this.appInitialized.next(true);
-      },
-      error: () => {
+      }),
+      catchError((error) => {
+        console.log('App initialization completed with error:', error);
         this.appInitialized.next(true);
-      },
-    });
+        return of(null);
+      })
+    );
   }
 
   private checkAuthCookieOnInit(): Observable<any> {
@@ -264,6 +269,18 @@ export class AuthService {
         console.error('Error manually restoring organization ID:', error);
         return of(null);
       })
+    );
+  }
+
+  sendPasswordReset(email: string): Observable<ForgotPasswordResponse> {
+    return this.http.post<ForgotPasswordResponse>(
+      `${this.url}/auth/send-reset?email=${encodeURIComponent(email)}`,
+      {},
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
     );
   }
 }

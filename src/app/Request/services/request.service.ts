@@ -233,7 +233,7 @@ export class RequestService {
     requestTypeId?: number;
     agencyRequestStatusIds?: number;
     offerorRequestStatusIds?: number;
-    organizationId?: number;
+    organizationId: number;
     categoryId?: number;
     referenceId?: string;
     requestName?: string;
@@ -244,10 +244,11 @@ export class RequestService {
     limit?: number;
     offset?: number;
   }): Observable<any> {
-    const httpParams = new HttpParams({ fromObject: { ...params } });
+    const { organizationId, ...queryParams } = params;
+    const httpParams = new HttpParams({ fromObject: { ...queryParams } });
 
     return this.http.get<any>(`${this.url}requests/offeror-grid`, {
-      params: httpParams,
+      params: httpParams.set('organizationId', organizationId.toString()),
     });
   }
 
@@ -255,7 +256,7 @@ export class RequestService {
     requestId?: number;
     requestTypeIds?: number;
     requestStatusIds?: number;
-    organizationId?: number;
+    organizationId: number;
     categoryId?: number;
     referenceId?: string;
     requestName?: string;
@@ -266,10 +267,11 @@ export class RequestService {
     limit?: number;
     offset?: number;
   }): Observable<any> {
-    const httpParams = new HttpParams({ fromObject: { ...params } });
+    const { organizationId, ...queryParams } = params;
+    const httpParams = new HttpParams({ fromObject: { ...queryParams } });
 
     return this.http.get<any>(`${this.url}requests/agency-grid`, {
-      params: httpParams,
+      params: httpParams.set('organizationId', organizationId.toString()),
     });
   }
 }

@@ -29,6 +29,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 import { CustomCategoryDropdownComponent } from '../../shared/CustomCategoryDropdown/custom-category-dropdown.component';
+import { StateService } from '../services/state.service';
 
 const ACTION_PERMISSIONS: {
   [status: string]: {
@@ -134,7 +135,8 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     public dialog: MatDialog,
     private requestService: RequestService,
     private categoryHierarchyService: CategoryHierarchyService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private stateService: StateService
   ) {}
 
   readonly requestTypeMap = {
@@ -165,6 +167,10 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     const status = request.agencyRequestStatus?.requestStatusDesc;
     const actionsForStatus = ACTION_PERMISSIONS[status] || {};
     return this.AVAILABLE_ACTIONS.filter((action) => actionsForStatus[action]);
+  }
+
+  ngOnInit(): void {
+    this.loadAndJoinRequestData();
   }
 
   onSearch(): void {
@@ -221,58 +227,72 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     this.loadAndJoinRequestData(params);
   }
 
-  ngOnInit(): void {
-    this.loadAndJoinRequestData();
-  }
+  private async loadAndJoinRequestData(params?: any): Promise<void> {
+    try {
+      const organizationId = await this.stateService.getOrganizationId();
 
-  private loadAndJoinRequestData(params?: any): void {
-    const combinedData: any[] = [];
+      if (!organizationId) {
+        console.error('Organization ID not found');
+        this.dataSource = new MatTableDataSource<any>([]);
+        return;
+      }
 
-    forkJoin([
-      this.requestService.GetRequestsAgencyView(params || {}),
-      this.categoryHierarchyService.GetCategoryHierarchy(),
-      this.requestService.GetRequestTypes(),
-      this.requestService.GetRequestStatuses(),
-    ])
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(
-        ([requests, categories, requestTypes, requestStatuses]) => {
-          requests.requests.forEach((request: any) => {
-            const category = this.findCategoryById(
-              categories,
-              request.categoryId
-            );
-            const requestType = requestTypes.find(
-              (r) => r.requestTypeId === request.requestTypeId
-            );
+      const requestParams = {
+        organizationId: organizationId,
+        ...(params || {}),
+      };
 
-            const agencyRequestStatus = requestStatuses.find(
-              (rs: { requestStatusId: any }) =>
-                rs.requestStatusId === request.agencyRequestStatusId
-            );
+      const combinedData: any[] = [];
 
-            const submittedOffersCount = (request.responses || []).filter(
-              (r: any) => r.offerorRequestStatusId === 9
-            ).length;
+      forkJoin([
+        this.requestService.GetRequestsAgencyView(requestParams), // Now includes organizationId
+        this.categoryHierarchyService.GetCategoryHierarchy(),
+        this.requestService.GetRequestTypes(),
+        this.requestService.GetRequestStatuses(),
+      ])
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(
+          ([requests, categories, requestTypes, requestStatuses]) => {
+            requests.requests.forEach((request: any) => {
+              const category = this.findCategoryById(
+                categories,
+                request.categoryId
+              );
+              const requestType = requestTypes.find(
+                (r) => r.requestTypeId === request.requestTypeId
+              );
 
-            combinedData.push({
-              ...request,
-              category,
-              requestType,
-              agencyRequestStatus,
-              submittedOffersCount,
+              const agencyRequestStatus = requestStatuses.find(
+                (rs: { requestStatusId: any }) =>
+                  rs.requestStatusId === request.agencyRequestStatusId
+              );
+
+              const submittedOffersCount = (request.responses || []).filter(
+                (r: any) => r.offerorRequestStatusId === 9
+              ).length;
+
+              combinedData.push({
+                ...request,
+                category,
+                requestType,
+                agencyRequestStatus,
+                submittedOffersCount,
+              });
             });
-          });
 
-          this.dataSource = new MatTableDataSource(combinedData);
-          this.dataSource.paginator = this.paginator;
-          this.dataSource.sort = this.sort;
-        },
-        (error) => {
-          console.error('Error loading request data:', error);
-          this.dataSource = new MatTableDataSource<any>([]);
-        }
-      );
+            this.dataSource = new MatTableDataSource(combinedData);
+            this.dataSource.paginator = this.paginator;
+            this.dataSource.sort = this.sort;
+          },
+          (error) => {
+            console.error('Error loading request data:', error);
+            this.dataSource = new MatTableDataSource<any>([]);
+          }
+        );
+    } catch (error) {
+      console.error('Error getting organization ID:', error);
+      this.dataSource = new MatTableDataSource<any>([]);
+    }
   }
 
   // future for dynamic filtering of solicitation name

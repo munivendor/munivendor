@@ -3,11 +3,24 @@ import { provideRouter } from '@angular/router';
 import { provideClientHydration } from '@angular/platform-browser';
 import { provideHttpClient } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { SocialAuthService, SocialAuthServiceConfig } from '@abacritt/angularx-social-login';
+import {
+  SocialAuthService,
+  SocialAuthServiceConfig,
+} from '@abacritt/angularx-social-login';
 import { GoogleLoginProvider } from '@abacritt/angularx-social-login';
+import { APP_INITIALIZER } from '@angular/core';
+import { AuthService } from './authorization/auth.service';
+import { Observable } from 'rxjs';
 import { routes } from './app.routes';
 
-const CLIENT_ID = "954795010792-oafduvq9mhtlatg68rhl4hadtcuajos6.apps.googleusercontent.com";
+const CLIENT_ID =
+  '954795010792-oafduvq9mhtlatg68rhl4hadtcuajos6.apps.googleusercontent.com';
+
+function initializeApp(authService: AuthService): () => Observable<any> {
+  return (): Observable<any> => {
+    return authService.initializeApp();
+  };
+}
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -15,7 +28,7 @@ export const appConfig: ApplicationConfig = {
     provideClientHydration(),
     provideHttpClient(),
     provideAnimationsAsync('noop'),
-  
+
     SocialAuthService,
     {
       provide: 'SocialAuthServiceConfig',
@@ -25,10 +38,16 @@ export const appConfig: ApplicationConfig = {
           {
             id: GoogleLoginProvider.PROVIDER_ID,
             provider: new GoogleLoginProvider(CLIENT_ID),
-          }
+          },
         ],
       } as SocialAuthServiceConfig,
     },
-  ]
-};
 
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializeApp,
+      deps: [AuthService],
+      multi: true,
+    },
+  ],
+};
