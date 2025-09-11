@@ -9,7 +9,7 @@
           <mat-label>Organization Type</mat-label>
           <mat-select
             formControlName="organizationTypeId"
-            placeholder="Select your organization"
+            placeholder="Select your organization type"
           >
             <mat-option
               *ngFor="let organizationType of organizationTypes"
@@ -29,7 +29,6 @@
 
         <br />
 
-        <!-- Show the button only if organization is selected -->
         <div
           *ngIf="
             signupFormGoogle.get('organizationTypeId')?.valid &&
@@ -46,7 +45,6 @@
           </asl-google-signin-button>
         </div>
 
-        <!-- Show disabled state when organization is not selected -->
         <div
           *ngIf="
             !signupFormGoogle.get('organizationTypeId')?.valid ||
@@ -116,7 +114,7 @@
           <mat-label>Organization Type</mat-label>
           <mat-select
             formControlName="organizationTypeId"
-            placeholder="Select your organization"
+            placeholder="Select your organization type"
             [disabled]="isLGA"
           >
             <mat-option

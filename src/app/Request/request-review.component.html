@@ -154,23 +154,12 @@
     </div>
   </div>
 
-  <div>
-    <h3><b>Digital Notarization</b></h3>
-    <mat-checkbox [checked]="true" [disabled]="true">
-      Proposers will submit digitally notarized documents using the MuniVendor
-      platform with one of our certified notaries. Completed and digitally
-      notarized documents will be included in the proposer's digital submission
-      package.
-    </mat-checkbox>
-  </div>
-
   <br />
 
   <h2>
     The Bid Checklist that proposers will complete for this solicitation will
-    include a list of the following forms. Any documents that require
-    notarization will be digitally notarized and included in the proposer’s
-    submission.
+    include a list of the forms below. Completed and digitally notarized
+    documents will be included in the offeror's digital submission package.
   </h2>
   <div
     *ngFor="let requestDocument of requestFinalReviewDetails.requestDocuments"
@@ -186,8 +175,5 @@
   <p *ngIf="requestFinalReviewDetails.requestDocuments === null">
     Note: You have not uploaded/selected any additional documents.
   </p>
-
-  <h2>You have uploaded the following request:</h2>
   <!-- the PDF of the proposals step (all sections that have been filled out by user compiled into a PDF) -->
-  <p>proposal.pdf?</p>
 </form>

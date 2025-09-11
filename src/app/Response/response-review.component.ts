@@ -23,7 +23,7 @@ import { DocumentService } from '../shared/service/document.service';
 import { MatButtonModule } from '@angular/material/button';
 import { SubmitConfirmationDialogComponent } from './SubmitConfirmationDialog/submit-confirmation-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
-import { TooltipDirective } from '../shared/directive/tooltip.directive';
+// import { TooltipDirective } from '../shared/directive/tooltip.directive';
 import { OfferorProfileService } from '../shared/service/offeror-profile.service';
 
 @Component({
@@ -41,7 +41,7 @@ import { OfferorProfileService } from '../shared/service/offeror-profile.service
     MatIconModule,
     MatTooltipModule,
     MatButtonModule,
-    TooltipDirective,
+    // TooltipDirective,
   ],
 })
 export class ResponseReviewComponent implements OnInit, OnDestroy {
