@@ -23,7 +23,12 @@ import { Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../authorization/auth.service';
 
 @Component({
-  imports: [MatDialogModule, MatButtonModule, MatProgressSpinnerModule],
+  imports: [
+    MatDialogModule,
+    MatButtonModule,
+    MatProgressSpinnerModule,
+    CommonModule,
+  ],
   standalone: true,
   template: `
     <mat-dialog-content>

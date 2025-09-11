@@ -10,6 +10,7 @@ import {
   withLatestFrom,
   switchMap,
   of,
+  debounceTime,
 } from 'rxjs';
 import { Router } from '@angular/router';
 import { UserLogin } from '../shared/model/user-login.model';
@@ -29,6 +30,13 @@ export interface ForgotPasswordResponse {
   providedIn: 'root',
 })
 export class AuthService {
+  private signupInProgressSubject = new BehaviorSubject<boolean>(false);
+  signupInProgress$ = this.signupInProgressSubject.asObservable();
+
+  setSignupInProgress(inProgress: boolean): void {
+    this.signupInProgressSubject.next(inProgress);
+  }
+
   private _snackBar = inject(MatSnackBar);
   private url = environment.apiUrl;
   private userSubject = new BehaviorSubject<number | null>(null);
@@ -59,14 +67,12 @@ export class AuthService {
     this.initializeAuthListener();
   }
 
-  // Initialize the app and check for existing auth cookie
   public initializeApp(): Observable<any> {
     return this.checkAuthCookieOnInit().pipe(
-      tap(() => {
+      tap((result) => {
         this.appInitialized.next(true);
       }),
       catchError((error) => {
-        console.log('App initialization completed with error:', error);
         this.appInitialized.next(true);
         return of(null);
       })
@@ -110,39 +116,41 @@ export class AuthService {
   private initializeAuthListener(): void {
     this.socialAuthService.authState
       .pipe(
-        withLatestFrom(this.skipNextAuthState$),
-        filter(([user, skipNext]) => !!user && !skipNext)
+        debounceTime(100),
+        withLatestFrom(this.skipNextAuthState$, this.signupInProgress$),
+        filter(
+          ([user, skipNext, signupInProgress]) =>
+            !!user &&
+            !skipNext &&
+            !signupInProgress &&
+            this.router.url !== '/signup'
+        )
       )
       .subscribe({
-        next: ([user, _]) => {
-          console.log('Google Auth State Changed:', user);
-          if (user && user.id) {
-            const userLogin: UserLogin = {
-              userIdentity: user.id,
-              username: user.email,
-            };
+        next: ([user, _skip, _signup]) => {
+          console.log('Google Auth State Changed (login mode):', user);
+          const userLogin: UserLogin = {
+            userIdentity: user.id,
+            username: user.email,
+          };
 
-            this.login(userLogin).subscribe({
-              next: (userId) => {
-                this.completeLoginProcess(userId, user.email);
-              },
-              error: (error) => {
-                this.safeResetAuthState();
-                this._snackBar.open(
-                  'Login failed: Invalid email, password, or unauthorized email.',
-                  'Close',
-                  {
-                    verticalPosition: 'top',
-                  }
-                );
-              },
-            });
-          }
+          this.login(userLogin).subscribe({
+            next: (userId) => this.completeLoginProcess(userId, user.email),
+            error: () => {
+              this.safeResetAuthState();
+              this._snackBar.open(
+                'Login failed: Invalid email, password, or unauthorized email.',
+                'Close',
+                { verticalPosition: 'top' }
+              );
+            },
+          });
         },
       });
   }
 
   login(userLogin: UserLogin): Observable<any> {
+    console.log('Attempting login with:', userLogin);
     this.isLoggingIn.next(true);
     return this.http
       .post<{ UserId: number; Token: string }>(`${this.url}login`, userLogin, {
@@ -233,16 +241,34 @@ export class AuthService {
 
   private completeLoginProcess(userId: number, email: string): void {
     this.userSubject.next(userId);
-    this.flowNavigationService.navigateAfterLogin(userId, email).subscribe({
-      next: () => {
-        this.setAuthenticated(true, userId);
-      },
-      error: (error: any) => {
-        console.error('Navigation error:', error);
-        this.setAuthenticated(true, userId);
-        this.router.navigate(['/role-verification']);
-      },
-    });
+
+    this.userService
+      .getUser(userId)
+      .pipe(
+        tap((user: User) => {
+          console.log('User data fetched in completeLoginProcess:', user);
+
+          if (user.organizationId !== undefined) {
+            this.stateService.setOrganizationId(user.organizationId);
+          }
+          if (user.organizationTypeId !== undefined) {
+            this.stateService.setOrganizationTypeId(user.organizationTypeId); // Add this method
+          }
+        }),
+        switchMap(() => {
+          return this.flowNavigationService.navigateAfterLogin(userId, email);
+        })
+      )
+      .subscribe({
+        next: () => {
+          this.setAuthenticated(true, userId);
+        },
+        error: (error: any) => {
+          console.error('Navigation error:', error);
+          this.setAuthenticated(true, userId);
+          this.router.navigate(['/role-verification']);
+        },
+      });
   }
 
   getCurrentUserId(): number | null {

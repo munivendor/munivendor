@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { AuthGuard } from './authorization/auth.guard';
+import { AuthGuard, GuestGuard } from './authorization/auth.guard';
 
 // Non-authorized pages
 import { SignupComponent } from './Signup/signup.component';
@@ -9,7 +9,7 @@ import { EmailVerification } from './Signup/Verification/verification.component'
 import { TokenValidationComponent } from './Signup/token-validation.component';
 
 // Authorized pages
-import { RoleVerificationComponent } from './Signup/RoleVerification/role-verification.component';
+// import { RoleVerificationComponent } from './Signup/RoleVerification/role-verification.component';
 import { OrganizationDetailsComponent } from './Organization/Details/organization.details.component';
 import { UserSignUpDetails } from './Signup/UserSignUpDetails/user-signup-details.component';
 // import { DesignationSelectionComponent } from './Organization/UserDesignationSelection/organization.user-designation-selection.component';
@@ -26,26 +26,53 @@ import { ResponseStepper } from './Response/ResponseStepper/response-stepper.com
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
-  { path: 'signup', component: SignupComponent },
-  { path: 'login', component: LoginComponent },
-  { path: 'forgot-password', component: ForgotPasswordComponent },
-  { path: 'email-verification', component: EmailVerification },
-  { path: 'validateuser', component: TokenValidationComponent },
-
+  // Guest-only routes (authenticated users will be redirected)
   {
-    path: 'role-verification',
-    component: RoleVerificationComponent,
-    canActivate: [AuthGuard],
+    path: 'signup',
+    component: SignupComponent,
+    canActivate: [GuestGuard],
+    data: { showSidenav: false },
   },
+  {
+    path: 'login',
+    component: LoginComponent,
+    canActivate: [GuestGuard],
+    data: { showSidenav: false },
+  },
+  {
+    path: 'forgot-password',
+    component: ForgotPasswordComponent,
+    canActivate: [GuestGuard],
+    data: { showSidenav: false },
+  },
+  {
+    path: 'email-verification',
+    component: EmailVerification,
+    canActivate: [GuestGuard],
+    data: { showSidenav: false },
+  },
+  {
+    path: 'validateuser',
+    component: TokenValidationComponent,
+    data: { showSidenav: false },
+  },
+
+  // {
+  //   path: 'role-verification',
+  //   component: RoleVerificationComponent,
+  //   canActivate: [AuthGuard],
+  // },
   {
     path: 'organization-details',
     component: OrganizationDetailsComponent,
     canActivate: [AuthGuard],
+    data: { showSidenav: false },
   },
   {
     path: 'user-details',
     component: UserSignUpDetails,
     canActivate: [AuthGuard],
+    data: { showSidenav: false },
   },
   // {
   //   path: 'user-designation',
@@ -63,45 +90,47 @@ export const routes: Routes = [
   //   canActivate: [AuthGuard],
   // },
 
-  // {
-  //   path: 'dashboard-component',
-  //   component: DashboardComponent,
-  //   canActivate: [AuthGuard],
-  // },
   {
     path: 'create-request-view',
     component: CreateRequestStepper,
     canActivate: [AuthGuard],
+    data: { showSidenav: true },
   },
   {
     path: 'requests-view',
     component: AgencyTableDetailsComponent,
     canActivate: [AuthGuard],
+    data: { showSidenav: true },
   },
   {
     path: 'offeror-requests-view',
     component: OfferorTableDetailsComponent,
     canActivate: [AuthGuard],
+    data: { showSidenav: true },
   },
   {
     path: 'edit-request-view/:requestId',
     component: CreateRequestStepper,
     canActivate: [AuthGuard],
+    data: { showSidenav: true },
   },
   {
     path: 'categories',
     component: CategoryTreeComponent,
     canActivate: [AuthGuard],
+    data: { showSidenav: true },
   },
 
   {
     path: 'response-basic/:sourceId',
     component: ResponseStepper,
     canActivate: [AuthGuard],
+    data: { showSidenav: true },
   },
   {
     path: 'response-basic/:sourceId/edit/:responseId',
     component: ResponseStepper,
     canActivate: [AuthGuard],
+    data: { showSidenav: true },
   },
 ];
