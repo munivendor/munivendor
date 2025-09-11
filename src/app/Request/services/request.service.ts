@@ -254,8 +254,8 @@ export class RequestService {
 
   GetRequestsAgencyView(params: {
     requestId?: number;
-    requestTypeIds?: number;
-    requestStatusIds?: number;
+    requestTypeIds?: number[];
+    requestStatusIds?: number[];
     organizationId: number;
     categoryId?: number;
     referenceId?: string;
@@ -268,10 +268,34 @@ export class RequestService {
     offset?: number;
   }): Observable<any> {
     const { organizationId, ...queryParams } = params;
-    const httpParams = new HttpParams({ fromObject: { ...queryParams } });
+    let httpParams = new HttpParams();
+    httpParams = httpParams.set('organizationId', organizationId.toString());
+
+    if (queryParams.requestTypeIds && queryParams.requestTypeIds.length > 0) {
+      queryParams.requestTypeIds.forEach((id) => {
+        httpParams = httpParams.append('requestTypeId', id.toString());
+      });
+    }
+
+    if (
+      queryParams.requestStatusIds &&
+      queryParams.requestStatusIds.length > 0
+    ) {
+      queryParams.requestStatusIds.forEach((id) => {
+        httpParams = httpParams.append('requestStatusId', id.toString());
+      });
+    }
+
+    const { requestTypeIds, requestStatusIds, ...otherParams } = queryParams;
+    Object.keys(otherParams).forEach((key) => {
+      const value = (otherParams as any)[key];
+      if (value !== undefined && value !== null) {
+        httpParams = httpParams.set(key, value.toString());
+      }
+    });
 
     return this.http.get<any>(`${this.url}requests/agency-grid`, {
-      params: httpParams.set('organizationId', organizationId.toString()),
+      params: httpParams,
     });
   }
 }

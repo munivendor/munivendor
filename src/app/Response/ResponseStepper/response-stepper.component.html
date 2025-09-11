@@ -9,10 +9,12 @@
       ></response-basic>
       <div>
         <button
-          mat-button
+          mat-raised-button
           matStepperNext
           (click)="saveResponse()"
           [disabled]="!isStepValid"
+          color="primary"
+          style="float: right"
         >
           Next
         </button>
@@ -28,28 +30,38 @@
         [responseIdParam]="responseIdParam"
       ></response-details>
       <!-- parameter for response-details (autoFillStatusChange)="onAutoFillStatusChange($event)" -->
-      <div>
-        <button mat-button matStepperPrevious>Back</button>
-        <!-- <button mat-button matStepperNext [disabled]="!isAutoFillComplete">
+      <div class="response-stepper-button-container-margin-top">
+        <button
+          mat-raised-button
+          matStepperPrevious
+          color="primary"
+          style="margin-right: 8px"
+        >
+          Back
+        </button>
+        <!-- <button mat-raised-button matStepperNext [disabled]="!isAutoFillComplete" color="primary">
           Next
         </button> -->
-        <button mat-button matStepperNext>Next</button>
+        <button mat-raised-button matStepperNext color="primary">Next</button>
       </div>
     </ng-template>
   </mat-step>
 
   <mat-step label="Documents">
     <ng-template matStepContent>
-      <!-- <response-documents
-        [sourceIdParam]="sourceIdParam"
-        [responseIdParam]="responseIdParam"
-      ></response-documents> -->
       <response-documents
         [responseIdParam]="responseIdParam"
       ></response-documents>
-      <div>
-        <button mat-button matStepperPrevious>Back</button>
-        <button mat-button matStepperNext>Next</button>
+      <div class="response-stepper-button-container">
+        <button
+          mat-raised-button
+          matStepperPrevious
+          color="primary"
+          style="margin-right: 8px"
+        >
+          Back
+        </button>
+        <button mat-raised-button matStepperNext color="primary">Next</button>
       </div>
     </ng-template>
   </mat-step>
@@ -61,8 +73,8 @@
         [responseIdParam]="responseIdParam"
       ></response-notarization>
       <div>
-        <button mat-button matStepperPrevious>Back</button>
-        <button mat-button matStepperNext>Next</button>
+        <button mat-raised-button matStepperPrevious>Back</button>
+        <button mat-raised-button matStepperNext>Next</button>
       </div>
     </ng-template>
   </mat-step> -->
@@ -74,9 +86,21 @@
         [responseIdParam]="responseIdParam"
       ></response-review>
       <div style="display: flex">
-        <button mat-button matStepperPrevious>Back</button>
+        <button
+          mat-raised-button
+          matStepperPrevious
+          color="primary"
+          style="margin-right: 8px"
+        >
+          Back
+        </button>
         <div style="display: flex; align-items: center; gap: 4px">
-          <button mat-button matStepperNext (click)="onSubmitOfferorResponse()">
+          <button
+            mat-raised-button
+            matStepperNext
+            (click)="onSubmitOfferorResponse()"
+            color="primary"
+          >
             Submit
           </button>
           <mat-icon

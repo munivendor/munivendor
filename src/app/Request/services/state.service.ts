@@ -19,6 +19,9 @@ export class StateService {
   private organizationIdSource = new BehaviorSubject<number | null>(null);
   currentOrganizationId$ = this.organizationIdSource.asObservable();
 
+  private organizationTypeIdSource = new BehaviorSubject<number | null>(null);
+  currentOrganizationTypeId$ = this.organizationTypeIdSource.asObservable();
+
   saveState(state: any) {
     this.myComponentState = state;
   }
@@ -61,5 +64,13 @@ export class StateService {
 
   clearOrganizationId(): void {
     this.organizationIdSource.next(null);
+  }
+
+  setOrganizationTypeId(organizationTypeId: number) {
+    this.organizationTypeIdSource.next(organizationTypeId);
+  }
+
+  getOrganizationTypeId(): number | null {
+    return this.organizationTypeIdSource.getValue();
   }
 }

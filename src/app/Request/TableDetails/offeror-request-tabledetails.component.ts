@@ -50,6 +50,7 @@ import { StateService } from '../services/state.service';
   ],
 })
 export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
+  hasLoadedData = false;
   private destroy$ = new Subject<void>();
   @Input() categoryControl!: FormControl<number | null>;
   organizationId: number = 0;
@@ -266,6 +267,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
       if (!organizationId) {
         console.error('Organization ID not found');
         this.dataSource = new MatTableDataSource<any>([]);
+        this.hasLoadedData = false;
         return;
       }
 
@@ -286,6 +288,9 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
         .subscribe(
           ([requests, categories, requestTypes, requestStatuses]) => {
             requests.requests.forEach((request: any) => {
+              const requestsData = requests?.requests || [];
+              this.hasLoadedData = requestsData.length > 0;
+
               const category = this.findCategoryById(
                 categories,
                 request.categoryId
@@ -319,6 +324,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
           (error) => {
             console.error('Error loading request data:', error);
             this.dataSource = new MatTableDataSource<any>([]);
+            this.hasLoadedData = false;
           }
         );
     } catch (error) {
