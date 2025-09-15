@@ -25,7 +25,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { EditorModule } from '@tinymce/tinymce-angular';
 import { RequestService } from './services/request.service';
 import { StateService } from './services/state.service';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, Observable } from 'rxjs';
 
 function atLeastOneFieldFilledValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
@@ -67,6 +67,7 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
 
   public editorConfig = {
     selector: '#your-textarea',
+    branding: false,
     toolbar:
       'bold italic underline strikethrough | alignleft aligncenter alignright | bullist numlist outdent indent',
     height: 300,
@@ -100,15 +101,74 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
     this.initializeProposalSections();
   }
 
+  private createSectionGroup(section: {
+    requestId: number;
+    requestSectionId: number | null;
+    requestSectionTitle: string;
+    requestSectionContent: string;
+  }): FormGroup {
+    const sectionGroup = this.fb.group({
+      requestId: [section.requestId],
+      requestSectionId: [section.requestSectionId],
+      requestSectionTitle: [section.requestSectionTitle, Validators.required],
+      requestSectionContent: [section.requestSectionContent],
+    });
+
+    sectionGroup
+      .get('requestSectionContent')
+      ?.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        setTimeout(() => {
+          this.proposalSections.updateValueAndValidity();
+        }, 100);
+      });
+
+    return sectionGroup;
+  }
+
   initializeProposalSections(): void {
     this.proposalsOverviewFormGroup = this.fb.group({
       proposalSections: this.fb.array([], [atLeastOneFieldFilledValidator()]),
     });
 
     if (!this.idParam && !this.requestId) {
-      this.getRequestSectionDefaultTitle();
+      this.getRequestSectionDefaultTitle().subscribe({
+        next: (response) => {
+          response.forEach((section) => {
+            this.proposalSections.push(this.createSectionGroup(section));
+          });
+        },
+        error: (err) => console.error('Error fetching default sections', err),
+      });
     } else {
-      this.getRequestSectionsById(Number(this.idParam));
+      this.getRequestSectionsById(Number(this.idParam)).subscribe({
+        next: (response) => {
+          if (response?.requestSections?.length > 0) {
+            response.requestSections.forEach((section: any) => {
+              this.proposalSections.push(this.createSectionGroup(section));
+            });
+            this.cdr.detectChanges();
+          } else {
+            this.getRequestSectionDefaultTitle().subscribe({
+              next: (response) => {
+                response.forEach((section) => {
+                  this.proposalSections.push(this.createSectionGroup(section));
+                });
+              },
+            });
+          }
+        },
+        error: (err) => {
+          console.error('Error fetching request sections', err);
+          this.getRequestSectionDefaultTitle().subscribe({
+            next: (response) => {
+              response.forEach((section) => {
+                this.proposalSections.push(this.createSectionGroup(section));
+              });
+            },
+          });
+        },
+      });
     }
 
     this.proposalsOverviewFormGroup.statusChanges
@@ -155,97 +215,16 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
     return content.replace(/<br>/g, '<br/>');
   }
 
-  getRequestSectionDefaultTitle(): void {
-    this.requestService
+  getRequestSectionDefaultTitle(): Observable<any[]> {
+    return this.requestService
       .GetRequestSectionDefaultTitles()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response) => {
-          response.forEach(
-            (section: {
-              requestId: number;
-              requestSectionId: number;
-              requestSectionTitle: string;
-              requestSectionContent: string;
-            }) => {
-              const sectionGroup = this.fb.group({
-                requestId: [section.requestId],
-                requestSectionId: [section.requestSectionId],
-                requestSectionTitle: [
-                  section.requestSectionTitle,
-                  Validators.required,
-                ],
-                requestSectionContent: [section.requestSectionContent],
-              });
-
-              sectionGroup
-                .get('requestSectionContent')
-                ?.valueChanges.pipe(takeUntil(this.destroy$))
-                .subscribe(() => {
-                  setTimeout(() => {
-                    this.proposalSections.updateValueAndValidity();
-                  }, 100);
-                });
-
-              this.proposalSections.push(sectionGroup);
-            }
-          );
-        },
-        error: (error) => {
-          console.error('Error fetching default section titles', error);
-        },
-        complete: () => {
-          console.log('Finished loading default section titles.');
-        },
-      });
+      .pipe(takeUntil(this.destroy$));
   }
 
-  getRequestSectionsById(requestId: number): void {
-    this.requestService
+  getRequestSectionsById(requestId: number): Observable<any> {
+    return this.requestService
       .GetRequestSections(requestId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response) => {
-          response.requestSections.forEach(
-            (section: {
-              requestSectionTitle: string;
-              requestId: number;
-              requestSectionId: number;
-              requestSectionContent: string;
-            }) => {
-              if (section.requestSectionTitle) {
-                const sectionGroup = this.fb.group({
-                  requestId: [section.requestId],
-                  requestSectionId: [section.requestSectionId],
-                  requestSectionTitle: [
-                    section.requestSectionTitle,
-                    Validators.required,
-                  ],
-                  requestSectionContent: [section.requestSectionContent],
-                });
-
-                sectionGroup
-                  .get('requestSectionContent')
-                  ?.valueChanges.pipe(takeUntil(this.destroy$))
-                  .subscribe(() => {
-                    setTimeout(() => {
-                      this.proposalSections.updateValueAndValidity();
-                    }, 100);
-                  });
-
-                this.proposalSections.push(sectionGroup);
-              }
-            }
-          );
-          this.cdr.detectChanges();
-        },
-        error: (error) => {
-          console.error('Error fetching request sections', error);
-        },
-        complete: () => {
-          console.log('Finished loading request sections.');
-        },
-      });
+      .pipe(takeUntil(this.destroy$));
   }
 
   saveSections(): void {

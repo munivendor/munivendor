@@ -1,10 +1,12 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
+import { CanActivateFn, Router, ActivatedRouteSnapshot } from '@angular/router';
 import { AuthService } from './auth.service';
 import { map, Observable, of } from 'rxjs';
 import { environment } from '../../environments/environment';
 
-export const AuthGuard: CanActivateFn = (): Observable<boolean> => {
+export const AuthGuard: CanActivateFn = (
+  route: ActivatedRouteSnapshot
+): Observable<boolean> => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
@@ -20,6 +22,21 @@ export const AuthGuard: CanActivateFn = (): Observable<boolean> => {
         router.navigate(['/login']);
         return false;
       }
+    })
+  );
+};
+
+export const GuestGuard: CanActivateFn = (): Observable<boolean> => {
+  const authService = inject(AuthService);
+
+  return authService.isAuthenticated$.pipe(
+    map((isAuthenticated) => {
+      // If the user is authenticated, prevent access to guest routes
+      if (isAuthenticated) {
+        return false;
+      }
+      // If the user is not authenticated, allow access to guest routes
+      return true;
     })
   );
 };

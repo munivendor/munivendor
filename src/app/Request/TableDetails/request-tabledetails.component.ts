@@ -6,7 +6,7 @@ import {
   TemplateRef,
   Input,
 } from '@angular/core';
-import { forkJoin, Subject, takeUntil } from 'rxjs';
+import { catchError, forkJoin, of, Subject, takeUntil } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ConfirmationDialog } from '../RequestConfirmationDialog/confirmation-dialog.component';
@@ -76,6 +76,7 @@ const ACTION_PERMISSIONS: {
   ],
 })
 export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
+  hasLoadedData = false;
   private destroy$ = new Subject<void>();
   @Input() categoryControl!: FormControl<number | null>;
 
@@ -124,6 +125,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
 
   joinedRequestData: Request[] = [];
   dataSource = new MatTableDataSource<any>();
+  organizationId: number = this.stateService.getOrganizationId() ?? 0;
 
   @ViewChild(MatPaginator)
   paginator!: MatPaginator;
@@ -170,7 +172,16 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.loadAndJoinRequestData();
+    if (!this.organizationId) {
+      setTimeout(() => {
+        this.organizationId = this.stateService.getOrganizationId() ?? 0;
+        if (this.organizationId) {
+          this.loadAndJoinRequestData();
+        }
+      }, 100);
+    } else {
+      this.loadAndJoinRequestData();
+    }
   }
 
   onSearch(): void {
@@ -227,72 +238,94 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     this.loadAndJoinRequestData(params);
   }
 
-  private async loadAndJoinRequestData(params?: any): Promise<void> {
-    try {
-      const organizationId = await this.stateService.getOrganizationId();
-
-      if (!organizationId) {
-        console.error('Organization ID not found');
-        this.dataSource = new MatTableDataSource<any>([]);
-        return;
-      }
-
-      const requestParams = {
-        organizationId: organizationId,
-        ...(params || {}),
-      };
-
-      const combinedData: any[] = [];
-
-      forkJoin([
-        this.requestService.GetRequestsAgencyView(requestParams), // Now includes organizationId
-        this.categoryHierarchyService.GetCategoryHierarchy(),
-        this.requestService.GetRequestTypes(),
-        this.requestService.GetRequestStatuses(),
-      ])
-        .pipe(takeUntil(this.destroy$))
-        .subscribe(
-          ([requests, categories, requestTypes, requestStatuses]) => {
-            requests.requests.forEach((request: any) => {
-              const category = this.findCategoryById(
-                categories,
-                request.categoryId
-              );
-              const requestType = requestTypes.find(
-                (r) => r.requestTypeId === request.requestTypeId
-              );
-
-              const agencyRequestStatus = requestStatuses.find(
-                (rs: { requestStatusId: any }) =>
-                  rs.requestStatusId === request.agencyRequestStatusId
-              );
-
-              const submittedOffersCount = (request.responses || []).filter(
-                (r: any) => r.offerorRequestStatusId === 9
-              ).length;
-
-              combinedData.push({
-                ...request,
-                category,
-                requestType,
-                agencyRequestStatus,
-                submittedOffersCount,
-              });
-            });
-
-            this.dataSource = new MatTableDataSource(combinedData);
-            this.dataSource.paginator = this.paginator;
-            this.dataSource.sort = this.sort;
-          },
-          (error) => {
-            console.error('Error loading request data:', error);
-            this.dataSource = new MatTableDataSource<any>([]);
-          }
-        );
-    } catch (error) {
-      console.error('Error getting organization ID:', error);
+  private loadAndJoinRequestData(params?: any): void {
+    if (!this.organizationId) {
+      console.error('Organization ID not found');
       this.dataSource = new MatTableDataSource<any>([]);
+      this.hasLoadedData = false;
+      return;
     }
+
+    const requestParams = {
+      organizationId: this.organizationId,
+      ...(params || {}),
+    };
+
+    const combinedData: any[] = [];
+
+    forkJoin([
+      this.requestService.GetRequestsAgencyView(requestParams).pipe(
+        catchError((error) => {
+          console.error('Error loading requests:', error);
+          return of({ requests: [] });
+        })
+      ),
+      this.categoryHierarchyService.GetCategoryHierarchy().pipe(
+        catchError((error) => {
+          console.error('Error loading categories:', error);
+          return of([]);
+        })
+      ),
+      this.requestService.GetRequestTypes().pipe(
+        catchError((error) => {
+          console.error('Error loading request types:', error);
+          return of([]);
+        })
+      ),
+      this.requestService.GetRequestStatuses().pipe(
+        catchError((error) => {
+          console.error('Error loading request statuses:', error);
+          return of([]);
+        })
+      ),
+    ])
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(
+        ([requests, categories, requestTypes, requestStatuses]) => {
+          const requestsData = requests?.requests || [];
+          this.hasLoadedData = requestsData.length > 0;
+
+          requestsData.forEach((request: any) => {
+            const category = this.findCategoryById(
+              categories || [],
+              request.categoryId
+            );
+            const requestType = (requestTypes || []).find(
+              (r) => r.requestTypeId === request.requestTypeId
+            );
+
+            const agencyRequestStatus = (requestStatuses || []).find(
+              (rs: { requestStatusId: any }) =>
+                rs.requestStatusId === request.agencyRequestStatusId
+            );
+
+            const submittedOffersCount = (request.responses || []).filter(
+              (r: any) => r.offerorRequestStatusId === 9
+            ).length;
+
+            request.closeDate = request.closeDate
+              ? new Date(request.closeDate + 'Z')
+              : null;
+
+            combinedData.push({
+              ...request,
+              category,
+              requestType,
+              agencyRequestStatus,
+              submittedOffersCount,
+            });
+          });
+
+          this.dataSource = new MatTableDataSource(combinedData);
+          this.dataSource.paginator = this.paginator;
+          this.dataSource.sort = this.sort;
+        },
+        (error) => {
+          console.error('Unexpected error in forkJoin:', error);
+          this.dataSource = new MatTableDataSource<any>([]);
+          this.hasLoadedData = false;
+        }
+      );
   }
 
   // future for dynamic filtering of solicitation name
@@ -353,7 +386,6 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     dialogRef.componentInstance.onCancelUpdateRequestStatus =
       this.onCancelUpdateRequestStatus.bind(this);
 
-    // Add this new subscription for status updates
     dialogRef.componentInstance.statusUpdated
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -392,7 +424,6 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
       });
   }
 
-  // Add this new method to update the table data:
   private updateRequestStatusInTable(
     requestId: number,
     newStatusId: number,

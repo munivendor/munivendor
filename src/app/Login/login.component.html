@@ -5,13 +5,14 @@
         <mat-card-title>Welcome back to Munivendor</mat-card-title>
       </mat-card-header>
       <mat-card-content>
-        <asl-google-signin-button
-          type="standard"
-          size="medium"
-          text="continue_with"
-          theme="filled_blue"
-        ></asl-google-signin-button>
-
+        <div #googleBtnContainer class="google-btn-container">
+          <asl-google-signin-button
+            type="standard"
+            size="medium"
+            text="continue_with"
+            theme="filled_blue"
+          ></asl-google-signin-button>
+        </div>
         <div class="separator">
           <span>OR</span>
         </div>

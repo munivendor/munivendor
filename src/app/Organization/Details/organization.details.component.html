@@ -19,12 +19,12 @@
         (ngSubmit)="onSubmit()"
       >
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Name</mat-label>
+          <mat-label>Organization Name</mat-label>
           <input
             matInput
             formControlName="organizationName"
             required
-            placeholder="Enter Organization Name Ex. ABC Corporation"
+            placeholder="Enter your organization name"
           />
           <mat-error
             *ngIf="
@@ -70,7 +70,7 @@
             matInput
             formControlName="address"
             required
-            placeholder="Enter Address Ex. 123 Main Street"
+            placeholder="Enter your address"
           />
           <mat-error
             *ngIf="organizationDetailForm.get('address')?.hasError('required')"
@@ -100,7 +100,7 @@
           <input
             matInput
             formControlName="address2"
-            placeholder="Enter Address Ex. Apt 4B or Suite 210"
+            placeholder="Enter your secondary Address (optional)"
           />
           <mat-error
             *ngIf="
@@ -130,7 +130,7 @@
             matInput
             formControlName="city"
             required
-            placeholder="Ex. San Francisco"
+            placeholder="Enter your city"
           />
           <mat-error
             *ngIf="organizationDetailForm.get('city')?.hasError('required')"
@@ -174,7 +174,7 @@
             matInput
             formControlName="zipCode"
             required
-            placeholder="Enter Zip Code Ex. 12345 or 12345-6789"
+            placeholder="Enter your zip code"
           />
           <mat-error
             *ngIf="organizationDetailForm.get('zipCode')?.hasError('required')"

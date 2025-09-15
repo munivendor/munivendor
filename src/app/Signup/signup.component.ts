@@ -25,6 +25,7 @@ import {
   filter,
   finalize,
   Observable,
+  of,
   Subject,
   switchMap,
   take,
@@ -47,6 +48,7 @@ import {
   MatDialogTitle,
 } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { StateService } from '../Request/services/state.service';
 
 @Component({
   selector: 'dialog-elements-example-dialog',
@@ -111,7 +113,8 @@ export class SignupComponent implements OnInit, OnDestroy {
     private signupService: SignupService,
     private organizationService: OrganizationService,
     public dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private stateService: StateService
   ) {}
 
   openDialog() {
@@ -122,6 +125,7 @@ export class SignupComponent implements OnInit, OnDestroy {
 
   prepareGoogleSignIn(): void {
     this.authService.setSkipNextAuthState(true);
+    this.authService.setSignupInProgress(true); // Add this line
   }
 
   ngOnInit(): void {
@@ -298,6 +302,7 @@ export class SignupComponent implements OnInit, OnDestroy {
           };
 
           this.createUserByEmail(organizationUser);
+          this.stateService.setOrganizationId(response.organizationId);
         },
         error: (err) => {
           console.error('Failed to save organization:', err);
@@ -315,12 +320,8 @@ export class SignupComponent implements OnInit, OnDestroy {
     ])
       .pipe(
         takeUntil(this.destroy$),
-        // Modified filter condition - just check for valid user and form
-        filter(([_, user]) => {
-          return !!user && this.signupFormGoogle.valid;
-        }),
-        // Take only the first emission to prevent multiple signups
-        take(1),
+        filter(([_, user]) => !!user && this.signupFormGoogle.valid),
+        take(1), // only handle first Google signup event
         switchMap(([_, user]) => {
           this.userCreationInProgress = true;
           const selectedOrganizationTypeId =
@@ -336,7 +337,7 @@ export class SignupComponent implements OnInit, OnDestroy {
               switchMap((orgResponse) => {
                 console.log('Organization created:', orgResponse);
 
-                const userData = {
+                const userData: User = {
                   firstName: user.firstName,
                   lastName: user.lastName,
                   workEmail: user.email,
@@ -346,30 +347,42 @@ export class SignupComponent implements OnInit, OnDestroy {
                   organizationId: orgResponse.organizationId,
                 };
 
-                return this.createUserByGoogle(userData);
+                this.stateService.setOrganizationId(orgResponse.organizationId);
+
+                return this.createOrLoginGoogleUser(userData);
               })
             );
         }),
         finalize(() => {
           this.userCreationInProgress = false;
+          this.authService.setSignupInProgress(false);
         })
       )
       .subscribe({
-        next: (user) => {
-          console.log('Google Auth Detected:', user);
-          this.router.navigate(['/role-verification']);
+        next: () => {
+          console.log('Google Auth Success');
+          this.router.navigate(['/organization-details']);
         },
-        error: (error) => {
-          this.snackBar.open(`Sign up failed. ${error.error}`, 'Close', {
-            verticalPosition: 'top',
-          });
+        error: () => {
+          this.snackBar.open(
+            `Sign up failed. This email may already exist or an error occurred.`,
+            'Close',
+            { verticalPosition: 'top' }
+          );
           this.authService.setSkipNextAuthState(false);
+          this.authService.setSignupInProgress(false);
         },
       });
   }
 
-  private createUserByGoogle(user: User): Observable<any> {
+  private createOrLoginGoogleUser(user: User): Observable<any> {
     return this.userService.createUser(user).pipe(
+      catchError((error) => {
+        if (error.status === 409) {
+          return of(null);
+        }
+        return throwError(() => error);
+      }),
       switchMap(() => {
         const googleUserLogin: UserLogin = {
           userIdentity: user.userIdentity,
@@ -378,14 +391,6 @@ export class SignupComponent implements OnInit, OnDestroy {
         return this.authService
           .login(googleUserLogin)
           .pipe(tap(() => this.authService.setSkipNextAuthState(false)));
-      }),
-      catchError((error) => {
-        this.userCreationInProgress = false;
-        this.authService.setSkipNextAuthState(false);
-        return throwError(() => error);
-      }),
-      finalize(() => {
-        this.userCreationInProgress = false;
       })
     );
   }
@@ -407,9 +412,13 @@ export class SignupComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         error: (error) => {
-          this.snackBar.open(`Sign up failed. ${error.error}`, 'Close', {
-            verticalPosition: 'top',
-          });
+          this.snackBar.open(
+            `Sign up failed. This email is already signed up or an error occurred signing up.`,
+            'Close',
+            {
+              verticalPosition: 'top',
+            }
+          );
         },
       });
   }

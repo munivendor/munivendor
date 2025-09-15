@@ -16,7 +16,7 @@ import { RequestService } from './services/request.service';
 import { Document } from './model/document.model';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RequestDocument } from './model/requestdocument.model';
-import { forkJoin, Observable, Subject, takeUntil, tap } from 'rxjs';
+import { forkJoin, Observable, of, Subject, takeUntil, tap } from 'rxjs';
 import { StateService } from './services/state.service';
 import { SelectionModel } from '@angular/cdk/collections';
 import { MatTableModule } from '@angular/material/table';
@@ -24,6 +24,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DocumentService } from '../shared/service/document.service';
+
 @Component({
   selector: 'request-required-documents',
   standalone: true,
@@ -129,40 +130,65 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
   }
 
   initializeForEditing(): void {
-    forkJoin({
-      allDocuments: this.getAllDocumentTypes(
-        Number(this.organizationId),
-        Number(this.idParam)
-      ),
-      requestDocuments: this.requestService.GetRequestRequiredDocumentsById(
-        Number(this.idParam)
-      ),
-    })
+    this.requestService
+      .GetRequestRequiredDocumentsById(Number(this.idParam))
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: ({ allDocuments, requestDocuments }) => {
-          try {
-            const enrichedRequestDocuments =
-              this.enrichRequestDocumentsWithOrganizationId(
-                requestDocuments.documents,
-                allDocuments.optionalMunicipalityDocuments.documents
-              );
-            if (enrichedRequestDocuments.length > 0) {
-              this.populateRequestDocuments(enrichedRequestDocuments);
-              this.mergeUnselectedDocuments(
-                allDocuments,
-                enrichedRequestDocuments
-              );
-            }
-          } catch (err) {
-            console.error('Error during form initialization:', err);
-            this.fallbackToCreation();
+        next: (requestDocuments) => {
+          const documents = requestDocuments?.documents ?? [];
+
+          if (!documents || documents.length === 0) {
+            console.log(
+              'No request documents found, falling back to creation mode'
+            );
+            this.initializeForCreation();
+            return;
           }
+
+          this.getAllDocumentTypes(
+            Number(this.organizationId),
+            Number(this.idParam)
+          )
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+              next: (allDocuments) => {
+                try {
+                  const enrichedRequestDocuments =
+                    this.enrichRequestDocumentsWithOrganizationId(
+                      documents,
+                      allDocuments.optionalMunicipalityDocuments.documents
+                    );
+
+                  if (enrichedRequestDocuments.length > 0) {
+                    this.populateRequestDocuments(enrichedRequestDocuments);
+                    this.mergeUnselectedDocuments(
+                      allDocuments,
+                      enrichedRequestDocuments
+                    );
+                  } else {
+                    console.log(
+                      'Enriched documents came back empty, falling back to creation mode'
+                    );
+                    this.initializeForCreation();
+                  }
+                } catch (err) {
+                  console.error('Error during form initialization:', err);
+                  this.fallbackToCreation();
+                }
+              },
+              error: (error) => {
+                console.error('Error fetching all documents:', error);
+                if (error.status >= 500) {
+                  console.log('Server error, falling back to creation mode');
+                  this.fallbackToCreation();
+                }
+              },
+            });
         },
         error: (error) => {
-          console.error('Error fetching documents for editing:', error);
-          if (error.status === 500 || error.status >= 500) {
-            console.log('Server error detected, falling back to creation mode');
+          console.error('Error fetching request documents:', error);
+          if (error.status >= 500) {
+            console.log('Server error, falling back to creation mode');
             this.fallbackToCreation();
           }
         },

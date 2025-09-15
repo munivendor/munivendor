@@ -40,3 +40,7 @@ mat-card-actions > * {
   border-bottom: 1px solid #363636;
   margin: 0 10px;
 }
+
+.google-btn-container {
+  width: 100%;
+}

@@ -10,10 +10,12 @@
         ></request-basic>
         <div>
           <button
-            mat-button
+            mat-raised-button
             (click)="saveRequest()"
             matStepperNext
             [disabled]="!isStepValid"
+            color="primary"
+            style="float: right"
           >
             Next
           </button>
@@ -28,16 +30,33 @@
           [idParam]="idParam"
           (formValidityChange)="onFormValidityChange($event)"
         ></request-overview>
-        <div>
-          <button mat-button matStepperPrevious>Back</button>
+        <div class="request-stepper-button-container-margin-top">
           <button
-            mat-button
+            mat-raised-button
+            matStepperPrevious
+            color="primary"
+            style="margin-right: 8px"
+          >
+            Back
+          </button>
+          <button
+            mat-raised-button
             matStepperNext
             (click)="saveSections()"
             [disabled]="!isStepValid"
+            color="primary"
           >
             Next
           </button>
+          <!-- not disabled for testing purposes -->
+          <!-- <button
+            mat-raised-button
+            matStepperNext
+            (click)="saveSections()"
+            color="primary"
+          >
+            Next
+          </button> -->
         </div>
       </ng-template>
     </mat-step>
@@ -47,9 +66,21 @@
         <request-required-documents
           [idParam]="idParam"
         ></request-required-documents>
-        <div>
-          <button mat-button matStepperPrevious>Back</button>
-          <button mat-button matStepperNext (click)="saveDocuments()">
+        <div class="request-stepper-button-container">
+          <button
+            mat-raised-button
+            matStepperPrevious
+            color="primary"
+            style="margin-right: 8px"
+          >
+            Back
+          </button>
+          <button
+            mat-raised-button
+            matStepperNext
+            (click)="saveDocuments()"
+            color="primary"
+          >
             Next
           </button>
         </div>
@@ -61,12 +92,20 @@
         <request-review
           [paramRequestId]="requestId ?? undefined"
         ></request-review>
-        <div>
-          <button mat-button matStepperPrevious>Back</button>
+        <div class="request-stepper-button-container">
           <button
-            mat-button
+            mat-raised-button
+            matStepperPrevious
+            color="primary"
+            style="margin-right: 8px"
+          >
+            Back
+          </button>
+          <button
+            mat-raised-button
             matStepperNext
             (click)="updateRequestStatusToScheduled()"
+            color="primary"
           >
             Submit
           </button>

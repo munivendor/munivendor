@@ -24,7 +24,7 @@ export class FlowNavigationService {
     agency: {
       flowId: 1,
       routes: {
-        0: '/role-verification',
+        // 0: '/role-verification',
         1: '/organization-details',
         2: '/user-details',
         // 3: '/user-designation',
@@ -36,7 +36,7 @@ export class FlowNavigationService {
     offeror: {
       flowId: 2,
       routes: {
-        0: '/role-verification',
+        // 0: '/role-verification',
         1: '/organization-details',
         2: '/user-details',
         // 3: '/payment-plan-confirmation',
@@ -111,7 +111,7 @@ export class FlowNavigationService {
     progress: any,
     routes: Record<number, string>
   ): void {
-    const pageId = progress?.lastCompletedPageId ?? 0;
+    const pageId = progress?.lastCompletedPageId ?? 1;
     const route = routes[pageId];
 
     if (route) {

@@ -1,4 +1,12 @@
-  .mat-mdc-form-field {
-    margin-top: 16px;
-  }
-  
+.mat-mdc-form-field {
+  margin-top: 16px;
+}
+
+.response-stepper-button-container-margin-top {
+  float: right;
+  margin-top: 5rem;
+}
+
+.response-stepper-button-container {
+  float: right;
+}
