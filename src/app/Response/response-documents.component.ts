@@ -222,7 +222,6 @@ export class ResponseDocumentsComponent implements OnInit {
               );
               if (rowToUpdate) {
                 rowToUpdate.documentInstanceStatus = 'Complete';
-                console.log(`Updated ${this.currentSource} row:`, rowToUpdate);
               }
 
               this.snackBar.open('Document uploaded successfully!', '', {
@@ -293,7 +292,6 @@ export class ResponseDocumentsComponent implements OnInit {
 
     if (isIncompleteOrNull) {
       if (derived) {
-        console.log('organizationDocumentId:', organizationDocumentId);
         if (!organizationDocumentId || !agencyOrganizationId) {
           console.error('organizationDocumentId is required but missing.');
           return;
@@ -338,7 +336,6 @@ export class ResponseDocumentsComponent implements OnInit {
       .pipe(takeUntil(this.destroy$))
       .subscribe((newDocument) => {
         if (newDocument) {
-          console.log('New document from dialog:', newDocument);
           const existingDoc = this.optionalOfferorDocuments.controls.find(
             (control) =>
               control.get('documentId')?.value === newDocument.documentId

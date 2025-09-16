@@ -161,7 +161,6 @@ export class AuthService {
   }
 
   login(userLogin: UserLogin): Observable<any> {
-    console.log('Attempting login with:', userLogin);
     this.isLoggingIn.next(true);
     return this.http
       .post<{ UserId: number; Token: string }>(`${this.url}login`, userLogin, {

@@ -299,10 +299,6 @@ export class ResponseBasicComponent implements OnInit {
           console.log('Response saved successfully:', response);
           this.requestService.UpdateRequestStatus(response, 8).subscribe(
             (statusResponse) => {
-              console.log(
-                'Request status updated successfully:',
-                statusResponse
-              );
               this.stateService.setRequestId(response);
             },
             (error) => {

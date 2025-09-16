@@ -272,7 +272,6 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          console.log('Request status updated successfully:', response);
           this.snackBar.open('Request successfully submitted!', '', {
             duration: 5000,
             verticalPosition: 'top',
