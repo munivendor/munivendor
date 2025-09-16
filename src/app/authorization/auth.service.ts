@@ -170,6 +170,7 @@ export class AuthService {
       .pipe(
         tap((userId) => {
           if (userId) {
+            this.authState.next(true);
             this.userSubject.next(userId as any);
             this.userService.getUser(Number(userId)).subscribe(
               (user: User) => {
