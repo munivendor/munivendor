@@ -345,7 +345,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
 
     const formattedOffers = submittedOffers.map((offer: any) => ({
       offerorName: offer.organizationName,
-      submittedDate: offer.submittedDate,
+      submittedDate: new Date(offer.submittedDate + 'Z'),
     }));
 
     this.dialog.open(this.offersDialog, {

@@ -21,8 +21,10 @@ export class RequestService {
     return this.http.get<any>(this.url);
   }
 
-  GetDecisionMakers(): Observable<DecisionMaker[]> {
-    return this.http.get<DecisionMaker[]>(this.url + 'DecisionMakers');
+  GetDecisionMakers(agencyOrganizationId: number): Observable<DecisionMaker[]> {
+    return this.http.get<DecisionMaker[]>(
+      `${this.url}DecisionMakers/${agencyOrganizationId}`
+    );
   }
 
   GetRequestTypes(): Observable<RequestType[]> {
@@ -166,10 +168,10 @@ export class RequestService {
 
   deleteRequestDocument(
     requestId: number,
-    documentId: number
+    requestDocumentId: number
   ): Observable<{ isSuccess: boolean }> {
     return this.http.delete<{ isSuccess: boolean }>(
-      `${this.url}RequestDocuments/${requestId}/${documentId}`
+      `${this.url}RequestDocuments/${requestId}/${requestDocumentId}`
     );
   }
 

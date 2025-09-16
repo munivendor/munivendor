@@ -24,6 +24,17 @@
 
   <mat-step label="Details">
     <ng-template matStepContent>
+      <div class="response-stepper-button-container">
+        <button
+          mat-raised-button
+          matStepperPrevious
+          color="primary"
+          style="margin-right: 8px"
+        >
+          Back
+        </button>
+        <button mat-raised-button matStepperNext color="primary">Next</button>
+      </div>
       <response-details
         #step2
         [sourceIdParam]="sourceIdParam"
@@ -49,6 +60,17 @@
 
   <mat-step label="Documents">
     <ng-template matStepContent>
+      <div class="response-stepper-button-container">
+        <button
+          mat-raised-button
+          matStepperPrevious
+          color="primary"
+          style="margin-right: 8px"
+        >
+          Back
+        </button>
+        <button mat-raised-button matStepperNext color="primary">Next</button>
+      </div>
       <response-documents
         [responseIdParam]="responseIdParam"
       ></response-documents>
@@ -81,11 +103,7 @@
 
   <mat-step label="Review">
     <ng-template matStepContent>
-      <response-review
-        [sourceIdParam]="sourceIdParam"
-        [responseIdParam]="responseIdParam"
-      ></response-review>
-      <div style="display: flex">
+      <div style="display: flex" class="response-stepper-button-container">
         <button
           mat-raised-button
           matStepperPrevious
@@ -111,7 +129,44 @@
               actionLabel: 'Vendor Profile Page',
               onAction: goToOfferorProfilePage,
               width: '350px',
-              transformStyle: 'translate(-48%, -101%)'
+              transformStyle: 'translate(-103%, -75%)'
+            }"
+          >
+            info_outline
+          </mat-icon>
+        </div>
+      </div>
+      <response-review
+        [sourceIdParam]="sourceIdParam"
+        [responseIdParam]="responseIdParam"
+      ></response-review>
+      <div style="display: flex" class="response-stepper-button-container">
+        <button
+          mat-raised-button
+          matStepperPrevious
+          color="primary"
+          style="margin-right: 8px"
+        >
+          Back
+        </button>
+        <div style="display: flex; align-items: center; gap: 4px">
+          <button
+            mat-raised-button
+            matStepperNext
+            (click)="onSubmitOfferorResponse()"
+            color="primary"
+          >
+            Submit
+          </button>
+          <mat-icon
+            style="font-size: medium; color: #0b74fd; cursor: pointer"
+            [appTooltip]="{
+              header: 'Incomplete',
+              body: 'You cannot yet submit your completed offer (submission packet), because there are forms that you still need to complete. Please make sure that your Vendor Profile page has been completed so that MuniVendor can autofill the documents and forms accordingly.',
+              actionLabel: 'Vendor Profile Page',
+              onAction: goToOfferorProfilePage,
+              width: '350px',
+              transformStyle: 'translate(-103%, -75%)'
             }"
           >
             info_outline

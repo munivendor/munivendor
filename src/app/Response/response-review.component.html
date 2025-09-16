@@ -190,6 +190,7 @@
 <section>
   <h2>Offeror Documents</h2>
   <table
+    *ngIf="offerorDocumentsDatasource.length > 0"
     mat-table
     [dataSource]="offerorDocumentsDatasource"
     class="mat-elevation-z8"
@@ -217,5 +218,11 @@
     <tr mat-header-row *matHeaderRowDef="offerorDocumentsColumns"></tr>
     <tr mat-row *matRowDef="let row; columns: offerorDocumentsColumns"></tr>
   </table>
+  <p
+    *ngIf="offerorDocumentsDatasource.length === 0"
+    class="no-documents-message"
+  >
+    No documents have been uploaded.
+  </p>
 </section>
 <br />

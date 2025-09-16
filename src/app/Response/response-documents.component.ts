@@ -29,6 +29,7 @@ import { DocumentService } from '../shared/service/document.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TooltipDirective } from '../shared/directive/tooltip.directive';
 import { Router } from '@angular/router';
+import { request } from 'http';
 // import { DocumentInstance } from '../Request/model/documentinstance.model';
 // import { BidProposalFormDialogComponent } from '../BidProposalForm/bid-proposal-form.component';
 @Component({
@@ -93,16 +94,11 @@ export class ResponseDocumentsComponent implements OnInit {
 
   ngOnInit(): void {
     this.initializeFormGroup();
-    // this.initializeRequestDocuments();
     this.initializeDocuments();
 
     const requestId = this.responseIdParam
       ? Number(this.responseIdParam)
       : this.responseIdFromStateService;
-
-    // if (requestId) {
-    //   this.initializeResponseDocuments(requestId);
-    // }
   }
 
   initializeDocuments(): void {
@@ -169,26 +165,6 @@ export class ResponseDocumentsComponent implements OnInit {
     });
   }
 
-  // initializeResponseDocuments(requestId: number): void {
-  //   this.requestService.GetRequestRequiredDocumentsById(requestId).subscribe({
-  //     next: (response) => {
-  //       this.offerorDocuments = response.documents.map((doc: any) => ({
-  //         ...doc,
-  //       }));
-  //       this.initializeFormArrayFromApiDocuments();
-  //       this.updateCombinedDatasource();
-
-  //       console.log(
-  //         'Offeror documents initialized successfully.',
-  //         this.offerorDocumentsDatasource
-  //       );
-  //     },
-  //     error: (error) => {
-  //       console.error('Error initializing offeror documents:', error);
-  //     },
-  //   });
-  // }
-
   private initializeFormArrayFromApiDocuments(): void {
     while (this.optionalOfferorDocuments.length !== 0) {
       this.optionalOfferorDocuments.removeAt(0);
@@ -208,58 +184,6 @@ export class ResponseDocumentsComponent implements OnInit {
       this.optionalOfferorDocuments.push(formGroup);
     });
   }
-
-  // initializeRequestDocuments(): void {
-  //   const requestId = Number(this.sourceIdParam);
-
-  //   forkJoin({
-  //     requiredDocs:
-  //       this.requestService.GetRequestRequiredDocumentsById(requestId),
-  //     documentInstances:
-  //       this.documentService.GetAllDocumentInstances(requestId),
-  //   }).subscribe({
-  //     next: ({ requiredDocs, documentInstances }) => {
-  //       const statusMap = new Map<number, number>();
-  //       documentInstances.documentInstances.forEach(
-  //         (instance: {
-  //           requestDocumentId: number | null;
-  //           documentInstanceStatusId: number;
-  //         }) => {
-  //           if (instance.requestDocumentId != null) {
-  //             statusMap.set(
-  //               instance.requestDocumentId,
-  //               instance.documentInstanceStatusId
-  //             );
-  //           }
-  //         }
-  //       );
-
-  //       this.requiredDocumentsDatasource = requiredDocs.documents.map(
-  //         (doc: {
-  //           documentName: any;
-  //           requiresNotarization: any;
-  //           requestDocumentId: number;
-  //           documentInstanceStatus: string;
-  //         }) => ({
-  //           formName: doc.documentName,
-  //           notarizationRequired: doc.requiresNotarization,
-  //           // autofillStatus: this.getStatusLabel(
-  //           //   statusMap.get(doc.requestDocumentId)
-  //           // ),
-  //           autofillStatus: doc.documentInstanceStatus,
-
-  //           documentInstanceStatus: doc.documentInstanceStatus,
-  //           ...doc,
-  //         })
-  //       );
-
-  //       console.log('Merged document data:', this.requiredDocumentsDatasource);
-  //     },
-  //     error: (err) => {
-  //       console.error('Error loading documents:', err);
-  //     },
-  //   });
-  // }
 
   onUploadClick(
     row: any,
@@ -460,16 +384,16 @@ export class ResponseDocumentsComponent implements OnInit {
     });
   }
 
-  deleteForm(documentId: number): void {
+  deleteForm(requestDocumentId: number, documentId: number): void {
     const requestId = +(
       this.responseIdParam ??
       this.responseIdFromStateService ??
       0
     );
-    const docId = +documentId;
+    const requestDocId = +requestDocumentId;
 
     this.requestService
-      .deleteRequestDocument(requestId, docId)
+      .deleteRequestDocument(requestId, requestDocId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
@@ -494,7 +418,7 @@ export class ResponseDocumentsComponent implements OnInit {
   }
 
   goToOfferorProfilePage() {
-    this.router.navigate(['/offeror-profile']);
+    this.router.navigate(['/offeror-profile-page']);
   }
 
   ngOnDestroy(): void {

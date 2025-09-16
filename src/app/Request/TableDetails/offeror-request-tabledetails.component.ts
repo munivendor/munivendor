@@ -192,7 +192,16 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
   };
 
   ngOnInit(): void {
-    this.loadAndJoinRequestData();
+    if (!this.organizationId) {
+      setTimeout(() => {
+        this.organizationId = this.stateService.getOrganizationId() ?? 0;
+        if (this.organizationId) {
+          this.loadAndJoinRequestData();
+        }
+      }, 100);
+    } else {
+      this.loadAndJoinRequestData();
+    }
   }
 
   onSearch(): void {
@@ -287,10 +296,10 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
         .pipe(takeUntil(this.destroy$))
         .subscribe(
           ([requests, categories, requestTypes, requestStatuses]) => {
-            requests.requests.forEach((request: any) => {
-              const requestsData = requests?.requests || [];
-              this.hasLoadedData = requestsData.length > 0;
+            const requestsData = requests?.requests || [];
+            this.hasLoadedData = requestsData.length > 0;
 
+            requestsData.forEach((request: any) => {
               const category = this.findCategoryById(
                 categories,
                 request.categoryId

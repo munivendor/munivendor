@@ -499,7 +499,7 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
       });
 
     this.requestService
-      .GetDecisionMakers()
+      .GetDecisionMakers(this.organizationId ?? 0)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (decisionMakers: DecisionMaker[]) =>
@@ -542,7 +542,9 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     const request$ = this.requestService.GetRequestDetailsById(requestId);
     const categories$ = this.categoryHierarchyService.GetCategoryHierarchy();
     const requestTypes$ = this.requestService.GetRequestTypes();
-    const decisionMakers$ = this.requestService.GetDecisionMakers();
+    const decisionMakers$ = this.requestService.GetDecisionMakers(
+      this.organizationId ?? 0
+    );
 
     forkJoin([request$, categories$, requestTypes$, decisionMakers$])
       .pipe(takeUntil(this.destroy$))

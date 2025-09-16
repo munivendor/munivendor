@@ -76,32 +76,32 @@ export class ResponseBasicComponent implements OnInit {
     });
   }
 
-  private fetchAuthorizingOfficials(): void {
-    this.offerorProfileService
-      .GetOfferorAuthorizingOfficials(Number(this.organizationId))
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(
-        (officials) => {
-          this.authorizingOfficialId =
-            officials?.[0].vendorAuthorizingOfficialId || null;
-          if (officials) {
-            this.responseForm.patchValue({
-              authorizingOfficial:
-                officials[0].firstName + ' ' + officials[0].lastName,
-            });
-          }
-          console.log('Response form after patching:', this.responseForm.value);
-        },
-        (error) => {
-          console.error('Error fetching authorizing officials:', error);
-        }
-      );
-  }
+  // private fetchAuthorizingOfficials(): void {
+  //   this.offerorProfileService
+  //     .GetOfferorAuthorizingOfficials(Number(this.organizationId))
+  //     .pipe(takeUntil(this.destroy$))
+  //     .subscribe(
+  //       (officials) => {
+  //         this.authorizingOfficialId =
+  //           officials?.[0].vendorAuthorizingOfficialId || null;
+  //         if (officials) {
+  //           this.responseForm.patchValue({
+  //             authorizingOfficial:
+  //               officials[0].firstName + ' ' + officials[0].lastName,
+  //           });
+  //         }
+  //         console.log('Response form after patching:', this.responseForm.value);
+  //       },
+  //       (error) => {
+  //         console.error('Error fetching authorizing officials:', error);
+  //       }
+  //     );
+  // }
 
   ngOnInit(): void {
     if (this.sourceIdParam) {
       this.loadTemplateRequest(Number(this.sourceIdParam));
-      this.fetchAuthorizingOfficials();
+      // this.fetchAuthorizingOfficials();
     }
 
     if (this.responseIdParam) {
@@ -196,25 +196,25 @@ export class ResponseBasicComponent implements OnInit {
 
   private loadResponseRequest(responseId: number): void {
     const request$ = this.requestService.GetRequestDetailsById(responseId);
-    const authorizingOfficials$ =
-      this.offerorProfileService.GetOfferorAuthorizingOfficials(
-        Number(this.organizationId)
-      );
-    forkJoin([request$, authorizingOfficials$])
+    // const authorizingOfficials$ =
+    //   this.offerorProfileService.GetOfferorAuthorizingOfficials(
+    //     Number(this.organizationId)
+    //   );
+    forkJoin([request$])
       .pipe(takeUntil(this.destroy$))
       .subscribe(
-        ([response, authorizingOfficials]) => {
-          const authorizingOfficial = authorizingOfficials.find(
-            (official: { vendorAuthorizingOfficialId: number }) =>
-              official.vendorAuthorizingOfficialId ===
-              response.authorizingOfficialId
-          );
+        ([response]) => {
+          // const authorizingOfficial = authorizingOfficials.find(
+          //   (official: { vendorAuthorizingOfficialId: number }) =>
+          //     official.vendorAuthorizingOfficialId ===
+          //     response.authorizingOfficialId
+          // );
 
           this.responseForm.patchValue({
             responseName: response.requestName,
-            authorizingOfficial: authorizingOfficial
-              ? `${authorizingOfficial.firstName} ${authorizingOfficial.lastName}`
-              : '',
+            // authorizingOfficial: authorizingOfficial
+            //   ? `${authorizingOfficial.firstName} ${authorizingOfficial.lastName}`
+            //   : '',
           });
         },
         (error: any) => {
@@ -318,7 +318,7 @@ export class ResponseBasicComponent implements OnInit {
   }
 
   goToOfferorProfilePage() {
-    this.router.navigate(['/offeror-profile']);
+    this.router.navigate(['/offeror-profile-page']);
   }
 
   ngOnDestroy() {
