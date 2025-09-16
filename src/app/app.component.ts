@@ -31,7 +31,7 @@ import { FlowNavigationService } from './shared/service/flow-navigation.service'
     Sidenav,
   ],
 })
-export class AppComponent implements OnInit {
+export class AppComponent {
   title = 'munivendor';
   user$: Observable<number | null>;
   showSidenav$: Observable<boolean>;
@@ -49,7 +49,6 @@ export class AppComponent implements OnInit {
   ) {
     this.user$ = this.authService.user$;
     this.organizationTypeId = this.stateService.getOrganizationTypeId();
-
     this.showSidenav$ = combineLatest([
       this.authService.isAuthenticated$,
       this.router.events.pipe(
@@ -59,70 +58,15 @@ export class AppComponent implements OnInit {
           while (route.firstChild) {
             route = route.firstChild;
           }
-          const showSidenav = route.snapshot.data['showSidenav'] ?? true;
-          return showSidenav;
-        }),
-        startWith(true)
+          return route.snapshot.data['showSidenav'] ?? true;
+        })
       ),
     ]).pipe(
-      map(([isAuthenticated, shouldShowSidenav]) => {
-        const result = isAuthenticated && shouldShowSidenav;
-        return result;
-      })
+      map(
+        ([isAuthenticated, shouldShowSidenav]) =>
+          isAuthenticated && shouldShowSidenav
+      )
     );
-  }
-
-  ngOnInit() {
-    // Handle initial navigation for authenticated users visiting guest routes
-    combineLatest([
-      this.authService.user$,
-      this.authService.isAuthenticated$,
-      this.router.events.pipe(
-        filter((event) => event instanceof NavigationEnd),
-        map(() => this.router.url),
-        startWith(this.router.url)
-      ),
-    ]).subscribe(([userId, isAuthenticated, currentRoute]) => {
-      // If user is authenticated and on a guest route or root, redirect them using FlowNavigationService
-      if (
-        isAuthenticated &&
-        userId &&
-        this.shouldRedirectAuthenticatedUser(currentRoute) &&
-        !this.hasNavigated
-      ) {
-        this.hasNavigated = true;
-        this.userService.getUser(userId).subscribe({
-          next: (user) => {
-            this.flowNavigationService
-              .navigateAfterLogin(userId, user.workEmail ?? '')
-              .subscribe({
-                next: () => {
-                  console.log('Navigation completed successfully');
-                },
-                error: (error: any) => {
-                  console.error('Error during navigation:', error);
-                  this.hasNavigated = false;
-                },
-              });
-          },
-          error: (error: any) => {
-            console.error('Error fetching user for navigation:', error);
-            this.hasNavigated = false;
-          },
-        });
-      }
-    });
-  }
-
-  private shouldRedirectAuthenticatedUser(route: string): boolean {
-    const routesToRedirect = [
-      '/',
-      '/login',
-      '/signup',
-      '/forgot-password',
-      '/email-verification',
-    ];
-    return routesToRedirect.includes(route);
   }
 
   onLogOut(): void {

@@ -46,7 +46,7 @@ import { OfferorProfileService } from '../shared/service/offeror-profile.service
 })
 export class ResponseReviewComponent implements OnInit, OnDestroy {
   goToOfferorProfilePage() {
-    this.router.navigate(['/offeror-profile']);
+    this.router.navigate(['/offeror-profile-page']);
   }
 
   @Input() sourceIdParam?: string | null | undefined;

@@ -24,6 +24,7 @@ import {
 import { filter, firstValueFrom, Observable, Subscription } from 'rxjs';
 import { AuthService } from '../authorization/auth.service';
 import { UserService } from '../shared/service/user.service';
+import { StateService } from '../Request/services/state.service';
 
 @Component({
   selector: 'custom-sidenav',
@@ -42,8 +43,7 @@ import { UserService } from '../shared/service/user.service';
 })
 export class Sidenav implements OnInit, AfterViewInit {
   @ViewChild('drawer') drawer!: MatDrawer;
-  @Input() organizationTypeId: number | null = null;
-
+  organizationTypeId: number | null = null;
   isExpanded = true;
   activeRoute = '';
   user$: Observable<number | null>;
@@ -62,7 +62,11 @@ export class Sidenav implements OnInit, AfterViewInit {
   ];
 
   offerorMenuItems = [
-    // { icon: 'person', label: 'Offeror Profile', route: '/offeror-profile' },
+    {
+      icon: 'person',
+      label: 'Offeror Profile',
+      route: '/offeror-profile-page',
+    },
     { icon: 'help_outline', label: 'Definitions', route: '/definitions' },
   ];
 
@@ -70,9 +74,11 @@ export class Sidenav implements OnInit, AfterViewInit {
     private router: Router,
     private authService: AuthService,
     private userService: UserService,
-    @Inject(PLATFORM_ID) private platformId: Object
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private stateService: StateService
   ) {
     this.user$ = this.authService.user$;
+    this.organizationTypeId = this.stateService.getOrganizationTypeId();
   }
 
   ngOnInit() {

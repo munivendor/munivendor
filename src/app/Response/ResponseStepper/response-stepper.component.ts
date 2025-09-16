@@ -77,7 +77,7 @@ export class ResponseStepper implements OnDestroy {
   }
 
   goToOfferorProfilePage() {
-    this.router.navigate(['/offeror-profile']);
+    this.router.navigate(['/offeror-profile-page']);
   }
 
   onAutoFillStatusChange(status: boolean) {

@@ -1,9 +1,5 @@
 <div *ngIf="showSidenav$ | async; else noSidenav" class="app-with-sidenav">
-  <custom-sidenav
-    [organizationTypeId]="organizationTypeId"
-    (logOut)="onLogOut()"
-  >
-  </custom-sidenav>
+  <custom-sidenav (logOut)="onLogOut()"> </custom-sidenav>
 </div>
 
 <ng-template #noSidenav>

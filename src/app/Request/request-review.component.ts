@@ -41,6 +41,7 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
   requestFinalReviewDetails: any = {};
   docs: any;
   hierarchicalCategories: CategoryNode[] = [];
+  organizationId: number | null = this.stateService.getOrganizationId();
 
   constructor(
     private fb: FormBuilder,
@@ -106,7 +107,9 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
   getRequestObjDetails(requestId: number) {
     const request$ = this.requestService.GetRequestDetailsById(requestId);
     const requestTypes$ = this.requestService.GetRequestTypes();
-    const decisionMakers$ = this.requestService.GetDecisionMakers();
+    const decisionMakers$ = this.requestService.GetDecisionMakers(
+      this.organizationId ?? 0
+    );
     const requiredRequestDocuments$ =
       this.requestService.GetRequestRequiredDocumentsById(requestId);
 

@@ -21,6 +21,9 @@ import { AgencyTableDetailsComponent } from './Request/TableDetails/request-tabl
 import { OfferorTableDetailsComponent } from './Request/TableDetails/offeror-request-tabledetails.component';
 import { CreateRequestStepper } from './Request/CreateRequestStepper/create-request-stepper.component';
 import { CategoryTreeComponent } from './CategoryTree/category-tree.component';
+import { DefinitionsComponent } from './DefinitionsPage/definitions.component';
+
+import { OfferorProfilePageComponent } from './Response/OfferorProfilePage/offeror-profile-page.component';
 
 import { ResponseStepper } from './Response/ResponseStepper/response-stepper.component';
 
@@ -130,6 +133,18 @@ export const routes: Routes = [
   {
     path: 'response-basic/:sourceId/edit/:responseId',
     component: ResponseStepper,
+    canActivate: [AuthGuard],
+    data: { showSidenav: true },
+  },
+  {
+    path: 'definitions',
+    component: DefinitionsComponent,
+    canActivate: [AuthGuard],
+    data: { showSidenav: true },
+  },
+  {
+    path: 'offeror-profile-page',
+    component: OfferorProfilePageComponent,
     canActivate: [AuthGuard],
     data: { showSidenav: true },
   },
