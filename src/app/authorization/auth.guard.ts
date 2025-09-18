@@ -26,16 +26,19 @@ export const AuthGuard: CanActivateFn = (
   );
 };
 
-export const GuestGuard: CanActivateFn = (): Observable<boolean> => {
+export const GuestGuard: CanActivateFn = (
+  route: ActivatedRouteSnapshot
+): Observable<boolean> => {
   const authService = inject(AuthService);
+  const router = inject(Router);
 
   return authService.isAuthenticated$.pipe(
     map((isAuthenticated) => {
-      // If the user is authenticated, prevent access to guest routes
       if (isAuthenticated) {
+        // Redirect authenticated users to dashboard
+        router.navigate(['/requests-view']); // or appropriate dashboard route
         return false;
       }
-      // If the user is not authenticated, allow access to guest routes
       return true;
     })
   );

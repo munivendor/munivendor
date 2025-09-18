@@ -125,7 +125,7 @@ export class SignupComponent implements OnInit, OnDestroy {
 
   prepareGoogleSignIn(): void {
     this.authService.setSkipNextAuthState(true);
-    this.authService.setSignupInProgress(true); // Add this line
+    this.authService.setSignupInProgress(true);
   }
 
   ngOnInit(): void {

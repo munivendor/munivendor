@@ -79,10 +79,9 @@ export class ResponseNotarizationComponent implements OnInit {
 
     const startStr = startOfMonth.toISOString().split('T')[0];
     const endStr = endOfMonth.toISOString().split('T')[0];
-    console.log('startStr:', startStr, 'endStr:', endStr);
+
     this.notarizationService.GetBlockedDates(startStr, endStr).subscribe({
       next: (bookedDates: string[]) => {
-        console.log('Setting blocked dates:', bookedDates);
         this.blockedDatesSet = new Set(bookedDates);
         this.isBlockedDatesLoaded = true;
         this.cdr.detectChanges();
@@ -104,8 +103,6 @@ export class ResponseNotarizationComponent implements OnInit {
 
     this.notarizationService.GetOpenTimeSlots(formattedDate).subscribe({
       next: (slots) => {
-        console.log('slots', slots);
-
         this.availableTimeSlots = slots.map((slot: any) => {
           // If slot is a string like "09:00:00-09:30:00", split it accordingly
           let startTimeStr: string, endTimeStr: string;

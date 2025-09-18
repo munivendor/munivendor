@@ -113,7 +113,7 @@ export class FlowNavigationService {
   ): void {
     const pageId = progress?.lastCompletedPageId ?? 1;
     const route = routes[pageId];
-
+    console.log(`Navigating to route: ${route} for page ID: ${pageId}`);
     if (route) {
       this.router.navigate([route]);
     } else {

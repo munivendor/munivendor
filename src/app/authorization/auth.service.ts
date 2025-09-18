@@ -157,6 +157,14 @@ export class AuthService {
 
           return this.userService.getUser(response.userId).pipe(
             tap((user: User) => {
+              if (user.userId !== undefined) {
+                this.stateService.setUserId(Number(user.userId));
+              }
+              if (user.organizationTypeId !== undefined) {
+                this.stateService.setOrganizationTypeId(
+                  user.organizationTypeId
+                );
+              }
               if (user.organizationId !== undefined) {
                 this.stateService.setOrganizationId(user.organizationId);
               } else {
@@ -174,6 +182,9 @@ export class AuthService {
         catchError((err) => {
           console.log('User not authenticated on init');
           this.setAuthenticated(false);
+          if (err.status === 401) {
+            this.router.navigate(['/login']);
+          }
           return throwError(() => err);
         })
       );
@@ -216,7 +227,6 @@ export class AuthService {
   }
 
   login(userLogin: UserLogin): Observable<any> {
-    console.log('Attempting login with:', userLogin);
     this.isLoggingIn.next(true);
     return this.http
       .post<{ UserId: number; Token: string }>(`${this.url}login`, userLogin, {
@@ -225,6 +235,7 @@ export class AuthService {
       .pipe(
         tap((userId) => {
           if (userId) {
+            this.authState.next(true);
             this.userSubject.next(userId as any);
             this.userService.getUser(Number(userId)).subscribe(
               (user: User) => {
@@ -299,6 +310,7 @@ export class AuthService {
   }
 
   setAuthenticated(isAuthenticated: boolean, userData: any = null): void {
+    console.log(`Setting authenticated state to ${isAuthenticated}`);
     this.authState.next(isAuthenticated);
     this.userSubject.next(userData);
     this.isLoggingIn.next(false);

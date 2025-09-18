@@ -39,7 +39,7 @@ export class OrganizationDetailsComponent implements OnInit {
   organizationDetailForm!: FormGroup;
   states: State[] = [];
   userId!: number;
-  organizationId!: number | undefined;
+  organizationId!: number | null;
   organizationTypeId!: number | null;
   private destroy$ = new Subject<void>();
   framePageNumber = 2;
@@ -54,45 +54,25 @@ export class OrganizationDetailsComponent implements OnInit {
     private flowProgressService: FlowProgressService
   ) {
     this.organizationDetailForm = this.fb.group({});
+    this.userId = this.stateService.getUserId() ?? 0;
+    this.organizationTypeId = this.stateService.getOrganizationTypeId();
+    this.organizationId = this.stateService.getOrganizationId();
+
+    if (this.organizationDetailForm) {
+      this.organizationDetailForm.patchValue({
+        organizationId: this.organizationId,
+      });
+    }
   }
 
   ngOnInit(): void {
     this.initializeForm();
-    this.authService.user$.pipe(takeUntil(this.destroy$)).subscribe((user) => {
-      if (user) {
-        const userId = user;
-        if (userId) {
-          this.userId = userId;
-          this.getUserDetails(userId);
-        } else {
-          console.error('No user ID available in authentication state');
-        }
-      }
-    });
     this.organizationService
       .getStates()
       .pipe(takeUntil(this.destroy$))
       .subscribe((states) => {
         this.states = states;
       });
-  }
-
-  getUserDetails(userId: number): void {
-    this.userService.getUser(userId).subscribe(
-      (user: User) => {
-        this.organizationId = user.organizationId;
-        this.organizationTypeId = user.organizationTypeId ?? null;
-
-        if (this.organizationDetailForm) {
-          this.organizationDetailForm.patchValue({
-            organizationId: this.organizationId,
-          });
-        }
-      },
-      (error) => {
-        console.error('Error fetching user data:', error);
-      }
-    );
   }
 
   private initializeForm(): void {

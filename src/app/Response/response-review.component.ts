@@ -46,7 +46,7 @@ import { OfferorProfileService } from '../shared/service/offeror-profile.service
 })
 export class ResponseReviewComponent implements OnInit, OnDestroy {
   goToOfferorProfilePage() {
-    this.router.navigate(['/offeror-profile']);
+    this.router.navigate(['/offeror-profile-page']);
   }
 
   @Input() sourceIdParam?: string | null | undefined;
@@ -200,7 +200,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
 
     if (this.sourceIdParam) {
       this.getRequestObjDetails(Number(this.sourceIdParam));
-      this.fetchAuthorizingOfficials();
+      // this.fetchAuthorizingOfficials();
     }
 
     if (this.responseIdParam) {
@@ -276,28 +276,32 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
 
   private loadResponseRequest(responseId: number): void {
     const request$ = this.requestService.GetRequestDetailsById(responseId);
-    const authorizingOfficials$ =
-      this.offerorProfileService.GetOfferorAuthorizingOfficials(
-        Number(this.organizationId)
-      );
+    // const authorizingOfficials$ =
+    //   this.offerorProfileService.GetOfferorAuthorizingOfficials(
+    //     Number(this.organizationId)
+    //   );
 
-    forkJoin([request$, authorizingOfficials$])
+    forkJoin([
+      request$,
+      // , authorizingOfficials$
+    ])
       .pipe(takeUntil(this.destroy$))
       .subscribe(
-        ([response, authorizingOfficials]) => {
-          const authorizingOfficial = authorizingOfficials.find(
-            (official: { vendorAuthorizingOfficialId: number }) =>
-              official.vendorAuthorizingOfficialId ===
-              response.authorizingOfficialId
-          );
-          console.log('Response:', response);
-          console.log('Authorizing Officials:', authorizingOfficials);
+        ([
+          response,
+          // , authorizingOfficials
+        ]) => {
+          // const authorizingOfficial = authorizingOfficials.find(
+          //   (official: { vendorAuthorizingOfficialId: number }) =>
+          //     official.vendorAuthorizingOfficialId ===
+          //     response.authorizingOfficialId
+          // );
 
           this.offerorFinalReviewDetailsForm.patchValue({
             responseName: response.requestName,
-            authorizingOfficial: authorizingOfficial
-              ? `${authorizingOfficial.firstName} ${authorizingOfficial.lastName}`
-              : '',
+            // authorizingOfficial: authorizingOfficial
+            //   ? `${authorizingOfficial.firstName} ${authorizingOfficial.lastName}`
+            //   : '',
           });
         },
         (error: any) => {
@@ -306,30 +310,30 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
       );
   }
 
-  private fetchAuthorizingOfficials(): void {
-    this.offerorProfileService
-      .GetOfferorAuthorizingOfficials(Number(this.organizationId))
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(
-        (officials) => {
-          this.authorizingOfficialId =
-            officials?.[0].vendorAuthorizingOfficialId || null;
-          if (officials) {
-            this.offerorFinalReviewDetailsForm.patchValue({
-              authorizingOfficial:
-                officials[0].firstName + ' ' + officials[0].lastName,
-            });
-          }
-          console.log(
-            'Response form after patching:',
-            this.offerorFinalReviewDetailsForm.value
-          );
-        },
-        (error) => {
-          console.error('Error fetching authorizing officials:', error);
-        }
-      );
-  }
+  // private fetchAuthorizingOfficials(): void {
+  //   this.offerorProfileService
+  //     .GetOfferorAuthorizingOfficials(Number(this.organizationId))
+  //     .pipe(takeUntil(this.destroy$))
+  //     .subscribe(
+  //       (officials) => {
+  //         this.authorizingOfficialId =
+  //           officials?.[0].vendorAuthorizingOfficialId || null;
+  //         if (officials) {
+  //           this.offerorFinalReviewDetailsForm.patchValue({
+  //             authorizingOfficial:
+  //               officials[0].firstName + ' ' + officials[0].lastName,
+  //           });
+  //         }
+  //         console.log(
+  //           'Response form after patching:',
+  //           this.offerorFinalReviewDetailsForm.value
+  //         );
+  //       },
+  //       (error) => {
+  //         console.error('Error fetching authorizing officials:', error);
+  //       }
+  //     );
+  // }
 
   getRequestObjDetails(requestId: number) {
     const request$ = this.requestService.GetRequestDetailsById(requestId);

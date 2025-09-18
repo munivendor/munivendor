@@ -25,12 +25,7 @@
 
     <mat-step label="Proposals">
       <ng-template matStepContent>
-        <request-overview
-          #step2
-          [idParam]="idParam"
-          (formValidityChange)="onFormValidityChange($event)"
-        ></request-overview>
-        <div class="request-stepper-button-container-margin-top">
+        <div class="request-stepper-button-container">
           <button
             mat-raised-button
             matStepperPrevious
@@ -58,11 +53,53 @@
             Next
           </button> -->
         </div>
+        <request-overview
+          #step2
+          [idParam]="idParam"
+          (formValidityChange)="onFormValidityChange($event)"
+        ></request-overview>
+        <div class="request-stepper-button-container-margin-top">
+          <button
+            mat-raised-button
+            matStepperPrevious
+            color="primary"
+            style="margin-right: 8px"
+          >
+            Back
+          </button>
+          <button
+            mat-raised-button
+            matStepperNext
+            (click)="saveSections()"
+            [disabled]="!isStepValid"
+            color="primary"
+          >
+            Next
+          </button>
+        </div>
       </ng-template>
     </mat-step>
 
     <mat-step label="Documents">
       <ng-template matStepContent>
+        <div class="request-stepper-button-container">
+          <button
+            mat-raised-button
+            matStepperPrevious
+            color="primary"
+            style="margin-right: 8px"
+          >
+            Back
+          </button>
+          <button
+            mat-raised-button
+            matStepperNext
+            (click)="saveDocuments()"
+            color="primary"
+          >
+            Next
+          </button>
+        </div>
         <request-required-documents
           [idParam]="idParam"
         ></request-required-documents>
@@ -89,6 +126,24 @@
 
     <mat-step label="Review">
       <ng-template matStepContent>
+        <div class="request-stepper-button-container">
+          <button
+            mat-raised-button
+            matStepperPrevious
+            color="primary"
+            style="margin-right: 8px"
+          >
+            Back
+          </button>
+          <button
+            mat-raised-button
+            matStepperNext
+            (click)="updateRequestStatusToScheduled()"
+            color="primary"
+          >
+            Submit
+          </button>
+        </div>
         <request-review
           [paramRequestId]="requestId ?? undefined"
         ></request-review>
