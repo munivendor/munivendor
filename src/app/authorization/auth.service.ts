@@ -1,4 +1,5 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, PLATFORM_ID, Inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { SocialAuthService } from '@abacritt/angularx-social-login';
 import {
   BehaviorSubject,
@@ -24,6 +25,11 @@ import { StateService } from '../Request/services/state.service';
 
 export interface ForgotPasswordResponse {
   message?: string;
+}
+
+interface UserSession {
+  userId: number;
+  timestamp: number;
 }
 
 @Injectable({
@@ -56,15 +62,75 @@ export class AuthService {
     this.skipNextAuthStateSubject.next(value);
   }
 
+  private storageEventListener?: (event: StorageEvent) => void;
+  private isBrowser: boolean;
+
   constructor(
     private http: HttpClient,
     private router: Router,
     private socialAuthService: SocialAuthService,
     private flowNavigationService: FlowNavigationService,
     private userService: UserService,
-    private stateService: StateService
+    private stateService: StateService,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
-    this.initializeAuthListener();
+    this.isBrowser = isPlatformBrowser(this.platformId);
+    if (this.isBrowser) {
+      this.initializeAuthListener();
+      this.setupCrossTabSessionSync();
+    }
+  }
+
+  private setupCrossTabSessionSync(): void {
+    this.storageEventListener = (event: StorageEvent) => {
+      if (event.key === 'currentSession') {
+        this.handleSessionChangeFromOtherTab(event.newValue);
+      }
+    };
+
+    window.addEventListener('storage', this.storageEventListener);
+  }
+
+  private handleSessionChangeFromOtherTab(newSessionData: string | null): void {
+    if (!newSessionData) {
+      // Session cleared in another tab
+      this.forceLogoutThisTab();
+      return;
+    }
+
+    try {
+      const newSession: UserSession = JSON.parse(newSessionData);
+      const currentUser = this.userSubject.value;
+
+      if (!currentUser || currentUser !== newSession.userId) {
+        // Different user - force logout and refresh
+        this.forceLogoutThisTab();
+      }
+    } catch (error) {
+      console.error('Error parsing session data:', error);
+      this.forceLogoutThisTab();
+    }
+  }
+
+  private forceLogoutThisTab(): void {
+    this.safeResetAuthState();
+
+    // Show a message to the user
+    alert('You have been logged out because another session was started.');
+
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
+  }
+
+  private setCurrentSession(userSession: UserSession): void {
+    // Store session info in localStorage to sync across tabs
+    localStorage.setItem('currentSession', JSON.stringify(userSession));
+  }
+
+  private clearCurrentSession(): void {
+    // Clear from localStorage
+    localStorage.removeItem('currentSession');
   }
 
   public initializeApp(): Observable<any> {
@@ -168,6 +234,12 @@ export class AuthService {
                 } else {
                   console.warn('Organization ID is undefined.');
                 }
+
+                const userSession: UserSession = {
+                  userId: Number(userId),
+                  timestamp: Date.now(),
+                };
+                this.setCurrentSession(userSession);
               },
               (error) => {
                 console.error('Error fetching user data:', error);
@@ -192,6 +264,7 @@ export class AuthService {
       .post(`${this.url}logout`, {}, { withCredentials: true })
       .subscribe({
         next: async () => {
+          this.clearCurrentSession();
           try {
             if (this.userSubject.value) {
               await this.socialAuthService.signOut();
