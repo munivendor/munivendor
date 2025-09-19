@@ -479,7 +479,7 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
       (cat) => cat.categoryId === value
     );
     if (match) {
-      return match.name;
+      return this.buildBreadcrumbPath(match);
     }
 
     return typeof value === 'string' ? value : '';
@@ -791,6 +791,25 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
 
   getNodeIndent(level: number | undefined): number {
     return (level ?? 0) * 30;
+  }
+
+  private buildBreadcrumbPath(node: FlattenedCategoryNode): string {
+    const path = [node.name];
+    let currentParentId = node.parentId;
+
+    while (currentParentId) {
+      const parentNode = this.flattenedCategories.find(
+        (cat) => cat.categoryId === currentParentId
+      );
+      if (parentNode) {
+        path.unshift(parentNode.name);
+        currentParentId = parentNode.parentId;
+      } else {
+        break;
+      }
+    }
+
+    return path.join(' > ');
   }
 
   ngOnDestroy(): void {
