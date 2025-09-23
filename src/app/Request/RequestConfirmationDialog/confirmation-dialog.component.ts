@@ -88,7 +88,7 @@ export class ConfirmationDialog {
       case 'continue':
         return 'Are you sure you want to continue working on your response to this solicitation?';
       case 'redownload':
-        return 'Are you sure you want to redownload the proposal documents for this solicitation?';
+        return 'Are you sure you want to redownload the offeror responses for this solicitation?';
       default:
         return `Are you sure you want to ${this.requestObjAndUserAction.action} this solicitation?`;
     }

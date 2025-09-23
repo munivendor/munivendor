@@ -16,6 +16,8 @@ import {
   Validators,
   FormControl,
   FormsModule,
+  AbstractControl,
+  ValidationErrors,
 } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RequestService } from './services/request.service';
@@ -54,6 +56,7 @@ interface FlattenedCategoryNode {
   parentId?: string | null;
   children?: FlattenedCategoryNode[];
 }
+
 @Component({
   selector: 'request-basic',
   standalone: true,
@@ -415,7 +418,10 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
 
   private createFormGroup(data: any = null): void {
     this.basicsFormGroup = this.fb.group({
-      category: [data?.category || '', Validators.required],
+      category: [
+        data?.category || '',
+        [Validators.required, this.categoryValidator],
+      ],
       requestType: [data?.requestType || '', Validators.required],
       requestName: [data?.requestName || '', Validators.required],
       publishDate: [data?.publishDate || '', Validators.required],
@@ -429,6 +435,22 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
       ),
     });
   }
+
+  private categoryValidator = (
+    control: AbstractControl
+  ): ValidationErrors | null => {
+    if (!control.value) return null;
+
+    if (!this.flattenedCategories || this.flattenedCategories.length === 0) {
+      return null;
+    }
+
+    const exists = this.flattenedCategories.some(
+      (cat) => String(cat.categoryId) === String(control.value)
+    );
+
+    return exists ? null : { invalidCategory: true };
+  };
 
   private handleCategoryValueChanges(): void {
     const categoryControl = this.basicsFormGroup.get('category');
@@ -494,6 +516,12 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
           this.hierarchicalCategories =
             this.prepareCategoriesForTreeRendering(categories);
           this.flattenCategories();
+
+          const categoryControl = this.basicsFormGroup.get('category');
+          if (categoryControl && categoryControl.value) {
+            const currentValue = categoryControl.value;
+            categoryControl.setValue(currentValue, { emitEvent: true });
+          }
         },
         error: (err) => console.error('Error fetching categories:', err),
       });
@@ -680,10 +708,10 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
   saveRequest() {
     let request = this.createRequest();
     const requestIdFromStateService = this.stateService.getRequestId();
-
-    if (this.idParam || requestIdFromStateService) {
+    const effectiveRequestId = this.idParam ?? requestIdFromStateService;
+    if (effectiveRequestId) {
       this.requestService
-        .UpdateRequest(Number(this.idParam), request)
+        .UpdateRequest(Number(effectiveRequestId), request)
         .pipe(takeUntil(this.destroy$))
         .subscribe(
           (responseRequestId: number) => {
@@ -761,15 +789,14 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     return localTime;
   }
 
-  // Block past dates + weekends
   disableWeekendsAndPastDates = (date: Date | null): boolean => {
     if (!date) return false;
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const isFutureOrToday = date >= today; // only today or future
-    const isWeekday = date.getDay() !== 0 && date.getDay() !== 6; // block Sat/Sun
+    const isFutureOrToday = date >= today;
+    const isWeekday = date.getDay() !== 0 && date.getDay() !== 6;
 
     return isFutureOrToday && isWeekday;
   };

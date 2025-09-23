@@ -30,6 +30,14 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 import { CustomCategoryDropdownComponent } from '../../shared/CustomCategoryDropdown/custom-category-dropdown.component';
 import { StateService } from '../services/state.service';
+import { CategoryNode } from '../../shared/model/category-tree.model';
+
+// Add interface for flattened categories
+interface FlattenedCategoryNode {
+  categoryId: string;
+  name: string;
+  parentId: string | null;
+}
 
 const ACTION_PERMISSIONS: {
   [status: string]: {
@@ -79,6 +87,10 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
   hasLoadedData = false;
   private destroy$ = new Subject<void>();
   @Input() categoryControl!: FormControl<number | null>;
+
+  // Add properties for category breadcrumbs
+  hierarchicalCategories: CategoryNode[] = [];
+  flattenedCategories: FlattenedCategoryNode[] = [];
 
   canPerformAction(
     request: any,
@@ -164,6 +176,86 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     'open',
     'redownload',
   ] as const;
+
+  // Add methods for category breadcrumbs
+  displayCategoryName = (categoryId: string | number | null): string => {
+    if (categoryId == null) {
+      return '';
+    }
+
+    const searchValue = categoryId.toString();
+    const match = this.flattenedCategories.find(
+      (cat) => cat.categoryId === searchValue
+    );
+    if (match) {
+      return this.buildBreadcrumbPath(match);
+    }
+
+    return typeof categoryId === 'string' ? categoryId : '';
+  };
+
+  private buildBreadcrumbPath(node: FlattenedCategoryNode): string {
+    const path = [node.name];
+    let currentParentId = node.parentId;
+
+    while (currentParentId) {
+      const parentNode = this.flattenedCategories.find(
+        (cat) => cat.categoryId === currentParentId
+      );
+      if (parentNode) {
+        path.unshift(parentNode.name);
+        currentParentId = parentNode.parentId;
+      } else {
+        break;
+      }
+    }
+
+    return path.join(' > ');
+  }
+
+  // Add method to flatten categories
+  private flattenCategories(
+    categories: CategoryNode[],
+    parentId: string | null = null
+  ): FlattenedCategoryNode[] {
+    const flattened: FlattenedCategoryNode[] = [];
+
+    for (const category of categories) {
+      flattened.push({
+        categoryId: category.categoryId || category.id?.toString() || '',
+        name: category.name || '',
+        parentId: parentId,
+      });
+
+      if (category.children && category.children.length > 0) {
+        flattened.push(
+          ...this.flattenCategories(
+            category.children,
+            category.categoryId || category.id?.toString() || ''
+          )
+        );
+      }
+    }
+
+    return flattened;
+  }
+
+  prepareCategoriesForTreeRendering(
+    categories: CategoryNode[],
+    level: number = 0
+  ): CategoryNode[] {
+    return categories
+      .filter((cat) => !cat.deleted)
+      .map((category) => ({
+        ...category,
+        categoryId: category.id?.toString() ?? '',
+        level,
+        expandable: !!category.children?.length,
+        children: category.children?.length
+          ? this.prepareCategoriesForTreeRendering(category.children, level + 1)
+          : undefined,
+      }));
+  }
 
   getAvailableActions(request: any): string[] {
     const status = request.agencyRequestStatus?.requestStatusDesc;
@@ -284,6 +376,15 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
         ([requests, categories, requestTypes, requestStatuses]) => {
           const requestsData = requests?.requests || [];
           this.hasLoadedData = requestsData.length > 0;
+
+          // Process categories for breadcrumbs
+          if (categories && categories.length > 0) {
+            this.hierarchicalCategories =
+              this.prepareCategoriesForTreeRendering(categories);
+            this.flattenedCategories = this.flattenCategories(
+              this.hierarchicalCategories
+            );
+          }
 
           requestsData.forEach((request: any) => {
             const category = this.findCategoryById(
