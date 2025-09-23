@@ -9,19 +9,21 @@ import { Designation } from '../model/designation.model';
   providedIn: 'root',
 })
 export class UserService {
+  constructor(private http: HttpClient) {}
 
-  constructor(private http: HttpClient) { }
-  
   userApiUrl = `${environment.apiUrl}users/`;
   createUser(user: User): Observable<number> {
     const headers = { 'Content-Type': 'application/json' };
     return this.http.post<number>(`${this.userApiUrl}`, user, { headers });
   }
 
-  loginUser(username: string, password: string): Observable<{ userId: number }> {
+  loginUser(
+    username: string,
+    password: string
+  ): Observable<{ userId: number }> {
     const headers = { 'Content-Type': 'application/json' };
     const loginPayload = { username, password };
-  
+
     return this.http.post<{ userId: number }>(
       `${environment.apiUrl}login`,
       loginPayload,
@@ -31,10 +33,12 @@ export class UserService {
       }
     );
   }
-  
+
   updateUser(user: User): Observable<number> {
     const headers = { 'Content-Type': 'application/json' };
-    return this.http.put<number>(`${this.userApiUrl}${user.userId}`, user, { headers });
+    return this.http.put<number>(`${this.userApiUrl}${user.userId}`, user, {
+      headers,
+    });
   }
 
   getUser(userId: number): Observable<User> {
@@ -47,12 +51,20 @@ export class UserService {
 
   SendUserVerificationEmail(userId: number): Observable<boolean> {
     const headers = { 'Content-Type': 'application/json' };
-    return this.http.post<boolean>(`${this.userApiUrl}sendveremail/${userId}`, null, { headers });
+    return this.http.post<boolean>(
+      `${this.userApiUrl}sendveremail/${userId}`,
+      null,
+      { headers }
+    );
   }
 
   ValidateEmailToken(token: string, userId: number): Observable<boolean> {
     const headers = { 'Content-Type': 'application/json' };
-    return this.http.post<boolean>(`${this.userApiUrl}validate/${token}/${userId}`, null, { headers });
+    return this.http.post<boolean>(
+      `${this.userApiUrl}validate/${token}/${userId}`,
+      null,
+      { headers }
+    );
   }
 
   designeeApiUrl = `${environment.apiUrl}designations`;

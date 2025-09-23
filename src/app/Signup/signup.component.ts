@@ -321,11 +321,16 @@ export class SignupComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         filter(([_, user]) => !!user && this.signupFormGoogle.valid),
-        take(1), // only handle first Google signup event
+        take(1),
         switchMap(([_, user]) => {
           this.userCreationInProgress = true;
-          const selectedOrganizationTypeId =
+          let selectedOrganizationTypeId =
             this.signupFormGoogle.get('organizationTypeId')?.value;
+
+          const isGovEmail = user.email && user.email.endsWith('.gov');
+          if (isGovEmail) {
+            selectedOrganizationTypeId = 1;
+          }
 
           const organizationData: Organization = {
             organizationTypeId: selectedOrganizationTypeId,
@@ -346,9 +351,10 @@ export class SignupComponent implements OnInit, OnDestroy {
                   identityTypeId: 2,
                   organizationId: orgResponse.organizationId,
                 };
-
+                this.stateService.setOrganizationTypeId(
+                  selectedOrganizationTypeId
+                );
                 this.stateService.setOrganizationId(orgResponse.organizationId);
-
                 return this.createOrLoginGoogleUser(userData);
               })
             );

@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { DecisionMaker } from '../model/decisionmaker.model';
@@ -193,10 +193,13 @@ export class RequestService {
   GetAgencySpecificDocumentContent(
     organizationDocumentId: number,
     organizationId: number
-  ): Observable<Blob> {
+  ): Observable<HttpResponse<Blob>> {
     return this.http.get(
       `${this.url}OrganizationDocuments/DocumentContent/${organizationDocumentId}/${organizationId}`,
-      { responseType: 'blob' }
+      {
+        observe: 'response',
+        responseType: 'blob',
+      }
     );
   }
 

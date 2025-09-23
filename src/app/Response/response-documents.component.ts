@@ -15,7 +15,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterModule } from '@angular/router';
 import { RequestService } from '../Request/services/request.service';
-import { takeUntil, Subject, forkJoin, Observable } from 'rxjs';
+import { takeUntil, Subject } from 'rxjs';
 import { FileUploadDialogComponent } from '../file-upload-dialog/file-upload-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
 import {
@@ -29,7 +29,6 @@ import { DocumentService } from '../shared/service/document.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TooltipDirective } from '../shared/directive/tooltip.directive';
 import { Router } from '@angular/router';
-import { request } from 'http';
 // import { DocumentInstance } from '../Request/model/documentinstance.model';
 // import { BidProposalFormDialogComponent } from '../BidProposalForm/bid-proposal-form.component';
 @Component({
@@ -229,6 +228,9 @@ export class ResponseDocumentsComponent implements OnInit {
                 verticalPosition: 'top',
               });
             }
+
+            // Clear the input value to allow same file selection again
+            input.value = '';
           },
           error: (error) => {
             console.error('Upload failed:', error);
@@ -236,8 +238,14 @@ export class ResponseDocumentsComponent implements OnInit {
               duration: 5000,
               verticalPosition: 'top',
             });
+
+            // Clear the input value even on error to allow retry with same file
+            input.value = '';
           },
         });
+    } else {
+      // Clear the input value if no file is selected or currentRow is null
+      input.value = '';
     }
   }
 
@@ -265,7 +273,8 @@ export class ResponseDocumentsComponent implements OnInit {
     derived: boolean;
     organizationId: number;
     organizationDocumentId?: number;
-    agencyOrganizationId?: number; //
+    agencyOrganizationId?: number;
+    sourceRequestDocumentId: number;
   }): void {
     const requestId = this.responseIdParam
       ? Number(this.responseIdParam)
@@ -288,37 +297,114 @@ export class ResponseDocumentsComponent implements OnInit {
     const isIncompleteOrNull =
       !documentInstanceStatus || documentInstanceStatus === 'Incomplete';
 
-    let download$: Observable<Blob>;
-
     if (isIncompleteOrNull) {
       if (derived) {
         if (!organizationDocumentId || !agencyOrganizationId) {
           console.error('organizationDocumentId is required but missing.');
           return;
         }
-        download$ = this.requestService.GetAgencySpecificDocumentContent(
-          organizationDocumentId,
-          agencyOrganizationId
-        );
+        // Handle regular blob response (no headers) - force download
+        this.requestService
+          .GetAgencySpecificDocumentContent(
+            organizationDocumentId,
+            agencyOrganizationId
+          )
+          .subscribe({
+            next: (response) => {
+              const blob = response.body;
+              if (!blob) return;
+              // Extract filename from Content-Disposition
+              const contentDisposition = response.headers.get(
+                'Content-Disposition'
+              );
+              let fileName = 'document';
+              if (contentDisposition) {
+                const match = contentDisposition.match(/filename="?([^"]+)"?/);
+                if (match && match[1]) {
+                  fileName = match[1];
+                }
+              }
+              // Force download with filename from headers
+              const a = document.createElement('a');
+              const blobUrl = URL.createObjectURL(blob);
+              a.href = blobUrl;
+              a.download = fileName;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(blobUrl);
+            },
+            error: (err) => {
+              console.error('Failed to fetch document:', err);
+            },
+          });
       } else {
-        download$ = this.documentService.GetStateDocumentContent(documentId);
+        // Handle HttpResponse<Blob> with headers - force download with correct filename
+        this.documentService.GetStateDocumentContent(documentId).subscribe({
+          next: (response) => {
+            const blob = response.body;
+            if (!blob) return;
+
+            // Extract filename from Content-Disposition
+            const contentDisposition = response.headers.get(
+              'Content-Disposition'
+            );
+            let fileName = 'download';
+            if (contentDisposition) {
+              const match = contentDisposition.match(/filename="?([^"]+)"?/);
+              if (match && match[1]) {
+                fileName = match[1];
+              }
+            }
+
+            // Force download with correct filename
+            const a = document.createElement('a');
+            const blobUrl = URL.createObjectURL(blob);
+            a.href = blobUrl;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(blobUrl);
+          },
+          error: (err) => {
+            console.error('Failed to fetch document:', err);
+          },
+        });
       }
     } else {
-      download$ = this.documentService.GetDocumentInstance(
-        Number(requestId),
-        requestDocumentId
-      );
-    }
+      this.documentService.GetDocumentInstance(requestDocumentId).subscribe({
+        next: (response) => {
+          const blob = response.body;
+          if (!blob) return;
 
-    download$.subscribe({
-      next: (blob) => {
-        const blobUrl = URL.createObjectURL(blob);
-        window.open(blobUrl, '_blank');
-      },
-      error: (err) => {
-        console.error('Failed to fetch document:', err);
-      },
-    });
+          // Extract filename from Content-Disposition
+          const contentDisposition = response.headers.get(
+            'Content-Disposition'
+          );
+          let fileName = 'document';
+          if (contentDisposition) {
+            const match = contentDisposition.match(/filename="?([^"]+)"?/);
+            if (match && match[1]) {
+              fileName = match[1];
+            }
+          }
+
+          // Force download with filename from headers
+          const a = document.createElement('a');
+          const blobUrl = URL.createObjectURL(blob);
+          a.href = blobUrl;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(blobUrl);
+        },
+        error: (err) => {
+          console.error('Failed to fetch document:', err);
+        },
+      });
+    }
   }
 
   openFileUploadDialog(responseId: number): void {

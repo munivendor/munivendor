@@ -451,21 +451,39 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
       );
   }
 
-  // open document in new tab for preview instead of automatic download
+  // force download of agency specific document
   onDownloadAgencySpecificDocument(row: FormGroup): void {
     const organizationDocumentId = row.get('organizationDocumentId')?.value;
-    const organizationId = this.organizationId;
-    if (!organizationDocumentId || !organizationId) {
-      console.error('Missing Org ID');
-      return;
-    }
 
     this.requestService
-      .GetAgencySpecificDocumentContent(organizationDocumentId, organizationId)
+      .GetAgencySpecificDocumentContent(
+        organizationDocumentId,
+        Number(this.organizationId)
+      )
       .subscribe({
-        next: (blob) => {
+        next: (response) => {
+          const blob = response.body;
+          if (!blob) return;
+          // Extract filename from Content-Disposition
+          const contentDisposition = response.headers.get(
+            'Content-Disposition'
+          );
+          let fileName = 'document';
+          if (contentDisposition) {
+            const match = contentDisposition.match(/filename="?([^"]+)"?/);
+            if (match && match[1]) {
+              fileName = match[1];
+            }
+          }
+          // Force download with filename from headers
+          const a = document.createElement('a');
           const blobUrl = URL.createObjectURL(blob);
-          window.open(blobUrl, '_blank');
+          a.href = blobUrl;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(blobUrl);
         },
         error: (err) => {
           console.error('Failed to fetch document:', err);
@@ -481,9 +499,29 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
     }
 
     this.documentService.GetStateDocumentContent(documentId).subscribe({
-      next: (blob) => {
+      next: (response) => {
+        const blob = response.body;
+        if (!blob) return;
+
+        // Extract filename from Content-Disposition
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let fileName = 'download';
+        if (contentDisposition) {
+          const match = contentDisposition.match(/filename="?([^"]+)"?/);
+          if (match && match[1]) {
+            fileName = match[1];
+          }
+        }
+
+        // Force download with correct filename
+        const a = document.createElement('a');
         const blobUrl = URL.createObjectURL(blob);
-        window.open(blobUrl, '_blank');
+        a.href = blobUrl;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
       },
       error: (err: any) => {
         console.error('Failed to fetch document:', err);

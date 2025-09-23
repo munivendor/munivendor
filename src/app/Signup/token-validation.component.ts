@@ -2,11 +2,11 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UserService } from '../shared/service/user.service';
 import { Subject, takeUntil } from 'rxjs';
-import { AuthService } from '../authorization/auth.service';
+
 @Component({
   selector: 'token-validation',
   templateUrl: './token-validation.component.html',
-  styleUrls: []
+  styleUrls: [],
 })
 export class TokenValidationComponent implements OnInit, OnDestroy {
   token: string | null = null;
@@ -17,14 +17,13 @@ export class TokenValidationComponent implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private userService: UserService,
-    private router: Router,
-    private authService: AuthService
-  ) { }
+    private router: Router
+  ) {}
 
   ngOnInit() {
     this.route.queryParams
       .pipe(takeUntil(this.destroy$))
-      .subscribe(params => {
+      .subscribe((params) => {
         this.token = params['token'];
         this.userId = params['userId'];
         if (this.token) {
@@ -40,18 +39,21 @@ export class TokenValidationComponent implements OnInit, OnDestroy {
   }
 
   validateToken(token: string, userId: number): void {
-    this.userService.ValidateEmailToken(token, userId)
+    this.userService
+      .ValidateEmailToken(token, userId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: response => {
+        next: (response) => {
           if (response === true) {
-            this.verificationStatus = 'Verification successful! Redirecting to login...';
+            this.verificationStatus =
+              'Verification successful! Redirecting to login...';
             setTimeout(() => this.router.navigate(['/login']), 5000);
           } else {
-            this.verificationStatus = 'Verification failed. Invalid or expired token. Redirecting...';
+            this.verificationStatus =
+              'Verification failed. Invalid or expired token. Redirecting...';
             setTimeout(() => this.router.navigate(['/signup']), 5000);
           }
-        }
+        },
       });
   }
 
