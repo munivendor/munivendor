@@ -18,6 +18,13 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { CategoryNode } from '../shared/model/category-tree.model';
 import { CategoryHierarchyService } from './services/category-hierarchy.service';
 
+// Add interface for flattened categories
+interface FlattenedCategoryNode {
+  categoryId: string;
+  name: string;
+  parentId: string | null;
+}
+
 @Component({
   selector: 'request-review',
   standalone: true,
@@ -41,6 +48,7 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
   requestFinalReviewDetails: any = {};
   docs: any;
   hierarchicalCategories: CategoryNode[] = [];
+  flattenedCategories: FlattenedCategoryNode[] = []; // Add this property
   organizationId: number | null = this.stateService.getOrganizationId();
 
   constructor(
@@ -60,9 +68,76 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
         next: (categories) => {
           this.hierarchicalCategories =
             this.prepareCategoriesForTreeRendering(categories);
+          // Create flattened categories after hierarchical categories are prepared
+          this.flattenedCategories = this.flattenCategories(
+            this.hierarchicalCategories
+          );
         },
         error: (err) => console.error('Error fetching categories:', err),
       });
+  }
+
+  // Add method to flatten hierarchical categories
+  private flattenCategories(
+    categories: CategoryNode[],
+    parentId: string | null = null
+  ): FlattenedCategoryNode[] {
+    const flattened: FlattenedCategoryNode[] = [];
+
+    for (const category of categories) {
+      flattened.push({
+        categoryId: category.categoryId || category.id?.toString() || '',
+        name: category.name || '',
+        parentId: parentId,
+      });
+
+      if (category.children && category.children.length > 0) {
+        flattened.push(
+          ...this.flattenCategories(
+            category.children,
+            category.categoryId || category.id?.toString() || ''
+          )
+        );
+      }
+    }
+
+    return flattened;
+  }
+
+  // Add your display category name methods
+  displayCategoryName = (value: string | number | null): string => {
+    if (value == null) {
+      return '';
+    }
+
+    const searchValue = value.toString();
+    const match = this.flattenedCategories.find(
+      (cat) => cat.categoryId === searchValue
+    );
+    if (match) {
+      return this.buildBreadcrumbPath(match);
+    }
+
+    return typeof value === 'string' ? value : '';
+  };
+
+  private buildBreadcrumbPath(node: FlattenedCategoryNode): string {
+    const path = [node.name];
+    let currentParentId = node.parentId;
+
+    while (currentParentId) {
+      const parentNode = this.flattenedCategories.find(
+        (cat) => cat.categoryId === currentParentId
+      );
+      if (parentNode) {
+        path.unshift(parentNode.name);
+        currentParentId = parentNode.parentId;
+      } else {
+        break;
+      }
+    }
+
+    return path.join(' > ');
   }
 
   ngOnInit() {
@@ -166,7 +241,8 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
 
           this.requestFinalReviewDetailsForm.patchValue({
             requestName: request.requestName,
-            category: category?.name || '',
+            // Use displayCategoryName method instead of direct category name
+            category: this.displayCategoryName(request.categoryId),
             requestType: requestType?.requestTypeDesc || '',
             publishDate: publishDate,
             publishTime: publishTime,
@@ -245,7 +321,7 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
     };
     return {
       date: new Intl.DateTimeFormat('en-US', dateOptions).format(utcDate),
-      time: utcDate.toLocaleTimeString(undefined, timeOptions), // Convert to local time
+      time: utcDate.toLocaleTimeString(undefined, timeOptions),
     };
   }
 

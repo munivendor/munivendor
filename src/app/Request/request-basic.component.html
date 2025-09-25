@@ -62,6 +62,13 @@
           >
             Category is required.
           </mat-error>
+          <mat-error
+            *ngIf="
+              basicsFormGroup?.get('category')?.hasError('invalidCategory')
+            "
+          >
+            Please select a valid category from the list.
+          </mat-error>
         </mat-form-field>
       </div>
 

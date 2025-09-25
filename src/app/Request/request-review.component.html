@@ -8,10 +8,8 @@
       <mat-form-field appearance="fill" class="input-width">
         <input
           matInput
-          formControlName="category"
+          [value]="displayCategoryName(requestFinalReviewDetails.categoryId)"
           readonly
-          placeholder="Chosen Category"
-          value="{{ requestFinalReviewDetails.category?.name }}"
         />
       </mat-form-field>
     </div>

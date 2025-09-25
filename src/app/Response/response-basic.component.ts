@@ -276,12 +276,12 @@ export class ResponseBasicComponent implements OnInit {
       authorizingOfficialId: this.authorizingOfficialId,
       organizationId: this.organizationId,
     };
-
-    if (this.responseIdFromStateService || this.responseIdParam) {
-      const requestId =
-        this.responseIdFromStateService || Number(this.responseIdParam);
+    const responseIdFromStateService = this.stateService.getRequestId();
+    const effectiveResponseId =
+      this.responseIdParam ?? responseIdFromStateService;
+    if (effectiveResponseId) {
       this.requestService
-        .UpdateRequest(Number(requestId), request)
+        .UpdateRequest(Number(effectiveResponseId), request)
         .pipe(takeUntil(this.destroy$))
         .subscribe(
           (responseRequestId: number) => {
@@ -293,14 +293,13 @@ export class ResponseBasicComponent implements OnInit {
             console.error('Error updating Request:', error);
           }
         );
-    } else if (!this.responseIdFromStateService || !this.responseIdParam) {
+    } else if (!responseIdFromStateService || !this.responseIdParam) {
       this.requestService.CreateRequest(request).subscribe(
         (response) => {
           console.log('Response saved successfully:', response);
+          this.stateService.setRequestId(response);
           this.requestService.UpdateRequestStatus(response, 8).subscribe(
-            (statusResponse) => {
-              this.stateService.setRequestId(response);
-            },
+            (statusResponse) => {},
             (error) => {
               console.error('Error updating request status:', error);
             }

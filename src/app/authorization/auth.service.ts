@@ -64,6 +64,14 @@ export class AuthService {
 
   private storageEventListener?: (event: StorageEvent) => void;
   private isBrowser: boolean;
+  private readonly allowGuestUrls = new Set([
+    '/',
+    '/login',
+    '/signup',
+    '/forgot-password',
+    '/email-verification',
+    '/validateuser',
+  ]);
 
   constructor(
     private http: HttpClient,
@@ -134,6 +142,12 @@ export class AuthService {
   }
 
   public initializeApp(): Observable<any> {
+    // If already initialized, return early
+    if (this.authState.value && this.userSubject.value) {
+      this.appInitialized.next(true);
+      return of(null);
+    }
+
     return this.checkAuthCookieOnInit().pipe(
       tap((result) => {
         this.appInitialized.next(true);
@@ -167,10 +181,6 @@ export class AuthService {
               }
               if (user.organizationId !== undefined) {
                 this.stateService.setOrganizationId(user.organizationId);
-              } else {
-                console.warn(
-                  'Organization ID is undefined during restoration.'
-                );
               }
             }),
             catchError((userError) => {
@@ -180,9 +190,11 @@ export class AuthService {
           );
         }),
         catchError((err) => {
-          console.log('User not authenticated on init');
           this.setAuthenticated(false);
-          if (err.status === 401) {
+          if (
+            err.status === 401 &&
+            !this.allowGuestUrls.has(window.location.pathname)
+          ) {
             this.router.navigate(['/login']);
           }
           return throwError(() => err);
@@ -242,8 +254,14 @@ export class AuthService {
                 console.log('User data fetched successfully:', user);
                 if (user.organizationId !== undefined) {
                   this.stateService.setOrganizationId(user.organizationId);
-                } else {
-                  console.warn('Organization ID is undefined.');
+                }
+                if (user.organizationTypeId !== undefined) {
+                  this.stateService.setOrganizationTypeId(
+                    user.organizationTypeId
+                  );
+                }
+                if (user.userId !== undefined) {
+                  this.stateService.setUserId(user.userId);
                 }
 
                 const userSession: UserSession = {
