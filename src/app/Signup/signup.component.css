@@ -11,7 +11,7 @@
 }
 
 .signup-card {
-  max-width: 695px;
+  max-width: 430px;
 }
 
 mat-card-header {
@@ -58,4 +58,10 @@ mat-card-actions > * {
   right: 0;
   bottom: 0;
   cursor: not-allowed;
+}
+
+.google-btn-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }

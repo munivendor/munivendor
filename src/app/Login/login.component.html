@@ -7,10 +7,12 @@
       <mat-card-content>
         <div #googleBtnContainer class="google-btn-container">
           <asl-google-signin-button
+            *ngIf="buttonWidth"
             type="standard"
             size="medium"
             text="continue_with"
             theme="filled_blue"
+            [width]="buttonWidth"
           ></asl-google-signin-button>
         </div>
         <div class="separator">
