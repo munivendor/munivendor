@@ -10,7 +10,7 @@ export class LoggingService {
   constructor() {
     this.appInsights = new ApplicationInsights({
       config: {
-        instrumentationKey: environment.appInsights.instrumentationKey,
+        connectionString: environment.appInsights.connectionString,
         enableAutoRouteTracking: true,
         enableUnhandledPromiseRejectionTracking: true
       }
@@ -26,11 +26,48 @@ export class LoggingService {
     this.appInsights.trackEvent({ name }, properties);
   }
 
-  logException(error: Error, severityLevel = 3) {
-    this.appInsights.trackException({ exception: error, severityLevel });
+  logException(error: Error, severityLevel = 3, additionalProps?: any) {
+    this.appInsights.trackException({
+      exception: error, severityLevel, properties:
+      {
+        userId: additionalProps?.userId,
+        methodName: additionalProps.methodName,
+        className: additionalProps.className,
+        operation: additionalProps.operation
+      }
+    });
+
   }
 
   logTrace(message: string) {
     this.appInsights.trackTrace({ message });
   }
+
+  /**
+   * Set user context for tracking
+   */
+  setUserContext(userId: string, accountId?: string): void {
+    this.appInsights.setAuthenticatedUserContext(userId, accountId, true);
+  }
+
+  /**
+   * Clear user context
+   */
+  clearUserContext(): void {
+    this.appInsights.clearAuthenticatedUserContext();
+  }
+
+  /**
+   * Get additional properties for logging
+   
+  private getAdditionalProperties(): { [key: string]: any } {
+    return {
+      timestamp: new Date().toISOString(),
+      url: window.location.href,
+      userAgent: navigator.userAgent,
+      platform: navigator.platform,
+      environment: environment.,
+      version: environment.version
+    };
+  }*/
 }

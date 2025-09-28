@@ -3,7 +3,7 @@ export const environment = {
   apiUrl: 'https://app.munivendor.com/api/',
   disableAuthGuard: false,
   appInsights: {
-    connectionString: "InstrumentationKey=464424ad-e204-461b-bcdb-a0a3c3a276ac;IngestionEndpoint=https://westus2-2.in.applicationinsights.azure.com/;LiveEndpoint=https://westus2.livediagnostics.monitor.azure.com/;ApplicationId=80c3d714-ef09-4db3-85e2-80545c4b1197",
+    connectionString: "InstrumentationKey=InstrumentationKey=f41c2a0f-1754-426e-8e26-26e0cb7a361d;IngestionEndpoint=https://westus2-2.in.applicationinsights.azure.com/;LiveEndpoint=https://westus2.livediagnostics.monitor.azure.com/;ApplicationId=75225461-721b-459d-984b-019f02f13b19",
     
   }
 };

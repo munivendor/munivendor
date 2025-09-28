@@ -23,6 +23,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { AuthService } from '../authorization/auth.service';
 import { UserLogin } from '../shared/model/user-login.model';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { LoggingService } from '../exceptionhandling/logging.service';
 
 @Component({
   selector: 'login',
@@ -42,6 +43,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 })
 export class LoginComponent implements OnInit {
   private _snackBar = inject(MatSnackBar);
+  private _logger = inject(LoggingService);
   loginForm!: FormGroup;
 
   @ViewChild('googleBtnContainer') googleBtnContainer!: ElementRef;
@@ -51,7 +53,7 @@ export class LoginComponent implements OnInit {
     private fb: FormBuilder,
     public dialog: MatDialog,
     private authService: AuthService
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.loginForm = this.fb.group({
@@ -89,6 +91,15 @@ export class LoginComponent implements OnInit {
         this.authService.completeEmailLogin(response, email);
       },
       error: (error) => {
+        const err = new Error(error.message);
+        err.name = 'Login failed';
+        this._logger.logException(err, 3, {
+          userId: email,
+          methodName: 'login',
+          className: 'AuthService',
+          operation: 'user_authentication'
+        }
+        );
         this._snackBar.open(
           'Login failed: Invalid email, password, or unauthorized email.',
           'Close',
