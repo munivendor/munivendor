@@ -166,6 +166,15 @@
         <td mat-cell *matCellDef="let row">{{ row.requestName }}</td>
       </ng-container>
 
+      <ng-container matColumnDef="agencyOrganizationName">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>
+          Agency Organization Name
+        </th>
+        <td mat-cell *matCellDef="let row">
+          {{ row.agencyOrganizationName ?? "Example Name" }}
+        </td>
+      </ng-container>
+
       <ng-container matColumnDef="requestId">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>
           Solicitation ID
@@ -188,9 +197,9 @@
       </ng-container>
 
       <ng-container matColumnDef="publishDate">
-        <th mat-header-cell *matHeaderCellDef>Publish Date</th>
+        <th mat-header-cell *matHeaderCellDef>Publish Date & Time</th>
         <td mat-cell *matCellDef="let row">
-          {{ row.publishDate | date : "MM/dd/yyyy" }}
+          {{ row.publishDate | date : "MM/dd/yyyy, h:mm a" }}
         </td>
       </ng-container>
 
@@ -253,7 +262,7 @@
     </table>
 
     <mat-paginator
-      [length]="100"
+      [length]="dataSource.data.length"
       [pageSize]="10"
       [pageSizeOptions]="[5, 10, 25, 100]"
     ></mat-paginator>

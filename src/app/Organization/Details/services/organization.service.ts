@@ -9,11 +9,10 @@ import { State } from '../../../shared/model/state.model';
   providedIn: 'root',
 })
 export class OrganizationService {
-
   url = `${environment.apiUrl}`;
   organizationUrl = `${environment.apiUrl}organizations`;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   saveOrganization(organization: Organization): Observable<any> {
     const url = `${this.organizationUrl}`;
@@ -26,7 +25,9 @@ export class OrganizationService {
   }
 
   getOrganization(organizationId: number): Observable<Organization> {
-    return this.http.get<Organization>(`${this.organizationUrl}${organizationId}`);
+    return this.http.get<Organization>(
+      `${this.organizationUrl}/${organizationId}`
+    );
   }
 
   getOrganizations(): Observable<Organization[]> {

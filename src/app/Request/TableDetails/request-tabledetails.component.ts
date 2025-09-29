@@ -31,8 +31,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { CustomCategoryDropdownComponent } from '../../shared/CustomCategoryDropdown/custom-category-dropdown.component';
 import { StateService } from '../services/state.service';
 import { CategoryNode } from '../../shared/model/category-tree.model';
+import { ChangeDetectorRef } from '@angular/core';
 
-// Add interface for flattened categories
 interface FlattenedCategoryNode {
   categoryId: string;
   name: string;
@@ -88,7 +88,6 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   @Input() categoryControl!: FormControl<number | null>;
 
-  // Add properties for category breadcrumbs
   hierarchicalCategories: CategoryNode[] = [];
   flattenedCategories: FlattenedCategoryNode[] = [];
 
@@ -150,7 +149,8 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     private requestService: RequestService,
     private categoryHierarchyService: CategoryHierarchyService,
     private fb: FormBuilder,
-    private stateService: StateService
+    private stateService: StateService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   readonly requestTypeMap = {
@@ -177,7 +177,6 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     'redownload',
   ] as const;
 
-  // Add methods for category breadcrumbs
   displayCategoryName = (categoryId: string | number | null): string => {
     if (categoryId == null) {
       return '';
@@ -377,7 +376,6 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
           const requestsData = requests?.requests || [];
           this.hasLoadedData = requestsData.length > 0;
 
-          // Process categories for breadcrumbs
           if (categories && categories.length > 0) {
             this.hierarchicalCategories =
               this.prepareCategoriesForTreeRendering(categories);
@@ -404,6 +402,10 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
               (r: any) => r.offerorRequestStatusId === 9
             ).length;
 
+            request.publishDate = request.publishDate
+              ? new Date(request.publishDate + 'Z')
+              : null;
+
             request.closeDate = request.closeDate
               ? new Date(request.closeDate + 'Z')
               : null;
@@ -418,8 +420,17 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
           });
 
           this.dataSource = new MatTableDataSource(combinedData);
-          this.dataSource.paginator = this.paginator;
-          this.dataSource.sort = this.sort;
+          this.cdr.detectChanges();
+
+          setTimeout(() => {
+            if (this.paginator) {
+              this.dataSource.paginator = this.paginator;
+              this.paginator.firstPage();
+            }
+            if (this.sort) {
+              this.dataSource.sort = this.sort;
+            }
+          }, 0);
         },
         (error) => {
           console.error('Unexpected error in forkJoin:', error);

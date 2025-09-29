@@ -23,8 +23,8 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CustomCategoryDropdownComponent } from '../../shared/CustomCategoryDropdown/custom-category-dropdown.component';
 import { StateService } from '../services/state.service';
 import { CategoryNode } from '../../shared/model/category-tree.model';
+import { ChangeDetectorRef } from '@angular/core';
 
-// Add interface for flattened categories
 interface FlattenedCategoryNode {
   categoryId: string;
   name: string;
@@ -105,7 +105,6 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
     return path.join(' > ');
   }
 
-  // Add method to flatten categories
   private flattenCategories(
     categories: CategoryNode[],
     parentId: string | null = null
@@ -235,6 +234,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
 
   displayedColumns: string[] = [
     'requestName',
+    'agencyOrganizationName',
     'requestId',
     'requestType',
     'category',
@@ -258,7 +258,8 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
     private categoryHierarchyService: CategoryHierarchyService,
     private fb: FormBuilder,
     public dialog: MatDialog,
-    private stateService: StateService
+    private stateService: StateService,
+    private cdr: ChangeDetectorRef
   ) {
     this.organizationId = this.stateService.getOrganizationId();
   }
@@ -366,7 +367,6 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
     try {
       const organizationId = await this.stateService.getOrganizationId();
       if (!organizationId) {
-        console.error('Organization ID not found');
         this.dataSource = new MatTableDataSource<any>([]);
         this.hasLoadedData = false;
         return;
@@ -418,6 +418,10 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
                   rs.requestStatusId === request.offerorRequestStatusId
               );
 
+              request.publishDate = request.publishDate
+                ? new Date(request.publishDate + 'Z')
+                : null;
+
               request.closeDate = request.closeDate
                 ? new Date(request.closeDate + 'Z')
                 : null;
@@ -432,8 +436,18 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
             });
 
             this.dataSource = new MatTableDataSource(combinedData);
-            this.dataSource.paginator = this.paginator;
-            this.dataSource.sort = this.sort;
+
+            this.cdr.detectChanges();
+
+            setTimeout(() => {
+              if (this.paginator) {
+                this.dataSource.paginator = this.paginator;
+                this.paginator.firstPage();
+              }
+              if (this.sort) {
+                this.dataSource.sort = this.sort;
+              }
+            }, 0);
           },
           (error) => {
             console.error('Error loading request data:', error);
