@@ -1,0 +1,33 @@
+@media print {
+  /* Hide the Material sidenav */
+  mat-drawer-container .sidenav,
+  mat-drawer,
+  .sidenav {
+    display: none !important;
+  }
+
+  /* Make the main content take full width */
+  mat-drawer-container {
+    display: block !important;
+  }
+
+  .main-content {
+    margin: 0 !important;
+    width: 100% !important;
+    margin-left: 0 !important;
+  }
+
+  /* Hide any elements you don't want printed */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Clean up print appearance */
+  body {
+    background: white !important;
+  }
+
+  * {
+    box-shadow: none !important;
+  }
+}

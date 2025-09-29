@@ -4,6 +4,9 @@
       Download Solicitation
     </button>
   </div> -->
+  <button mat-raised-button color="primary" (click)="downloadPDFv2()">
+    Download as PDF
+  </button>
   <div class="content">
     <div *ngFor="let section of requestSections">
       <h2>{{ section.requestSectionTitle }}</h2>
