@@ -203,10 +203,15 @@ export class RequestService {
     );
   }
 
-  GetOfferorDocumentContent(requestDocumentId: number): Observable<Blob> {
+  GetOfferorDocumentContent(
+    requestDocumentId: number
+  ): Observable<HttpResponse<Blob>> {
     return this.http.get(
       `${this.url}RequestDocuments/DocumentContent/Response/${requestDocumentId}`,
-      { responseType: 'blob' }
+      {
+        observe: 'response',
+        responseType: 'blob',
+      }
     );
   }
 

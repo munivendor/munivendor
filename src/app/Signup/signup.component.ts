@@ -433,7 +433,9 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
     this.userService
       .createUser(user)
       .pipe(
-        tap((userId: number) => console.log(`User created with ID: ${userId}`)),
+        tap((userId: number) => {
+          this.stateService.setUserId(userId);
+        }),
         switchMap((userId: number) =>
           this.userService.SendUserVerificationEmail(userId).pipe(
             tap(() => {

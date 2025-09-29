@@ -19,7 +19,7 @@
           <p>Solicitation Category</p>
           <mat-form-field appearance="fill" class="input-width">
             <mat-label>Solicitation Category</mat-label>
-            <input matInput formControlName="requestCategory" />
+            <input matInput formControlName="requestCategory" readonly />
           </mat-form-field>
         </div>
 
@@ -91,7 +91,7 @@
       </div>
     </div>
 
-    <!-- <div class="field-container">
+    <div class="field-container">
       <div class="inline-field">
         <div style="display: flex; align-items: center; gap: 4px">
           <span>Authorizing official for this offer.</span>
@@ -100,8 +100,8 @@
             style="font-size: medium; color: #0b74fd; cursor: pointer"
             [appTooltip]="{
               header: 'Required',
-              body: 'Please designate an authorizing official for this offer.',
-              actionLabel: 'Vendor Profile Page',
+              body: 'Please designate an authorizing official for this offer. An Authorizing Official is a person authorized from your organization to submit offers in response to government agency solicitations.',
+              actionLabel: 'Offeror Profile Page',
               width: '320px',
               onAction: goToOfferorProfilePage,
               transformStyle: 'translate(-50%, -102%)'
@@ -112,7 +112,7 @@
         </div>
         <mat-form-field appearance="fill" class="input-width">
           <mat-label>Authorizing Official</mat-label>
-          <input matInput formControlName="authorizingOfficial" />
+          <input matInput readonly formControlName="authorizingOfficial" />
           <mat-error
             *ngIf="
               responseForm.get('authorizingOfficial')?.hasError('required')
@@ -123,6 +123,6 @@
         </mat-form-field>
       </div>
       <div class="inline-field"></div>
-    </div> -->
+    </div>
   </form>
 </div>

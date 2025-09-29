@@ -1,13 +1,13 @@
 .container {
-    display: grid;
-    place-items: center; 
-    text-align: center;
-    padding: 20px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 20px;
+  min-height: 100vh;
 }
 
 .container h2 {
-    max-width: 600px;
-    line-height: 1.5; 
-    word-wrap: break-word; 
-    margin: 0 auto; 
+  max-width: 600px;
+  word-wrap: break-word;
+  margin: 0 auto;
 }
