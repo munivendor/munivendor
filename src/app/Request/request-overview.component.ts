@@ -246,7 +246,25 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
     });
 
     if (this.proposalsOverviewFormGroup.valid && this.requestId) {
-      this.proposalsOverviewFormGroup.value.proposalSections.forEach(
+      // Filter sections that have content before making API calls
+      const sectionsWithContent =
+        this.proposalsOverviewFormGroup.value.proposalSections.filter(
+          (section: {
+            requestSectionId: any;
+            requestSectionTitle: any;
+            requestSectionContent: any;
+          }) => {
+            // Clean the content by removing HTML tags and trim whitespace
+            const cleanContent = section.requestSectionContent
+              ?.replace(/<[^>]*>/g, '')
+              .trim();
+            // Only include sections that have actual content
+            return cleanContent && cleanContent.length > 0;
+          }
+        );
+
+      // Process only sections with content
+      sectionsWithContent.forEach(
         (section: {
           requestSectionId: any;
           requestSectionTitle: any;

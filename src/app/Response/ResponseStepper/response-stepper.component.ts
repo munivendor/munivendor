@@ -16,6 +16,7 @@ import { TooltipDirective } from '../../shared/directive/tooltip.directive';
 import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 // import { ResponseNotarizationComponent } from '../response-notarization.component';
+import { StepperSelectionEvent } from '@angular/cdk/stepper';
 
 @Component({
   selector: 'response-stepper',
@@ -52,14 +53,13 @@ export class ResponseStepper implements OnDestroy {
   // @ViewChild(ResponseNotarizationComponent) responseNotarizationComponent!: ResponseNotarizationComponent;
 
   private destroy$ = new Subject<void>();
-
+  allRequiredDocumentsUploaded = false;
   requestId?: number;
   responseId?: number;
   sourceIdParam?: string | undefined | null;
   responseIdParam?: string | undefined | null;
   isEditMode = false;
   isStepValid = false;
-
   isAutoFillComplete = false;
 
   constructor(
@@ -74,6 +74,18 @@ export class ResponseStepper implements OnDestroy {
         ? params.get('responseId')
         : this.stateService.getRequestId()?.toString();
     });
+  }
+
+  onStepChange(event: StepperSelectionEvent): void {
+    // Check if we're navigating to the Review step (index 3, assuming 0-based)
+    if (event.selectedIndex === 3 && this.responseReviewComponent) {
+      // Refresh the documents data when entering the review step
+      this.responseReviewComponent.initializeDocuments();
+    }
+  }
+
+  onDocumentsValidityChange(valid: boolean): void {
+    this.allRequiredDocumentsUploaded = valid;
   }
 
   goToOfferorProfilePage() {
@@ -91,6 +103,7 @@ export class ResponseStepper implements OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    this.stateService.clearRequestId();
   }
 
   saveResponse() {

@@ -11,6 +11,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatCardModule } from '@angular/material/card';
 import {
+  AfterViewInit,
+  ChangeDetectorRef,
   Component,
   ElementRef,
   HostListener,
@@ -40,7 +42,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     GoogleSigninButtonModule,
   ],
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent implements OnInit, AfterViewInit {
   private _snackBar = inject(MatSnackBar);
   loginForm!: FormGroup;
 
@@ -50,7 +52,8 @@ export class LoginComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     public dialog: MatDialog,
-    private authService: AuthService
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -73,6 +76,7 @@ export class LoginComponent implements OnInit {
     if (this.googleBtnContainer) {
       const containerWidth = this.googleBtnContainer.nativeElement.offsetWidth;
       this.buttonWidth = containerWidth;
+      this.cdr.detectChanges();
     }
   }
 

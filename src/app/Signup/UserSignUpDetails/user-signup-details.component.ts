@@ -48,7 +48,7 @@ export class UserSignUpDetails implements OnInit {
       email: [{ value: '', disabled: true }, [Validators.required]],
       firstName: [{ value: '', disabled: true }, Validators.required],
       lastName: [{ value: '', disabled: true }, Validators.required],
-      title: ['', [Validators.required, Validators.pattern(/^.{1,10}$/)]],
+      title: ['', [Validators.required, Validators.pattern(/^.{1,40}$/)]],
       workPhoneNumber: [
         '',
         [Validators.required, Validators.pattern(/^(1?\d{10})$/)],

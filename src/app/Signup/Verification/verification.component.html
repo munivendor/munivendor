@@ -1,6 +1,30 @@
 <div class="container">
+  <div>
     <h2>
-        We've sent you a verification email to  {{ email }} (just to make sure it's really you)! 
-        Go ahead and check your inbox and/or spam to verify and continue the sign-up process!
+      We've sent you a verification email to {{ email }} (just to make sure it's
+      really you)! Go ahead and check your inbox and/or spam to verify and
+      continue the sign-up process!
     </h2>
+    <div class="resend-section" style="margin-top: 2rem">
+      <p>Didn't receive the email?</p>
+      <button
+        mat-raised-button
+        type="button"
+        color="primary"
+        class="resend-btn"
+        (click)="resendVerificationEmail()"
+        [disabled]="isResending || countdown > 0"
+      >
+        {{ getButtonText() }}
+      </button>
+      <p
+        *ngIf="resendMessage"
+        class="resend-message"
+        style="margin-top: 1rem"
+        [ngClass]="{ success: isSuccess, error: !isSuccess }"
+      >
+        {{ resendMessage }}
+      </p>
+    </div>
+  </div>
 </div>

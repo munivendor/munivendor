@@ -34,13 +34,17 @@
             signupFormGoogle.get('organizationTypeId')?.valid &&
             signupFormGoogle.get('organizationTypeId')?.value !== null
           "
+          #googleBtnContainer
+          class="google-btn-container"
         >
           <asl-google-signin-button
+            *ngIf="buttonWidth"
             type="standard"
             size="medium"
             text="signup_with"
             theme="filled_blue"
             (click)="prepareGoogleSignIn()"
+            [width]="buttonWidth"
           >
           </asl-google-signin-button>
         </div>
