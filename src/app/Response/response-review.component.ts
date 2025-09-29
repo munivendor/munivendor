@@ -1,4 +1,11 @@
-import { Component, Input, OnInit, OnDestroy } from '@angular/core';
+import {
+  Component,
+  Input,
+  OnInit,
+  OnDestroy,
+  Output,
+  EventEmitter,
+} from '@angular/core';
 import { RouterModule } from '@angular/router';
 import {
   FormGroup,
@@ -9,7 +16,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { MatFormField } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { forkJoin, Observable, Subject, takeUntil } from 'rxjs';
+import { forkJoin, Subject, takeUntil } from 'rxjs';
 import { RequestService } from '../Request/services/request.service';
 import { StateService } from '../Request/services/state.service';
 import { Router } from '@angular/router';
@@ -25,6 +32,12 @@ import { SubmitConfirmationDialogComponent } from './SubmitConfirmationDialog/su
 import { MatDialog } from '@angular/material/dialog';
 // import { TooltipDirective } from '../shared/directive/tooltip.directive';
 import { OfferorProfileService } from '../shared/service/offeror-profile.service';
+
+interface FlattenedCategoryNode {
+  categoryId: string;
+  name: string;
+  parentId: string | null;
+}
 
 @Component({
   selector: 'response-review',
@@ -49,10 +62,14 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
     this.router.navigate(['/offeror-profile-page']);
   }
 
+  @Output() documentsValidityChange = new EventEmitter<boolean>();
+  allRequiredDocumentsUploaded = false;
+
   @Input() sourceIdParam?: string | null | undefined;
   @Input() responseIdParam?: string | null | undefined;
   responseIdFromStateService = this.stateService.getRequestId();
   private destroy$ = new Subject<void>();
+  flattenedCategories: FlattenedCategoryNode[] = [];
 
   requestId!: number | null;
   requestFinalReviewDetailsForm!: FormGroup;
@@ -250,9 +267,32 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
     }
 
     this.requestService.GetOfferorDocumentContent(requestDocumentId).subscribe({
-      next: (blob) => {
-        const blobUrl = URL.createObjectURL(blob);
-        window.open(blobUrl, '_blank');
+      next: (response) => {
+        // Extract filename from Content-Disposition header
+        const contentDisposition = response.headers.get('content-disposition');
+        let fileName = 'download'; // fallback name
+
+        if (contentDisposition) {
+          const fileNameMatch = contentDisposition.match(
+            /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+          );
+          if (fileNameMatch && fileNameMatch[1]) {
+            fileName = fileNameMatch[1].replace(/['"]/g, '');
+          }
+        }
+
+        // Create blob URL and trigger download
+        const blob = response.body;
+        if (blob) {
+          const blobUrl = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = blobUrl;
+          link.download = fileName;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(blobUrl); // Clean up
+        }
       },
       error: (err: any) => {
         console.error('Failed to fetch document:', err);
@@ -268,38 +308,117 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
         next: (categories) => {
           this.hierarchicalCategories =
             this.prepareCategoriesForTreeRendering(categories);
+          this.flattenedCategories = this.flattenCategories(
+            this.hierarchicalCategories
+          );
         },
         error: (err) => console.error('Error fetching categories:', err),
       });
   }
 
+  private flattenCategories(
+    categories: CategoryNode[],
+    parentId: string | null = null
+  ): FlattenedCategoryNode[] {
+    const flattened: FlattenedCategoryNode[] = [];
+
+    for (const category of categories) {
+      flattened.push({
+        categoryId: category.categoryId || category.id?.toString() || '',
+        name: category.name || '',
+        parentId: parentId,
+      });
+
+      if (category.children && category.children.length > 0) {
+        flattened.push(
+          ...this.flattenCategories(
+            category.children,
+            category.categoryId || category.id?.toString() || ''
+          )
+        );
+      }
+    }
+
+    return flattened;
+  }
+
+  displayCategoryName = (value: string | number | null): string => {
+    if (value == null) {
+      return '';
+    }
+
+    const searchValue = value.toString();
+    const match = this.flattenedCategories.find(
+      (cat) => cat.categoryId === searchValue
+    );
+    if (match) {
+      return this.buildBreadcrumbPath(match);
+    }
+
+    return typeof value === 'string' ? value : '';
+  };
+
+  private buildBreadcrumbPath(node: FlattenedCategoryNode): string {
+    const path = [node.name];
+    let currentParentId = node.parentId;
+
+    while (currentParentId) {
+      const parentNode = this.flattenedCategories.find(
+        (cat) => cat.categoryId === currentParentId
+      );
+      if (parentNode) {
+        path.unshift(parentNode.name);
+        currentParentId = parentNode.parentId;
+      } else {
+        break;
+      }
+    }
+
+    return path.join(' > ');
+  }
+
   ngOnInit() {
     this.getCategoryHierarchy();
-    this.initializeDocuments();
 
-    if (this.sourceIdParam) {
-      this.getRequestObjDetails(Number(this.sourceIdParam));
-      // this.fetchAuthorizingOfficials();
-    }
-
-    if (this.responseIdParam) {
-      this.loadResponseRequest(Number(this.responseIdParam));
-    } else if (this.responseIdFromStateService) {
-      this.loadResponseRequest(this.responseIdFromStateService);
-    }
-
-    this.stateService.currentRequestHasBeenSaved$
+    this.categoryHierarchyService
+      .GetCategoryHierarchy()
       .pipe(takeUntil(this.destroy$))
-      .subscribe((hasBeenSaved) => {
-        this.requestId = this.stateService.getRequestId();
-        if (hasBeenSaved && this.requestId) {
+      .subscribe({
+        next: (categories) => {
+          this.hierarchicalCategories =
+            this.prepareCategoriesForTreeRendering(categories);
+          this.flattenedCategories = this.flattenCategories(
+            this.hierarchicalCategories
+          );
+
           if (this.sourceIdParam) {
             this.getRequestObjDetails(Number(this.sourceIdParam));
-          } else if (this.requestId) {
-            this.getRequestObjDetails(this.requestId);
+            this.fetchAuthorizingOfficials();
           }
-        }
+
+          if (this.responseIdParam) {
+            this.loadResponseRequest(Number(this.responseIdParam));
+          } else if (this.responseIdFromStateService) {
+            this.loadResponseRequest(this.responseIdFromStateService);
+          }
+
+          this.stateService.currentRequestHasBeenSaved$
+            .pipe(takeUntil(this.destroy$))
+            .subscribe((hasBeenSaved) => {
+              this.requestId = this.stateService.getRequestId();
+              if (hasBeenSaved && this.requestId) {
+                if (this.sourceIdParam) {
+                  this.getRequestObjDetails(Number(this.sourceIdParam));
+                } else if (this.requestId) {
+                  this.getRequestObjDetails(this.requestId);
+                }
+              }
+            });
+        },
+        error: (err) => console.error('Error fetching categories:', err),
       });
+
+    this.initializeDocuments();
 
     this.requestFinalReviewDetailsForm = this.fb.group({
       requestName: [''],
@@ -320,7 +439,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
     });
   }
 
-  initializeDocuments(): void {
+  public initializeDocuments(): void {
     const requestId = this.responseIdParam
       ? Number(this.responseIdParam)
       : Number(this.responseIdFromStateService);
@@ -341,11 +460,29 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
 
           this.requiredDocumentsDatasource = requiredDocs;
           this.offerorDocumentsDatasource = offerorDocs;
+
+          this.checkRequiredDocumentsStatus();
         },
         error: (err) => {
           console.error('Error loading documents:', err);
         },
       });
+  }
+
+  private checkRequiredDocumentsStatus(): void {
+    // Check if all required documents have been uploaded
+    // A document is considered uploaded if documentInstanceStatus is not 'Incomplete' or null
+    this.allRequiredDocumentsUploaded = this.requiredDocumentsDatasource.every(
+      (doc: any) =>
+        doc.documentInstanceStatus &&
+        doc.documentInstanceStatus !== 'Incomplete'
+    );
+
+    this.documentsValidityChange.emit(this.allRequiredDocumentsUploaded);
+  }
+
+  get hasAllRequiredDocuments(): boolean {
+    return this.allRequiredDocumentsUploaded;
   }
 
   ngOnDestroy(): void {
@@ -389,30 +526,30 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
       );
   }
 
-  // private fetchAuthorizingOfficials(): void {
-  //   this.offerorProfileService
-  //     .GetOfferorAuthorizingOfficials(Number(this.organizationId))
-  //     .pipe(takeUntil(this.destroy$))
-  //     .subscribe(
-  //       (officials) => {
-  //         this.authorizingOfficialId =
-  //           officials?.[0].vendorAuthorizingOfficialId || null;
-  //         if (officials) {
-  //           this.offerorFinalReviewDetailsForm.patchValue({
-  //             authorizingOfficial:
-  //               officials[0].firstName + ' ' + officials[0].lastName,
-  //           });
-  //         }
-  //         console.log(
-  //           'Response form after patching:',
-  //           this.offerorFinalReviewDetailsForm.value
-  //         );
-  //       },
-  //       (error) => {
-  //         console.error('Error fetching authorizing officials:', error);
-  //       }
-  //     );
-  // }
+  private fetchAuthorizingOfficials(): void {
+    this.offerorProfileService
+      .GetOfferorAuthorizingOfficials(Number(this.organizationId))
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(
+        (officials) => {
+          this.authorizingOfficialId =
+            officials?.[0].vendorAuthorizingOfficialId || null;
+          if (officials) {
+            this.offerorFinalReviewDetailsForm.patchValue({
+              authorizingOfficial:
+                officials[0].firstName + ' ' + officials[0].lastName,
+            });
+          }
+          console.log(
+            'Response form after patching:',
+            this.offerorFinalReviewDetailsForm.value
+          );
+        },
+        (error) => {
+          console.error('Error fetching authorizing officials:', error);
+        }
+      );
+  }
 
   getRequestObjDetails(requestId: number) {
     const request$ = this.requestService.GetRequestDetailsById(requestId);
@@ -422,7 +559,10 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(
         ([request, requestTypes]) => {
-          const category = this.findCategoryById(request.categoryId);
+          const categoryBreadcrumb = this.displayCategoryName(
+            request.categoryId
+          );
+
           const requestType = requestTypes.find(
             (r: { requestTypeId: number }) =>
               r.requestTypeId === request.requestTypeId
@@ -437,7 +577,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
 
           this.requestFinalReviewDetails = {
             ...request,
-            category,
+            categoryBreadcrumb,
             requestType,
             closeDate,
             publishDate,
@@ -447,7 +587,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
 
           this.requestFinalReviewDetailsForm.patchValue({
             requestName: request.requestName,
-            category: category?.name || '',
+            category: categoryBreadcrumb,
             requestType: requestType?.requestTypeDesc || '',
             publishDate: this.formatDateTime(request.publishDate),
             closeDate: this.formatDateTime(request.closeDate),
@@ -464,13 +604,17 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
   private formatDateTime(dateString: string): string {
     if (!dateString) return '';
 
-    const date = new Date(dateString);
+    const date = new Date(dateString + 'Z');
+
+    if (isNaN(date.getTime())) return '';
+
     const formattedDate = date.toLocaleDateString('en-US');
     const formattedTime = date.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
       hour12: true,
-    }); // HH:mm AM/PM
+    });
+
     return `${formattedDate} at ${formattedTime}`;
   }
 

@@ -1,4 +1,4 @@
-<mat-stepper [linear]="true" #stepper>
+<mat-stepper [linear]="true" #stepper (selectionChange)="onStepChange($event)">
   <mat-step label="Basics">
     <ng-template matStepContent>
       <response-basic
@@ -41,7 +41,7 @@
         [responseIdParam]="responseIdParam"
       ></response-details>
       <!-- parameter for response-details (autoFillStatusChange)="onAutoFillStatusChange($event)" -->
-      <div class="response-stepper-button-container-margin-top">
+      <div class="response-stepper-button-container">
         <button
           mat-raised-button
           matStepperPrevious
@@ -118,15 +118,17 @@
             matStepperNext
             (click)="onSubmitOfferorResponse()"
             color="primary"
+            [disabled]="!allRequiredDocumentsUploaded"
           >
             Submit
           </button>
           <mat-icon
+            *ngIf="!allRequiredDocumentsUploaded"
             style="font-size: medium; color: #0b74fd; cursor: pointer"
             [appTooltip]="{
               header: 'Incomplete',
               body: 'You cannot yet submit your completed offer (submission packet), because there are forms that you still need to upload. Please look above to see which files you still need to upload before submitting your completed offer to the Agency.',
-              actionLabel: 'Vendor Profile Page',
+              actionLabel: 'Offeror Profile Page',
               onAction: goToOfferorProfilePage,
               width: '350px',
               transformStyle: 'translate(-103%, -75%)'
@@ -139,6 +141,7 @@
       <response-review
         [sourceIdParam]="sourceIdParam"
         [responseIdParam]="responseIdParam"
+        (documentsValidityChange)="onDocumentsValidityChange($event)"
       ></response-review>
       <div style="display: flex" class="response-stepper-button-container">
         <button
@@ -155,15 +158,17 @@
             matStepperNext
             (click)="onSubmitOfferorResponse()"
             color="primary"
+            [disabled]="!allRequiredDocumentsUploaded"
           >
             Submit
           </button>
           <mat-icon
+            *ngIf="!allRequiredDocumentsUploaded"
             style="font-size: medium; color: #0b74fd; cursor: pointer"
             [appTooltip]="{
               header: 'Incomplete',
               body: 'You cannot yet submit your completed offer (submission packet), because there are forms that you still need to upload. Please look above to see which files you still need to upload before submitting your completed offer to the Agency.',
-              actionLabel: 'Vendor Profile Page',
+              actionLabel: 'Offeror Profile Page',
               onAction: goToOfferorProfilePage,
               width: '350px',
               transformStyle: 'translate(-103%, -75%)'

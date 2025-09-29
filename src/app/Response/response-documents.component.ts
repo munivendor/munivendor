@@ -457,9 +457,32 @@ export class ResponseDocumentsComponent implements OnInit {
     }
 
     this.requestService.GetOfferorDocumentContent(requestDocumentId).subscribe({
-      next: (blob) => {
-        const blobUrl = URL.createObjectURL(blob);
-        window.open(blobUrl, '_blank');
+      next: (response) => {
+        // Extract filename from Content-Disposition header
+        const contentDisposition = response.headers.get('content-disposition');
+        let fileName = 'download'; // fallback name
+
+        if (contentDisposition) {
+          const fileNameMatch = contentDisposition.match(
+            /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+          );
+          if (fileNameMatch && fileNameMatch[1]) {
+            fileName = fileNameMatch[1].replace(/['"]/g, '');
+          }
+        }
+
+        // Create blob URL and trigger download
+        const blob = response.body;
+        if (blob) {
+          const blobUrl = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = blobUrl;
+          link.download = fileName;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(blobUrl);
+        }
       },
       error: (err: any) => {
         console.error('Failed to fetch document:', err);
