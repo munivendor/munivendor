@@ -2,10 +2,6 @@
   width: 100%;
 }
 
-.single-input-width {
-  width: 49%;
-}
-
 .field-container {
   display: flex;
   justify-content: space-between;

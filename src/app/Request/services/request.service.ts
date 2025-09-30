@@ -119,13 +119,23 @@ export class RequestService {
 
   SaveRequestSections(
     requestSection: RequestSection,
-    requestId: number
-  ): Observable<{ success: boolean; requestSectionId: number | null }> {
+    requestId: number,
+    sortOrderId: number
+  ): Observable<{
+    success: boolean;
+    requestSectionId: number | null;
+    sortOrderId: number | null;
+  }> {
     const headers = { 'Content-Type': 'application/json' };
     return this.http.post<{
       success: boolean;
       requestSectionId: number | null;
-    }>(`${this.url}RequestSections/${requestId}`, requestSection, { headers });
+      sortOrderId: number | null;
+    }>(
+      `${this.url}RequestSections/${requestId}/${sortOrderId}`,
+      requestSection,
+      { headers }
+    );
   }
 
   GetRequiredDocuments(): Observable<any> {

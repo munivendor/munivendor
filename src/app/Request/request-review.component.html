@@ -132,23 +132,22 @@
   </div>
 
   <div class="field-container">
-    <div
-      *ngFor="
-        let decisionMaker of requestFinalReviewDetails.decisionMakers;
-        let i = index
-      "
-      class="inline-field"
-    >
-      <p *ngIf="i === 0">Decision Makers:</p>
-      <p *ngIf="i > 0" style="visibility: hidden">&nbsp;</p>
-      <mat-form-field appearance="fill" class="single-input-width">
-        <input
-          matInput
-          readonly
-          placeholder="Chosen Decision Maker(s)"
-          [value]="decisionMaker.decisionMakerName"
-        />
-      </mat-form-field>
+    <div class="decision-makers-full-width">
+      <p>Decision Makers:</p>
+      <div class="decision-makers-grid">
+        <mat-form-field
+          *ngFor="let decisionMaker of requestFinalReviewDetails.decisionMakers"
+          appearance="fill"
+          class="decision-maker-field"
+        >
+          <input
+            matInput
+            readonly
+            placeholder="Chosen Decision Maker(s)"
+            [value]="decisionMaker.decisionMakerName"
+          />
+        </mat-form-field>
+      </div>
     </div>
   </div>
 

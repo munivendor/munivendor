@@ -98,21 +98,24 @@
 
           <mat-icon
             style="font-size: medium; color: #0b74fd; cursor: pointer"
-            [appTooltip]="{
-              header: 'Required',
-              body: 'Please designate an authorizing official for this offer. An Authorizing Official is a person authorized from your organization to submit offers in response to government agency solicitations.',
-              actionLabel: 'Offeror Profile Page',
-              width: '320px',
-              onAction: goToOfferorProfilePage,
-              transformStyle: 'translate(-50%, -102%)'
-            }"
+            [appTooltip]="authorizingOfficialTooltip"
           >
             info_outline
           </mat-icon>
         </div>
         <mat-form-field appearance="fill" class="input-width">
           <mat-label>Authorizing Official</mat-label>
-          <input matInput readonly formControlName="authorizingOfficial" />
+          <mat-select
+            formControlName="authorizingOfficial"
+            (selectionChange)="onAuthorizingOfficialChange($event.value)"
+          >
+            <mat-option
+              *ngFor="let official of authorizingOfficials"
+              [value]="official.vendorAuthorizingOfficialId"
+            >
+              {{ official.firstName }} {{ official.lastName }}
+            </mat-option>
+          </mat-select>
           <mat-error
             *ngIf="
               responseForm.get('authorizingOfficial')?.hasError('required')

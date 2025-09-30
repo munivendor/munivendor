@@ -34,7 +34,6 @@ export const GuestGuard: CanActivateFn = (
   const router = inject(Router);
   const stateService = inject(StateService);
   const organizationTypeId = stateService.getOrganizationTypeId();
-  console.log(stateService.getOrganizationTypeId());
 
   return authService.isAuthenticated$.pipe(
     map((isAuthenticated) => {

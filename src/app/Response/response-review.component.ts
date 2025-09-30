@@ -155,7 +155,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
           console.error('organizationDocumentId is required but missing.');
           return;
         }
-        // Handle regular blob response (no headers) - force download
         this.requestService
           .GetAgencySpecificDocumentContent(
             organizationDocumentId,
@@ -165,7 +164,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
             next: (response) => {
               const blob = response.body;
               if (!blob) return;
-              // Extract filename from Content-Disposition
               const contentDisposition = response.headers.get(
                 'Content-Disposition'
               );
@@ -176,7 +174,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
                   fileName = match[1];
                 }
               }
-              // Force download with filename from headers
               const a = document.createElement('a');
               const blobUrl = URL.createObjectURL(blob);
               a.href = blobUrl;
@@ -191,13 +188,11 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
             },
           });
       } else {
-        // Handle HttpResponse<Blob> with headers - force download with correct filename
         this.documentService.GetStateDocumentContent(documentId).subscribe({
           next: (response) => {
             const blob = response.body;
             if (!blob) return;
 
-            // Extract filename from Content-Disposition
             const contentDisposition = response.headers.get(
               'Content-Disposition'
             );
@@ -209,7 +204,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
               }
             }
 
-            // Force download with correct filename
             const a = document.createElement('a');
             const blobUrl = URL.createObjectURL(blob);
             a.href = blobUrl;
@@ -230,7 +224,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
           const blob = response.body;
           if (!blob) return;
 
-          // Extract filename from Content-Disposition
           const contentDisposition = response.headers.get(
             'Content-Disposition'
           );
@@ -242,7 +235,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
             }
           }
 
-          // Force download with filename from headers
           const a = document.createElement('a');
           const blobUrl = URL.createObjectURL(blob);
           a.href = blobUrl;
@@ -262,15 +254,13 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
   onDownloadOfferorDocument(row: { requestDocumentId: number }): void {
     const requestDocumentId = row.requestDocumentId;
     if (!requestDocumentId) {
-      console.error('Request Document ID is not available.');
       return;
     }
 
     this.requestService.GetOfferorDocumentContent(requestDocumentId).subscribe({
       next: (response) => {
-        // Extract filename from Content-Disposition header
         const contentDisposition = response.headers.get('content-disposition');
-        let fileName = 'download'; // fallback name
+        let fileName = 'download';
 
         if (contentDisposition) {
           const fileNameMatch = contentDisposition.match(
@@ -281,7 +271,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
           }
         }
 
-        // Create blob URL and trigger download
         const blob = response.body;
         if (blob) {
           const blobUrl = URL.createObjectURL(blob);
@@ -291,12 +280,10 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
-          URL.revokeObjectURL(blobUrl); // Clean up
+          URL.revokeObjectURL(blobUrl);
         }
       },
-      error: (err: any) => {
-        console.error('Failed to fetch document:', err);
-      },
+      error: (err: any) => {},
     });
   }
 
@@ -391,15 +378,14 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
             this.hierarchicalCategories
           );
 
-          if (this.sourceIdParam) {
-            this.getRequestObjDetails(Number(this.sourceIdParam));
-            this.fetchAuthorizingOfficials();
-          }
-
           if (this.responseIdParam) {
             this.loadResponseRequest(Number(this.responseIdParam));
           } else if (this.responseIdFromStateService) {
             this.loadResponseRequest(this.responseIdFromStateService);
+          }
+
+          if (this.sourceIdParam) {
+            this.getRequestObjDetails(Number(this.sourceIdParam));
           }
 
           this.stateService.currentRequestHasBeenSaved$
@@ -450,7 +436,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
         next: (response) => {
           const documents = response.documents || [];
 
-          // Split documents by presence of sourceRequestDocumentId
           const requiredDocs = documents.filter(
             (doc: any) => doc.sourceRequestDocumentId !== null
           );
@@ -492,61 +477,31 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
 
   private loadResponseRequest(responseId: number): void {
     const request$ = this.requestService.GetRequestDetailsById(responseId);
-    // const authorizingOfficials$ =
-    //   this.offerorProfileService.GetOfferorAuthorizingOfficials(
-    //     Number(this.organizationId)
-    //   );
+    const authorizingOfficials$ =
+      this.offerorProfileService.GetOfferorAuthorizingOfficials(
+        Number(this.organizationId)
+      );
 
-    forkJoin([
-      request$,
-      // , authorizingOfficials$
-    ])
+    forkJoin([request$, authorizingOfficials$])
       .pipe(takeUntil(this.destroy$))
       .subscribe(
-        ([
-          response,
-          // , authorizingOfficials
-        ]) => {
-          // const authorizingOfficial = authorizingOfficials.find(
-          //   (official: { vendorAuthorizingOfficialId: number }) =>
-          //     official.vendorAuthorizingOfficialId ===
-          //     response.authorizingOfficialId
-          // );
+        ([response, authorizingOfficials]) => {
+          // Find the matching authorizing official by ID
+          const authorizingOfficial = authorizingOfficials.find(
+            (official: { vendorAuthorizingOfficialId: number }) =>
+              official.vendorAuthorizingOfficialId ===
+              response.authorizingOfficialId
+          );
 
           this.offerorFinalReviewDetailsForm.patchValue({
             responseName: response.requestName,
-            // authorizingOfficial: authorizingOfficial
-            //   ? `${authorizingOfficial.firstName} ${authorizingOfficial.lastName}`
-            //   : '',
+            authorizingOfficial: authorizingOfficial
+              ? `${authorizingOfficial.firstName} ${authorizingOfficial.lastName}`
+              : 'Not assigned',
           });
         },
         (error: any) => {
           console.error('Error loading response request', error);
-        }
-      );
-  }
-
-  private fetchAuthorizingOfficials(): void {
-    this.offerorProfileService
-      .GetOfferorAuthorizingOfficials(Number(this.organizationId))
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(
-        (officials) => {
-          this.authorizingOfficialId =
-            officials?.[0].vendorAuthorizingOfficialId || null;
-          if (officials) {
-            this.offerorFinalReviewDetailsForm.patchValue({
-              authorizingOfficial:
-                officials[0].firstName + ' ' + officials[0].lastName,
-            });
-          }
-          console.log(
-            'Response form after patching:',
-            this.offerorFinalReviewDetailsForm.value
-          );
-        },
-        (error) => {
-          console.error('Error fetching authorizing officials:', error);
         }
       );
   }

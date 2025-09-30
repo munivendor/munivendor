@@ -18,7 +18,6 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { CategoryNode } from '../shared/model/category-tree.model';
 import { CategoryHierarchyService } from './services/category-hierarchy.service';
 
-// Add interface for flattened categories
 interface FlattenedCategoryNode {
   categoryId: string;
   name: string;
@@ -48,7 +47,7 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
   requestFinalReviewDetails: any = {};
   docs: any;
   hierarchicalCategories: CategoryNode[] = [];
-  flattenedCategories: FlattenedCategoryNode[] = []; // Add this property
+  flattenedCategories: FlattenedCategoryNode[] = [];
   organizationId: number | null = this.stateService.getOrganizationId();
 
   constructor(
@@ -68,7 +67,6 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
         next: (categories) => {
           this.hierarchicalCategories =
             this.prepareCategoriesForTreeRendering(categories);
-          // Create flattened categories after hierarchical categories are prepared
           this.flattenedCategories = this.flattenCategories(
             this.hierarchicalCategories
           );
@@ -77,7 +75,6 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
       });
   }
 
-  // Add method to flatten hierarchical categories
   private flattenCategories(
     categories: CategoryNode[],
     parentId: string | null = null
@@ -104,7 +101,6 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
     return flattened;
   }
 
-  // Add your display category name methods
   displayCategoryName = (value: string | number | null): string => {
     if (value == null) {
       return '';
@@ -241,7 +237,7 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
 
           this.requestFinalReviewDetailsForm.patchValue({
             requestName: request.requestName,
-            // Use displayCategoryName method instead of direct category name
+
             category: this.displayCategoryName(request.categoryId),
             requestType: requestType?.requestTypeDesc || '',
             publishDate: publishDate,

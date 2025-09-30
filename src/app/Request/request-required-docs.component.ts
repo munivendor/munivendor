@@ -120,12 +120,8 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
     this.getAllDocumentTypes(Number(this.organizationId))
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: () => {
-          console.log('Documents fetched and form initialized for creation.');
-        },
-        error: (error) => {
-          console.error('Error fetching documents for creation:', error);
-        },
+        next: () => {},
+        error: (error) => {},
       });
   }
 
@@ -138,9 +134,6 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
           const documents = requestDocuments?.documents ?? [];
 
           if (!documents || documents.length === 0) {
-            console.log(
-              'No request documents found, falling back to creation mode'
-            );
             this.initializeForCreation();
             return;
           }
@@ -451,10 +444,8 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
       );
   }
 
-  // force download of agency specific document
   onDownloadAgencySpecificDocument(row: FormGroup): void {
     const organizationDocumentId = row.get('organizationDocumentId')?.value;
-
     this.requestService
       .GetAgencySpecificDocumentContent(
         organizationDocumentId,
@@ -464,7 +455,7 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
         next: (response) => {
           const blob = response.body;
           if (!blob) return;
-          // Extract filename from Content-Disposition
+
           const contentDisposition = response.headers.get(
             'Content-Disposition'
           );
@@ -475,7 +466,7 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
               fileName = match[1];
             }
           }
-          // Force download with filename from headers
+
           const a = document.createElement('a');
           const blobUrl = URL.createObjectURL(blob);
           a.href = blobUrl;
@@ -503,7 +494,6 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
         const blob = response.body;
         if (!blob) return;
 
-        // Extract filename from Content-Disposition
         const contentDisposition = response.headers.get('Content-Disposition');
         let fileName = 'download';
         if (contentDisposition) {
@@ -513,7 +503,6 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
           }
         }
 
-        // Force download with correct filename
         const a = document.createElement('a');
         const blobUrl = URL.createObjectURL(blob);
         a.href = blobUrl;

@@ -265,11 +265,14 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
 
       // Process only sections with content
       sectionsWithContent.forEach(
-        (section: {
-          requestSectionId: any;
-          requestSectionTitle: any;
-          requestSectionContent: any;
-        }) => {
+        (
+          section: {
+            requestSectionId: any;
+            requestSectionTitle: any;
+            requestSectionContent: any;
+          },
+          idx: number
+        ) => {
           const payload = {
             requestId: this.requestId,
             requestSectionId: section.requestSectionId,
@@ -278,13 +281,10 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
           };
 
           this.requestService
-            .SaveRequestSections(payload, this.requestId ?? 0)
+            .SaveRequestSections(payload, this.requestId ?? 0, idx + 1)
             .pipe(takeUntil(this.destroy$))
             .subscribe({
               next: (response) => {
-                console.log(
-                  `Section ${section.requestSectionTitle} saved successfully!`
-                );
                 if (response.success) {
                   const index = this.proposalSections.controls.findIndex(
                     (control) =>
