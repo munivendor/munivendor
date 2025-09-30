@@ -1,4 +1,4 @@
-import { ApplicationConfig } from '@angular/core';
+import { ApplicationConfig, ErrorHandler } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideClientHydration } from '@angular/platform-browser';
 import { provideHttpClient } from '@angular/common/http';
@@ -12,6 +12,7 @@ import { APP_INITIALIZER } from '@angular/core';
 import { AuthService } from './authorization/auth.service';
 import { Observable } from 'rxjs';
 import { routes } from './app.routes';
+import { GlobalErrorHandler } from './exceptionhandling/global-error-handler';
 
 const CLIENT_ID =
   '954795010792-oafduvq9mhtlatg68rhl4hadtcuajos6.apps.googleusercontent.com';
@@ -27,6 +28,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideClientHydration(),
     provideHttpClient(),
+    { provide: ErrorHandler, useClass: GlobalErrorHandler },
     provideAnimationsAsync('noop'),
 
     SocialAuthService,
