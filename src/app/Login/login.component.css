@@ -43,4 +43,6 @@ mat-card-actions > * {
 
 .google-btn-container {
   width: 100%;
+  display: flex;
+  justify-content: center;
 }

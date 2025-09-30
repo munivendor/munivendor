@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { DocumentInstance } from '../../Request/model/documentinstance.model';
@@ -16,20 +16,22 @@ export class DocumentService {
     return this.http.get(this.url, { responseType: 'blob' });
   }
 
-  GetStateDocumentContent(documentId: number): Observable<Blob> {
+  GetStateDocumentContent(documentId: number): Observable<HttpResponse<Blob>> {
     return this.http.get(
       `${this.url}Documents/DocumentContent/StateDocument/${documentId}`,
-      { responseType: 'blob' }
+      {
+        observe: 'response',
+        responseType: 'blob',
+      }
     );
   }
 
   GetDocumentInstance(
-    responseRequestId: number,
-    sourceRequestDocumentId: number
-  ): Observable<Blob> {
+    requestDocumentId: number
+  ): Observable<HttpResponse<Blob>> {
     return this.http.get(
-      `${this.url}DocumentInstances/DocumentContent/${responseRequestId}/${sourceRequestDocumentId}`,
-      { responseType: 'blob' }
+      `${this.url}DocumentInstances/DocumentContent/${requestDocumentId}`,
+      { observe: 'response', responseType: 'blob' }
     );
   }
 

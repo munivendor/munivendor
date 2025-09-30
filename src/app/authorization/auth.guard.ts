@@ -3,6 +3,7 @@ import { CanActivateFn, Router, ActivatedRouteSnapshot } from '@angular/router';
 import { AuthService } from './auth.service';
 import { map, Observable, of } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { StateService } from '../Request/services/state.service';
 
 export const AuthGuard: CanActivateFn = (
   route: ActivatedRouteSnapshot
@@ -31,12 +32,18 @@ export const GuestGuard: CanActivateFn = (
 ): Observable<boolean> => {
   const authService = inject(AuthService);
   const router = inject(Router);
+  const stateService = inject(StateService);
+  const organizationTypeId = stateService.getOrganizationTypeId();
 
   return authService.isAuthenticated$.pipe(
     map((isAuthenticated) => {
       if (isAuthenticated) {
-        // Redirect authenticated users to dashboard
-        router.navigate(['/requests-view']); // or appropriate dashboard route
+        if (organizationTypeId === 1) {
+          router.navigate(['/requests-view']);
+        } else {
+          router.navigate(['/offeror-requests-view']);
+        }
+
         return false;
       }
       return true;

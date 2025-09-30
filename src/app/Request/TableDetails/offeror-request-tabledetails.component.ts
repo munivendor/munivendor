@@ -22,6 +22,14 @@ import { ConfirmationDialog } from '../RequestConfirmationDialog/confirmation-di
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CustomCategoryDropdownComponent } from '../../shared/CustomCategoryDropdown/custom-category-dropdown.component';
 import { StateService } from '../services/state.service';
+import { CategoryNode } from '../../shared/model/category-tree.model';
+import { ChangeDetectorRef } from '@angular/core';
+
+interface FlattenedCategoryNode {
+  categoryId: string;
+  name: string;
+  parentId: string | null;
+}
 
 @Component({
   selector: 'offeror-request-tabledetails',
@@ -53,9 +61,92 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
   hasLoadedData = false;
   private destroy$ = new Subject<void>();
   @Input() categoryControl!: FormControl<number | null>;
-  organizationId: number = 0;
+  organizationId!: number | null;
+
+  // Add properties for category breadcrumbs
+  hierarchicalCategories: CategoryNode[] = [];
+  flattenedCategories: FlattenedCategoryNode[] = [];
 
   readonly AVAILABLE_ACTIONS = ['respond', 'delete', 'continue'] as const;
+
+  // Add methods for category breadcrumbs
+  displayCategoryName = (categoryId: string | number | null): string => {
+    if (categoryId == null) {
+      return '';
+    }
+
+    const searchValue = categoryId.toString();
+    const match = this.flattenedCategories.find(
+      (cat) => cat.categoryId === searchValue
+    );
+    if (match) {
+      return this.buildBreadcrumbPath(match);
+    }
+
+    return typeof categoryId === 'string' ? categoryId : '';
+  };
+
+  private buildBreadcrumbPath(node: FlattenedCategoryNode): string {
+    const path = [node.name];
+    let currentParentId = node.parentId;
+
+    while (currentParentId) {
+      const parentNode = this.flattenedCategories.find(
+        (cat) => cat.categoryId === currentParentId
+      );
+      if (parentNode) {
+        path.unshift(parentNode.name);
+        currentParentId = parentNode.parentId;
+      } else {
+        break;
+      }
+    }
+
+    return path.join(' > ');
+  }
+
+  private flattenCategories(
+    categories: CategoryNode[],
+    parentId: string | null = null
+  ): FlattenedCategoryNode[] {
+    const flattened: FlattenedCategoryNode[] = [];
+
+    for (const category of categories) {
+      flattened.push({
+        categoryId: category.categoryId || category.id?.toString() || '',
+        name: category.name || '',
+        parentId: parentId,
+      });
+
+      if (category.children && category.children.length > 0) {
+        flattened.push(
+          ...this.flattenCategories(
+            category.children,
+            category.categoryId || category.id?.toString() || ''
+          )
+        );
+      }
+    }
+
+    return flattened;
+  }
+
+  prepareCategoriesForTreeRendering(
+    categories: CategoryNode[],
+    level: number = 0
+  ): CategoryNode[] {
+    return categories
+      .filter((cat) => !cat.deleted)
+      .map((category) => ({
+        ...category,
+        categoryId: category.id?.toString() ?? '',
+        level,
+        expandable: !!category.children?.length,
+        children: category.children?.length
+          ? this.prepareCategoriesForTreeRendering(category.children, level + 1)
+          : undefined,
+      }));
+  }
 
   getAvailableActions(request: any): string[] {
     const agencyStatus = request.agencyRequestStatus?.requestStatusDesc ?? '';
@@ -105,7 +196,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
 
   deleteRequest(request: any): void {
     this.requestService
-      .DeleteRequest(request.offerorRequestId, this.organizationId)
+      .DeleteRequest(request.offerorRequestId, Number(this.organizationId))
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
@@ -143,6 +234,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
 
   displayedColumns: string[] = [
     'requestName',
+    'agencyOrganizationName',
     'requestId',
     'requestType',
     'category',
@@ -166,9 +258,10 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
     private categoryHierarchyService: CategoryHierarchyService,
     private fb: FormBuilder,
     public dialog: MatDialog,
-    private stateService: StateService
+    private stateService: StateService,
+    private cdr: ChangeDetectorRef
   ) {
-    this.organizationId = this.stateService.getOrganizationId() ?? 0;
+    this.organizationId = this.stateService.getOrganizationId();
   }
 
   readonly requestTypeMap = {
@@ -274,7 +367,6 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
     try {
       const organizationId = await this.stateService.getOrganizationId();
       if (!organizationId) {
-        console.error('Organization ID not found');
         this.dataSource = new MatTableDataSource<any>([]);
         this.hasLoadedData = false;
         return;
@@ -299,6 +391,15 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
             const requestsData = requests?.requests || [];
             this.hasLoadedData = requestsData.length > 0;
 
+            // Process categories for breadcrumbs
+            if (categories && categories.length > 0) {
+              this.hierarchicalCategories =
+                this.prepareCategoriesForTreeRendering(categories);
+              this.flattenedCategories = this.flattenCategories(
+                this.hierarchicalCategories
+              );
+            }
+
             requestsData.forEach((request: any) => {
               const category = this.findCategoryById(
                 categories,
@@ -317,6 +418,14 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
                   rs.requestStatusId === request.offerorRequestStatusId
               );
 
+              request.publishDate = request.publishDate
+                ? new Date(request.publishDate + 'Z')
+                : null;
+
+              request.closeDate = request.closeDate
+                ? new Date(request.closeDate + 'Z')
+                : null;
+
               combinedData.push({
                 ...request,
                 category,
@@ -327,8 +436,18 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
             });
 
             this.dataSource = new MatTableDataSource(combinedData);
-            this.dataSource.paginator = this.paginator;
-            this.dataSource.sort = this.sort;
+
+            this.cdr.detectChanges();
+
+            setTimeout(() => {
+              if (this.paginator) {
+                this.dataSource.paginator = this.paginator;
+                this.paginator.firstPage();
+              }
+              if (this.sort) {
+                this.dataSource.sort = this.sort;
+              }
+            }, 0);
           },
           (error) => {
             console.error('Error loading request data:', error);

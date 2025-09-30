@@ -1,3 +1,88 @@
+.offeror-profile-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.organization-section,
+.authorizing-officials-section {
+  margin-bottom: 24px;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  align-items: flex-start;
+}
+
 .full-width {
   width: 100%;
+}
+
+.half-width {
+  width: calc(50% - 8px);
+}
+
+.quarter-width {
+  width: calc(25% - 12px);
+}
+
+.officials-table {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.add-button-container {
+  margin: 20px 0;
+}
+
+.official-form {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 20px;
+  margin-top: 20px;
+  background-color: #fafafa;
+}
+
+.official-form h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #1976d2;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.cancel-button {
+  margin-left: 8px;
+}
+
+.no-officials {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+
+.no-officials p {
+  font-size: 16px;
+  margin: 0;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .form-row {
+    flex-direction: column;
+  }
+
+  .half-width,
+  .quarter-width {
+    width: 100%;
+  }
+
+  .officials-table {
+    font-size: 14px;
+  }
 }

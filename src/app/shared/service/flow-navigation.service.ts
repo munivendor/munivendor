@@ -13,7 +13,9 @@ export class FlowNavigationService {
     government: {
       flowId: 1,
       routes: {
-        0: '/organization-details',
+        // commented out codes are for MVP+
+        // organization detials should be 0 instead of 1
+        1: '/organization-details',
         2: '/user-details',
         // 3: '/user-designation',
         // 4: '/payment-plan-confirmation',
@@ -113,7 +115,6 @@ export class FlowNavigationService {
   ): void {
     const pageId = progress?.lastCompletedPageId ?? 1;
     const route = routes[pageId];
-    console.log(`Navigating to route: ${route} for page ID: ${pageId}`);
     if (route) {
       this.router.navigate([route]);
     } else {

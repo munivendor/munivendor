@@ -32,7 +32,7 @@
         style="font-size: medium; color: #0b74fd; cursor: pointer"
         [appTooltip]="{
           header: 'Form Name',
-          body: 'This column indicates the name of the Agency form you, the offeror are required to complete before submitting your offer.',
+          body: 'This column indicates the name of the Agency form that you, the offeror are required to complete before submitting your offer.',
           width: 'auto',
           showCloseButton: false,
           showActionButton: false
@@ -58,10 +58,8 @@
         style="font-size: medium; color: #0b74fd; cursor: pointer"
         [appTooltip]="{
           header: 'File Actions',
-          body: 'Clicking on each download button will download a copy of the Agency required form. Please note that depending on when you click to download this document, you may be downloading the original document, or the auto-filled version of the document.',
-          subtext:
-            'Instead of using MuniVendor’s Autofill AI, you may upload a manually completed copy of each respective form.',
-          width: '500px',
+          body: 'Clicking on each download button will download a copy of the Agency required form.',
+          width: 'auto',
           showCloseButton: false,
           showActionButton: false
         }"
@@ -104,12 +102,12 @@
           style="font-size: medium; color: #0b74fd; cursor: pointer"
           [appTooltip]="{
             header: 'Incomplete',
-            body: 'To save you time and money, MuniVendor automatically fills out all agency required forms using content from your Vendor Profile page. MuniVendor also attaches all required documents, such as your BRC, W-9, etc. to your offer (completed response/submission package). Please complete your Vendor Profile Page so that MuniVendor can auto-fill the corresponding government agency documents.',
+            body: 'To save you time and money, MuniVendor automatically fills out all agency required forms using content from your Offeror Profile Page. MuniVendor also attaches all required documents, such as your BRC, W-9, etc. to your offer (completed response/submission package). Please complete your Offeror Profile Page so that MuniVendor can auto-fill the corresponding government agency documents.',
             subtext:
               'Alternatively, you can modify/edit these documents and forms by downloading them, filling them out, and then uploading them to the appropriate location in this section.',
             subtextTwo:
               'Please note that MuniVendor is not responsible for any errors and/or omissions in your offer (submission package) resulting from documents manually edited by you.',
-            actionLabel: 'Vendor Profile Page',
+            actionLabel: 'Offeror Profile Page',
             onAction: goToOfferorProfilePage,
             width: '500px',
             transformStyle: 'translate(-103%, -48%)'
@@ -128,10 +126,11 @@
         style="font-size: medium; color: #0b74fd; cursor: pointer"
         [appTooltip]="{
           header: 'Status',
-          body: 'This column indicates the current status of the respective required Agency form. Incomplete means that either the required content is missing from your Vendor Profile Page, or you have not yet uploaded your manually completed form. Uploaded means that you you have elected to use a manually completed copy of the respective form. MV Autofill AI means that you are currently using a version of this Agency form that has been completed by the MuniVendor Autofill AI.',
+          body: 'This column indicates the current status of the respective required Agency form. Incomplete means that you have not yet uploaded your manually completed form. Complete means that you successfully uploaded the respective form. You, the offeror, must make certain that you completed the forms as per the Agency\'s instructions.',
           width: '500px',
           showCloseButton: false,
-          showActionButton: false
+          showActionButton: false,
+          transformStyle: 'translate(-103%, -48%)'
         }"
       >
         info_outline
@@ -145,14 +144,10 @@
           style="font-size: medium; color: #0b74fd; cursor: pointer"
           [appTooltip]="{
             header: 'Incomplete',
-            body: 'To save you time and money, MuniVendor automatically fills out all agency required forms using content from your Vendor Profile page. MuniVendor also attaches all required documents, such as your BRC, W-9, etc. to your offer (completed response/submission package). Please complete your Vendor Profile Page so that MuniVendor can auto-fill the corresponding government agency documents.',
-            subtext:
-              'Alternatively, you can modify/edit these documents and forms by downloading them, filling them out, and then uploading them to the appropriate location in this section.',
-            subtextTwo:
-              'Please note that MuniVendor is not responsible for any errors and/or omissions in your offer (submission package) resulting from documents manually edited by you.',
-            actionLabel: 'Vendor Profile Page',
+            body: 'Incomplete means that you have not yet uploaded your manually completed form.',
+            actionLabel: 'Offeror Profile Page',
             onAction: goToOfferorProfilePage,
-            width: '500px',
+            width: 'auto',
             transformStyle: 'translate(-103%, -48%)'
           }"
         >
@@ -209,10 +204,8 @@
           style="font-size: medium; color: #0b74fd; cursor: pointer"
           [appTooltip]="{
             header: 'File Actions',
-            body: 'Clicking on each download button will download a copy of the Agency required form. Please note that depending on when you click to download this document, you may be downloading the original document, or the auto-filled version of the document.',
-            subtext:
-              'Instead of using MuniVendor’s Autofill AI, you may upload a manually completed copy of each respective form.',
-            width: '500px',
+            body: 'Clicking on each download button will download a copy of the Agency required form.',
+            width: 'auto',
             showCloseButton: false,
             showActionButton: false
           }"
@@ -245,7 +238,7 @@
           style="font-size: medium; color: #0b74fd; cursor: pointer"
           [appTooltip]="{
             header: 'Status',
-            body: 'This column indicates the current status of the respective required Agency form. Incomplete means that either the required content is missing from your Vendor Profile Page, or you have not yet uploaded your manually completed form. Uploaded means that you you have elected to use a manually completed copy of the respective form. MV Autofill AI means that you are currently using a version of this Agency form that has been completed by the MuniVendor Autofill AI.',
+            body: 'This column indicates the current status of the respective required Agency form. Incomplete means that you have not yet uploaded your manually completed form. Complete means that you successfully uploaded the respective form. You, the offeror, must make certain that you completed the forms as per the Agency\'s instructions.',
             width: '500px',
             showCloseButton: false,
             showActionButton: false
@@ -262,14 +255,10 @@
             style="font-size: medium; color: #0b74fd; cursor: pointer"
             [appTooltip]="{
               header: 'Incomplete',
-              body: 'To save you time and money, MuniVendor automatically fills out all agency required forms using content from your Vendor Profile page. MuniVendor also attaches all required documents, such as your BRC, W-9, etc. to your offer (completed response/submission package). Please complete your Vendor Profile Page so that MuniVendor can auto-fill the corresponding government agency documents.',
-              subtext:
-                'Alternatively, you can modify/edit these documents and forms by downloading them, filling them out, and then uploading them to the appropriate location in this section.',
-              subtextTwo:
-                'Please note that MuniVendor is not responsible for any errors and/or omissions in your offer (submission package) resulting from documents manually edited by you.',
-              actionLabel: 'Vendor Profile Page',
+              body: 'Incomplete means that you have not yet uploaded your manually completed form.',
+              actionLabel: 'Offeror Profile Page',
               onAction: goToOfferorProfilePage,
-              width: '500px',
+              width: 'auto',
               transformStyle: 'translate(-103%, -48%)'
             }"
           >
@@ -292,7 +281,7 @@
 
 <br />
 <h2>
-  Offeror Uploads<span style="font-size: 16px; font-weight: normal"
+  Offeror Uploads &nbsp;<span style="font-size: 16px; font-weight: normal"
     >(Upload your response here. Include items such as your proposal, brochures,
     and any other offer-specific documents that are relevant to this
     solicitation.)</span

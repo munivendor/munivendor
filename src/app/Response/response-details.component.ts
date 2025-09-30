@@ -29,6 +29,7 @@ import {
   MatDialogModule,
   // MatDialogRef,
 } from '@angular/material/dialog';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'response-details',
@@ -72,6 +73,7 @@ export class ResponseDetailsComponent implements OnInit {
     private documentService: DocumentService,
     private fb: FormBuilder,
     private stateService: StateService,
+    private http: HttpClient,
     public dialog: MatDialog
   ) {
     this.responseForm = this.fb.group({
@@ -197,11 +199,33 @@ export class ResponseDetailsComponent implements OnInit {
     });
   }
 
+  downloadPDFv2() {
+    // Pick the wrapper for your main content
+    const content = document.querySelector('.content')?.innerHTML ?? '';
+
+    this.http
+      .post(
+        '/api/generate-pdf/' + this.sourceIdParam,
+        { html: content },
+        { responseType: 'blob' }
+      )
+      .subscribe((response) => {
+        const blob = new Blob([response], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'document.pdf';
+        a.click();
+        window.URL.revokeObjectURL(url);
+      });
+  }
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
 }
+
 // @Component({
 //   selector: 'app-auto-fill-status-dialog',
 //   template: `

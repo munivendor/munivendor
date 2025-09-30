@@ -12,7 +12,14 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatCardModule } from '@angular/material/card';
-import { OnDestroy } from '@angular/core';
+import {
+  AfterViewInit,
+  ElementRef,
+  HostListener,
+  OnDestroy,
+  ViewChild,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { Component, OnInit } from '@angular/core';
 import { GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
 import { Router } from '@angular/router';
@@ -93,7 +100,7 @@ export class DialogElementsExampleDialog {}
   templateUrl: './signup.component.html',
   styleUrls: ['./signup.component.css'],
 })
-export class SignupComponent implements OnInit, OnDestroy {
+export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
   signupFormEmail!: FormGroup;
   signupFormGoogle!: FormGroup;
   userId!: number;
@@ -103,6 +110,9 @@ export class SignupComponent implements OnInit, OnDestroy {
   private userSelectedOrgTypeIdGoogle: number | null = null;
   private userCreationInProgress = false;
   private destroy$ = new Subject<void>();
+
+  @ViewChild('googleBtnContainer') googleBtnContainer!: ElementRef;
+  buttonWidth = 424;
 
   constructor(
     private fb: FormBuilder,
@@ -114,7 +124,8 @@ export class SignupComponent implements OnInit, OnDestroy {
     private organizationService: OrganizationService,
     public dialog: MatDialog,
     private snackBar: MatSnackBar,
-    private stateService: StateService
+    private stateService: StateService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   openDialog() {
@@ -180,6 +191,23 @@ export class SignupComponent implements OnInit, OnDestroy {
           }
         }
       });
+  }
+
+  ngAfterViewInit() {
+    this.setButtonWidth();
+  }
+
+  @HostListener('window:resize')
+  onResize() {
+    this.setButtonWidth();
+  }
+
+  private setButtonWidth() {
+    if (this.googleBtnContainer) {
+      const containerWidth = this.googleBtnContainer.nativeElement.offsetWidth;
+      this.buttonWidth = containerWidth;
+      this.cdr.detectChanges();
+    }
   }
 
   private initForm(): void {
@@ -321,11 +349,16 @@ export class SignupComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         filter(([_, user]) => !!user && this.signupFormGoogle.valid),
-        take(1), // only handle first Google signup event
+        take(1),
         switchMap(([_, user]) => {
           this.userCreationInProgress = true;
-          const selectedOrganizationTypeId =
+          let selectedOrganizationTypeId =
             this.signupFormGoogle.get('organizationTypeId')?.value;
+
+          const isGovEmail = user.email && user.email.endsWith('.gov');
+          if (isGovEmail) {
+            selectedOrganizationTypeId = 1;
+          }
 
           const organizationData: Organization = {
             organizationTypeId: selectedOrganizationTypeId,
@@ -346,9 +379,10 @@ export class SignupComponent implements OnInit, OnDestroy {
                   identityTypeId: 2,
                   organizationId: orgResponse.organizationId,
                 };
-
+                this.stateService.setOrganizationTypeId(
+                  selectedOrganizationTypeId
+                );
                 this.stateService.setOrganizationId(orgResponse.organizationId);
-
                 return this.createOrLoginGoogleUser(userData);
               })
             );
@@ -399,7 +433,9 @@ export class SignupComponent implements OnInit, OnDestroy {
     this.userService
       .createUser(user)
       .pipe(
-        tap((userId: number) => console.log(`User created with ID: ${userId}`)),
+        tap((userId: number) => {
+          this.stateService.setUserId(userId);
+        }),
         switchMap((userId: number) =>
           this.userService.SendUserVerificationEmail(userId).pipe(
             tap(() => {

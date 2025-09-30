@@ -6,8 +6,8 @@
       color="primary"
       [appTooltip]="{
         header: 'Incomplete',
-        body: 'You cannot yet download your completed offer (submission packet), because there are forms that you still need to complete. Please make sure that your Vendor Profile page has been completed so that MuniVendor can autofill the documents and forms accordingly.',
-        actionLabel: 'Vendor Profile Page',
+        body: 'You cannot yet download your completed offer (submission packet), because there are forms that you still need to complete. Please make sure that your Offeror Profile Page has been completed so that MuniVendor can autofill the documents and forms accordingly.',
+        actionLabel: 'Offeror Profile Page',
         onAction: goToOfferorProfilePage,
         width: '400px',
         transformStyle: 'translate(-51%, 18%)'
@@ -39,7 +39,7 @@
           matInput
           formControlName="category"
           readonly
-          value="{{ requestFinalReviewDetails.category?.name }}"
+          [value]="displayCategoryName(requestFinalReviewDetails.categoryId)"
         />
       </mat-form-field>
     </div>
@@ -125,7 +125,7 @@
     </div>
   </div>
 
-  <!-- <div class="field-container">
+  <div class="field-container">
     <div class="inline-field">
       <p>Authorizing Official</p>
       <mat-form-field appearance="fill" class="input-width">
@@ -134,7 +134,7 @@
       </mat-form-field>
     </div>
     <div class="inline-field"></div>
-  </div> -->
+  </div>
 </form>
 
 <section>

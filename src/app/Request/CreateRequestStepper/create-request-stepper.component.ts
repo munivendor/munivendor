@@ -15,6 +15,7 @@ import { Request } from '../model/request.model';
 import { RequestSection } from '../model/requestsection.model';
 import { Subject, takeUntil } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
+import { StateService } from '../services/state.service';
 @Component({
   selector: 'create-request-stepper',
   templateUrl: 'create-request-stepper.component.html',
@@ -62,7 +63,10 @@ export class CreateRequestStepper implements OnDestroy {
   idParam?: string | null;
   isStepValid = false;
 
-  constructor(private route: ActivatedRoute) {
+  constructor(
+    private route: ActivatedRoute,
+    private stateService: StateService
+  ) {
     this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       this.idParam = params.get('requestId');
       this.requestId = this.idParam ? +this.idParam : null;
@@ -76,6 +80,7 @@ export class CreateRequestStepper implements OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    this.stateService.clearRequestId();
   }
 
   saveRequest() {

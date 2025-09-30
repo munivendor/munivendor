@@ -15,12 +15,11 @@ import { Organization } from './model/organization.model';
 import { Subject, throwError } from 'rxjs';
 import { takeUntil, tap, catchError, switchMap } from 'rxjs/operators';
 import { State } from '../../shared/model/state.model';
-import { AuthService } from '../../authorization/auth.service';
-import { UserService } from '../../shared/service/user.service';
-import { User } from '../../shared/model/user.model';
 import { FlowProgressService } from '../../shared/service/flow-progress.service';
+
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { LoggingService } from '../../exceptionhandling/logging.service';
+
 @Component({
   selector: 'app-organization-details',
   templateUrl: './organization.details.component.html',
@@ -43,7 +42,7 @@ export class OrganizationDetailsComponent implements OnInit {
     loginForm!: FormGroup;
   organizationDetailForm!: FormGroup;
   states: State[] = [];
-  userId!: number;
+  userId!: number | null;
   organizationId!: number | null;
   organizationTypeId!: number | null;
   private destroy$ = new Subject<void>();
@@ -54,23 +53,22 @@ export class OrganizationDetailsComponent implements OnInit {
     private organizationService: OrganizationService,
     private router: Router,
     private stateService: StateService,
-    private authService: AuthService,
-    private userService: UserService,
     private flowProgressService: FlowProgressService
   ) {
     this.organizationDetailForm = this.fb.group({});
-    this.userId = this.stateService.getUserId() ?? 0;
-    this.organizationTypeId = this.stateService.getOrganizationTypeId();
-    this.organizationId = this.stateService.getOrganizationId();
 
     if (this.organizationDetailForm) {
       this.organizationDetailForm.patchValue({
         organizationId: this.organizationId,
+        organizationTypeId: this.organizationTypeId,
       });
     }
   }
 
   ngOnInit(): void {
+    this.userId = this.stateService.getUserId();
+    this.organizationTypeId = this.stateService.getOrganizationTypeId();
+    this.organizationId = this.stateService.getOrganizationId();
     this.initializeForm();
     this.organizationService
       .getStates()
@@ -136,11 +134,20 @@ export class OrganizationDetailsComponent implements OnInit {
    /*this.organizationService
       .updateOrganization(organization)
       .pipe(
-        switchMap((organizationId: number) => {
-          this.stateService.setOrganizationId(organizationId);
+        switchMap((organizationId: any) => {
+          let orgId: number;
+          if (typeof organizationId === 'object' && organizationId !== null) {
+            orgId = organizationId.organizationId;
+          } else if (typeof organizationId === 'string') {
+            orgId = Number(organizationId);
+          } else {
+            orgId = organizationId;
+          }
+
+          this.stateService.setOrganizationId(Number(orgId));
 
           return this.flowProgressService
-            .saveFlowProgress(this.userId, 1, this.framePageNumber)
+            .saveFlowProgress(Number(this.userId), 1, this.framePageNumber)
             .pipe(tap(() => this.router.navigate(['/user-details'])));
         }),
 

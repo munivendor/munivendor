@@ -30,6 +30,14 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 import { CustomCategoryDropdownComponent } from '../../shared/CustomCategoryDropdown/custom-category-dropdown.component';
 import { StateService } from '../services/state.service';
+import { CategoryNode } from '../../shared/model/category-tree.model';
+import { ChangeDetectorRef } from '@angular/core';
+
+interface FlattenedCategoryNode {
+  categoryId: string;
+  name: string;
+  parentId: string | null;
+}
 
 const ACTION_PERMISSIONS: {
   [status: string]: {
@@ -79,6 +87,9 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
   hasLoadedData = false;
   private destroy$ = new Subject<void>();
   @Input() categoryControl!: FormControl<number | null>;
+
+  hierarchicalCategories: CategoryNode[] = [];
+  flattenedCategories: FlattenedCategoryNode[] = [];
 
   canPerformAction(
     request: any,
@@ -138,7 +149,8 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     private requestService: RequestService,
     private categoryHierarchyService: CategoryHierarchyService,
     private fb: FormBuilder,
-    private stateService: StateService
+    private stateService: StateService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   readonly requestTypeMap = {
@@ -164,6 +176,85 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     'open',
     'redownload',
   ] as const;
+
+  displayCategoryName = (categoryId: string | number | null): string => {
+    if (categoryId == null) {
+      return '';
+    }
+
+    const searchValue = categoryId.toString();
+    const match = this.flattenedCategories.find(
+      (cat) => cat.categoryId === searchValue
+    );
+    if (match) {
+      return this.buildBreadcrumbPath(match);
+    }
+
+    return typeof categoryId === 'string' ? categoryId : '';
+  };
+
+  private buildBreadcrumbPath(node: FlattenedCategoryNode): string {
+    const path = [node.name];
+    let currentParentId = node.parentId;
+
+    while (currentParentId) {
+      const parentNode = this.flattenedCategories.find(
+        (cat) => cat.categoryId === currentParentId
+      );
+      if (parentNode) {
+        path.unshift(parentNode.name);
+        currentParentId = parentNode.parentId;
+      } else {
+        break;
+      }
+    }
+
+    return path.join(' > ');
+  }
+
+  // Add method to flatten categories
+  private flattenCategories(
+    categories: CategoryNode[],
+    parentId: string | null = null
+  ): FlattenedCategoryNode[] {
+    const flattened: FlattenedCategoryNode[] = [];
+
+    for (const category of categories) {
+      flattened.push({
+        categoryId: category.categoryId || category.id?.toString() || '',
+        name: category.name || '',
+        parentId: parentId,
+      });
+
+      if (category.children && category.children.length > 0) {
+        flattened.push(
+          ...this.flattenCategories(
+            category.children,
+            category.categoryId || category.id?.toString() || ''
+          )
+        );
+      }
+    }
+
+    return flattened;
+  }
+
+  prepareCategoriesForTreeRendering(
+    categories: CategoryNode[],
+    level: number = 0
+  ): CategoryNode[] {
+    return categories
+      .filter((cat) => !cat.deleted)
+      .map((category) => ({
+        ...category,
+        categoryId: category.id?.toString() ?? '',
+        level,
+        expandable: !!category.children?.length,
+        children: category.children?.length
+          ? this.prepareCategoriesForTreeRendering(category.children, level + 1)
+          : undefined,
+      }));
+  }
 
   getAvailableActions(request: any): string[] {
     const status = request.agencyRequestStatus?.requestStatusDesc;
@@ -285,6 +376,14 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
           const requestsData = requests?.requests || [];
           this.hasLoadedData = requestsData.length > 0;
 
+          if (categories && categories.length > 0) {
+            this.hierarchicalCategories =
+              this.prepareCategoriesForTreeRendering(categories);
+            this.flattenedCategories = this.flattenCategories(
+              this.hierarchicalCategories
+            );
+          }
+
           requestsData.forEach((request: any) => {
             const category = this.findCategoryById(
               categories || [],
@@ -303,6 +402,10 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
               (r: any) => r.offerorRequestStatusId === 9
             ).length;
 
+            request.publishDate = request.publishDate
+              ? new Date(request.publishDate + 'Z')
+              : null;
+
             request.closeDate = request.closeDate
               ? new Date(request.closeDate + 'Z')
               : null;
@@ -317,8 +420,17 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
           });
 
           this.dataSource = new MatTableDataSource(combinedData);
-          this.dataSource.paginator = this.paginator;
-          this.dataSource.sort = this.sort;
+          this.cdr.detectChanges();
+
+          setTimeout(() => {
+            if (this.paginator) {
+              this.dataSource.paginator = this.paginator;
+              this.paginator.firstPage();
+            }
+            if (this.sort) {
+              this.dataSource.sort = this.sort;
+            }
+          }, 0);
         },
         (error) => {
           console.error('Unexpected error in forkJoin:', error);

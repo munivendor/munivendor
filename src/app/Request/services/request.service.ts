@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { DecisionMaker } from '../model/decisionmaker.model';
@@ -119,13 +119,23 @@ export class RequestService {
 
   SaveRequestSections(
     requestSection: RequestSection,
-    requestId: number
-  ): Observable<{ success: boolean; requestSectionId: number | null }> {
+    requestId: number,
+    sortOrderId: number
+  ): Observable<{
+    success: boolean;
+    requestSectionId: number | null;
+    sortOrderId: number | null;
+  }> {
     const headers = { 'Content-Type': 'application/json' };
     return this.http.post<{
       success: boolean;
       requestSectionId: number | null;
-    }>(`${this.url}RequestSections/${requestId}`, requestSection, { headers });
+      sortOrderId: number | null;
+    }>(
+      `${this.url}RequestSections/${requestId}/${sortOrderId}`,
+      requestSection,
+      { headers }
+    );
   }
 
   GetRequiredDocuments(): Observable<any> {
@@ -193,17 +203,25 @@ export class RequestService {
   GetAgencySpecificDocumentContent(
     organizationDocumentId: number,
     organizationId: number
-  ): Observable<Blob> {
+  ): Observable<HttpResponse<Blob>> {
     return this.http.get(
       `${this.url}OrganizationDocuments/DocumentContent/${organizationDocumentId}/${organizationId}`,
-      { responseType: 'blob' }
+      {
+        observe: 'response',
+        responseType: 'blob',
+      }
     );
   }
 
-  GetOfferorDocumentContent(requestDocumentId: number): Observable<Blob> {
+  GetOfferorDocumentContent(
+    requestDocumentId: number
+  ): Observable<HttpResponse<Blob>> {
     return this.http.get(
       `${this.url}RequestDocuments/DocumentContent/Response/${requestDocumentId}`,
-      { responseType: 'blob' }
+      {
+        observe: 'response',
+        responseType: 'blob',
+      }
     );
   }
 
