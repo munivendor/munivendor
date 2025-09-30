@@ -1,119 +1,115 @@
-  .input-width {
-    width: 100%;
-  }
+.input-width {
+  width: 100%;
+}
 
-  .single-input-width {
-    width: 49%;
-  }
+.field-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
 
-  .field-container {
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-  }
+.inline-field {
+  flex: 1;
+  min-width: 200px;
+}
 
-  .inline-field {
-    flex: 1;
-    min-width: 200px;
-  }
+.form-with-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
-  .form-with-button {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
+.tree-node {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
 
-  .tree-node {
-    display: flex;
-    align-items: center;
-    width: 100%;
-  }
+.toggle-button {
+  min-width: 40px;
+  width: 40px;
+  height: 40px;
+  padding: 0 !important;
+  margin-right: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  position: relative;
+}
 
-  .toggle-button {
-    min-width: 40px;
-    width: 40px;
-    height: 40px;
-    padding: 0 !important;
-    margin-right: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    position: relative;
-  }
+/* Override Material Design defaults completely */
+.toggle-button.mat-icon-button {
+  line-height: 1;
+  padding: 0 !important;
+  margin: 0;
+}
 
-  /* Override Material Design defaults completely */
-  .toggle-button.mat-icon-button {
-    line-height: 1;
-    padding: 0 !important;
-    margin: 0;
-  }
+/* Force the mat-icon to be perfectly centered */
+.toggle-button .mat-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 !important;
+}
 
-  /* Force the mat-icon to be perfectly centered */
-  .toggle-button .mat-icon {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 20px;
-    height: 20px;
-    font-size: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 !important;
-  }
+/* Maintain centering on all states */
+.toggle-button:hover .mat-icon,
+.toggle-button:focus .mat-icon,
+.toggle-button:active .mat-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
 
-  /* Maintain centering on all states */
-  .toggle-button:hover .mat-icon,
-  .toggle-button:focus .mat-icon,
-  .toggle-button:active .mat-icon {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-  }
+.toggle-spacer {
+  display: inline-block;
+  height: 40px;
+  margin-right: 4px;
+}
 
-  .toggle-spacer {
-    display: inline-block;
-    height: 40px;
-    margin-right: 4px;
-  }
+.category-name {
+  flex: 1;
+  padding: 8px 0;
+}
 
-  .category-name {
-    flex: 1;
-    padding: 8px 0;
-  }
+.info-menu .non-interactive {
+  pointer-events: auto !important;
+  opacity: 1 !important;
+  background: transparent !important;
+  cursor: default !important;
+}
 
-  .info-menu .non-interactive {
-    pointer-events: auto !important;
-    opacity: 1 !important;
-    background: transparent !important;
-    cursor: default !important;
-  }
+.info-menu .non-interactive:hover {
+  background: transparent !important;
+}
 
-  .info-menu .non-interactive:hover {
-    background: transparent !important;
-  }
+.info-menu .non-interactive:focus {
+  background: transparent !important;
+  outline: none !important;
+}
 
-  .info-menu .non-interactive:focus {
-    background: transparent !important;
-    outline: none !important;
-  }
+.menu-content {
+  padding: 16px;
+  max-width: 350px;
+  white-space: normal;
+  line-height: 1.4;
+}
 
-  .menu-content {
-    padding: 16px;
-    max-width: 350px;
-    white-space: normal;
-    line-height: 1.4;
-  }
+.tooltip-text {
+  margin-bottom: 16px;
+  color: #333;
+}
 
-  .tooltip-text {
-    margin-bottom: 16px;
-    color: #333;
-  }
-
-  /* Ensure the menu doesn't interfere with hover detection */
-  .info-menu {
-    pointer-events: auto;
-  }
+/* Ensure the menu doesn't interfere with hover detection */
+.info-menu {
+  pointer-events: auto;
+}

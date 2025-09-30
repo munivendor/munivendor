@@ -1,18 +1,28 @@
-  .field-container {
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-  }
+.field-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
 
-  .inline-field {
-    flex: 1;
-    min-width: 200px;
-  }
+.inline-field {
+  flex: 1;
+  min-width: 200px;
+}
 
-  .input-width {
-    width: 100%;
-  }
+.input-width {
+  width: 100%;
+}
 
-  .single-input-width {
-    width: 49%;
-  }
+.decision-makers-full-width {
+  width: 100%;
+}
+
+.decision-makers-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.decision-maker-field {
+  width: 100%;
+}
