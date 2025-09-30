@@ -62,7 +62,9 @@ export class TooltipService {
 
     tooltip.instance.close.subscribe(() => this.hideTooltip());
     tooltip.instance.action.subscribe(() => {
-      onAction?.();
+      if (onAction) {
+        onAction();
+      }
       this.hideTooltip();
     });
 

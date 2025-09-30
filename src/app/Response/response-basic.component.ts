@@ -16,6 +16,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSelectModule } from '@angular/material/select'; // ADD THIS
 import { CategoryHierarchyService } from '../Request/services/category-hierarchy.service';
 import { Subject, takeUntil, forkJoin, BehaviorSubject } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
@@ -36,6 +37,12 @@ interface FlattenedCategoryNode {
   children?: FlattenedCategoryNode[];
 }
 
+interface AuthorizingOfficial {
+  vendorAuthorizingOfficialId: number;
+  firstName: string;
+  lastName: string;
+}
+
 @Component({
   selector: 'response-basic',
   templateUrl: './response-basic.component.html',
@@ -52,6 +59,7 @@ interface FlattenedCategoryNode {
     MatIconModule,
     MatButtonModule,
     MatMenuModule,
+    MatSelectModule,
     TooltipDirective,
   ],
   providers: [RequestService],
@@ -72,6 +80,8 @@ export class ResponseBasicComponent implements OnInit {
   responseIdFromStateService = this.stateService.getRequestId();
   filteredCategoriesSubject = new BehaviorSubject<FlattenedCategoryNode[]>([]);
   flattenedCategories: FlattenedCategoryNode[] = [];
+  authorizingOfficialTooltip: any;
+  authorizingOfficials: AuthorizingOfficial[] = [];
 
   constructor(
     private requestService: RequestService,
@@ -83,7 +93,7 @@ export class ResponseBasicComponent implements OnInit {
   ) {
     this.responseForm = this.fb.group({
       responseName: ['', Validators.required],
-      authorizingOfficial: [{ value: '' }, Validators.required],
+      authorizingOfficial: [null, Validators.required],
     });
   }
 
@@ -93,30 +103,47 @@ export class ResponseBasicComponent implements OnInit {
       .pipe(takeUntil(this.destroy$))
       .subscribe(
         (officials) => {
-          if (officials && officials.length > 0) {
-            const fullName = `${officials[0].firstName} ${officials[0].lastName}`;
+          this.authorizingOfficials = officials || [];
+
+          if (this.authorizingOfficials.length > 0) {
+            const firstOfficial = this.authorizingOfficials[0];
+            this.authorizingOfficialId =
+              firstOfficial.vendorAuthorizingOfficialId;
 
             this.responseForm.patchValue({
-              authorizingOfficial: fullName,
+              authorizingOfficial: firstOfficial.vendorAuthorizingOfficialId,
             });
           } else {
             this.authorizingOfficialId = null;
             this.responseForm.patchValue({
-              authorizingOfficial: '',
+              authorizingOfficial: null,
             });
           }
         },
         (error) => {
-          console.error('Error fetching authorizing officials:', error);
+          this.authorizingOfficials = [];
           this.authorizingOfficialId = null;
           this.responseForm.patchValue({
-            authorizingOfficial: '',
+            authorizingOfficial: null,
           });
         }
       );
   }
 
+  onAuthorizingOfficialChange(officialId: number): void {
+    this.authorizingOfficialId = officialId;
+  }
+
   ngOnInit(): void {
+    this.authorizingOfficialTooltip = {
+      header: 'Required',
+      body: 'Please designate an authorizing official for this offer. An Authorizing Official is a person authorized from your organization to submit offers in response to government agency solicitations.',
+      actionLabel: 'Offeror Profile Page',
+      width: '320px',
+      onAction: () => this.goToOfferorProfilePage(),
+      transformStyle: 'translate(-50%, -102%)',
+    };
+
     if (this.sourceIdParam) {
       this.loadTemplateRequest(Number(this.sourceIdParam));
       this.fetchAuthorizingOfficials();
@@ -243,7 +270,6 @@ export class ResponseBasicComponent implements OnInit {
     if (value == null) {
       return '';
     }
-    console.log('value', value);
     const match = this.flattenedCategories.find(
       (cat) => cat.categoryId === value
     );
@@ -281,32 +307,25 @@ export class ResponseBasicComponent implements OnInit {
 
   private loadResponseRequest(responseId: number): void {
     const request$ = this.requestService.GetRequestDetailsById(responseId);
-    // const authorizingOfficials$ =
-    //   this.offerorProfileService.GetOfferorAuthorizingOfficials(
-    //     Number(this.organizationId)
-    //   );
-    forkJoin([
-      request$,
-      // , authorizingOfficials$
-    ])
+    const authorizingOfficials$ =
+      this.offerorProfileService.GetOfferorAuthorizingOfficials(
+        Number(this.organizationId)
+      );
+
+    forkJoin([request$, authorizingOfficials$])
       .pipe(takeUntil(this.destroy$))
       .subscribe(
-        ([
-          response,
-          // , authorizingOfficials
-        ]) => {
-          // const authorizingOfficial = authorizingOfficials.find(
-          //   (official: { vendorAuthorizingOfficialId: number }) =>
-          //     official.vendorAuthorizingOfficialId ===
-          //     response.authorizingOfficialId
-          // );
-          // console.log('authorizingOfficials', authorizingOfficials);
+        ([response, authorizingOfficials]) => {
+          this.authorizingOfficials = authorizingOfficials || [];
+
           this.responseForm.patchValue({
             responseName: response.requestName,
-            // authorizingOfficial: authorizingOfficial
-            //   ? `${authorizingOfficial.firstName} ${authorizingOfficial.lastName}`
-            //   : '',
+            authorizingOfficial: response.authorizingOfficialId || null,
           });
+
+          if (response.authorizingOfficialId) {
+            this.authorizingOfficialId = response.authorizingOfficialId;
+          }
         },
         (error: any) => {
           console.error('Error loading response request', error);
@@ -366,29 +385,21 @@ export class ResponseBasicComponent implements OnInit {
         .pipe(takeUntil(this.destroy$))
         .subscribe(
           (responseRequestId: number) => {
-            console.log('Request updated successfully:', responseRequestId);
             this.stateService.setRequestId(responseRequestId);
             this.stateService.setRequestHasBeenSaved(true);
           },
-          (error) => {
-            console.error('Error updating Request:', error);
-          }
+          (error) => {}
         );
     } else if (!responseIdFromStateService || !this.responseIdParam) {
       this.requestService.CreateRequest(request).subscribe(
         (response) => {
-          console.log('Response saved successfully:', response);
           this.stateService.setRequestId(response);
           this.requestService.UpdateRequestStatus(response, 8).subscribe(
             (statusResponse) => {},
-            (error) => {
-              console.error('Error updating request status:', error);
-            }
+            (error) => {}
           );
         },
-        (error) => {
-          console.error('Error saving response:', error);
-        }
+        (error) => {}
       );
     }
   }
