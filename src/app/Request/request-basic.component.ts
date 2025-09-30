@@ -6,6 +6,7 @@ import {
   Output,
   EventEmitter,
   ChangeDetectorRef,
+  inject,
 } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import {
@@ -45,6 +46,8 @@ import {
   tap,
 } from 'rxjs/operators';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { LoggingService } from '../exceptionhandling/logging.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 interface FlattenedCategoryNode {
   name: string;
@@ -83,6 +86,9 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     decisionMakerId: number | null;
   }>();
   @Output() formValidityChange = new EventEmitter<boolean>();
+private _snackBar = inject(MatSnackBar);
+  private _logger = inject(LoggingService);
+
 
   filteredCategoriesSubject = new BehaviorSubject<FlattenedCategoryNode[]>([]);
   filteredCategories = this.filteredCategoriesSubject.asObservable();
@@ -104,12 +110,15 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     private requestService: RequestService,
     private stateService: StateService,
     private cdr: ChangeDetectorRef,
-    private categoryHierarchyService: CategoryHierarchyService
+    private categoryHierarchyService: CategoryHierarchyService,
+  
+ 
   ) {
     this.flattenCategories();
   }
 
   ngOnInit() {
+
     this.stateService.setRequestId(null);
     if (this.idParam) {
       this.getRequestById(Number(this.idParam));
@@ -485,37 +494,80 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     return typeof value === 'string' ? value : '';
   };
 
-  private fetchInitialData(): void {
-    this.categoryHierarchyService
-      .GetCategoryHierarchy()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (categories) => {
-          this.hierarchicalCategories =
-            this.prepareCategoriesForTreeRendering(categories);
-          this.flattenCategories();
-        },
-        error: (err) => console.error('Error fetching categories:', err),
-      });
+private fetchInitialData(): void {
+  this.categoryHierarchyService
+    .GetCategoryHierarchy()
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: (categories) => {
+        this.hierarchicalCategories =
+          this.prepareCategoriesForTreeRendering(categories);
+        this.flattenCategories();
+      },
+      error: (error) => {
+        const err = new Error(error.message || error.toString());
+        err.name = 'Fetch Category Hierarchy Failed';
+        this._logger.logException(err, 3, {
+          methodName: 'fetchInitialData',
+          className: 'RequestBasicComponent',
+          operation: 'GetCategoryHierarchy',
+          organizationId: this.organizationId
+        });
+        this._snackBar.open(
+          'Failed to load categories. Please try again later.',
+          'Close',
+          { verticalPosition: 'top' }
+        );
+      }
+    });
 
-    this.requestService
-      .GetDecisionMakers(this.organizationId ?? 0)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (decisionMakers: DecisionMaker[]) =>
-          (this.decisionMakers = decisionMakers),
-        error: (err) => console.error('Error fetching decision makers:', err),
-      });
+  this.requestService
+    .GetDecisionMakers(this.organizationId ?? 0)
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: (decisionMakers: DecisionMaker[]) =>
+        (this.decisionMakers = decisionMakers),
+      error: (error) => {
+        const err = new Error(error.message || error.toString());
+        err.name = 'Fetch Decision Makers Failed';
+        this._logger.logException(err, 3, {
+          methodName: 'fetchInitialData',
+          className: 'RequestBasicComponent',
+          operation: 'GetDecisionMakers',
+          organizationId: this.organizationId
+        });
+        this._snackBar.open(
+          'Failed to load decision makers. Please try again later.',
+          'Close',
+          { verticalPosition: 'top' }
+        );
+      }
+    });
 
-    this.requestService
-      .GetRequestTypes()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (requestTypes: RequestType[]) =>
-          (this.requestTypes = requestTypes),
-        error: (err) => console.error('Error fetching request types:', err),
-      });
-  }
+  this.requestService
+    .GetRequestTypes()
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: (requestTypes: RequestType[]) =>
+        (this.requestTypes = requestTypes),
+      error: (error) => {
+        const err = new Error(error.message || error.toString());
+        err.name = 'Fetch Request Types Failed';
+        this._logger.logException(err, 3, {
+          methodName: 'fetchInitialData',
+          className: 'YourComponent',
+          operation: 'GetRequestTypes'
+        });
+        this._snackBar.open(
+          'Failed to load request types. Please try again later.',
+          'Close',
+          { verticalPosition: 'top' }
+        );
+      }
+    });
+}
+
+
 
   selectCategory(categoryId: string, categoryName: string): void {
     this.basicsFormGroup
@@ -548,8 +600,8 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
 
     forkJoin([request$, categories$, requestTypes$, decisionMakers$])
       .pipe(takeUntil(this.destroy$))
-      .subscribe(
-        ([request, categories, requestTypes, decisionMakers]) => {
+      .subscribe({
+        next: ([request, categories, requestTypes, decisionMakers]) => {
           const category = this.findCategoryById(
             categories,
             request.categoryId
@@ -602,10 +654,23 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
           }
           this.cdr.detectChanges();
         },
-        (error: any) => {
-          console.error('Error fetching data', error);
+        error: (error: unknown) => {
+          const err = new Error(
+            (error as Error)?.message || error?.toString?.() || String(error)
+          );
+          err.name = 'Fetch Request Types Failed';
+          this._logger.logException(err, 3, {
+            methodName: 'fetchInitialData',
+            className: 'BasicRequestComponent',
+            operation: 'GetRequestTypes'
+          });
+          this._snackBar.open(
+            'Unidentified error occurred',
+            'Close',
+            { verticalPosition: 'top' }
+          );
         }
-      );
+      });
   }
 
   get dropdowns(): FormArray {

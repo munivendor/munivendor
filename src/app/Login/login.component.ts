@@ -96,8 +96,8 @@ export class LoginComponent implements OnInit {
         this._logger.logException(err, 3, {
           userId: email,
           methodName: 'login',
-          className: 'AuthService',
-          operation: 'user_authentication'
+          className: 'LoginComponent',
+          operation: 'user_authentication',
         }
         );
         this._snackBar.open(

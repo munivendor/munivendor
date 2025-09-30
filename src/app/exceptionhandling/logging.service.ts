@@ -2,6 +2,8 @@
 import { Injectable } from '@angular/core';
 import { ApplicationInsights } from '@microsoft/applicationinsights-web';
 import { environment } from '../../environments/environment';
+import { request } from 'http';
+import { Organization } from '../Organization/Details/model/organization.model';
 
 @Injectable({ providedIn: 'root' })
 export class LoggingService {
@@ -28,12 +30,16 @@ export class LoggingService {
 
   logException(error: Error, severityLevel = 3, additionalProps?: any) {
     this.appInsights.trackException({
-      exception: error, severityLevel, properties:
+      exception: error, severityLevel,
+     properties:
       {
         userId: additionalProps?.userId,
+        requestId: additionalProps?.requestId,
+        organizationId: additionalProps?.organizationId,
         methodName: additionalProps.methodName,
         className: additionalProps.className,
-        operation: additionalProps.operation
+        operation: additionalProps.operation, 
+        correlationId: additionalProps?.correlationId,
       }
     });
 
