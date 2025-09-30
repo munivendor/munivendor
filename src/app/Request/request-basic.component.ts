@@ -715,7 +715,6 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
         .pipe(takeUntil(this.destroy$))
         .subscribe(
           (responseRequestId: number) => {
-            console.log('Request updated successfully:', responseRequestId);
             this.getRequestById(responseRequestId);
             this.stateService.setRequestId(responseRequestId);
             this.stateService.setRequestHasBeenSaved(true);

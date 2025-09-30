@@ -53,8 +53,6 @@ export class AuthService {
   private skipNextAuthStateSubject = new BehaviorSubject<boolean>(false);
   skipNextAuthState$ = this.skipNextAuthStateSubject.asObservable();
   public isLoggingIn = new BehaviorSubject<boolean>(false);
-
-  // Add a subject to track app initialization
   private appInitialized = new BehaviorSubject<boolean>(false);
   public appInitialized$ = this.appInitialized.asObservable();
 
@@ -122,22 +120,17 @@ export class AuthService {
 
   private forceLogoutThisTab(): void {
     this.safeResetAuthState();
-
-    // Show a message to the user
     alert('You have been logged out because another session was started.');
-
     setTimeout(() => {
       window.location.reload();
     }, 100);
   }
 
   private setCurrentSession(userSession: UserSession): void {
-    // Store session info in localStorage to sync across tabs
     localStorage.setItem('currentSession', JSON.stringify(userSession));
   }
 
   private clearCurrentSession(): void {
-    // Clear from localStorage
     localStorage.removeItem('currentSession');
   }
 
@@ -217,7 +210,6 @@ export class AuthService {
       )
       .subscribe({
         next: ([user, _skip, _signup]) => {
-          console.log('Google Auth State Changed (login mode):', user);
           const userLogin: UserLogin = {
             userIdentity: user.id,
             username: user.email,
@@ -251,7 +243,6 @@ export class AuthService {
             this.userSubject.next(userId as any);
             this.userService.getUser(Number(userId)).subscribe(
               (user: User) => {
-                console.log('User data fetched successfully:', user);
                 if (user.organizationId !== undefined) {
                   this.stateService.setOrganizationId(user.organizationId);
                 }
@@ -328,7 +319,6 @@ export class AuthService {
   }
 
   setAuthenticated(isAuthenticated: boolean, userData: any = null): void {
-    console.log(`Setting authenticated state to ${isAuthenticated}`);
     this.authState.next(isAuthenticated);
     this.userSubject.next(userData);
     this.isLoggingIn.next(false);
@@ -349,8 +339,6 @@ export class AuthService {
       .getUser(userId)
       .pipe(
         tap((user: User) => {
-          console.log('User data fetched in completeLoginProcess:', user);
-
           if (user.organizationId !== undefined) {
             this.stateService.setOrganizationId(user.organizationId);
           }
