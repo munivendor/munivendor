@@ -26,6 +26,7 @@ interface AuthorizingOfficial {
   lastName: string;
   title: string;
   email: string;
+  phoneNumber?: string;
 }
 
 @Component({
@@ -56,6 +57,7 @@ export class OfferorProfilePageComponent implements OnInit {
     'lastName',
     'title',
     'email',
+    'phoneNumber',
     'actions',
   ];
 
@@ -98,6 +100,7 @@ export class OfferorProfilePageComponent implements OnInit {
         '',
         [Validators.required, Validators.email, Validators.maxLength(255)],
       ],
+      phoneNumber: ['', [Validators.maxLength(20)]],
     });
   }
 
@@ -148,6 +151,7 @@ export class OfferorProfilePageComponent implements OnInit {
       lastName: official.lastName,
       title: official.title,
       email: official.email,
+      phoneNumber: official.phoneNumber || '',
     });
   }
 
@@ -168,6 +172,7 @@ export class OfferorProfilePageComponent implements OnInit {
         lastName: this.authorizingOfficialForm.value.lastName,
         title: this.authorizingOfficialForm.value.title,
         email: this.authorizingOfficialForm.value.email,
+        phoneNumber: this.authorizingOfficialForm.value.phoneNumber,
       };
 
       if (this.editingOfficialId) {
@@ -213,30 +218,6 @@ export class OfferorProfilePageComponent implements OnInit {
       });
   }
 
-  deleteOfficial(official: AuthorizingOfficial): void {
-    if (
-      confirm(
-        `Are you sure you want to delete ${official.firstName} ${official.lastName}?`
-      )
-    ) {
-      // if (this.offerorProfileService.DeleteOfferorAuthorizingOfficial) {
-      //   this.offerorProfileService.DeleteOfferorAuthorizingOfficial(official.vendorAuthorizingOfficialId!).subscribe({
-      //     next: () => {
-      //       this.showSnackBar('Authorizing Official deleted successfully');
-      //       this.loadAuthorizingOfficials(official.organizationId);
-      //     },
-      //     error: (err) => {
-      //       console.error('Error deleting Authorizing Official:', err);
-      //       this.showSnackBar('Error deleting Authorizing Official');
-      //     },
-      //   });
-      // } else {
-      //   this.showSnackBar('Delete functionality not yet implemented');
-      //   console.warn('DeleteOfferorAuthorizingOfficial method not found in service');
-      // }
-    }
-  }
-
   hasError(fieldName: string, errorType: string): boolean {
     return (
       (this.authorizingOfficialForm.get(fieldName)?.hasError(errorType) &&
@@ -251,6 +232,7 @@ export class OfferorProfilePageComponent implements OnInit {
       lastName: 50,
       title: 100,
       email: 255,
+      phoneNumber: 20,
     };
     return maxLengths[fieldName] || 0;
   }
@@ -258,6 +240,7 @@ export class OfferorProfilePageComponent implements OnInit {
   private showSnackBar(message: string): void {
     this.snackBar.open(message, 'Close', {
       duration: 3000,
+      verticalPosition: 'top',
     });
   }
 
