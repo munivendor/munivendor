@@ -166,7 +166,7 @@ this.organizationService
       this.stateService.setOrganizationId(organizationId);
 
       return this.flowProgressService
-        .saveFlowProgress(this.userId, 1, this.framePageNumber)
+        .saveFlowProgress(Number(this.userId), 1, this.framePageNumber)
         .pipe(
           tap(() => this.router.navigate(['/user-details'])),
           catchError((flowError) => {
