@@ -1,4 +1,4 @@
-import { Component, Inject, OnDestroy } from '@angular/core';
+import { Component, inject, Inject, OnDestroy } from '@angular/core';
 import {
   MatDialogRef,
   MatDialogModule,
@@ -9,6 +9,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { RequestService } from '../../Request/services/request.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
+import { LoggingService } from '../../exceptionhandling/logging.service';
 
 @Component({
   selector: 'submit-confirmation-dialog',
@@ -18,6 +19,10 @@ import { Router } from '@angular/router';
 })
 export class SubmitConfirmationDialogComponent implements OnDestroy {
   private destroy$ = new Subject<void>();
+
+  private _snackBar = inject(MatSnackBar);
+  private _logger = inject(LoggingService);
+  
   constructor(
     private requestService: RequestService,
     private snackBar: MatSnackBar,
@@ -35,7 +40,7 @@ export class SubmitConfirmationDialogComponent implements OnDestroy {
     this.destroy$.complete();
   }
 
-  confirm(): void {
+  /*confirm(): void {
     const requestId = this.data.responseId ? +this.data.responseId : 0;
     this.requestService
       .UpdateRequestStatus(requestId, 9)
@@ -54,5 +59,58 @@ export class SubmitConfirmationDialogComponent implements OnDestroy {
           console.error('Failed to update request status:', err);
         },
       });
-  }
+  }*/
+confirm(): void {
+  const requestId = +this.data.responseId;
+
+  this.requestService
+    .UpdateRequestStatus(requestId, 9)
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: (response: any) => {
+        const correlationId = response?.correlationId;
+
+        this._logger.logEvent('RequestStatusUpdated', {
+          responseId: requestId,
+          correlationId,
+          responseCode: response?.status,
+          methodName: 'confirm',
+          className: 'SubmitConfirmationDialogComponent',
+          operation: 'update_request_status',
+        });
+
+        this._snackBar.open(
+          'Offer successfully submitted!',
+          'Close',
+          {
+            verticalPosition: 'top',
+          }
+        );
+
+        this.router.navigate(['/offeror-requests-view']);
+        this.dialogRef.close(true);
+      },
+      error: (err: any) => {
+        const correlationId = err?.error; 
+        const error = new Error(err.message);
+        error.name = 'RequestStatusUpdateFailed';
+
+        this._logger.logException(error, err.status, {
+          responseId: requestId,
+          correlationId,
+          responseCode: err.status,
+          methodName: 'confirm',
+          className: 'SubmitConfirmationDialogComponent',
+          operation: 'update_request_status',
+        });
+
+        this._snackBar.open(
+          `Failed to submit offer. (Correlation ID: ${correlationId})`,
+          'Close',
+          { verticalPosition: 'top' }
+        );
+      },
+    });
+}
+      
 }
