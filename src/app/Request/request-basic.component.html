@@ -160,7 +160,7 @@
           <input
             matInput
             [matDatepicker]="closeDatePicker"
-            [matDatepickerFilter]="disableWeekendsAndPastDates"
+            [matDatepickerFilter]="disableCloseDates"
             formControlName="closeDate"
             (dateChange)="onSelectDate('closeDate', $event)"
             readonly
@@ -227,7 +227,7 @@
           <input
             matInput
             [matDatepicker]="contractEndDatePicker"
-            [matDatepickerFilter]="disableWeekendsAndPastDates"
+            [matDatepickerFilter]="disableContractEndDates"
             formControlName="contractEndDate"
             (dateChange)="onSelectDate('contractEndDate', $event)"
             readonly

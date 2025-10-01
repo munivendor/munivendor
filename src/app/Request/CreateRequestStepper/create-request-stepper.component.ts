@@ -1,12 +1,20 @@
-import { Component, ViewChild, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  ViewChild,
+  OnDestroy,
+  HostListener,
+  OnInit,
+  PLATFORM_ID,
+  Inject,
+} from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormGroup } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatButtonModule } from '@angular/material/button';
 import { Document } from '../model/document.model';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { BasicRequestComponent } from '../request-basic.component';
 import { RequestOverviewComponent } from '../request-overview.component';
 import { RequestRequiredDocumentsComponent } from '../request-required-docs.component';
@@ -16,6 +24,7 @@ import { RequestSection } from '../model/requestsection.model';
 import { Subject, takeUntil } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { StateService } from '../services/state.service';
+
 @Component({
   selector: 'create-request-stepper',
   templateUrl: 'create-request-stepper.component.html',
@@ -36,7 +45,7 @@ import { StateService } from '../services/state.service';
     MatCardModule,
   ],
 })
-export class CreateRequestStepper implements OnDestroy {
+export class CreateRequestStepper implements OnInit, OnDestroy {
   @ViewChild(BasicRequestComponent)
   basicRequestComponent!: BasicRequestComponent;
   @ViewChild(RequestOverviewComponent)
@@ -47,6 +56,7 @@ export class CreateRequestStepper implements OnDestroy {
   requestReviewComponent!: RequestReviewComponent;
 
   private destroy$ = new Subject<void>();
+  private hasNavigated = false;
 
   receivedProposalSections: RequestSection[] = [];
   requestData!: Request;
@@ -62,15 +72,90 @@ export class CreateRequestStepper implements OnDestroy {
   finalReviewFormGroup!: FormGroup;
   idParam?: string | null;
   isStepValid = false;
+  organizationTypeId = this.stateService.getOrganizationTypeId() || 1;
 
   constructor(
     private route: ActivatedRoute,
-    private stateService: StateService
+    private router: Router,
+    private stateService: StateService,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       this.idParam = params.get('requestId');
       this.requestId = this.idParam ? +this.idParam : null;
+
+      // Check for redirect after route params are loaded
+      this.checkAndRedirectOnReload();
     });
+  }
+
+  ngOnInit(): void {
+    // Determine if we're in creation mode based on route
+    if (isPlatformBrowser(this.platformId)) {
+      // If there's no requestId in the route initially, we're creating
+      if (!this.idParam) {
+        sessionStorage.setItem('request_in_creation_mode', 'true');
+      } else {
+        // We're editing, so remove the flag if it exists
+        sessionStorage.removeItem('request_in_creation_mode');
+      }
+    }
+
+    // Also check on init in case route params loaded before constructor subscription
+    this.checkAndRedirectOnReload();
+  }
+
+  private checkAndRedirectOnReload(): void {
+    // Only run in browser environment
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
+    // Check if we're in creation mode (not edit mode)
+    const isCreationMode =
+      sessionStorage.getItem('request_in_creation_mode') === 'true';
+
+    // Check multiple sources for requestId, including sessionStorage for persistence
+    const sessionRequestId = sessionStorage.getItem('currentRequestId');
+    const hasRequestId =
+      this.stateService.getRequestId() ||
+      this.requestId ||
+      (sessionRequestId ? +sessionRequestId : null);
+
+    const isPageReload =
+      performance?.navigation?.type === 1 ||
+      (performance as any)?.navigation?.type === 'reload';
+
+    console.log('Checking redirect conditions:', {
+      hasRequestId,
+      isPageReload,
+      isCreationMode,
+      stateServiceId: this.stateService.getRequestId(),
+      routeRequestId: this.requestId,
+      sessionRequestId,
+      navigationType: performance?.navigation?.type,
+    });
+
+    // Only redirect if in creation mode AND page was reloaded
+    if (hasRequestId && isPageReload && isCreationMode) {
+      console.log('Redirecting to dashboard...');
+      // Clear the session storage before redirecting
+      sessionStorage.removeItem('currentRequestId');
+      sessionStorage.removeItem('request_in_creation_mode');
+      console.log('this.organizationTypeId', this.organizationTypeId);
+      if (this.organizationTypeId === 1) {
+        this.router.navigate(['/requests-view']);
+      } else {
+        this.router.navigate(['/offeror-requests-view']);
+      }
+    }
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  unloadNotification($event: any): void {
+    $event.preventDefault();
+    $event.returnValue =
+      'You have unsaved changes. Are you sure you want to leave?';
   }
 
   onFormValidityChange(valid: boolean) {
@@ -81,6 +166,15 @@ export class CreateRequestStepper implements OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
     this.stateService.clearRequestId();
+
+    // Clean up sessionStorage only if not reloading and in browser
+    if (isPlatformBrowser(this.platformId)) {
+      const isPageReload = performance?.navigation?.type === 1;
+      if (!isPageReload) {
+        sessionStorage.removeItem('currentRequestId');
+        sessionStorage.removeItem('request_in_creation_mode');
+      }
+    }
   }
 
   saveRequest() {
