@@ -1,4 +1,4 @@
-import { Component, OnDestroy, ViewChild } from '@angular/core';
+import { Component, OnDestroy, ViewChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
@@ -16,7 +16,6 @@ import { TooltipDirective } from '../../shared/directive/tooltip.directive';
 import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 // import { ResponseNotarizationComponent } from '../response-notarization.component';
-import { StepperSelectionEvent } from '@angular/cdk/stepper';
 
 @Component({
   selector: 'response-stepper',
@@ -76,12 +75,9 @@ export class ResponseStepper implements OnDestroy {
     });
   }
 
-  onStepChange(event: StepperSelectionEvent): void {
-    // Check if we're navigating to the Review step (index 3, assuming 0-based)
-    if (event.selectedIndex === 3 && this.responseReviewComponent) {
-      // Refresh the documents data when entering the review step
-      this.responseReviewComponent.initializeDocuments();
-    }
+  @HostListener('window:beforeunload', ['$event'])
+  unloadNotification($event: any): void {
+    $event.returnValue = true;
   }
 
   onDocumentsValidityChange(valid: boolean): void {
