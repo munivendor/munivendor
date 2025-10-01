@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { forkJoin, Subject, takeUntil } from 'rxjs';
+import { finalize, forkJoin, Subject, takeUntil } from 'rxjs';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
@@ -24,6 +24,7 @@ import { CustomCategoryDropdownComponent } from '../../shared/CustomCategoryDrop
 import { StateService } from '../services/state.service';
 import { CategoryNode } from '../../shared/model/category-tree.model';
 import { ChangeDetectorRef } from '@angular/core';
+import { LoadingService } from '../../shared/LoadingSpinner/loading.service';
 
 interface FlattenedCategoryNode {
   categoryId: string;
@@ -63,13 +64,11 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
   @Input() categoryControl!: FormControl<number | null>;
   organizationId!: number | null;
 
-  // Add properties for category breadcrumbs
   hierarchicalCategories: CategoryNode[] = [];
   flattenedCategories: FlattenedCategoryNode[] = [];
 
   readonly AVAILABLE_ACTIONS = ['respond', 'delete', 'continue'] as const;
 
-  // Add methods for category breadcrumbs
   displayCategoryName = (categoryId: string | number | null): string => {
     if (categoryId == null) {
       return '';
@@ -259,7 +258,8 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     public dialog: MatDialog,
     private stateService: StateService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private loadingService: LoadingService
   ) {
     this.organizationId = this.stateService.getOrganizationId();
   }
@@ -379,19 +379,23 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
 
       const combinedData: any[] = [];
 
+      this.loadingService.show();
+
       forkJoin([
         this.requestService.GetRequestsOfferorView(requestParams || {}),
         this.categoryHierarchyService.GetCategoryHierarchy(),
         this.requestService.GetRequestTypes(),
         this.requestService.GetRequestStatuses(),
       ])
-        .pipe(takeUntil(this.destroy$))
+        .pipe(
+          takeUntil(this.destroy$),
+          finalize(() => this.loadingService.hide())
+        )
         .subscribe(
           ([requests, categories, requestTypes, requestStatuses]) => {
             const requestsData = requests?.requests || [];
             this.hasLoadedData = requestsData.length > 0;
 
-            // Process categories for breadcrumbs
             if (categories && categories.length > 0) {
               this.hierarchicalCategories =
                 this.prepareCategoriesForTreeRendering(categories);

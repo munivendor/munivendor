@@ -14,6 +14,8 @@ import { FormsModule } from '@angular/forms';
 import { CategoryHierarchyService } from '../Request/services/category-hierarchy.service';
 import { CategoryNode } from '../shared/model/category-tree.model';
 import { ChangeDetectorRef } from '@angular/core';
+import { LoadingService } from '../shared/LoadingSpinner/loading.service';
+import { finalize } from 'rxjs';
 
 // TODO: use treeNode to keep an internal state of all nodes and their collapsed state and save to session storage
 //       on load, restore the state from session storage
@@ -46,7 +48,8 @@ export class CategoryTreeComponent implements OnInit {
 
   constructor(
     private categoryHierarchyService: CategoryHierarchyService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private loadingService: LoadingService
   ) {}
 
   ngOnInit() {
@@ -73,26 +76,31 @@ export class CategoryTreeComponent implements OnInit {
   }
 
   private loadCategoryHierarchy() {
-    this.categoryHierarchyService.GetCategoryHierarchy().subscribe({
-      next: (categories: CategoryNode[]) => {
-        this.updateNodeLevels(categories);
-        this.categoryHierarchy = categories;
-        this.dataSource.data = categories;
-        this.treeControl.dataNodes = categories;
+    this.loadingService.show();
 
-        this.loadFromSessionStorage();
-        if (this.collapsedStateTree) {
-          this.restoreExpandedNodes(
-            Object.keys(this.collapsedStateTree)
-              .filter((key) => !this.collapsedStateTree[key])
-              .map((key) => (isNaN(Number(key)) ? key : Number(key)))
-          );
-        }
-      },
-      error: (error) => {
-        console.error('Error fetching categories:', error);
-      },
-    });
+    this.categoryHierarchyService
+      .GetCategoryHierarchy()
+      .pipe(finalize(() => this.loadingService.hide()))
+      .subscribe({
+        next: (categories: CategoryNode[]) => {
+          this.updateNodeLevels(categories);
+          this.categoryHierarchy = categories;
+          this.dataSource.data = categories;
+          this.treeControl.dataNodes = categories;
+
+          this.loadFromSessionStorage();
+          if (this.collapsedStateTree) {
+            this.restoreExpandedNodes(
+              Object.keys(this.collapsedStateTree)
+                .filter((key) => !this.collapsedStateTree[key])
+                .map((key) => (isNaN(Number(key)) ? key : Number(key)))
+            );
+          }
+        },
+        error: (error) => {
+          console.error('Error fetching categories:', error);
+        },
+      });
   }
 
   // data to be passed in payload
@@ -296,8 +304,11 @@ export class CategoryTreeComponent implements OnInit {
     this.buildCollapsedStateTree();
     this.saveToSessionStorage();
 
+    this.loadingService.show();
+
     this.categoryHierarchyService
       .SaveCategoryHierarchy(categoryHierarchyString)
+      .pipe(finalize(() => this.loadingService.hide()))
       .subscribe({
         next: (response) => {
           console.log('Category hierarchy saved successfully!');

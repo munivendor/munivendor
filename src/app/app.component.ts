@@ -10,12 +10,11 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatListModule } from '@angular/material/list';
 import { combineLatest, Observable } from 'rxjs';
-import { filter, map, startWith } from 'rxjs/operators';
-import { UserService } from './shared/service/user.service';
+import { filter, map } from 'rxjs/operators';
 import { StateService } from './Request/services/state.service';
 import { AuthService } from './authorization/auth.service';
 import { Sidenav } from './Sidenav/sidenav.component';
-import { FlowNavigationService } from './shared/service/flow-navigation.service';
+import { LoadingSpinnerComponent } from '../app/shared/LoadingSpinner/loading-spinner.component';
 
 @Component({
   selector: 'app-root',
@@ -29,6 +28,7 @@ import { FlowNavigationService } from './shared/service/flow-navigation.service'
     MatToolbarModule,
     MatListModule,
     Sidenav,
+    LoadingSpinnerComponent,
   ],
 })
 export class AppComponent {
@@ -37,15 +37,13 @@ export class AppComponent {
   showSidenav$: Observable<boolean>;
   userId: number | null = null;
   organizationTypeId: number | null = null;
-  private hasNavigated = false;
+  hasNavigated = false;
 
   constructor(
     private authService: AuthService,
     private router: Router,
     private activatedRoute: ActivatedRoute,
-    private stateService: StateService,
-    private flowNavigationService: FlowNavigationService,
-    private userService: UserService
+    private stateService: StateService
   ) {
     this.user$ = this.authService.user$;
     this.organizationTypeId = this.stateService.getOrganizationTypeId();
