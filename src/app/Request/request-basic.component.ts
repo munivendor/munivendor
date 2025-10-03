@@ -7,6 +7,8 @@ import {
   EventEmitter,
   ChangeDetectorRef,
   inject,
+  PLATFORM_ID,
+  Inject,
 } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import {
@@ -20,7 +22,7 @@ import {
   AbstractControl,
   ValidationErrors,
 } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RequestService } from './services/request.service';
 import { StateService } from './services/state.service';
 import { DecisionMaker } from './model/decisionmaker.model';
@@ -89,9 +91,8 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     decisionMakerId: number | null;
   }>();
   @Output() formValidityChange = new EventEmitter<boolean>();
-private _snackBar = inject(MatSnackBar);
+  private _snackBar = inject(MatSnackBar);
   private _logger = inject(LoggingService);
-
 
   filteredCategoriesSubject = new BehaviorSubject<FlattenedCategoryNode[]>([]);
   filteredCategories = this.filteredCategoriesSubject.asObservable();
@@ -114,14 +115,12 @@ private _snackBar = inject(MatSnackBar);
     private stateService: StateService,
     private cdr: ChangeDetectorRef,
     private categoryHierarchyService: CategoryHierarchyService,
-  
- 
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.flattenCategories();
   }
 
   ngOnInit() {
-
     this.stateService.setRequestId(null);
     if (this.idParam) {
       this.getRequestById(Number(this.idParam));
@@ -516,87 +515,84 @@ private _snackBar = inject(MatSnackBar);
     return typeof value === 'string' ? value : '';
   };
 
-private fetchInitialData(): void {
-  this.categoryHierarchyService
-    .GetCategoryHierarchy()
-    .pipe(takeUntil(this.destroy$))
-    .subscribe({
-      next: (categories) => {
-        this.hierarchicalCategories =
-          this.prepareCategoriesForTreeRendering(categories);
-        this.flattenCategories();
-        
-        const categoryControl = this.basicsFormGroup.get('category');
+  private fetchInitialData(): void {
+    this.categoryHierarchyService
+      .GetCategoryHierarchy()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (categories) => {
+          this.hierarchicalCategories =
+            this.prepareCategoriesForTreeRendering(categories);
+          this.flattenCategories();
+
+          const categoryControl = this.basicsFormGroup.get('category');
           if (categoryControl && categoryControl.value) {
             const currentValue = categoryControl.value;
             categoryControl.setValue(currentValue, { emitEvent: true });
           }
-        
-      },
-      error: (error) => {
-        const err = new Error(error.message || error.toString());
-        err.name = 'Fetch Category Hierarchy Failed';
-        this._logger.logException(err, 3, {
-          methodName: 'fetchInitialData',
-          className: 'RequestBasicComponent',
-          operation: 'GetCategoryHierarchy',
-          organizationId: this.organizationId
-        });
-        this._snackBar.open(
-          'Failed to load categories. Please try again later.',
-          'Close',
-          { verticalPosition: 'top' }
-        );
-      }
-    });
+        },
+        error: (error) => {
+          const err = new Error(error.message || error.toString());
+          err.name = 'Fetch Category Hierarchy Failed';
+          this._logger.logException(err, 3, {
+            methodName: 'fetchInitialData',
+            className: 'RequestBasicComponent',
+            operation: 'GetCategoryHierarchy',
+            organizationId: this.organizationId,
+          });
+          this._snackBar.open(
+            'Failed to load categories. Please try again later.',
+            'Close',
+            { verticalPosition: 'top' }
+          );
+        },
+      });
 
-  this.requestService
-    .GetDecisionMakers(this.organizationId ?? 0)
-    .pipe(takeUntil(this.destroy$))
-    .subscribe({
-      next: (decisionMakers: DecisionMaker[]) =>
-        (this.decisionMakers = decisionMakers),
-      error: (error) => {
-        const err = new Error(error.message || error.toString());
-        err.name = 'Fetch Decision Makers Failed';
-        this._logger.logException(err, 3, {
-          methodName: 'fetchInitialData',
-          className: 'RequestBasicComponent',
-          operation: 'GetDecisionMakers',
-          organizationId: this.organizationId
-        });
-        this._snackBar.open(
-          'Failed to load decision makers. Please try again later.',
-          'Close',
-          { verticalPosition: 'top' }
-        );
-      }
-    });
+    this.requestService
+      .GetDecisionMakers(this.organizationId ?? 0)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (decisionMakers: DecisionMaker[]) =>
+          (this.decisionMakers = decisionMakers),
+        error: (error) => {
+          const err = new Error(error.message || error.toString());
+          err.name = 'Fetch Decision Makers Failed';
+          this._logger.logException(err, 3, {
+            methodName: 'fetchInitialData',
+            className: 'RequestBasicComponent',
+            operation: 'GetDecisionMakers',
+            organizationId: this.organizationId,
+          });
+          this._snackBar.open(
+            'Failed to load decision makers. Please try again later.',
+            'Close',
+            { verticalPosition: 'top' }
+          );
+        },
+      });
 
-  this.requestService
-    .GetRequestTypes()
-    .pipe(takeUntil(this.destroy$))
-    .subscribe({
-      next: (requestTypes: RequestType[]) =>
-        (this.requestTypes = requestTypes),
-      error: (error) => {
-        const err = new Error(error.message || error.toString());
-        err.name = 'Fetch Request Types Failed';
-        this._logger.logException(err, 3, {
-          methodName: 'fetchInitialData',
-          className: 'YourComponent',
-          operation: 'GetRequestTypes'
-        });
-        this._snackBar.open(
-          'Failed to load request types. Please try again later.',
-          'Close',
-          { verticalPosition: 'top' }
-        );
-      }
-    });
-}
-
-
+    this.requestService
+      .GetRequestTypes()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (requestTypes: RequestType[]) =>
+          (this.requestTypes = requestTypes),
+        error: (error) => {
+          const err = new Error(error.message || error.toString());
+          err.name = 'Fetch Request Types Failed';
+          this._logger.logException(err, 3, {
+            methodName: 'fetchInitialData',
+            className: 'YourComponent',
+            operation: 'GetRequestTypes',
+          });
+          this._snackBar.open(
+            'Failed to load request types. Please try again later.',
+            'Close',
+            { verticalPosition: 'top' }
+          );
+        },
+      });
+  }
 
   selectCategory(categoryId: string, categoryName: string): void {
     this.basicsFormGroup
@@ -691,14 +687,12 @@ private fetchInitialData(): void {
           this._logger.logException(err, 3, {
             methodName: 'fetchInitialData',
             className: 'BasicRequestComponent',
-            operation: 'GetRequestTypes'
+            operation: 'GetRequestTypes',
           });
-          this._snackBar.open(
-            'Unidentified error occurred',
-            'Close',
-            { verticalPosition: 'top' }
-          );
-        }
+          this._snackBar.open('Unidentified error occurred', 'Close', {
+            verticalPosition: 'top',
+          });
+        },
       });
   }
 
@@ -775,6 +769,7 @@ private fetchInitialData(): void {
     let request = this.createRequest();
     const requestIdFromStateService = this.stateService.getRequestId();
     const effectiveRequestId = this.idParam ?? requestIdFromStateService;
+
     if (effectiveRequestId) {
       this.requestService
         .UpdateRequest(Number(effectiveRequestId), request)
@@ -784,6 +779,12 @@ private fetchInitialData(): void {
             this.getRequestById(responseRequestId);
             this.stateService.setRequestId(responseRequestId);
             this.stateService.setRequestHasBeenSaved(true);
+            if (isPlatformBrowser(this.platformId)) {
+              sessionStorage.setItem(
+                'currentRequestId',
+                responseRequestId.toString()
+              );
+            }
           },
           (error) => {
             console.error('Error updating Request:', error);
@@ -798,6 +799,13 @@ private fetchInitialData(): void {
             console.log('Request created successfully:', responseRequestId);
             this.requestId = responseRequestId;
             this.stateService.setRequestId(responseRequestId);
+            // Store in sessionStorage for reload detection - only in browser
+            if (isPlatformBrowser(this.platformId)) {
+              sessionStorage.setItem(
+                'currentRequestId',
+                responseRequestId.toString()
+              );
+            }
             this.cdr.detectChanges();
           },
           (error) => {
@@ -903,6 +911,50 @@ private fetchInitialData(): void {
 
     return path.join(' > ');
   }
+
+  disableContractEndDates = (date: Date | null): boolean => {
+    if (!date) return false;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const isFutureOrToday = date >= today;
+    const isWeekday = date.getDay() !== 0 && date.getDay() !== 6;
+
+    const contractStartDate =
+      this.basicsFormGroup?.get('contractStartDate')?.value;
+
+    // If there's a contract start date, ensure end date is not before it
+    let isAfterOrEqualToStartDate = true;
+    if (contractStartDate) {
+      const startDate = new Date(contractStartDate);
+      startDate.setHours(0, 0, 0, 0);
+      isAfterOrEqualToStartDate = date >= startDate;
+    }
+
+    return isFutureOrToday && isWeekday && isAfterOrEqualToStartDate;
+  };
+
+  disableCloseDates = (date: Date | null): boolean => {
+    if (!date) return false;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const isFutureOrToday = date >= today;
+    const isWeekday = date.getDay() !== 0 && date.getDay() !== 6;
+
+    const publishDate = this.basicsFormGroup?.get('publishDate')?.value;
+
+    let isAfterOrEqualToPublishDate = true;
+    if (publishDate) {
+      const pubDate = new Date(publishDate);
+      pubDate.setHours(0, 0, 0, 0);
+      isAfterOrEqualToPublishDate = date >= pubDate;
+    }
+
+    return isFutureOrToday && isWeekday && isAfterOrEqualToPublishDate;
+  };
 
   ngOnDestroy(): void {
     this.destroy$.next();

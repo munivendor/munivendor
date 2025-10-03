@@ -41,11 +41,6 @@ import { AuthService } from '../authorization/auth.service';
         (click)="onResendClick()"
         [disabled]="isLoading"
       >
-        <mat-spinner
-          *ngIf="isLoading"
-          diameter="20"
-          style="margin-right: 8px;"
-        ></mat-spinner>
         {{ isLoading ? 'Sending...' : 'Resend Link' }}
       </button>
       <button mat-raised-button color="primary" mat-dialog-close>Ok</button>

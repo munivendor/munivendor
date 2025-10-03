@@ -1,3 +1,5 @@
+<app-loading-spinner></app-loading-spinner>
+
 <div *ngIf="showSidenav$ | async; else noSidenav" class="app-with-sidenav">
   <custom-sidenav (logOut)="onLogOut()"> </custom-sidenav>
 </div>

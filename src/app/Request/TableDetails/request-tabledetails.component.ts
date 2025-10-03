@@ -6,7 +6,7 @@ import {
   TemplateRef,
   Input,
 } from '@angular/core';
-import { catchError, forkJoin, of, Subject, takeUntil } from 'rxjs';
+import { catchError, finalize, forkJoin, of, Subject, takeUntil } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ConfirmationDialog } from '../RequestConfirmationDialog/confirmation-dialog.component';
@@ -32,6 +32,7 @@ import { CustomCategoryDropdownComponent } from '../../shared/CustomCategoryDrop
 import { StateService } from '../services/state.service';
 import { CategoryNode } from '../../shared/model/category-tree.model';
 import { ChangeDetectorRef } from '@angular/core';
+import { LoadingService } from '../../shared/LoadingSpinner/loading.service';
 
 interface FlattenedCategoryNode {
   categoryId: string;
@@ -150,7 +151,8 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     private categoryHierarchyService: CategoryHierarchyService,
     private fb: FormBuilder,
     private stateService: StateService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private loadingService: LoadingService
   ) {}
 
   readonly requestTypeMap = {
@@ -344,6 +346,8 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
 
     const combinedData: any[] = [];
 
+    this.loadingService.show();
+
     forkJoin([
       this.requestService.GetRequestsAgencyView(requestParams).pipe(
         catchError((error) => {
@@ -370,7 +374,10 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
         })
       ),
     ])
-      .pipe(takeUntil(this.destroy$))
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => this.loadingService.hide())
+      )
       .subscribe(
         ([requests, categories, requestTypes, requestStatuses]) => {
           const requestsData = requests?.requests || [];
