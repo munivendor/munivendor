@@ -7,8 +7,8 @@ import { isPlatformBrowser } from '@angular/common';
 
 @Injectable({ providedIn: 'root' })
 export class IdleService {
-  private inactivityTimeoutMinutes = 0.5;
-  private dialogTimeoutMinutes = 2;
+  private inactivityTimeoutMinutes = 30;
+  private dialogTimeoutMinutes = 5;
 
   private activityEvents = [
     'mousemove',
