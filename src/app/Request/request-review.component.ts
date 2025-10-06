@@ -348,6 +348,8 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
             duration: 5000,
             verticalPosition: 'top',
           });
+          sessionStorage.removeItem('currentRequestId');
+          sessionStorage.removeItem('request_in_creation_mode');
           this.router.navigate(['/requests-view']);
         },
         error: (err) => {

@@ -1,15 +1,17 @@
 import {
   Component,
   EventEmitter,
+  Inject,
   Input,
   OnInit,
   Output,
+  PLATFORM_ID,
   ViewChild,
   ViewEncapsulation,
 } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RequestService } from '../Request/services/request.service';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatInputModule } from '@angular/material/input';
@@ -89,7 +91,8 @@ export class ResponseBasicComponent implements OnInit {
     private categoryHierarchyService: CategoryHierarchyService,
     private router: Router,
     private stateService: StateService,
-    private offerorProfileService: OfferorProfileService
+    private offerorProfileService: OfferorProfileService,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.responseForm = this.fb.group({
       responseName: ['', Validators.required],
@@ -379,7 +382,9 @@ export class ResponseBasicComponent implements OnInit {
     const responseIdFromStateService = this.stateService.getRequestId();
     const effectiveResponseId =
       this.responseIdParam ?? responseIdFromStateService;
+
     if (effectiveResponseId) {
+      // EDIT MODE - don't set creation flag
       this.requestService
         .UpdateRequest(Number(effectiveResponseId), request)
         .pipe(takeUntil(this.destroy$))
@@ -387,20 +392,48 @@ export class ResponseBasicComponent implements OnInit {
           (responseRequestId: number) => {
             this.stateService.setRequestId(responseRequestId);
             this.stateService.setRequestHasBeenSaved(true);
+            // In edit mode, don't set the creation flag
+            if (isPlatformBrowser(this.platformId)) {
+              sessionStorage.setItem(
+                'currentResponseId',
+                responseRequestId.toString()
+              );
+            }
           },
-          (error) => {}
+          (error) => {
+            console.error('Error updating response:', error);
+          }
         );
     } else if (!responseIdFromStateService || !this.responseIdParam) {
-      this.requestService.CreateRequest(request).subscribe(
-        (response) => {
-          this.stateService.setRequestId(response);
-          this.requestService.UpdateRequestStatus(response, 8).subscribe(
-            (statusResponse) => {},
-            (error) => {}
-          );
-        },
-        (error) => {}
-      );
+      // CREATION MODE - set the creation flag
+      this.requestService
+        .CreateRequest(request)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(
+          (response) => {
+            this.stateService.setRequestId(response);
+            // Store in sessionStorage for reload detection - only in browser
+            if (isPlatformBrowser(this.platformId)) {
+              sessionStorage.setItem('currentResponseId', response.toString());
+              sessionStorage.setItem('response_in_creation_mode', 'true'); // Mark as creation mode
+            }
+
+            this.requestService
+              .UpdateRequestStatus(response, 8)
+              .pipe(takeUntil(this.destroy$))
+              .subscribe(
+                (statusResponse) => {
+                  console.log('Response status updated successfully');
+                },
+                (error) => {
+                  console.error('Error updating response status:', error);
+                }
+              );
+          },
+          (error) => {
+            console.error('Error creating response:', error);
+          }
+        );
     }
   }
 
