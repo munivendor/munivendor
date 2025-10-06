@@ -648,9 +648,9 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
             category: category?.id,
             requestType: requestType?.requestTypeId,
             requestName: request.requestName,
-            publishDate: request.publishDate,
+            publishDate: this.convertUtcToLocalDate(request.publishDate),
             publishTime: this.convertUtcToLocalTimeOnly(request.publishDate),
-            closeDate: request.closeDate,
+            closeDate: this.convertUtcToLocalDate(request.closeDate),
             closeTime: this.convertUtcToLocalTimeOnly(request.closeDate),
             contractStartDate: request.contractStart,
             contractEndDate: request.contractEnd,
@@ -796,7 +796,6 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
         .pipe(takeUntil(this.destroy$))
         .subscribe(
           (responseRequestId: number) => {
-            console.log('Request created successfully:', responseRequestId);
             this.requestId = responseRequestId;
             this.stateService.setRequestId(responseRequestId);
             // Store in sessionStorage for reload detection - only in browser
@@ -860,6 +859,13 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
       hour12: false,
     });
     return localTime;
+  }
+
+  private convertUtcToLocalDate(utcDateTime: string): Date | null {
+    if (!utcDateTime) return null;
+    const utcDate = new Date(utcDateTime + 'Z');
+    if (isNaN(utcDate.getTime())) return null;
+    return utcDate;
   }
 
   disableWeekendsAndPastDates = (date: Date | null): boolean => {

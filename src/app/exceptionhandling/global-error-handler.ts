@@ -1,4 +1,3 @@
-// global-error-handler.ts
 import { ErrorHandler, Injectable } from '@angular/core';
 import { LoggingService } from './logging.service';
 

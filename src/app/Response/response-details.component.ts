@@ -168,14 +168,10 @@ export class ResponseDetailsComponent implements OnInit {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          console.log('Request sections fetched successfully:', response);
           this.requestSections = response.requestSections;
         },
         error: (error) => {
           console.error('Error fetching request sections', error);
-        },
-        complete: () => {
-          console.log('Finished loading request sections.');
         },
       });
   }
@@ -193,7 +189,7 @@ export class ResponseDetailsComponent implements OnInit {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'document.pdf';
+      a.download = 'Proposals.pdf';
       a.click();
       window.URL.revokeObjectURL(url);
     });

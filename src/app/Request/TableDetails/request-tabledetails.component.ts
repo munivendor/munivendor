@@ -333,7 +333,6 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
 
   private loadAndJoinRequestData(params?: any): void {
     if (!this.organizationId) {
-      console.error('Organization ID not found');
       this.dataSource = new MatTableDataSource<any>([]);
       this.hasLoadedData = false;
       return;

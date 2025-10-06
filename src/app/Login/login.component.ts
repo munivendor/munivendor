@@ -10,16 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatCardModule } from '@angular/material/card';
-import {
-  AfterViewInit,
-  ChangeDetectorRef,
-  Component,
-  ElementRef,
-  HostListener,
-  inject,
-  OnInit,
-  ViewChild,
-} from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
 import { MatDialog } from '@angular/material/dialog';
 import { AuthService } from '../authorization/auth.service';
@@ -43,18 +34,15 @@ import { LoggingService } from '../exceptionhandling/logging.service';
     GoogleSigninButtonModule,
   ],
 })
-export class LoginComponent implements OnInit, AfterViewInit {
+export class LoginComponent implements OnInit {
   private _snackBar = inject(MatSnackBar);
   private _logger = inject(LoggingService);
   loginForm!: FormGroup;
-
-  @ViewChild('googleBtnContainer') googleBtnContainer!: ElementRef;
-  buttonWidth = 424;
+  buttonWidth = 400;
 
   constructor(
     private fb: FormBuilder,
     public dialog: MatDialog,
-
     private authService: AuthService,
     private cdr: ChangeDetectorRef
   ) {}
@@ -64,23 +52,6 @@ export class LoginComponent implements OnInit, AfterViewInit {
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required]],
     });
-  }
-
-  ngAfterViewInit() {
-    this.setButtonWidth();
-  }
-
-  @HostListener('window:resize')
-  onResize() {
-    this.setButtonWidth();
-  }
-
-  private setButtonWidth() {
-    if (this.googleBtnContainer) {
-      const containerWidth = this.googleBtnContainer.nativeElement.offsetWidth;
-      this.buttonWidth = containerWidth;
-      this.cdr.detectChanges();
-    }
   }
 
   onSubmit(): void {
@@ -99,12 +70,11 @@ export class LoginComponent implements OnInit, AfterViewInit {
         const err = new Error(error.message);
         err.name = 'Login failed';
         this._logger.logException(err, 3, {
-          userId: email,
+          // userId: email,
           methodName: 'login',
           className: 'LoginComponent',
           operation: 'user_authentication',
-        }
-        );
+        });
         this._snackBar.open(
           'Login failed: Invalid email, password, or unauthorized email.',
           'Close',
