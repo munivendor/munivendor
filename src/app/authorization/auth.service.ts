@@ -12,6 +12,7 @@ import {
   switchMap,
   of,
   debounceTime,
+  Subject,
 } from 'rxjs';
 import { Router } from '@angular/router';
 import { UserLogin } from '../shared/model/user-login.model';
@@ -55,6 +56,7 @@ export class AuthService {
   public isLoggingIn = new BehaviorSubject<boolean>(false);
   private appInitialized = new BehaviorSubject<boolean>(false);
   public appInitialized$ = this.appInitialized.asObservable();
+  userLoggedOut$ = new Subject<void>();
 
   setSkipNextAuthState(value: boolean): void {
     this.skipNextAuthStateSubject.next(value);
@@ -289,6 +291,7 @@ export class AuthService {
             if (this.userSubject.value) {
               await this.socialAuthService.signOut();
             }
+            this.userLoggedOut$.next();
           } catch (error) {
             console.error('Google Sign-Out Error:', error);
           } finally {

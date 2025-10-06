@@ -14,8 +14,8 @@ export class LoggingService {
       config: {
         connectionString: environment.appInsights.connectionString,
         enableAutoRouteTracking: true,
-        enableUnhandledPromiseRejectionTracking: true
-      }
+        enableUnhandledPromiseRejectionTracking: true,
+      },
     });
     this.appInsights.loadAppInsights();
   }
@@ -29,20 +29,33 @@ export class LoggingService {
   }
 
   logException(error: Error, severityLevel = 3, additionalProps?: any) {
-    this.appInsights.trackException({
-      exception: error, severityLevel,
-     properties:
-      {
-        userId: additionalProps?.userId,
-        requestId: additionalProps?.requestId,
-        organizationId: additionalProps?.organizationId,
-        methodName: additionalProps.methodName,
-        className: additionalProps.className,
-        operation: additionalProps.operation, 
-        correlationId: additionalProps?.correlationId,
-      }
-    });
+    try {
+      const props = additionalProps ?? {};
 
+      this.appInsights.trackException({
+        exception: error instanceof Error ? error : new Error(String(error)),
+        severityLevel,
+        properties: {
+          userId: props?.userId ?? null,
+          requestId: props?.requestId ?? null,
+          organizationId: props?.organizationId ?? null,
+          methodName: props?.methodName ?? 'unknown',
+          className: props?.className ?? 'unknown',
+          operation: props?.operation ?? null,
+          correlationId: props?.correlationId ?? null,
+        },
+      });
+    } catch (ex) {
+      // Ensure logging never throws
+      try {
+        console.error('LoggingService - failed to log exception', ex, {
+          error,
+          additionalProps,
+        });
+      } catch {
+        // swallow silently as a last resort
+      }
+    }
   }
 
   logTrace(message: string) {
