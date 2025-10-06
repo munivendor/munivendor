@@ -1,0 +1,13 @@
+<div class="idle-timeout-container">
+  <h2 class="title">Idle Timeout</h2>
+
+  <div class="content">
+    <p>You’ve been inactive for a while.</p>
+    <p>Would you like to continue your session?</p>
+  </div>
+
+  <div class="actions">
+    <button color="warn" (click)="close('logout')">No, Log Out</button>
+    <button color="primary" (click)="close('continue')">Yes, Continue</button>
+  </div>
+</div>

@@ -15,6 +15,7 @@ import { StateService } from './Request/services/state.service';
 import { AuthService } from './authorization/auth.service';
 import { Sidenav } from './Sidenav/sidenav.component';
 import { LoadingSpinnerComponent } from '../app/shared/LoadingSpinner/loading-spinner.component';
+import { IdleService } from './shared/service/idle.service';
 
 @Component({
   selector: 'app-root',
@@ -31,7 +32,7 @@ import { LoadingSpinnerComponent } from '../app/shared/LoadingSpinner/loading-sp
     LoadingSpinnerComponent,
   ],
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   title = 'munivendor';
   user$: Observable<number | null>;
   showSidenav$: Observable<boolean>;
@@ -43,7 +44,8 @@ export class AppComponent {
     private authService: AuthService,
     private router: Router,
     private activatedRoute: ActivatedRoute,
-    private stateService: StateService
+    private stateService: StateService,
+    private idleService: IdleService
   ) {
     this.user$ = this.authService.user$;
     this.organizationTypeId = this.stateService.getOrganizationTypeId();
@@ -65,6 +67,16 @@ export class AppComponent {
           isAuthenticated && shouldShowSidenav
       )
     );
+  }
+
+  ngOnInit(): void {
+    if (this.authService.isAuthenticated$) {
+      this.idleService.startWatching();
+    }
+
+    this.authService.userLoggedOut$.subscribe(() => {
+      this.idleService.stopWatching();
+    });
   }
 
   onLogOut(): void {
