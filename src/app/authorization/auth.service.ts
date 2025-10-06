@@ -134,6 +134,7 @@ export class AuthService {
 
   private clearCurrentSession(): void {
     localStorage.removeItem('currentSession');
+    sessionStorage.clear();
   }
 
   public initializeApp(): Observable<any> {
@@ -278,6 +279,7 @@ export class AuthService {
 
   logout(): void {
     if (!this.authState.value) {
+      this.clearCurrentSession();
       console.warn('User is already logged out, skipping redundant logout.');
       return;
     }
@@ -346,7 +348,7 @@ export class AuthService {
             this.stateService.setOrganizationId(user.organizationId);
           }
           if (user.organizationTypeId !== undefined) {
-            this.stateService.setOrganizationTypeId(user.organizationTypeId); // Add this method
+            this.stateService.setOrganizationTypeId(user.organizationTypeId);
           }
         }),
         switchMap(() => {
@@ -358,9 +360,7 @@ export class AuthService {
           this.setAuthenticated(true, userId);
         },
         error: (error: any) => {
-          console.error('Navigation error:', error);
           this.setAuthenticated(true, userId);
-          this.router.navigate(['/role-verification']);
         },
       });
   }
@@ -394,7 +394,7 @@ export class AuthService {
 
   sendPasswordReset(email: string): Observable<ForgotPasswordResponse> {
     return this.http.post<ForgotPasswordResponse>(
-      `${this.url}/auth/send-reset?email=${encodeURIComponent(email)}`,
+      `${this.url}auth/send-reset?email=${encodeURIComponent(email)}`,
       {},
       {
         headers: {
