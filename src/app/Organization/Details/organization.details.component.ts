@@ -16,7 +16,6 @@ import { Subject, throwError } from 'rxjs';
 import { takeUntil, tap, catchError, switchMap } from 'rxjs/operators';
 import { State } from '../../shared/model/state.model';
 import { FlowProgressService } from '../../shared/service/flow-progress.service';
-
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { LoggingService } from '../../exceptionhandling/logging.service';
 
@@ -39,7 +38,7 @@ import { LoggingService } from '../../exceptionhandling/logging.service';
 export class OrganizationDetailsComponent implements OnInit {
   private _snackBar = inject(MatSnackBar);
   private _logger = inject(LoggingService);
-    loginForm!: FormGroup;
+  loginForm!: FormGroup;
   organizationDetailForm!: FormGroup;
   states: State[] = [];
   userId!: number | null;
@@ -131,10 +130,12 @@ export class OrganizationDetailsComponent implements OnInit {
 
     const organization: Organization = this.organizationDetailForm.value;
 
-   /*this.organizationService
+    this.organizationService
       .updateOrganization(organization)
       .pipe(
         switchMap((organizationId: any) => {
+          // required where organizationId is [object Object] for agency/offeror grid API
+          // backend returns { organizationId: number } instead of just a numberW
           let orgId: number;
           if (typeof organizationId === 'object' && organizationId !== null) {
             orgId = organizationId.organizationId;
@@ -157,61 +158,56 @@ export class OrganizationDetailsComponent implements OnInit {
         }),
         takeUntil(this.destroy$)
       )
-      .subscribe();*/
+      .subscribe();
 
-this.organizationService
-  .updateOrganization(organization)
-  .pipe(
-    switchMap((organizationId: number) => {
-      this.stateService.setOrganizationId(organizationId);
+    // this.organizationService
+    //   .updateOrganization(organization)
+    //   .pipe(
+    //     switchMap((organizationId: number) => {
+    //       this.stateService.setOrganizationId(organizationId);
 
-      return this.flowProgressService
-        .saveFlowProgress(Number(this.userId), 1, this.framePageNumber)
-        .pipe(
-          tap(() => this.router.navigate(['/user-details'])),
-          catchError((flowError) => {
-            const err = new Error(flowError.message);
-            err.name = 'FlowProgressSaveFailed';
-            this._logger.logException(err, 3, {
-              userId: this.userId,
-              methodName: 'saveFlowProgress',
-              className: 'ORGDetailsComponent',
-              operation: 'flow_progress_save',
-            });
-            this._snackBar.open(
-              'Failed to save progress. Please try again.',
-              'Close',
-              { verticalPosition: 'top' }
-            );
-            return throwError(() => flowError);
-          })
-        );
-    }),
-    catchError((orgError) => {
-      const err = new Error(orgError.message);
-      err.name = 'OrganizationUpdateFailed';
-      this._logger.logException(err, 3, {
-        userId: this.userId,
-        methodName: 'updateOrganization',
-        className: 'ORGDetailsComponent',
-        operation: 'organization_update',
-      });
-      this._snackBar.open(
-        'Failed to update organization. Please check your input and try again.',
-        'Close',
-        { verticalPosition: 'top' }
-      );
-      return throwError(() => orgError);
-    }),
-    takeUntil(this.destroy$)
-  )
-  .subscribe();
-
-
-
+    //       return this.flowProgressService
+    //         .saveFlowProgress(Number(this.userId), 1, this.framePageNumber)
+    //         .pipe(
+    //           tap(() => this.router.navigate(['/user-details'])),
+    //           catchError((flowError) => {
+    //             const err = new Error(flowError.message);
+    //             err.name = 'FlowProgressSaveFailed';
+    //             this._logger.logException(err, 3, {
+    //               userId: this.userId,
+    //               methodName: 'saveFlowProgress',
+    //               className: 'ORGDetailsComponent',
+    //               operation: 'flow_progress_save',
+    //             });
+    //             this._snackBar.open(
+    //               'Failed to save progress. Please try again.',
+    //               'Close',
+    //               { verticalPosition: 'top' }
+    //             );
+    //             return throwError(() => flowError);
+    //           })
+    //         );
+    //     }),
+    //     catchError((orgError) => {
+    //       const err = new Error(orgError.message);
+    //       err.name = 'OrganizationUpdateFailed';
+    //       this._logger.logException(err, 3, {
+    //         userId: this.userId,
+    //         methodName: 'updateOrganization',
+    //         className: 'ORGDetailsComponent',
+    //         operation: 'organization_update',
+    //       });
+    //       this._snackBar.open(
+    //         'Failed to update organization. Please check your input and try again.',
+    //         'Close',
+    //         { verticalPosition: 'top' }
+    //       );
+    //       return throwError(() => orgError);
+    //     }),
+    //     takeUntil(this.destroy$)
+    //   )
+    //   .subscribe();
   }
-
-
 
   ngOnDestroy(): void {
     this.destroy$.next();

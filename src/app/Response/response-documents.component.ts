@@ -50,9 +50,9 @@ import { Router } from '@angular/router';
 })
 export class ResponseDocumentsComponent implements OnInit {
   @Output() autoFillStatusChange = new EventEmitter<boolean>();
-  // @Input() sourceIdParam?: string | null | undefined;
   @Input() responseIdParam?: string | null | undefined;
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+  authorizingOfficialTooltip: any;
 
   agencyDocumentsColumns: string[] = [
     'formName',
@@ -95,9 +95,14 @@ export class ResponseDocumentsComponent implements OnInit {
     this.initializeFormGroup();
     this.initializeDocuments();
 
-    const requestId = this.responseIdParam
-      ? Number(this.responseIdParam)
-      : this.responseIdFromStateService;
+    this.authorizingOfficialTooltip = {
+      header: 'Incomplete',
+      body: 'Incomplete means that you have not yet uploaded your manually completed form.',
+      showCloseButton: false,
+      showActionButton: false,
+      width: 'auto',
+      transformStyle: 'translate(-103%, -48%)',
+    };
   }
 
   initializeDocuments(): void {

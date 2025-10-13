@@ -142,14 +142,7 @@
         <mat-icon
           *ngIf="row.documentInstanceStatus === 'Incomplete'"
           style="font-size: medium; color: #0b74fd; cursor: pointer"
-          [appTooltip]="{
-            header: 'Incomplete',
-            body: 'Incomplete means that you have not yet uploaded your manually completed form.',
-            actionLabel: 'Offeror Profile Page',
-            onAction: goToOfferorProfilePage,
-            width: 'auto',
-            transformStyle: 'translate(-103%, -48%)'
-          }"
+          [appTooltip]="authorizingOfficialTooltip"
         >
           info_outline
         </mat-icon>
@@ -253,14 +246,7 @@
           <mat-icon
             *ngIf="row.documentInstanceStatus === 'Incomplete'"
             style="font-size: medium; color: #0b74fd; cursor: pointer"
-            [appTooltip]="{
-              header: 'Incomplete',
-              body: 'Incomplete means that you have not yet uploaded your manually completed form.',
-              actionLabel: 'Offeror Profile Page',
-              onAction: goToOfferorProfilePage,
-              width: 'auto',
-              transformStyle: 'translate(-103%, -48%)'
-            }"
+            [appTooltip]="authorizingOfficialTooltip"
           >
             info_outline
           </mat-icon>

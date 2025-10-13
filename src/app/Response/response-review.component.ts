@@ -58,10 +58,6 @@ interface FlattenedCategoryNode {
   ],
 })
 export class ResponseReviewComponent implements OnInit, OnDestroy {
-  goToOfferorProfilePage() {
-    this.router.navigate(['/offeror-profile-page']);
-  }
-
   @Output() documentsValidityChange = new EventEmitter<boolean>();
   allRequiredDocumentsUploaded = false;
 
@@ -95,8 +91,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private requestService: RequestService,
     private stateService: StateService,
-    private router: Router,
-    private snackBar: MatSnackBar,
     private categoryHierarchyService: CategoryHierarchyService,
     private documentService: DocumentService,
     public dialog: MatDialog,

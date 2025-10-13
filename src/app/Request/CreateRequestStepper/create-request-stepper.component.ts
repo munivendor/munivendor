@@ -14,14 +14,14 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatButtonModule } from '@angular/material/button';
 import { Document } from '../model/document.model';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, NavigationStart } from '@angular/router';
 import { BasicRequestComponent } from '../request-basic.component';
 import { RequestOverviewComponent } from '../request-overview.component';
 import { RequestRequiredDocumentsComponent } from '../request-required-docs.component';
 import { RequestReviewComponent } from '../request-review.component';
 import { Request } from '../model/request.model';
 import { RequestSection } from '../model/requestsection.model';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, filter } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { StateService } from '../services/state.service';
 
@@ -56,7 +56,6 @@ export class CreateRequestStepper implements OnInit, OnDestroy {
   requestReviewComponent!: RequestReviewComponent;
 
   private destroy$ = new Subject<void>();
-  private hasNavigated = false;
 
   receivedProposalSections: RequestSection[] = [];
   requestData!: Request;
@@ -72,7 +71,6 @@ export class CreateRequestStepper implements OnInit, OnDestroy {
   finalReviewFormGroup!: FormGroup;
   idParam?: string | null;
   isStepValid = false;
-  organizationTypeId = this.stateService.getOrganizationTypeId() || 1;
 
   constructor(
     private route: ActivatedRoute,
@@ -87,6 +85,21 @@ export class CreateRequestStepper implements OnInit, OnDestroy {
       // Check for redirect after route params are loaded
       this.checkAndRedirectOnReload();
     });
+
+    // Listen for navigation events to clear sessionStorage when leaving this route
+    this.router.events
+      .pipe(
+        filter(
+          (event): event is NavigationStart => event instanceof NavigationStart
+        ),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((event) => {
+        // Check if navigating away from create-request-view
+        if (!event.url.includes('/create-request-view')) {
+          this.clearCreationSessionStorage();
+        }
+      });
   }
 
   ngOnInit(): void {
@@ -98,6 +111,7 @@ export class CreateRequestStepper implements OnInit, OnDestroy {
       } else {
         // We're editing, so remove the flag if it exists
         sessionStorage.removeItem('request_in_creation_mode');
+        sessionStorage.removeItem('currentRequestId');
       }
     }
 
@@ -126,28 +140,18 @@ export class CreateRequestStepper implements OnInit, OnDestroy {
       performance?.navigation?.type === 1 ||
       (performance as any)?.navigation?.type === 'reload';
 
-    console.log('Checking redirect conditions:', {
-      hasRequestId,
-      isPageReload,
-      isCreationMode,
-      stateServiceId: this.stateService.getRequestId(),
-      routeRequestId: this.requestId,
-      sessionRequestId,
-      navigationType: performance?.navigation?.type,
-    });
-
     // Only redirect if in creation mode AND page was reloaded
     if (hasRequestId && isPageReload && isCreationMode) {
-      console.log('Redirecting to dashboard...');
       // Clear the session storage before redirecting
+      this.clearCreationSessionStorage();
+      this.router.navigate(['/requests-view']);
+    }
+  }
+
+  private clearCreationSessionStorage(): void {
+    if (isPlatformBrowser(this.platformId)) {
       sessionStorage.removeItem('currentRequestId');
       sessionStorage.removeItem('request_in_creation_mode');
-      console.log('this.organizationTypeId', this.organizationTypeId);
-      if (this.organizationTypeId === 1) {
-        this.router.navigate(['/requests-view']);
-      } else {
-        this.router.navigate(['/offeror-requests-view']);
-      }
     }
   }
 
@@ -167,14 +171,8 @@ export class CreateRequestStepper implements OnInit, OnDestroy {
     this.destroy$.complete();
     this.stateService.clearRequestId();
 
-    // Clean up sessionStorage only if not reloading and in browser
-    if (isPlatformBrowser(this.platformId)) {
-      const isPageReload = performance?.navigation?.type === 1;
-      if (!isPageReload) {
-        sessionStorage.removeItem('currentRequestId');
-        sessionStorage.removeItem('request_in_creation_mode');
-      }
-    }
+    // Always clear sessionStorage on component destroy (navigation away)
+    this.clearCreationSessionStorage();
   }
 
   saveRequest() {
