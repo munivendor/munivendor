@@ -70,10 +70,6 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    if (this.authService.isAuthenticated$) {
-      this.idleService.startWatching();
-    }
-
     this.authService.userLoggedOut$.subscribe(() => {
       this.idleService.stopWatching();
     });

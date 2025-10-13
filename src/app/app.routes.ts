@@ -5,6 +5,7 @@ import { AuthGuard, GuestGuard } from './authorization/auth.guard';
 import { SignupComponent } from './Signup/signup.component';
 import { LoginComponent } from './Login/login.component';
 import { ForgotPasswordComponent } from './ForgotPassword/forgot-password.component';
+import { ForgotPasswordResetComponent } from './ForgotPasswordReset/forgot-password-reset.component';
 import { EmailVerification } from './Signup/Verification/verification.component';
 import { TokenValidationComponent } from './Signup/token-validation.component';
 
@@ -26,6 +27,7 @@ import { DefinitionsComponent } from './DefinitionsPage/definitions.component';
 import { OfferorProfilePageComponent } from './Response/OfferorProfilePage/offeror-profile-page.component';
 
 import { ResponseStepper } from './Response/ResponseStepper/response-stepper.component';
+import { FlowCompletionGuard } from './authorization/auth.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -49,6 +51,12 @@ export const routes: Routes = [
     data: { showSidenav: false },
   },
   {
+    path: 'reset-password',
+    component: ForgotPasswordResetComponent,
+    canActivate: [GuestGuard],
+    data: { showSidenav: false },
+  },
+  {
     path: 'email-verification',
     component: EmailVerification,
     canActivate: [GuestGuard],
@@ -57,6 +65,7 @@ export const routes: Routes = [
   {
     path: 'validateuser',
     component: TokenValidationComponent,
+    canActivate: [],
     data: { showSidenav: false },
   },
 
@@ -102,13 +111,13 @@ export const routes: Routes = [
   {
     path: 'requests-view',
     component: AgencyTableDetailsComponent,
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard, FlowCompletionGuard],
     data: { showSidenav: true },
   },
   {
     path: 'offeror-requests-view',
     component: OfferorTableDetailsComponent,
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard, FlowCompletionGuard],
     data: { showSidenav: true },
   },
   {

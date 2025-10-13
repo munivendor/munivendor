@@ -1,13 +1,15 @@
-<div class="idle-timeout-container">
-  <h2 class="title">Idle Timeout</h2>
+<h2 mat-dialog-title>Idle Timeout</h2>
 
-  <div class="content">
-    <p>You’ve been inactive for a while.</p>
-    <p>Would you like to continue your session?</p>
-  </div>
+<mat-dialog-content class="mat-typography">
+  <p>You’ve been inactive for a while.</p>
+  <p>Would you like to continue your session?</p>
+</mat-dialog-content>
 
-  <div class="actions">
-    <button color="warn" (click)="close('logout')">No, Log Out</button>
-    <button color="primary" (click)="close('continue')">Yes, Continue</button>
-  </div>
-</div>
+<mat-dialog-actions align="center">
+  <button mat-stroked-button color="warn" (click)="close('logout')">
+    No, Log Out
+  </button>
+  <button mat-flat-button color="primary" (click)="close('continue')">
+    Yes, Continue
+  </button>
+</mat-dialog-actions>

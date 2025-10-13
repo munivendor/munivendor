@@ -96,9 +96,7 @@ export class UserSignUpDetails implements OnInit {
 
   updateUser(user: User): void {
     this.userService.updateUser(user).subscribe(
-      () => {
-        console.log('Success updating user');
-      },
+      () => {},
       (error) => {
         console.error('Error fetching user data:', error);
       }
@@ -139,11 +137,6 @@ export class UserSignUpDetails implements OnInit {
             console.error('Error saving flow progress:', err);
           },
         });
-      //   } else {
-      //     console.warn(
-      //       `No flow mapping found for organizationTypeId: ${this.organizationTypeId}`
-      //     );
-      //   }
     } else {
       console.error('Form is invalid or user data is not loaded yet.');
     }
