@@ -16,7 +16,11 @@ import {
 } from 'rxjs';
 import { Router } from '@angular/router';
 import { UserLogin } from '../shared/model/user-login.model';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import {
+  HttpClient,
+  HttpErrorResponse,
+  HttpParams,
+} from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { FlowNavigationService } from '../shared/service/flow-navigation.service';
@@ -71,6 +75,7 @@ export class AuthService {
     '/forgot-password',
     '/email-verification',
     '/validateuser',
+    '/reset-password',
   ]);
 
   constructor(
@@ -193,7 +198,8 @@ export class AuthService {
           ) {
             this.router.navigate(['/login']);
           }
-          return throwError(() => err);
+          // Return of(null) instead of throwError to prevent error propagation
+          return of(null);
         })
       );
   }
@@ -379,10 +385,6 @@ export class AuthService {
       tap((user: User) => {
         if (user && user.organizationId !== undefined) {
           this.stateService.setOrganizationId(user.organizationId);
-          console.log(
-            'Organization ID manually restored:',
-            user.organizationId
-          );
         }
       }),
       catchError((error) => {
@@ -402,5 +404,14 @@ export class AuthService {
         },
       }
     );
+  }
+
+  resetPassword(token: string, newPassword: string): Observable<any> {
+    // Your backend expects query parameters, not a body
+    const params = new HttpParams()
+      .set('token', token)
+      .set('newPassword', newPassword);
+
+    return this.http.post(`${this.url}auth/reset-password`, null, { params });
   }
 }

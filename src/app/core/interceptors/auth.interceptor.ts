@@ -6,7 +6,7 @@ import {
   HttpEvent,
   HttpErrorResponse,
 } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { Observable, throwError, EMPTY } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import {
@@ -15,19 +15,24 @@ import {
   MatDialogModule,
 } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
+import { AuthService } from '../../authorization/auth.service';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
-  // Track if we've already shown the dialog to prevent duplicates
   private dialogOpen = false;
-  private wasAuthenticated = false;
 
-  constructor(private router: Router, private dialog: MatDialog) {}
+  // 🟢 Define public (unauthenticated) endpoints that should skip interceptor handling
+  private readonly publicEndpoints: string[] = [
+    '/users/validate', // your token validation API
+    '/auth/send-reset', // optional: forgot password
+    '/auth/reset-password', // optional: reset password
+  ];
 
-  // Call this method from AuthService when user logs in
-  setAuthenticated(isAuth: boolean): void {
-    this.wasAuthenticated = isAuth;
-  }
+  constructor(
+    private router: Router,
+    private dialog: MatDialog,
+    private authService: AuthService
+  ) {}
 
   intercept(
     req: HttpRequest<any>,
@@ -35,27 +40,26 @@ export class AuthInterceptor implements HttpInterceptor {
   ): Observable<HttpEvent<any>> {
     return next.handle(req).pipe(
       catchError((error: HttpErrorResponse) => {
-        if (error.status === 401) {
-          // Skip dialog for /me endpoint (used for session checking)
-          // Skip dialog for auth-related endpoints
-          const skipDialogUrls = [
-            '/me',
-            '/login',
-            '/logout',
-            '/auth',
-            '/organizations',
-          ];
-          const shouldSkipDialog = skipDialogUrls.some((url) =>
-            req.url.includes(url)
-          );
+        // if request is to a public endpoint, skip ALL auth handling
+        const isPublicEndpoint = this.publicEndpoints.some((path) =>
+          req.url.includes(path)
+        );
+        if (isPublicEndpoint) {
+          return throwError(() => error);
+        }
 
-          // Only show dialog if:
-          // 1. Not already open
-          // 2. Not a skipped URL
-          // 3. Not already on login page
+        // normal 401 handling for private endpoints
+        if (error.status === 401) {
+          const isSessionCheck =
+            req.url.includes('/me') || req.url.includes('/auth/check');
+
+          const isLoggedIn = this.authService.authState.value;
+
+          // show session-expired dialog for logged-in users
           if (
+            isLoggedIn &&
+            !isSessionCheck &&
             !this.dialogOpen &&
-            !shouldSkipDialog &&
             this.router.url !== '/login'
           ) {
             this.dialogOpen = true;
@@ -67,8 +71,14 @@ export class AuthInterceptor implements HttpInterceptor {
 
             dialogRef.afterClosed().subscribe(() => {
               this.dialogOpen = false;
-              this.router.navigate(['/login']);
+              this.authService.logout();
             });
+
+            return EMPTY;
+          }
+
+          if (isSessionCheck) {
+            return EMPTY;
           }
         }
         return throwError(() => error);

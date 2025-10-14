@@ -110,14 +110,17 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
     if (this.forgotPasswordForm.valid) {
       this.currentEmail = this.forgotPasswordForm.value.email;
       this.isLoading = true;
+      this.forgotPasswordForm.get('email')?.disable();
 
       this.authService.sendPasswordReset(this.currentEmail).subscribe({
         next: (response) => {
           this.isLoading = false;
+          this.forgotPasswordForm.get('email')?.enable();
           this.openDialog();
         },
         error: (error) => {
           this.isLoading = false;
+          this.forgotPasswordForm.get('email')?.enable();
         },
       });
     }
@@ -125,14 +128,17 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
 
   onResendLink() {
     this.isLoading = true;
+    this.forgotPasswordForm.get('email')?.disable();
 
     this.authService.sendPasswordReset(this.currentEmail).subscribe({
       next: (response) => {
         this.isLoading = false;
+        this.forgotPasswordForm.get('email')?.enable();
         this.openDialog();
       },
       error: (error) => {
         this.isLoading = false;
+        this.forgotPasswordForm.get('email')?.enable();
       },
     });
   }
@@ -145,7 +151,6 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
 
     dialogRef.componentInstance.message = `We've sent a password reset link to ${this.currentEmail}. Please check your email and follow the instructions.`;
 
-    // Subscribe to dialog close event
     dialogRef.afterClosed().subscribe((result) => {
       this.showResendButton = true;
     });
@@ -165,7 +170,6 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
       ],
     });
 
-    // Watch for email changes
     this.forgotPasswordForm
       .get('email')
       ?.valueChanges.pipe(takeUntil(this.destroy$))
