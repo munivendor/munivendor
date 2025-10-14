@@ -23,6 +23,7 @@ export class IdleService {
   private isDialogOpen = false;
   private userActivity$ = new Subject<void>();
   private isBrowser: boolean;
+  private authSubscription?: Subscription;
 
   constructor(
     private ngZone: NgZone,
@@ -31,14 +32,30 @@ export class IdleService {
     @Inject(PLATFORM_ID) platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
+
+    if (this.isBrowser) {
+      // 👇 Subscribe to auth state
+      this.authSubscription = this.authService.isAuthenticated$.subscribe(
+        (isAuthenticated) => {
+          if (isAuthenticated) {
+            this.startWatching();
+          } else {
+            this.stopWatching();
+          }
+        }
+      );
+    }
   }
 
   startWatching() {
     if (!this.isBrowser) return;
 
+    // Prevent double registration if called multiple times
+    this.stopWatching();
+
     this.ngZone.runOutsideAngular(() => {
       this.activityEvents.forEach((event) =>
-        window.addEventListener(event, () => this.userActivity$.next())
+        window.addEventListener(event, this.onUserActivity, true)
       );
     });
 
@@ -48,6 +65,10 @@ export class IdleService {
       if (!this.isDialogOpen) this.resetTimer();
     });
   }
+
+  private onUserActivity = () => {
+    this.userActivity$.next();
+  };
 
   private resetTimer() {
     this.inactivityTimer?.unsubscribe();
@@ -66,11 +87,8 @@ export class IdleService {
       disableClose: true,
     });
 
-    // Start the "no response" timer
     this.dialogTimer = timer(this.dialogTimeoutMinutes * 60 * 1000).subscribe(
-      () => {
-        dialogRef.close('timeout');
-      }
+      () => dialogRef.close('timeout')
     );
 
     dialogRef.afterClosed().subscribe((result) => {
@@ -90,8 +108,9 @@ export class IdleService {
     this.activitySubscription?.unsubscribe();
     this.inactivityTimer?.unsubscribe();
     this.dialogTimer?.unsubscribe();
+
     this.activityEvents.forEach((event) =>
-      window.removeEventListener(event, () => {})
+      window.removeEventListener(event, this.onUserActivity, true)
     );
   }
 }
