@@ -19,6 +19,7 @@ import { routes } from './app.routes';
 import { GlobalErrorHandler } from './exceptionhandling/global-error-handler';
 import { WithCredentialsInterceptor } from './core/interceptors/with-credentials.interceptor';
 import { AuthInterceptor } from './core/interceptors/auth.interceptor';
+import { ErrorHandlerInterceptor } from './core/interceptors/error-handler.interceptor';
 
 const CLIENT_ID =
   '954795010792-oafduvq9mhtlatg68rhl4hadtcuajos6.apps.googleusercontent.com';
@@ -66,6 +67,11 @@ export const appConfig: ApplicationConfig = {
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,
+      multi: true,
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: ErrorHandlerInterceptor,
       multi: true,
     },
   ],
