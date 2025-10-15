@@ -1,9 +1,6 @@
-// logging.service.ts
 import { Injectable } from '@angular/core';
 import { ApplicationInsights } from '@microsoft/applicationinsights-web';
 import { environment } from '../../environments/environment';
-import { request } from 'http';
-import { Organization } from '../Organization/Details/model/organization.model';
 
 @Injectable({ providedIn: 'root' })
 export class LoggingService {

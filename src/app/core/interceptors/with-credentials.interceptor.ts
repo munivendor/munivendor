@@ -6,27 +6,27 @@ import {
   HttpEvent,
 } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 @Injectable()
 export class WithCredentialsInterceptor implements HttpInterceptor {
-  private readonly credentialPaths: string[] = [
-    '/Requests',
-    '/CategoryHierarchy',
-    '/AuthorizingOfficials',
-    '/AuthorizingOfficials/organization',
-    '/organizations',
+  private readonly publicPaths: string[] = [
+    '/auth/send-reset',
+    '/auth/reset-password',
+    '/users/validate',
   ];
 
   intercept(
     req: HttpRequest<any>,
     next: HttpHandler
   ): Observable<HttpEvent<any>> {
-    // Check if the URL matches one of the credential-required paths
-    const needsCredentials = this.credentialPaths.some((path) =>
+    const isApiRequest = req.url.startsWith(environment.apiUrl);
+    const isPublicEndpoint = this.publicPaths.some((path) =>
       req.url.includes(path)
     );
 
-    // Clone the request with credentials if needed
+    const needsCredentials = isApiRequest && !isPublicEndpoint;
+
     const authReq = needsCredentials
       ? req.clone({ withCredentials: true })
       : req;

@@ -24,8 +24,11 @@
           <input
             matInput
             type="text"
+            id="email"
+            name="email"
             formControlName="email"
             placeholder="Enter your work email/username"
+            autocomplete="username"
           />
           <mat-error *ngIf="loginForm.get('email')?.hasError('required')">
             Work Email/Username is required.
@@ -45,8 +48,11 @@
           <input
             matInput
             type="password"
+            id="password"
+            name="password"
             formControlName="password"
             placeholder="Enter your password"
+            autocomplete="current-password"
           />
           <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
             Password is required.
@@ -60,7 +66,7 @@
             justify-content: space-between;
           "
         >
-          <div>Remember me</div>
+          <!-- <div>Remember me</div> -->
           <a [routerLink]="['/forgot-password']">Forgot password?</a>
         </div>
 

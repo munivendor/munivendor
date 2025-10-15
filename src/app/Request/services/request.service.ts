@@ -122,13 +122,13 @@ export class RequestService {
     requestId: number,
     sortOrderId: number
   ): Observable<{
-    success: boolean;
+    isSuccess: boolean;
     requestSectionId: number | null;
     sortOrderId: number | null;
   }> {
     const headers = { 'Content-Type': 'application/json' };
     return this.http.post<{
-      success: boolean;
+      isSuccess: boolean;
       requestSectionId: number | null;
       sortOrderId: number | null;
     }>(
