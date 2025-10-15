@@ -11,9 +11,12 @@
 }
 
 .signup-card {
-  max-width: 430px;
+  max-width: 520px;
 }
-
+mat-card {
+  max-width: 500px;
+  width: 100%;
+}
 mat-card-header {
   display: flex;
   justify-content: center;

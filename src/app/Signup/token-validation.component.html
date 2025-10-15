@@ -1,1 +1,19 @@
-<h2>{{ verificationStatus }}</h2>
+<div
+  style="
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    width: 100vw;
+  "
+>
+  <mat-card>
+    <mat-card-content>
+      <h1>{{ verificationStatus }}</h1>
+      <mat-progress-spinner
+        *ngIf="verificationStatus === 'Verifying...'"
+        mode="indeterminate"
+      ></mat-progress-spinner>
+    </mat-card-content>
+  </mat-card>
+</div>

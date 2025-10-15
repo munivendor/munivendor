@@ -63,7 +63,7 @@
     <mat-card-header>
       <mat-card-title>Authorizing Officials</mat-card-title>
       <mat-card-subtitle>
-        Manage the authorized representatives for your organization
+        Manage your organization's authorized representatives.
       </mat-card-subtitle>
     </mat-card-header>
 
@@ -100,10 +100,10 @@
             <td mat-cell *matCellDef="let official">{{ official.email }}</td>
           </ng-container>
 
-          <ng-container matColumnDef="phoneNumber">
+          <ng-container matColumnDef="phone">
             <th mat-header-cell *matHeaderCellDef>Phone Number</th>
             <td mat-cell *matCellDef="let official">
-              {{ official.phoneNumber || "-" }}
+              {{ official.phone || "-" }}
             </td>
           </ng-container>
 
@@ -225,11 +225,11 @@
               <mat-label>Phone Number (Optional)</mat-label>
               <input
                 matInput
-                formControlName="phoneNumber"
+                formControlName="phone"
                 type="tel"
                 maxlength="20"
               />
-              <mat-error *ngIf="hasError('phoneNumber', 'maxlength')">
+              <mat-error *ngIf="hasError('phone', 'maxlength')">
                 Phone Number cannot exceed 20 characters
               </mat-error>
             </mat-form-field>
