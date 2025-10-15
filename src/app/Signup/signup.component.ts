@@ -315,15 +315,14 @@ export class SignupComponent implements OnInit, OnDestroy {
   }
 
   private setupGoogleAuthListener(): void {
-    combineLatest([
-      this.authService.skipNextAuthState$,
-      this.socialAuthService.authState,
-    ])
+    this.socialAuthService.authState
       .pipe(
         takeUntil(this.destroy$),
-        filter(([_, user]) => !!user && this.signupFormGoogle.valid),
-        take(1),
-        switchMap(([_, user]) => {
+        // Filter out null/undefined users and when already processing
+        filter((user) => !!user && !this.userCreationInProgress),
+        // Filter to only process when form is valid
+        filter(() => this.signupFormGoogle.valid),
+        switchMap((user) => {
           this.userCreationInProgress = true;
           let selectedOrganizationTypeId =
             this.signupFormGoogle.get('organizationTypeId')?.value;
@@ -341,8 +340,6 @@ export class SignupComponent implements OnInit, OnDestroy {
             .saveOrganization(organizationData)
             .pipe(
               switchMap((orgResponse) => {
-                console.log('Organization created:', orgResponse);
-
                 const userData: User = {
                   firstName: user.firstName,
                   lastName: user.lastName,
@@ -357,27 +354,46 @@ export class SignupComponent implements OnInit, OnDestroy {
                 );
                 this.stateService.setOrganizationId(orgResponse.organizationId);
                 return this.createOrLoginGoogleUser(userData);
+              }),
+
+              catchError((error) => {
+                this.userCreationInProgress = false;
+                this.authService.setSignupInProgress(false);
+                this.authService.setSkipNextAuthState(false);
+
+                this.snackBar.open(
+                  `Sign up failed. This email may already exist or an error occurred.`,
+                  'Close',
+                  { verticalPosition: 'top', duration: 15000 }
+                );
+
+                return of(null);
+              }),
+              finalize(() => {
+                this.userCreationInProgress = false;
+                this.authService.setSignupInProgress(false);
               })
             );
-        }),
-        finalize(() => {
-          this.userCreationInProgress = false;
-          this.authService.setSignupInProgress(false);
         })
       )
       .subscribe({
-        next: () => {
-          console.log('Google Auth Success');
-          this.router.navigate(['/organization-details']);
+        next: (result) => {
+          // Only navigate if we got a successful result
+          if (result !== null) {
+            this.router.navigate(['/organization-details']);
+          } else {
+            console.log('Result was null, not navigating');
+          }
         },
-        error: () => {
+        error: (error) => {
           this.snackBar.open(
-            `Sign up failed. This email may already exist or an error occurred.`,
+            `Sign up failed. An unexpected error occurred.`,
             'Close',
-            { verticalPosition: 'top' }
+            { verticalPosition: 'top', duration: 15000 }
           );
           this.authService.setSkipNextAuthState(false);
           this.authService.setSignupInProgress(false);
+          this.userCreationInProgress = false;
         },
       });
   }
@@ -395,9 +411,13 @@ export class SignupComponent implements OnInit, OnDestroy {
           userIdentity: user.userIdentity,
           username: user.username,
         };
-        return this.authService
-          .login(googleUserLogin)
-          .pipe(tap(() => this.authService.setSkipNextAuthState(false)));
+        return this.authService.login(googleUserLogin).pipe(
+          tap(() => this.authService.setSkipNextAuthState(false)),
+          catchError((loginError) => {
+            this.authService.setSkipNextAuthState(false);
+            return throwError(() => loginError);
+          })
+        );
       })
     );
   }
@@ -426,6 +446,7 @@ export class SignupComponent implements OnInit, OnDestroy {
             'Close',
             {
               verticalPosition: 'top',
+              duration: 15000,
             }
           );
         },
