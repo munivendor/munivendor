@@ -285,7 +285,7 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
             .pipe(takeUntil(this.destroy$))
             .subscribe({
               next: (response) => {
-                if (response.success) {
+                if (response.isSuccess) {
                   const index = this.proposalSections.controls.findIndex(
                     (control) =>
                       control.get('requestSectionTitle')?.value ===
@@ -304,10 +304,6 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
                   }
 
                   section.requestSectionId = response.requestSectionId;
-                } else {
-                  console.warn(
-                    `Section ${section.requestSectionTitle} not saved successfully.`
-                  );
                 }
               },
               error: (error) => {
