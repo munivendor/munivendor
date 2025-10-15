@@ -2,11 +2,16 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UserService } from '../shared/service/user.service';
 import { Subject, takeUntil } from 'rxjs';
+import { MatCardModule } from '@angular/material/card';
+import { CommonModule } from '@angular/common';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'token-validation',
   templateUrl: './token-validation.component.html',
   styleUrls: [],
+  standalone: true,
+  imports: [CommonModule, MatCardModule, MatProgressSpinnerModule],
 })
 export class TokenValidationComponent implements OnInit, OnDestroy {
   token: string | null = null;
@@ -53,6 +58,10 @@ export class TokenValidationComponent implements OnInit, OnDestroy {
               'Verification failed. Invalid or expired token. Redirecting...';
             setTimeout(() => this.router.navigate(['/signup']), 5000);
           }
+        },
+        error: () => {
+          this.verificationStatus =
+            'An unexpected error occurred. Please try again later.';
         },
       });
   }
