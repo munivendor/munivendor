@@ -26,7 +26,7 @@ interface AuthorizingOfficial {
   lastName: string;
   title: string;
   email: string;
-  phoneNumber?: string;
+  phone?: string;
 }
 
 @Component({
@@ -57,7 +57,7 @@ export class OfferorProfilePageComponent implements OnInit {
     'lastName',
     'title',
     'email',
-    'phoneNumber',
+    'phone',
     'actions',
   ];
 
@@ -100,7 +100,7 @@ export class OfferorProfilePageComponent implements OnInit {
         '',
         [Validators.required, Validators.email, Validators.maxLength(255)],
       ],
-      phoneNumber: ['', [Validators.maxLength(20)]],
+      phone: ['', [Validators.maxLength(20)]],
     });
   }
 
@@ -151,7 +151,7 @@ export class OfferorProfilePageComponent implements OnInit {
       lastName: official.lastName,
       title: official.title,
       email: official.email,
-      phoneNumber: official.phoneNumber || '',
+      phone: official.phone || '',
     });
   }
 
@@ -172,7 +172,7 @@ export class OfferorProfilePageComponent implements OnInit {
         lastName: this.authorizingOfficialForm.value.lastName,
         title: this.authorizingOfficialForm.value.title,
         email: this.authorizingOfficialForm.value.email,
-        phoneNumber: this.authorizingOfficialForm.value.phoneNumber,
+        phone: this.authorizingOfficialForm.value.phone,
       };
 
       if (this.editingOfficialId) {
@@ -232,7 +232,7 @@ export class OfferorProfilePageComponent implements OnInit {
       lastName: 50,
       title: 100,
       email: 255,
-      phoneNumber: 20,
+      phone: 20,
     };
     return maxLengths[fieldName] || 0;
   }
