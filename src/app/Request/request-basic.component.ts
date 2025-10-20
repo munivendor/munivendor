@@ -883,6 +883,13 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Add method to normalize date to midnight local time when saving
+  private normalizeDateOnly(date: Date): Date {
+    const normalized = new Date(date);
+    normalized.setHours(0, 0, 0, 0);
+    return normalized;
+  }
+
   createRequest(): Request {
     const formValues = this.basicsFormGroup.value;
     let request = new Request();
@@ -899,8 +906,12 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     const closeTime = formValues.closeTime;
     request.closeDate = this.combineDateAndTime(closeDate, closeTime);
 
-    request.contractStart = new Date(formValues.contractStartDate);
-    request.contractEnd = new Date(formValues.contractEndDate);
+    request.contractStart = this.normalizeDateOnly(
+      new Date(formValues.contractStartDate)
+    );
+    request.contractEnd = this.normalizeDateOnly(
+      new Date(formValues.contractEndDate)
+    );
     request.decisionMakerSelections = formValues.dropdowns.map(
       (control: any, index: number) => ({
         decisionMakerNumber: index + 1,

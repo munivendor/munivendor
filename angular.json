@@ -140,7 +140,7 @@
               {
                 "glob": "**/*",
                 "input": "node_modules/tinymce",
-                "output": "/tinymce/"
+                "output": "/assets/tinymce/"
               }
             ],
             "styles": [

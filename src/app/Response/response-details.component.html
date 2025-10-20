@@ -6,9 +6,29 @@
     <div *ngFor="let section of requestSections">
       <h2>{{ section.requestSectionTitle }}</h2>
       <div
-        [innerHTML]="section.requestSectionContent"
+        [innerHTML]="formattedHtml(section.requestSectionContent)"
         class="content-display"
       ></div>
+
+      <ul
+        *ngIf="
+          section.requestSectionTitle ===
+          'Technical Proposal Standard Requirements'
+        "
+      >
+        <li>
+          Note: N.J.S.A 52:32-44 provides that government agencies may not enter
+          into a contract for goods or services unless the other party to the
+          contract provides a copy of its business registration certificate and
+          the business registration certificate of any subcontractors at the
+          time that it submits its proposal. MuniVendor automatically inserts
+          your business registration certificate from your MuniVendor vendor
+          profile. If you plan to utilize subcontractors, then please include
+          copies of those subcontractor's business registration certificates in
+          your technical proposal upload. The contracting party must also
+          collect the state use tax where applicable.
+        </li>
+      </ul>
     </div>
   </div>
 </div>

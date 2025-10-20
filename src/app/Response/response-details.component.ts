@@ -175,6 +175,7 @@ export class ResponseDetailsComponent implements OnInit {
         },
       });
   }
+
   formattedHtml(html: string): string {
     const cleanedHtml = html
       .replace(/<p>&nbsp;<\/p>/g, '')
@@ -184,7 +185,6 @@ export class ResponseDetailsComponent implements OnInit {
   }
 
   downloadPDFv2() {
-    // Pick the wrapper for your main content
     const content = document.querySelector('.content')?.innerHTML ?? '';
 
     this.http
