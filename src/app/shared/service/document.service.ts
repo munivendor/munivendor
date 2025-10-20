@@ -12,10 +12,6 @@ export class DocumentService {
 
   constructor(private http: HttpClient) {}
 
-  downloadPDF(): Observable<Blob> {
-    return this.http.get(this.url, { responseType: 'blob' });
-  }
-
   GetStateDocumentContent(documentId: number): Observable<HttpResponse<Blob>> {
     return this.http.get(
       `${this.url}Documents/DocumentContent/StateDocument/${documentId}`,

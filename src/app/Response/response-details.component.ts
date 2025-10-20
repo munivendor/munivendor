@@ -183,18 +183,6 @@ export class ResponseDetailsComponent implements OnInit {
     return cleanedHtml;
   }
 
-  downloadPDF() {
-    this.documentService.downloadPDF().subscribe((response) => {
-      const blob = new Blob([response], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'Proposals.pdf';
-      a.click();
-      window.URL.revokeObjectURL(url);
-    });
-  }
-
   downloadPDFv2() {
     // Pick the wrapper for your main content
     const content = document.querySelector('.content')?.innerHTML ?? '';
@@ -210,7 +198,7 @@ export class ResponseDetailsComponent implements OnInit {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'document.pdf';
+        a.download = 'Proposals.pdf';
         a.click();
         window.URL.revokeObjectURL(url);
       });
