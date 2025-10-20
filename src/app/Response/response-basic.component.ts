@@ -18,7 +18,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select'; // ADD THIS
+import { MatSelectModule } from '@angular/material/select';
 import { CategoryHierarchyService } from '../Request/services/category-hierarchy.service';
 import { Subject, takeUntil, forkJoin, BehaviorSubject } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
@@ -29,6 +29,7 @@ import { OfferorProfileService } from '../shared/service/offeror-profile.service
 import { Response } from '../shared/model/response.model';
 import { StateService } from '../Request/services/state.service';
 import { TooltipDirective } from '../shared/directive/tooltip.directive';
+import { LoggingService } from '../exceptionhandling/logging.service';
 
 interface FlattenedCategoryNode {
   name: string;
@@ -92,6 +93,7 @@ export class ResponseBasicComponent implements OnInit {
     private router: Router,
     private stateService: StateService,
     private offerorProfileService: OfferorProfileService,
+    private loggingService: LoggingService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.responseForm = this.fb.group({
@@ -174,8 +176,8 @@ export class ResponseBasicComponent implements OnInit {
 
     forkJoin([request$, categories$, requestTypes$])
       .pipe(takeUntil(this.destroy$))
-      .subscribe(
-        ([request, categories, requestTypes]) => {
+      .subscribe({
+        next: ([request, categories, requestTypes]) => {
           this.flattenedCategories = this.flattenCategories(categories);
 
           const category = this.flattenedCategories.find(
@@ -233,10 +235,26 @@ export class ResponseBasicComponent implements OnInit {
             ],
           });
         },
-        (error: any) => {
-          console.error('Error loading template request', error);
-        }
-      );
+        error: (error: any) => {
+          console.error('Error loading template request:', error);
+
+          // Extract correlationId from error response
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              requestId: requestId,
+              organizationId: this.organizationId,
+              correlationId: correlationId,
+              methodName: 'loadTemplateRequest',
+              className: 'ResponseBasicsComponent',
+              operation: 'GetRequestDetailsById',
+            }
+          );
+        },
+      });
   }
 
   private flattenCategories(categories: any[]): FlattenedCategoryNode[] {
@@ -402,6 +420,22 @@ export class ResponseBasicComponent implements OnInit {
           },
           (error) => {
             console.error('Error updating response:', error);
+            // Extract correlationId from error response
+            const correlationId = error?.error?.correlationId;
+
+            this.loggingService.logException(
+              new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+              3,
+              {
+                requestId: effectiveResponseId,
+                organizationId: this.organizationId,
+                correlationId: correlationId,
+                methodName: 'saveResponse',
+                className: 'ResponseBasicComponent',
+                operation: 'UpdateRequest',
+                userId: this.stateService.getUserId(),
+              }
+            );
           }
         );
     } else if (!responseIdFromStateService || !this.responseIdParam) {
@@ -432,6 +466,22 @@ export class ResponseBasicComponent implements OnInit {
           },
           (error) => {
             console.error('Error creating response:', error);
+
+            // Extract correlationId from error response
+            const correlationId = error?.error?.correlationId;
+
+            this.loggingService.logException(
+              new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+              3,
+              {
+                organizationId: this.organizationId,
+                correlationId: correlationId,
+                methodName: 'saveResponse',
+                className: 'ResponseBasicsComponent',
+                operation: 'CreateRequest',
+                userId: this.stateService.getUserId(),
+              }
+            );
           }
         );
     }

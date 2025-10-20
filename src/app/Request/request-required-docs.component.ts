@@ -116,12 +116,20 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
     }
   }
 
-  private initializeForCreation(): void {
-    this.getAllDocumentTypes(Number(this.organizationId))
+  private initializeForCreation(forceUpdate: boolean = false): void {
+    this.getAllDocumentTypes(
+      Number(this.organizationId),
+      undefined,
+      forceUpdate
+    )
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: () => {},
-        error: (error) => {},
+        next: () => {
+          console.log('Documents fetched and form initialized for creation.');
+        },
+        error: (error) => {
+          console.error('Error fetching documents for creation:', error);
+        },
       });
   }
 
@@ -134,7 +142,7 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
           const documents = requestDocuments?.documents ?? [];
 
           if (!documents || documents.length === 0) {
-            this.initializeForCreation();
+            this.initializeForCreation(true);
             return;
           }
 
@@ -149,7 +157,7 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
                   const enrichedRequestDocuments =
                     this.enrichRequestDocumentsWithOrganizationId(
                       documents,
-                      allDocuments.optionalMunicipalityDocuments ?? [] // Add fallback here
+                      allDocuments.optionalMunicipalityDocuments ?? []
                     );
 
                   if (enrichedRequestDocuments.length > 0) {
@@ -159,7 +167,7 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
                       enrichedRequestDocuments
                     );
                   } else {
-                    this.initializeForCreation();
+                    this.initializeForCreation(true);
                   }
                 } catch (err) {
                   this.fallbackToCreation();
@@ -184,7 +192,6 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
     requestDocs: any[],
     optionalMunicipalityDocs: any[]
   ): any[] {
-    // Ensure it's an array
     const municipalityDocs = Array.isArray(optionalMunicipalityDocs)
       ? optionalMunicipalityDocs
       : [];
@@ -202,7 +209,7 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
   }
 
   private fallbackToCreation(): void {
-    this.getAllDocumentTypes(Number(this.organizationId))
+    this.getAllDocumentTypes(Number(this.organizationId), undefined, true)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
@@ -221,7 +228,8 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
 
   getAllDocumentTypes(
     organizationId: number,
-    requestId?: number
+    requestId?: number,
+    forceUpdate: boolean = false
   ): Observable<any> {
     return forkJoin({
       requiredStateDocuments: this.requestService.GetRequiredDocuments(),
@@ -235,7 +243,7 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
           optionalStateDocuments,
           optionalMunicipalityDocuments,
         }) => {
-          if (!this.idParam) {
+          if (!this.idParam || forceUpdate) {
             this.populateFormArray(
               this.requiredStateDocuments,
               requiredStateDocuments
@@ -308,7 +316,6 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
     const selectedIds = new Set(requestDocuments.map((doc) => doc.documentId));
 
     const filterOutSelected = (documents: any[]) => {
-      // Guard: ensure documents is an array
       if (!Array.isArray(documents)) {
         console.warn('Expected array but got:', documents);
         return [];
@@ -356,7 +363,6 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
       ? response.documents
       : response;
 
-    // Guard against null/undefined or non-array values
     if (!Array.isArray(documents)) {
       console.warn('Documents is not an array:', documents);
       return;

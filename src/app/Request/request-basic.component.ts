@@ -115,6 +115,7 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     private stateService: StateService,
     private cdr: ChangeDetectorRef,
     private categoryHierarchyService: CategoryHierarchyService,
+    private loggingService: LoggingService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.flattenCategories();
@@ -659,6 +660,7 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
           };
 
           this.initializeForm(formData);
+
           if (category) {
             this.basicsFormGroup
               .get('category')
@@ -677,21 +679,50 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
               this.cdr.detectChanges();
             }, 0);
           }
+
           this.cdr.detectChanges();
         },
-        error: (error: unknown) => {
-          const err = new Error(
-            (error as Error)?.message || error?.toString?.() || String(error)
+        error: (error: any) => {
+          console.error('Error fetching request details:', error);
+
+          // Extract correlationId
+          const correlationId = error?.error?.correlationId;
+
+          // Identify likely failing operation (based on backend message or URL)
+          let operation = 'UnknownOperation';
+          const errorMessage = error?.message?.toLowerCase?.() || '';
+          const errorUrl = error?.url?.toLowerCase?.() || '';
+
+          if (errorUrl.includes('requestdetails'))
+            operation = 'GetRequestDetailsById';
+          else if (errorUrl.includes('categoryhierarchy'))
+            operation = 'GetCategoryHierarchy';
+          else if (errorUrl.includes('requesttypes'))
+            operation = 'GetRequestTypes';
+          else if (errorUrl.includes('decisionmakers'))
+            operation = 'GetDecisionMakers';
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              requestId: requestId,
+              organizationId: this.organizationId,
+              correlationId: correlationId,
+              methodName: 'getRequestById',
+              className: 'RequestBasicsComponent',
+              operation: operation,
+              userId: this.stateService.getUserId(),
+            }
           );
-          err.name = 'Fetch Request Types Failed';
-          this._logger.logException(err, 3, {
-            methodName: 'fetchInitialData',
-            className: 'BasicRequestComponent',
-            operation: 'GetRequestTypes',
-          });
-          this._snackBar.open('Unidentified error occurred', 'Close', {
-            verticalPosition: 'top',
-          });
+
+          this._snackBar.open(
+            'An error occurred while fetching request data.',
+            'Close',
+            {
+              verticalPosition: 'top',
+            }
+          );
         },
       });
   }
@@ -767,6 +798,7 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
 
   saveRequest() {
     let request = this.createRequest();
+
     const requestIdFromStateService = this.stateService.getRequestId();
     const effectiveRequestId = this.idParam ?? requestIdFromStateService;
 
@@ -788,6 +820,28 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
           },
           (error) => {
             console.error('Error updating Request:', error);
+            this._snackBar.open(
+              'An error occurred while saving the request. Please try again.',
+              'Close',
+              { verticalPosition: 'top' }
+            );
+
+            // Extract correlationId from error response
+            const correlationId = error?.error?.correlationId;
+
+            this.loggingService.logException(
+              new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+              3,
+              {
+                requestId: effectiveRequestId,
+                organizationId: this.organizationId,
+                correlationId: correlationId,
+                methodName: 'saveRequest',
+                className: 'RequestBasicsComponent',
+                operation: 'UpdateRequest',
+                userId: this.stateService.getUserId(),
+              }
+            );
           }
         );
     } else if (!this.idParam || !this.requestId) {
@@ -798,7 +852,6 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
           (responseRequestId: number) => {
             this.requestId = responseRequestId;
             this.stateService.setRequestId(responseRequestId);
-            // Store in sessionStorage for reload detection - only in browser
             if (isPlatformBrowser(this.platformId)) {
               sessionStorage.setItem(
                 'currentRequestId',
@@ -809,6 +862,22 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
           },
           (error) => {
             console.error('Error creating request:', error);
+
+            // Extract correlationId from error response
+            const correlationId = error?.error?.correlationId;
+
+            this.loggingService.logException(
+              new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+              3,
+              {
+                organizationId: this.organizationId,
+                correlationId: correlationId,
+                methodName: 'saveRequest',
+                className: 'RequestBasicsComponent',
+                operation: 'CreateRequest',
+                userId: this.stateService.getUserId(),
+              }
+            );
           }
         );
     }

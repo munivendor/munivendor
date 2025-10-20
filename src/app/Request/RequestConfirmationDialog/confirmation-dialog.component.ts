@@ -18,6 +18,7 @@ import { Request } from '../model/request.model';
 import { Router } from '@angular/router';
 import { DocumentService } from '../../shared/service/document.service';
 import { RequestService } from '../services/request.service';
+import { LoggingService } from '../../exceptionhandling/logging.service';
 
 export interface DialogData {
   action: string;
@@ -57,7 +58,8 @@ export class ConfirmationDialog {
     public dialog: MatDialog,
     private router: Router,
     private documentService: DocumentService,
-    private requestService: RequestService
+    private requestService: RequestService,
+    private loggingService: LoggingService
   ) {}
 
   getConfirmationMessage(): string {
@@ -143,8 +145,18 @@ export class ConfirmationDialog {
 
           this.downloadZipDocuments(request);
         },
-        error: (err) => {
-          console.error('Failed to update status:', err);
+        error: (error) => {
+          console.error('Failed to update status:', error);
+
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(error, 3, {
+            // organizationId: this.organizationId,
+            correlationId: correlationId,
+            methodName: 'confirm',
+            className: 'ConfirmationDialog',
+            operation: 'UpdateRequestStatus',
+          });
         },
       });
     }

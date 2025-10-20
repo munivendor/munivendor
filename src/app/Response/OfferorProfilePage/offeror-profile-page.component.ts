@@ -18,6 +18,7 @@ import { OrganizationService } from '../../Organization/Details/services/organiz
 import { Organization } from '../../Organization/Details/model/organization.model';
 import { StateService } from '../../Request/services/state.service';
 import { OfferorProfileService } from '../../shared/service/offeror-profile.service';
+import { LoggingService } from '../../exceptionhandling/logging.service';
 
 interface AuthorizingOfficial {
   vendorAuthorizingOfficialId?: number;
@@ -69,7 +70,8 @@ export class OfferorProfilePageComponent implements OnInit {
     private organizationService: OrganizationService,
     private stateService: StateService,
     private offerorProfileService: OfferorProfileService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private loggingService: LoggingService
   ) {}
 
   ngOnInit(): void {
@@ -116,8 +118,23 @@ export class OfferorProfilePageComponent implements OnInit {
           zipCode: org.zipCode,
         });
       },
-      error: (err) => {
-        console.error('Error fetching organization:', err);
+      error: (error) => {
+        console.error('Error fetching organization:', error);
+        // Extract correlationId
+        const correlationId = error?.error?.correlationId;
+
+        this.loggingService.logException(
+          new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+          3,
+          {
+            organizationId: this.stateService.getOrganizationId(),
+            correlationId: correlationId,
+            methodName: 'loadOrganization',
+            className: 'OfferorProfilePageComponent',
+            operation: 'getOrganization',
+            userId: this.stateService.getUserId(),
+          }
+        );
         this.showSnackBar('Error loading organization data');
       },
     });
@@ -130,8 +147,22 @@ export class OfferorProfilePageComponent implements OnInit {
         next: (officials: AuthorizingOfficial[]) => {
           this.authorizingOfficials = officials;
         },
-        error: (err) => {
-          console.error('Error fetching authorizing officials:', err);
+        error: (error) => {
+          console.error('Error fetching authorizing officials:', error);
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              organizationId: this.stateService.getOrganizationId(),
+              correlationId: correlationId,
+              methodName: 'loadAuthorizingOfficials',
+              className: 'OfferorProfilePageComponent',
+              operation: 'GetOfferorAuthorizingOfficials',
+              userId: this.stateService.getUserId(),
+            }
+          );
           this.showSnackBar('Error loading authorizing officials');
         },
       });
@@ -194,7 +225,21 @@ export class OfferorProfilePageComponent implements OnInit {
           this.cancelEdit();
           this.loadAuthorizingOfficials(official.organizationId);
         },
-        error: (err) => {
+        error: (error) => {
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              organizationId: this.stateService.getOrganizationId(),
+              correlationId: correlationId,
+              methodName: 'addAuthorizingOfficial',
+              className: 'OfferorProfilePageComponent',
+              operation: 'SaveOfferorAuthorizingOfficial',
+              userId: this.stateService.getUserId(),
+            }
+          );
           this.showSnackBar('Error saving Authorizing Official');
         },
       });
@@ -212,7 +257,21 @@ export class OfferorProfilePageComponent implements OnInit {
           this.cancelEdit();
           this.loadAuthorizingOfficials(official.organizationId);
         },
-        error: (err) => {
+        error: (error) => {
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              organizationId: this.stateService.getOrganizationId(),
+              correlationId: correlationId,
+              methodName: 'updateAuthorizingOfficial',
+              className: 'OfferorProfilePageComponent',
+              operation: 'UpdateOfferorAuthorizingOfficial',
+              userId: this.stateService.getUserId(),
+            }
+          );
           this.showSnackBar('Error updating Authorizing Official');
         },
       });

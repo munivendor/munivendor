@@ -19,8 +19,6 @@ import { MatInputModule } from '@angular/material/input';
 import { forkJoin, Subject, takeUntil } from 'rxjs';
 import { RequestService } from '../Request/services/request.service';
 import { StateService } from '../Request/services/state.service';
-import { Router } from '@angular/router';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { CategoryNode } from '../shared/model/category-tree.model';
 import { CategoryHierarchyService } from '../Request/services/category-hierarchy.service';
 import { MatTableModule } from '@angular/material/table';
@@ -553,18 +551,28 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
   private formatDateTime(dateString: string): string {
     if (!dateString) return '';
 
-    const date = new Date(dateString + 'Z');
+    // Handle if dateString is already just a date
+    const date = new Date(
+      dateString.includes('Z') ? dateString : dateString + 'Z'
+    );
 
     if (isNaN(date.getTime())) return '';
 
     const formattedDate = date.toLocaleDateString('en-US');
-    const formattedTime = date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    });
 
-    return `${formattedDate} at ${formattedTime}`;
+    // Check if the original string contained time information
+    const hasTime = dateString.includes('T') || dateString.includes(':');
+
+    if (hasTime) {
+      const formattedTime = date.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      });
+      return `${formattedDate} at ${formattedTime}`;
+    }
+
+    return formattedDate;
   }
 
   findCategoryById(categoryId: number): CategoryNode | null {

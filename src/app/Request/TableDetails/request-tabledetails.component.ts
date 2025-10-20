@@ -33,6 +33,7 @@ import { StateService } from '../services/state.service';
 import { CategoryNode } from '../../shared/model/category-tree.model';
 import { ChangeDetectorRef } from '@angular/core';
 import { LoadingService } from '../../shared/LoadingSpinner/loading.service';
+import { LoggingService } from '../../exceptionhandling/logging.service';
 
 interface FlattenedCategoryNode {
   categoryId: string;
@@ -152,7 +153,8 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private stateService: StateService,
     private cdr: ChangeDetectorRef,
-    private loadingService: LoadingService
+    private loadingService: LoadingService,
+    private loggingService: LoggingService
   ) {}
 
   readonly requestTypeMap = {
@@ -578,6 +580,18 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error deleting the request:', error);
+
+          // ✅ Extract correlationId from backend error response
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(error, 3, {
+            requestId: request?.requestId,
+            organizationId: this.organizationId,
+            correlationId: correlationId,
+            methodName: 'deleteRequest',
+            className: 'OfferorTableComponent',
+            operation: 'DeleteRequest',
+          });
         },
       });
   }
