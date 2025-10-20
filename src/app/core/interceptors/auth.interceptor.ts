@@ -21,11 +21,22 @@ import { AuthService } from '../../authorization/auth.service';
 export class AuthInterceptor implements HttpInterceptor {
   private dialogOpen = false;
 
-  // 🟢 Define public (unauthenticated) endpoints that should skip interceptor handling
+  // Public (unauthenticated) endpoints that should skip interceptor handling
   private readonly publicEndpoints: string[] = [
-    '/users/validate', // your token validation API
-    '/auth/send-reset', // optional: forgot password
-    '/auth/reset-password', // optional: reset password
+    '/users/validate',
+    '/auth/send-reset',
+    '/auth/reset-password',
+  ];
+
+  // Public routes where dialog should not show
+  private readonly publicRoutes: string[] = [
+    '/login',
+    '/signup',
+    '/register',
+    '/forgot-password',
+    '/reset-password',
+    '/email-verification',
+    '/validateuser',
   ];
 
   constructor(
@@ -50,17 +61,20 @@ export class AuthInterceptor implements HttpInterceptor {
 
         // normal 401 handling for private endpoints
         if (error.status === 401) {
-          const isSessionCheck =
-            req.url.includes('/me') || req.url.includes('/auth/check');
-
+          const isSessionCheck = req.url.includes('/auth/check');
           const isLoggedIn = this.authService.authState.value;
 
-          // show session-expired dialog for logged-in users
+          // 🟢 Check if current route is public
+          const isPublicRoute = this.publicRoutes.some((route) =>
+            this.router.url.startsWith(route)
+          );
+
+          // show session-expired dialog for logged-in users on private routes
           if (
             isLoggedIn &&
             !isSessionCheck &&
             !this.dialogOpen &&
-            this.router.url !== '/login'
+            !isPublicRoute
           ) {
             this.dialogOpen = true;
 

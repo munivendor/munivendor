@@ -9,7 +9,44 @@ import {
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
+import { Router } from '@angular/router';
+import { Component } from '@angular/core';
+import { MatDialogRef } from '@angular/material/dialog';
 import { LoggingService } from '../../exceptionhandling/logging.service';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
+import { StateService } from '../../Request/services/state.service';
+
+@Component({
+  imports: [MatDialogModule, MatButtonModule],
+  standalone: true,
+  selector: 'app-request-closed-dialog',
+  template: `
+    <h2 mat-dialog-title>Request Already Closed</h2>
+    <mat-dialog-content>
+      <p>
+        The request you are trying to access/respond to has already been closed.
+        You will be re-directed to the dashboard.
+      </p>
+    </mat-dialog-content>
+    <mat-dialog-actions align="end">
+      <button mat-raised-button color="primary" (click)="dialogRef.close()">
+        OK
+      </button>
+    </mat-dialog-actions>
+  `,
+  styles: [
+    `
+      mat-dialog-content {
+        padding: 20px 0;
+      }
+    `,
+  ],
+})
+export class RequestClosedDialogComponent {
+  constructor(public dialogRef: MatDialogRef<RequestClosedDialogComponent>) {}
+}
 
 @Injectable()
 export class ErrorHandlerInterceptor implements HttpInterceptor {
@@ -26,7 +63,10 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
 
   constructor(
     private snackBar: MatSnackBar,
-    private loggingService: LoggingService
+    private loggingService: LoggingService,
+    private dialog: MatDialog,
+    private router: Router,
+    private stateService: StateService
   ) {}
 
   intercept(
@@ -43,6 +83,12 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
           req.url.includes(path)
         );
 
+        // Handle 422 status with dialog and redirect
+        if (error.status === 422 && !isPublicPath && !isSilentPath) {
+          this.handle422Error();
+          return throwError(() => error);
+        }
+
         // Only handle errors for non-public, non-silent endpoints
         if (!isPublicPath && !isSilentPath) {
           this.handleError(error, req);
@@ -51,6 +97,28 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
         return throwError(() => error);
       })
     );
+  }
+
+  private handle422Error(): void {
+    this.dialog.closeAll();
+
+    const dialogRef = this.dialog.open(RequestClosedDialogComponent, {
+      width: '400px',
+      disableClose: true,
+    });
+
+    dialogRef.afterClosed().subscribe(() => {
+      const organizationTypeId = this.stateService.getOrganizationTypeId();
+
+      switch (organizationTypeId) {
+        case 1:
+          this.router.navigate(['/requests-view']);
+          break;
+        case 2:
+          this.router.navigate(['/offeror-requests-view']);
+          break;
+      }
+    });
   }
 
   private handleError(error: HttpErrorResponse, req: HttpRequest<any>): void {
@@ -77,7 +145,6 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
     const message = this.getErrorMessage(error.status);
     this.snackBar.open(message, 'Dismiss', {
       duration: 15000,
-      horizontalPosition: 'center',
       verticalPosition: 'top',
       panelClass: ['error-snackbar'],
     });
