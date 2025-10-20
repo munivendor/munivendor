@@ -20,14 +20,12 @@ import { User } from '../shared/model/user.model';
 import { UserLogin } from '../shared/model/user-login.model';
 import {
   catchError,
-  combineLatest,
   filter,
   finalize,
   Observable,
   of,
   Subject,
   switchMap,
-  take,
   takeUntil,
   tap,
   throwError,
@@ -48,6 +46,7 @@ import {
 } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { StateService } from '../Request/services/state.service';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'dialog-elements-example-dialog',
@@ -88,6 +87,7 @@ export class DialogElementsExampleDialog {}
     MatSelectModule,
     GoogleSigninButtonModule,
     MatDialogModule,
+    MatIconModule,
   ],
   templateUrl: './signup.component.html',
   styleUrls: ['./signup.component.css'],
@@ -102,6 +102,8 @@ export class SignupComponent implements OnInit, OnDestroy {
   private userSelectedOrgTypeIdGoogle: number | null = null;
   private userCreationInProgress = false;
   private destroy$ = new Subject<void>();
+  hidePassword = true;
+  hideConfirmPassword = true;
 
   buttonWidth = 400;
 
@@ -117,6 +119,14 @@ export class SignupComponent implements OnInit, OnDestroy {
     private snackBar: MatSnackBar,
     private stateService: StateService
   ) {}
+
+  togglePasswordVisibility(): void {
+    this.hidePassword = !this.hidePassword;
+  }
+
+  toggleConfirmPasswordVisibility(): void {
+    this.hideConfirmPassword = !this.hideConfirmPassword;
+  }
 
   openDialog() {
     this.dialog.open(DialogElementsExampleDialog, {
@@ -376,25 +386,10 @@ export class SignupComponent implements OnInit, OnDestroy {
             );
         })
       )
-      .subscribe({
-        next: (result) => {
-          // Only navigate if we got a successful result
-          if (result !== null) {
-            this.router.navigate(['/organization-details']);
-          } else {
-            console.log('Result was null, not navigating');
-          }
-        },
-        error: (error) => {
-          this.snackBar.open(
-            `Sign up failed. An unexpected error occurred.`,
-            'Close',
-            { verticalPosition: 'top', duration: 15000 }
-          );
-          this.authService.setSkipNextAuthState(false);
-          this.authService.setSignupInProgress(false);
-          this.userCreationInProgress = false;
-        },
+      .subscribe((result) => {
+        if (result) {
+          this.router.navigate(['/organization-details']);
+        }
       });
   }
 
@@ -442,7 +437,7 @@ export class SignupComponent implements OnInit, OnDestroy {
       .subscribe({
         error: (error) => {
           this.snackBar.open(
-            `Sign up failed. This email is already signed up or an error occurred signing up.`,
+            `Sign up failed. This email is already signed up or an error occurred.`,
             'Close',
             {
               verticalPosition: 'top',
