@@ -22,7 +22,11 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { EditorModule } from '@tinymce/tinymce-angular';
+import {
+  EditorModule,
+  EditorComponent,
+  TINYMCE_SCRIPT_SRC,
+} from '@tinymce/tinymce-angular';
 import { RequestService } from './services/request.service';
 import { StateService } from './services/state.service';
 import { Subject, takeUntil, Observable } from 'rxjs';
@@ -57,6 +61,13 @@ function atLeastOneFieldFilledValidator(): ValidatorFn {
     MatIconModule,
     ReactiveFormsModule,
     EditorModule,
+    EditorComponent,
+  ],
+  providers: [
+    {
+      provide: TINYMCE_SCRIPT_SRC,
+      useValue: '/assets/tinymce/tinymce.min.js',
+    },
   ],
 })
 export class RequestOverviewComponent implements OnInit, OnDestroy {
@@ -64,15 +75,32 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
   @Output() formValidityChange = new EventEmitter<boolean>();
 
   private destroy$ = new Subject<void>();
-
-  public editorConfig = {
-    selector: '#your-textarea',
+  // cloud version
+  // public editorConfig = {
+  //   base_url: '/assets/tinymce',
+  //   suffix: '.min',
+  //   selector: '#your-textarea',
+  //   branding: false,
+  //   toolbar:
+  //     'bold italic underline strikethrough | alignleft aligncenter alignright | bullist numlist outdent indent',
+  //   height: 300,
+  //   menubar: false,
+  //   plugins: 'lists code',
+  //   setup: (editor: any) => {
+  //     editor.on('input change keyup', () => {
+  //       setTimeout(() => {
+  //         this.proposalSections.updateValueAndValidity();
+  //       }, 100);
+  //     });
+  //   },
+  // };
+  init: EditorComponent['init'] = {
+    plugins: 'lists link image table code help wordcount',
     branding: false,
     toolbar:
       'bold italic underline strikethrough | alignleft aligncenter alignright | bullist numlist outdent indent',
     height: 300,
     menubar: false,
-    plugins: 'lists code',
     setup: (editor: any) => {
       editor.on('input change keyup', () => {
         setTimeout(() => {
