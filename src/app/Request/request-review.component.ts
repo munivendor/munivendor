@@ -17,6 +17,7 @@ import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CategoryNode } from '../shared/model/category-tree.model';
 import { CategoryHierarchyService } from './services/category-hierarchy.service';
+import { LoggingService } from '../exceptionhandling/logging.service';
 
 interface FlattenedCategoryNode {
   categoryId: string;
@@ -56,7 +57,8 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
     private stateService: StateService,
     private router: Router,
     private snackBar: MatSnackBar,
-    private categoryHierarchyService: CategoryHierarchyService
+    private categoryHierarchyService: CategoryHierarchyService,
+    private loggingService: LoggingService
   ) {}
 
   private getCategoryHierarchy() {
@@ -345,15 +347,31 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           this.snackBar.open('Request successfully submitted!', '', {
-            duration: 5000,
+            duration: 15000,
             verticalPosition: 'top',
           });
           sessionStorage.removeItem('currentRequestId');
           sessionStorage.removeItem('request_in_creation_mode');
           this.router.navigate(['/requests-view']);
         },
-        error: (err) => {
-          console.error('Failed to update request status:', err);
+        error: (error) => {
+          console.error('Failed to update request status:', error);
+          // Extract correlationId from error response
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              organizationId: this.organizationId,
+              correlationId: correlationId,
+              methodName: 'onSubmit',
+              className: 'RequestReviewComponent',
+              operation: 'UpdateRequestStatus',
+              requestId: requestIdToUse,
+              userId: this.stateService.getUserId(),
+            }
+          );
         },
       });
   }

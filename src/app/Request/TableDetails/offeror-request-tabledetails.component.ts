@@ -1,5 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import {
+  Component,
+  inject,
+  Input,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { finalize, forkJoin, Subject, takeUntil } from 'rxjs';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
@@ -25,6 +32,8 @@ import { StateService } from '../services/state.service';
 import { CategoryNode } from '../../shared/model/category-tree.model';
 import { ChangeDetectorRef } from '@angular/core';
 import { LoadingService } from '../../shared/LoadingSpinner/loading.service';
+import { LoggingService } from '../../exceptionhandling/logging.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 interface FlattenedCategoryNode {
   categoryId: string;
@@ -63,7 +72,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   @Input() categoryControl!: FormControl<number | null>;
   organizationId!: number | null;
-
+  private _snackBar = inject(MatSnackBar);
   hierarchicalCategories: CategoryNode[] = [];
   flattenedCategories: FlattenedCategoryNode[] = [];
 
@@ -206,6 +215,22 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error deleting the request:', error);
+
+          // Extract correlationId from error response
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              requestId: request?.requestId,
+              organizationId: this.organizationId,
+              correlationId: correlationId,
+              methodName: 'deleteRequest',
+              className: 'OfferorTableDetailsComponent',
+              operation: 'DeleteRequest',
+            }
+          );
         },
       });
   }
@@ -259,7 +284,8 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
     public dialog: MatDialog,
     private stateService: StateService,
     private cdr: ChangeDetectorRef,
-    private loadingService: LoadingService
+    private loadingService: LoadingService,
+    private loggingService: LoggingService
   ) {
     this.organizationId = this.stateService.getOrganizationId();
   }
@@ -391,8 +417,8 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
           takeUntil(this.destroy$),
           finalize(() => this.loadingService.hide())
         )
-        .subscribe(
-          ([requests, categories, requestTypes, requestStatuses]) => {
+        .subscribe({
+          next: ([requests, categories, requestTypes, requestStatuses]) => {
             const requestsData = requests?.requests || [];
             this.hasLoadedData = requestsData.length > 0;
 
@@ -453,14 +479,70 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
               }
             }, 0);
           },
-          (error) => {
+          error: (error: any) => {
             console.error('Error loading request data:', error);
+
+            // Extract correlationId
+            const correlationId = error?.error?.correlationId;
+
+            // Identify likely failing operation (based on backend message or URL)
+            let operation = 'UnknownOperation';
+            const errorUrl = error?.url?.toLowerCase?.() || '';
+
+            if (
+              errorUrl.includes('requestsofferorview') ||
+              errorUrl.includes('requests')
+            )
+              operation = 'GetRequestsOfferorView';
+            else if (errorUrl.includes('categoryhierarchy'))
+              operation = 'GetCategoryHierarchy';
+            else if (errorUrl.includes('requesttypes'))
+              operation = 'GetRequestTypes';
+            else if (errorUrl.includes('requeststatuses'))
+              operation = 'GetRequestStatuses';
+
+            this.loggingService.logException(
+              new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+              3,
+              {
+                organizationId: organizationId,
+                requestParams: requestParams,
+                correlationId: correlationId,
+                methodName: 'loadAndJoinRequestData',
+                className: 'OfferorRequestTableDetailsComponent',
+                operation: operation,
+                userId: this.stateService.getUserId(),
+              }
+            );
+
+            this._snackBar.open(
+              'An error occurred while loading request data.',
+              'Close',
+              {
+                verticalPosition: 'top',
+              }
+            );
+
             this.dataSource = new MatTableDataSource<any>([]);
             this.hasLoadedData = false;
-          }
-        );
-    } catch (error) {
+          },
+        });
+    } catch (error: any) {
       console.error('Error getting organization ID:', error);
+      // Extract correlationId
+      const correlationId = error?.error?.correlationId;
+      this.loggingService.logException(
+        error instanceof Error ? error : new Error(String(error)),
+        3,
+        {
+          methodName: 'loadAndJoinRequestData',
+          className: 'OfferorRequestTableDetailsComponent',
+          operation: 'GetOrganizationId',
+          userId: this.stateService.getUserId(),
+          correlationId: correlationId,
+        }
+      );
+
       this.dataSource = new MatTableDataSource<any>([]);
     }
   }

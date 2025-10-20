@@ -25,6 +25,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { CategoryNode } from '../../shared/model/category-tree.model';
 import { MatButtonModule } from '@angular/material/button';
+import { StateService } from '../../Request/services/state.service';
+import { LoggingService } from '../../exceptionhandling/logging.service';
 
 interface FlattenedCategoryNode {
   name: string;
@@ -109,7 +111,9 @@ export class CustomCategoryDropdownComponent implements OnInit, OnDestroy {
 
   constructor(
     private categoryHierarchyService: CategoryHierarchyService,
-    public dialog: MatDialog
+    public dialog: MatDialog,
+    private stateService: StateService,
+    private loggingService: LoggingService
   ) {
     this.flattenCategories();
   }
@@ -161,7 +165,24 @@ export class CustomCategoryDropdownComponent implements OnInit, OnDestroy {
             this.prepareCategoriesForTreeRendering(categories);
           this.flattenCategories();
         },
-        error: (err) => console.error('Error fetching categories:', err),
+        error: (error) => {
+          console.error('Error fetching categories:', error);
+          // Extract correlationId from error response
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              organizationId: this.stateService.getOrganizationId(),
+              correlationId: correlationId,
+              methodName: 'fetchInitialData',
+              className: 'CustomCategoryDropdownComponent',
+              operation: 'GetCategoryHierarchy',
+              userId: this.stateService.getUserId(),
+            }
+          );
+        },
       });
   }
 
