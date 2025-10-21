@@ -24,8 +24,9 @@ import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import {
   EditorModule,
-  EditorComponent,
-  TINYMCE_SCRIPT_SRC,
+  // self-host version
+  // EditorComponent,
+  // TINYMCE_SCRIPT_SRC,
 } from '@tinymce/tinymce-angular';
 import { RequestService } from './services/request.service';
 import { StateService } from './services/state.service';
@@ -61,14 +62,14 @@ function atLeastOneFieldFilledValidator(): ValidatorFn {
     MatIconModule,
     ReactiveFormsModule,
     EditorModule,
-    EditorComponent,
+    // EditorComponent,
   ],
-  providers: [
-    {
-      provide: TINYMCE_SCRIPT_SRC,
-      useValue: '/assets/tinymce/tinymce.min.js',
-    },
-  ],
+  // providers: [
+  //   {
+  //     provide: TINYMCE_SCRIPT_SRC,
+  //     useValue: '/assets/tinymce/tinymce.min.js',
+  //   },
+  // ],
 })
 export class RequestOverviewComponent implements OnInit, OnDestroy {
   @Input() idParam?: string | null | undefined;
@@ -76,31 +77,14 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
   // cloud version
-  // public editorConfig = {
-  //   base_url: '/assets/tinymce',
-  //   suffix: '.min',
-  //   selector: '#your-textarea',
-  //   branding: false,
-  //   toolbar:
-  //     'bold italic underline strikethrough | alignleft aligncenter alignright | bullist numlist outdent indent',
-  //   height: 300,
-  //   menubar: false,
-  //   plugins: 'lists code',
-  //   setup: (editor: any) => {
-  //     editor.on('input change keyup', () => {
-  //       setTimeout(() => {
-  //         this.proposalSections.updateValueAndValidity();
-  //       }, 100);
-  //     });
-  //   },
-  // };
-  init: EditorComponent['init'] = {
-    plugins: 'lists link image table code help wordcount',
+  public editorConfig = {
+    selector: '#your-textarea',
     branding: false,
     toolbar:
       'bold italic underline strikethrough | alignleft aligncenter alignright | bullist numlist outdent indent',
     height: 300,
     menubar: false,
+    plugins: 'lists code',
     setup: (editor: any) => {
       editor.on('input change keyup', () => {
         setTimeout(() => {
@@ -109,6 +93,22 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
       });
     },
   };
+  // self-host version
+  // init: EditorComponent['init'] = {
+  //   plugins: 'lists link image table code help wordcount',
+  //   branding: false,
+  //   toolbar:
+  //     'bold italic underline strikethrough | alignleft aligncenter alignright | bullist numlist outdent indent',
+  //   height: 300,
+  //   menubar: false,
+  //   setup: (editor: any) => {
+  //     editor.on('input change keyup', () => {
+  //       setTimeout(() => {
+  //         this.proposalSections.updateValueAndValidity();
+  //       }, 100);
+  //     });
+  //   },
+  // };
 
   proposalsOverviewFormGroup!: FormGroup;
   requestId!: number | null;
