@@ -23,6 +23,7 @@ import { StateService } from '../../Request/services/state.service';
 import { TooltipDirective } from '../../shared/directive/tooltip.directive';
 import { MatIconModule } from '@angular/material/icon';
 // import { ResponseNotarizationComponent } from '../response-notarization.component';
+import { StepperSelectionEvent } from '@angular/cdk/stepper';
 
 @Component({
   selector: 'response-stepper',
@@ -117,6 +118,14 @@ export class ResponseStepper implements OnInit, OnDestroy {
           this.clearCreationSessionStorage();
         }
       });
+  }
+
+  onStepChange(event: StepperSelectionEvent): void {
+    // Check if we're navigating to the Review step (index 3, assuming 0-based)
+    if (event.selectedIndex === 3 && this.responseReviewComponent) {
+      // Refresh the documents data when entering the review step
+      this.responseReviewComponent.initializeDocuments();
+    }
   }
 
   private checkAndRedirectOnReload(): void {
