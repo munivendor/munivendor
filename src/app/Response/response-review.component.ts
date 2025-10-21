@@ -403,9 +403,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
       category: [''],
       requestType: [''],
       publishDate: [''],
-      publishTime: [''],
       closeDate: [''],
-      closeTime: [''],
       contractStart: [''],
       contractEnd: [''],
       requestDocuments: this.fb.array([]),
@@ -515,8 +513,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
               r.requestTypeId === request.requestTypeId
           );
 
-          const { date: publishDate } = this.splitDateTime(request.publishDate);
-          const { date: closeDate } = this.splitDateTime(request.closeDate);
           const { date: contractStart } = this.splitDateTime(
             request.contractStart
           );
@@ -526,8 +522,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
             ...request,
             categoryBreadcrumb,
             requestType,
-            closeDate,
-            publishDate,
             contractStart,
             contractEnd,
           };

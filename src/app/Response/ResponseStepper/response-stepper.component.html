@@ -1,4 +1,4 @@
-<mat-stepper [linear]="true" #stepper>
+<mat-stepper [linear]="true" #stepper (selectionChange)="onStepChange($event)">
   <mat-step label="Basics">
     <ng-template matStepContent>
       <response-basic
