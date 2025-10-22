@@ -81,10 +81,11 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
     selector: '#your-textarea',
     branding: false,
     toolbar:
-      'bold italic underline strikethrough | alignleft aligncenter alignright | bullist numlist outdent indent',
+      'bold italic underline strikethrough | alignleft aligncenter alignright | bullist numlist outdent indent | spellcheckdialog',
+    spellchecker_language: 'en-US',
     height: 300,
     menubar: false,
-    plugins: 'lists code',
+    plugins: 'lists tinymcespellchecker code',
     setup: (editor: any) => {
       editor.on('input change keyup', () => {
         setTimeout(() => {
@@ -93,6 +94,7 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
       });
     },
   };
+
   // self-host version
   // init: EditorComponent['init'] = {
   //   plugins: 'lists link image table code help wordcount',
