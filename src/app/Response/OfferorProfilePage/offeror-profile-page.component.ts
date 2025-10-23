@@ -19,6 +19,7 @@ import { Organization } from '../../Organization/Details/model/organization.mode
 import { StateService } from '../../Request/services/state.service';
 import { OfferorProfileService } from '../../shared/service/offeror-profile.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
+import { AuthService } from '../../authorization/auth.service';
 
 interface AuthorizingOfficial {
   vendorAuthorizingOfficialId?: number;
@@ -71,7 +72,8 @@ export class OfferorProfilePageComponent implements OnInit {
     private stateService: StateService,
     private offerorProfileService: OfferorProfileService,
     private snackBar: MatSnackBar,
-    private loggingService: LoggingService
+    private loggingService: LoggingService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -135,7 +137,12 @@ export class OfferorProfilePageComponent implements OnInit {
             userId: this.stateService.getUserId(),
           }
         );
-        this.showSnackBar('Error loading organization data');
+
+        if (error.status !== 401 && this.authService.authState.value) {
+          this.showSnackBar(
+            `Failed to load organization details. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`
+          );
+        }
       },
     });
   }
@@ -149,6 +156,7 @@ export class OfferorProfilePageComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error fetching authorizing officials:', error);
+          // Extract correlationId
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -163,7 +171,12 @@ export class OfferorProfilePageComponent implements OnInit {
               userId: this.stateService.getUserId(),
             }
           );
-          this.showSnackBar('Error loading authorizing officials');
+
+          if (error.status !== 401 && this.authService.authState.value) {
+            this.showSnackBar(
+              `Failed to load authorizing officials. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`
+            );
+          }
         },
       });
   }
@@ -226,6 +239,7 @@ export class OfferorProfilePageComponent implements OnInit {
           this.loadAuthorizingOfficials(official.organizationId);
         },
         error: (error) => {
+          // Extract correlationId
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -240,7 +254,11 @@ export class OfferorProfilePageComponent implements OnInit {
               userId: this.stateService.getUserId(),
             }
           );
-          this.showSnackBar('Error saving Authorizing Official');
+          if (error.status !== 401 && this.authService.authState.value) {
+            this.showSnackBar(
+              `Failed to add authorizing official. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`
+            );
+          }
         },
       });
   }
@@ -258,6 +276,7 @@ export class OfferorProfilePageComponent implements OnInit {
           this.loadAuthorizingOfficials(official.organizationId);
         },
         error: (error) => {
+          // Extract correlationId
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -272,7 +291,12 @@ export class OfferorProfilePageComponent implements OnInit {
               userId: this.stateService.getUserId(),
             }
           );
-          this.showSnackBar('Error updating Authorizing Official');
+
+          if (error.status !== 401 && this.authService.authState.value) {
+            this.showSnackBar(
+              `Failed to update authorizing official details. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`
+            );
+          }
         },
       });
   }
@@ -298,7 +322,6 @@ export class OfferorProfilePageComponent implements OnInit {
 
   private showSnackBar(message: string): void {
     this.snackBar.open(message, 'Close', {
-      duration: 3000,
       verticalPosition: 'top',
     });
   }

@@ -16,7 +16,10 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
-import { DocumentService } from '../shared/service/document.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { AuthService } from '../authorization/auth.service';
+// commented out code are all needed for autofill
+// import { DocumentService } from '../shared/service/document.service';
 import {
   // delay, EMPTY, expand, of, switchMap,
   Subject,
@@ -30,6 +33,7 @@ import {
   // MatDialogRef,
 } from '@angular/material/dialog';
 import { HttpClient } from '@angular/common/http';
+import { LoggingService } from '../exceptionhandling/logging.service';
 
 @Component({
   selector: 'response-details',
@@ -52,7 +56,6 @@ export class ResponseDetailsComponent implements OnInit {
   @Input() responseIdParam?: string | null | undefined;
   @Input() requestId?: number;
   @Output() formValidityChange = new EventEmitter<boolean>();
-  // commented out code are all needed for autofill
   // @Output() autoFillStatusChange = new EventEmitter<boolean>();
 
   requestSections: RequestSection[] = [];
@@ -70,11 +73,14 @@ export class ResponseDetailsComponent implements OnInit {
 
   constructor(
     private requestService: RequestService,
-    private documentService: DocumentService,
+    // private documentService: DocumentService,
     private fb: FormBuilder,
     private stateService: StateService,
     private http: HttpClient,
-    public dialog: MatDialog
+    public dialog: MatDialog,
+    private loggingService: LoggingService,
+    private _snackBar: MatSnackBar,
+    private authService: AuthService
   ) {
     this.responseForm = this.fb.group({
       responseName: ['', Validators.required],
@@ -172,6 +178,29 @@ export class ResponseDetailsComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error fetching request sections', error);
+          // Extract correlationId
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              requestId: requestId,
+              organizationId: this.stateService.getOrganizationId(),
+              correlationId: correlationId,
+              methodName: 'getRequestSectionsById',
+              className: 'ResponseDetailsComponent',
+              operation: 'GetRequestSections',
+              userId: this.stateService.getUserId(),
+            }
+          );
+          if (error.status !== 401 && this.authService.authState.value) {
+            this._snackBar.open(
+              `Failed to load section details. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+              'Close',
+              { verticalPosition: 'top' }
+            );
+          }
         },
       });
   }
@@ -193,14 +222,45 @@ export class ResponseDetailsComponent implements OnInit {
         { html: content },
         { responseType: 'blob' }
       )
-      .subscribe((response) => {
-        const blob = new Blob([response], { type: 'application/pdf' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'Proposals.pdf';
-        a.click();
-        window.URL.revokeObjectURL(url);
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          const blob = new Blob([response], { type: 'application/pdf' });
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'Proposals.pdf';
+          a.click();
+          window.URL.revokeObjectURL(url);
+        },
+        error: (error) => {
+          console.error('Error generating PDF', error);
+
+          // Extract correlationId
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              requestId: this.sourceIdParam,
+              organizationId: this.stateService.getOrganizationId(),
+              correlationId: correlationId,
+              methodName: 'downloadPDFv2',
+              className: 'ResponseDetailsComponent',
+              operation: 'GeneratePDF',
+              userId: this.stateService.getUserId(),
+            }
+          );
+
+          if (error.status !== 401 && this.authService.authState.value) {
+            this._snackBar.open(
+              `Failed to download PDF. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+              'Close',
+              { verticalPosition: 'top' }
+            );
+          }
+        },
       });
   }
 

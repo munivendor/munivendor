@@ -34,7 +34,7 @@ import { ChangeDetectorRef } from '@angular/core';
 import { LoadingService } from '../../shared/LoadingSpinner/loading.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
-
+import { AuthService } from '../../authorization/auth.service';
 interface FlattenedCategoryNode {
   categoryId: string;
   name: string;
@@ -186,51 +186,57 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
       data: { action, request },
     });
 
-    dialogRef.componentInstance.cancellationRequested
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (cancelData: any) => {},
-      });
-
     dialogRef
       .afterClosed()
       .pipe(takeUntil(this.destroy$))
       .subscribe((result) => {
         if (result && action === 'delete') {
-          this.deleteRequest(request);
+          this.deleteResponse(request);
         }
       });
   }
 
-  deleteRequest(request: any): void {
+  deleteResponse(request: any): void {
     this.requestService
       .DeleteRequest(request.offerorRequestId, Number(this.organizationId))
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
           console.log(
-            `Request with ID ${request.requestId} deleted successfully.`
+            `Response with ID ${request.offerorRequestId} deleted successfully.`
           );
+          this._snackBar.open(`Offer successfully deleted.`, 'Close', {
+            verticalPosition: 'top',
+          });
           this.loadAndJoinRequestData();
         },
         error: (error) => {
-          console.error('Error deleting the request:', error);
+          console.error('Error deleting the offer:', error);
 
-          // Extract correlationId from error response
+          // Extract correlationId
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
             new Error(`HTTP Error ${error.status}: ${error.statusText}`),
             3,
             {
-              requestId: request?.requestId,
+              offerorRequestId: request.offerorRequestId,
+              agencyRequestId: request.requestId,
               organizationId: this.organizationId,
               correlationId: correlationId,
-              methodName: 'deleteRequest',
+              methodName: 'deleteResponse',
               className: 'OfferorTableDetailsComponent',
               operation: 'DeleteRequest',
+              userId: this.stateService.getUserId(),
             }
           );
+          if (error.status !== 401 && this.authService.authState.value) {
+            this._snackBar.open(
+              `Failed to delete offer. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+              'Close',
+              { verticalPosition: 'top' }
+            );
+          }
         },
       });
   }
@@ -285,7 +291,8 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
     private stateService: StateService,
     private cdr: ChangeDetectorRef,
     private loadingService: LoadingService,
-    private loggingService: LoggingService
+    private loggingService: LoggingService,
+    private authService: AuthService
   ) {
     this.organizationId = this.stateService.getOrganizationId();
   }
@@ -506,7 +513,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
               3,
               {
                 organizationId: organizationId,
-                requestParams: requestParams,
+                requestId: requestParams,
                 correlationId: correlationId,
                 methodName: 'loadAndJoinRequestData',
                 className: 'OfferorRequestTableDetailsComponent',
@@ -515,33 +522,21 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
               }
             );
 
-            this._snackBar.open(
-              'An error occurred while loading request data.',
-              'Close',
-              {
-                verticalPosition: 'top',
-              }
-            );
-
+            if (error.status !== 401 && this.authService.authState.value) {
+              this._snackBar.open(
+                `Failed to load requests. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+                'Close',
+                { verticalPosition: 'top' }
+              );
+            }
             this.dataSource = new MatTableDataSource<any>([]);
             this.hasLoadedData = false;
           },
         });
     } catch (error: any) {
       console.error('Error getting organization ID:', error);
-      // Extract correlationId
-      const correlationId = error?.error?.correlationId;
-      this.loggingService.logException(
-        error instanceof Error ? error : new Error(String(error)),
-        3,
-        {
-          methodName: 'loadAndJoinRequestData',
-          className: 'OfferorRequestTableDetailsComponent',
-          operation: 'GetOrganizationId',
-          userId: this.stateService.getUserId(),
-          correlationId: correlationId,
-        }
-      );
+      // display snackbar since this is a call to state service and
+      // will not return correlationId
 
       this.dataSource = new MatTableDataSource<any>([]);
     }

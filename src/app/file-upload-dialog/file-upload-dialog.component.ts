@@ -12,6 +12,10 @@ import {
   MatDialogTitle,
   MAT_DIALOG_DATA,
 } from '@angular/material/dialog';
+import { LoggingService } from '../exceptionhandling/logging.service';
+import { StateService } from '../Request/services/state.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { AuthService } from '../authorization/auth.service';
 
 export type FileUploadDialogData =
   | { organizationId: number; municipalityDocuments: Document[] }
@@ -39,6 +43,10 @@ export class FileUploadDialogComponent {
 
   constructor(
     private requestService: RequestService,
+    private loggingService: LoggingService,
+    private stateService: StateService,
+    private _snackBar: MatSnackBar,
+    private authService: AuthService,
     public dialogRef: MatDialogRef<FileUploadDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: FileUploadDialogData
   ) {}
@@ -74,16 +82,46 @@ export class FileUploadDialogComponent {
           municipalityDocument,
           this.selectedFile
         )
-        .subscribe((response) => {
-          console.log('Document uploaded and saved successfully:', response);
-          this.dialogRef.close({
-            documentId: response.documentId,
-            documentName: municipalityDocument.documentName,
-            organizationDocumentId: response.organizationDocumentId,
-            documentRequired: true,
-            selected: true,
-            notarization: 'Not Required',
-          });
+        .subscribe({
+          next: (response) => {
+            console.log('Document uploaded and saved successfully:', response);
+            this.dialogRef.close({
+              documentId: response.documentId,
+              documentName: municipalityDocument.documentName,
+              organizationDocumentId: response.organizationDocumentId,
+              documentRequired: true,
+              selected: true,
+              notarization: 'Not Required',
+            });
+          },
+          error: (error) => {
+            console.error('Error uploading document:', error);
+
+            // Extract correlationId
+            const correlationId = error?.error?.correlationId;
+
+            this.loggingService.logException(
+              new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+              3,
+              {
+                requestId: this.stateService.getRequestId(),
+                organizationId: this.stateService.getOrganizationId(),
+                documentName: this.documentName,
+                correlationId: correlationId,
+                methodName: 'onUpload',
+                className: 'FileUploadDialogComponent',
+                operation: 'SaveOrganizationDocument',
+                userId: this.stateService.getUserId(),
+              }
+            );
+            if (error.status !== 401 && this.authService.authState.value) {
+              this._snackBar.open(
+                `Failed to upload document. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+                'Close',
+                { verticalPosition: 'top' }
+              );
+            }
+          },
         });
     } else if ('requestId' in this.data) {
       const offerorDocument = {
@@ -93,18 +131,49 @@ export class FileUploadDialogComponent {
       };
 
       this.requestService
+        // this is offeror/response requestID
         .SaveOfferorDocument(
           Number(this.data.requestId),
           offerorDocument,
           this.selectedFile
         )
-        .subscribe((response) => {
-          console.log('Document uploaded and saved successfully:', response);
-          this.dialogRef.close({
-            documentId: response.documentId,
-            documentName: this.documentName,
-            requestDocumentId: response.requestDocumentId,
-          });
+        .subscribe({
+          next: (response) => {
+            console.log('Document uploaded and saved successfully:', response);
+            this.dialogRef.close({
+              documentId: response.documentId,
+              documentName: this.documentName,
+              requestDocumentId: response.requestDocumentId,
+            });
+          },
+          error: (error) => {
+            console.error('Error uploading document:', error);
+
+            // Extract correlationId
+            const correlationId = error?.error?.correlationId;
+
+            this.loggingService.logException(
+              new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+              3,
+              {
+                requestId: this.stateService.getRequestId(),
+                organizationId: this.stateService.getOrganizationId(),
+                documentName: this.documentName,
+                correlationId: correlationId,
+                methodName: 'onUpload',
+                className: 'FileUploadDialogComponent',
+                operation: 'SaveOfferorDocument',
+                userId: this.stateService.getUserId(),
+              }
+            );
+            if (error.status !== 401 && this.authService.authState.value) {
+              this._snackBar.open(
+                `Failed to upload document. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+                'Close',
+                { verticalPosition: 'top' }
+              );
+            }
+          },
         });
     }
   }

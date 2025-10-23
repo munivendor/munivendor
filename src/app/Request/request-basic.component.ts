@@ -690,7 +690,6 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
 
           // Identify likely failing operation (based on backend message or URL)
           let operation = 'UnknownOperation';
-          const errorMessage = error?.message?.toLowerCase?.() || '';
           const errorUrl = error?.url?.toLowerCase?.() || '';
 
           if (errorUrl.includes('requestdetails'))
@@ -826,7 +825,7 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
               { verticalPosition: 'top' }
             );
 
-            // Extract correlationId from error response
+            // Extract correlationId
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(
@@ -863,7 +862,7 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
           (error) => {
             console.error('Error creating request:', error);
 
-            // Extract correlationId from error response
+            // Extract correlationId
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(

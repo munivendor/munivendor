@@ -581,7 +581,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error('Error deleting the request:', error);
 
-          // ✅ Extract correlationId from backend error response
+          // Extract correlationId
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(error, 3, {

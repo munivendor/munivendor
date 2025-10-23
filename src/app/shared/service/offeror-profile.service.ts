@@ -27,7 +27,7 @@ export class OfferorProfileService {
   ): Observable<any> {
     return this.http.put(
       `${this.url}AuthorizingOfficials/${officialId}`,
-      official // 👈 send body
+      official
     );
   }
 }

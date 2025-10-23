@@ -30,6 +30,8 @@ import { Response } from '../shared/model/response.model';
 import { StateService } from '../Request/services/state.service';
 import { TooltipDirective } from '../shared/directive/tooltip.directive';
 import { LoggingService } from '../exceptionhandling/logging.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { AuthService } from '../authorization/auth.service';
 
 interface FlattenedCategoryNode {
   name: string;
@@ -94,8 +96,15 @@ export class ResponseBasicComponent implements OnInit {
     private stateService: StateService,
     private offerorProfileService: OfferorProfileService,
     private loggingService: LoggingService,
+    private _snackBar: MatSnackBar,
+    private authService: AuthService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
+    this._snackBar.open(
+      `Failed to update offer status. (Correlation ID: 12AJdsaR839029jdsD). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+      'Close',
+      { verticalPosition: 'top' }
+    );
     this.responseForm = this.fb.group({
       responseName: ['', Validators.required],
       authorizingOfficial: [null, Validators.required],
@@ -131,6 +140,30 @@ export class ResponseBasicComponent implements OnInit {
           this.responseForm.patchValue({
             authorizingOfficial: null,
           });
+
+          // Extract correlationId
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              requestId: this.stateService.getRequestId(),
+              organizationId: this.organizationId,
+              correlationId: correlationId,
+              methodName: 'fetchAuthorizingOfficials',
+              className: 'ResponseBasicsComponent',
+              operation: 'GetOfferorAuthorizingOfficials',
+              userId: this.stateService.getUserId(),
+            }
+          );
+          if (error.status !== 401 && this.authService.authState.value) {
+            this._snackBar.open(
+              `Failed to load list of authorizing officials. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+              'Close',
+              { verticalPosition: 'top' }
+            );
+          }
         }
       );
   }
@@ -238,8 +271,17 @@ export class ResponseBasicComponent implements OnInit {
         error: (error: any) => {
           console.error('Error loading template request:', error);
 
-          // Extract correlationId from error response
+          // Extract correlationId
           const correlationId = error?.error?.correlationId;
+          let operation = 'UnknownOperation';
+          const errorUrl = error?.url?.toLowerCase?.() || '';
+
+          if (errorUrl.includes('requestdetails'))
+            operation = 'GetRequestDetailsById';
+          else if (errorUrl.includes('categoryhierarchy'))
+            operation = 'GetCategoryHierarchy';
+          else if (errorUrl.includes('requesttypes'))
+            operation = 'GetRequestTypes';
 
           this.loggingService.logException(
             new Error(`HTTP Error ${error.status}: ${error.statusText}`),
@@ -250,9 +292,18 @@ export class ResponseBasicComponent implements OnInit {
               correlationId: correlationId,
               methodName: 'loadTemplateRequest',
               className: 'ResponseBasicsComponent',
-              operation: 'GetRequestDetailsById',
+              operation: operation,
+              userId: this.stateService.getUserId(),
             }
           );
+
+          if (error.status !== 401 && this.authService.authState.value) {
+            this._snackBar.open(
+              `Failed to load agency basic details. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+              'Close',
+              { verticalPosition: 'top' }
+            );
+          }
         },
       });
   }
@@ -350,6 +401,38 @@ export class ResponseBasicComponent implements OnInit {
         },
         (error: any) => {
           console.error('Error loading response request', error);
+
+          // Extract correlationId
+          const correlationId = error?.error?.correlationId;
+          let operation = 'UnknownOperation';
+          const errorUrl = error?.url?.toLowerCase?.() || '';
+          // request is response in this case
+          if (errorUrl.includes('requestdetails'))
+            operation = 'GetRequestDetailsById';
+          else if (errorUrl.includes('authorizingofficials'))
+            operation = 'GetOfferorAuthorizingOfficials';
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              requestId: this.stateService.getRequestId(),
+              organizationId: this.organizationId,
+              correlationId: correlationId,
+              methodName: 'loadResponseRequest',
+              className: 'ResponseBasicComponent',
+              operation: operation,
+              userId: this.stateService.getUserId(),
+            }
+          );
+
+          if (error.status !== 401 && this.authService.authState.value) {
+            this._snackBar.open(
+              `Failed to load offer details. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+              'Close',
+              { verticalPosition: 'top' }
+            );
+          }
         }
       );
   }
@@ -420,7 +503,7 @@ export class ResponseBasicComponent implements OnInit {
           },
           (error) => {
             console.error('Error updating response:', error);
-            // Extract correlationId from error response
+            // Extract correlationId
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(
@@ -436,6 +519,13 @@ export class ResponseBasicComponent implements OnInit {
                 userId: this.stateService.getUserId(),
               }
             );
+            if (error.status !== 401 && this.authService.authState.value) {
+              this._snackBar.open(
+                `Failed to update offer basic details. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+                'Close',
+                { verticalPosition: 'top' }
+              );
+            }
           }
         );
     } else if (!responseIdFromStateService || !this.responseIdParam) {
@@ -461,13 +551,41 @@ export class ResponseBasicComponent implements OnInit {
                 },
                 (error) => {
                   console.error('Error updating response status:', error);
+
+                  // Extract correlationId
+                  const correlationId = error?.error?.correlationId;
+
+                  this.loggingService.logException(
+                    new Error(
+                      `HTTP Error ${error.status}: ${error.statusText}`
+                    ),
+                    3,
+                    {
+                      organizationId: this.organizationId,
+                      correlationId: correlationId,
+                      methodName: 'saveResponse',
+                      className: 'ResponseBasicsComponent',
+                      operation: 'UpdateRequestStatus',
+                      userId: this.stateService.getUserId(),
+                    }
+                  );
+                  if (
+                    error.status !== 401 &&
+                    this.authService.authState.value
+                  ) {
+                    this._snackBar.open(
+                      `Failed to update offer status. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+                      'Close',
+                      { verticalPosition: 'top' }
+                    );
+                  }
                 }
               );
           },
           (error) => {
             console.error('Error creating response:', error);
 
-            // Extract correlationId from error response
+            // Extract correlationId
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(
@@ -482,6 +600,13 @@ export class ResponseBasicComponent implements OnInit {
                 userId: this.stateService.getUserId(),
               }
             );
+            if (error.status !== 401 && this.authService.authState.value) {
+              this._snackBar.open(
+                `Failed to create offer basics details. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+                'Close',
+                { verticalPosition: 'top' }
+              );
+            }
           }
         );
     }

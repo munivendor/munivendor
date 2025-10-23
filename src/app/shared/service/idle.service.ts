@@ -34,7 +34,7 @@ export class IdleService {
     this.isBrowser = isPlatformBrowser(platformId);
 
     if (this.isBrowser) {
-      // 👇 Subscribe to auth state
+      // Subscribe to auth state
       this.authSubscription = this.authService.isAuthenticated$.subscribe(
         (isAuthenticated) => {
           if (isAuthenticated) {

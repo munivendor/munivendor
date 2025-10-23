@@ -66,7 +66,7 @@ export class CancellationReasonDialog implements OnInit {
   cancellationReasonId = new FormControl<number | null>(null, [
     Validators.required,
   ]);
-  cancellationReasonNote = new FormControl({ value: '', disabled: true }); // Initially disabled
+  cancellationReasonNote = new FormControl({ value: '', disabled: true });
   requestCancellationReasons: CancellationReasons[] = [];
 
   matcher = new MyErrorStateMatcher();
