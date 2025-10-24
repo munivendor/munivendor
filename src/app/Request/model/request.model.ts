@@ -29,4 +29,5 @@ export class Request {
   sourceRequestId?: null | number;
   authorizingOfficialId!: null | number;
   organizationId!: number;
+  offerorRequestId: any;
 }
