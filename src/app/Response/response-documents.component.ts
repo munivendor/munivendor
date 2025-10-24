@@ -31,6 +31,8 @@ import { TooltipDirective } from '../shared/directive/tooltip.directive';
 import { Router } from '@angular/router';
 // import { DocumentInstance } from '../Request/model/documentinstance.model';
 // import { BidProposalFormDialogComponent } from '../BidProposalForm/bid-proposal-form.component';
+import { LoggingService } from '../exceptionhandling/logging.service';
+import { AuthService } from '../authorization/auth.service';
 @Component({
   selector: 'response-documents',
   standalone: true,
@@ -87,8 +89,10 @@ export class ResponseDocumentsComponent implements OnInit {
     private fb: FormBuilder,
     private stateService: StateService,
     private documentService: DocumentService,
-    private snackBar: MatSnackBar,
-    private router: Router
+    private _snackBar: MatSnackBar,
+    private router: Router,
+    private loggingService: LoggingService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -156,6 +160,30 @@ export class ResponseDocumentsComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error initializing documents:', error);
+
+          // Extract correlationId
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              requestId: requestId,
+              organizationId: this.stateService.getOrganizationId(),
+              correlationId: correlationId,
+              methodName: 'initializeDocuments',
+              className: 'ResponseDocumentsComponent',
+              operation: 'GetRequestRequiredDocumentsById',
+              userId: this.stateService.getUserId(),
+            }
+          );
+          if (error.status !== 401 && this.authService.authState.value) {
+            this._snackBar.open(
+              `Failed to load documents. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+              'Close',
+              { verticalPosition: 'top' }
+            );
+          }
         },
       });
   }
@@ -228,7 +256,7 @@ export class ResponseDocumentsComponent implements OnInit {
                 rowToUpdate.documentInstanceStatus = 'Complete';
               }
 
-              this.snackBar.open('Document uploaded successfully!', '', {
+              this._snackBar.open('Document uploaded successfully!', '', {
                 duration: 5000,
                 verticalPosition: 'top',
               });
@@ -239,10 +267,29 @@ export class ResponseDocumentsComponent implements OnInit {
           },
           error: (error) => {
             console.error('Upload failed:', error);
-            this.snackBar.open('Failed to upload document.', '', {
-              duration: 5000,
-              verticalPosition: 'top',
-            });
+
+            const correlationId = error?.error?.correlationId;
+            this.loggingService.logException(
+              new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+              3,
+              {
+                requestId: requestId,
+                sourceRequestDocumentId: this.currentRow.requestDocumentId,
+                organizationId: this.stateService.getOrganizationId(),
+                correlationId: correlationId,
+                methodName: 'onFileSelected',
+                className: 'ResponseDocumentsComponent',
+                operation: 'UploadDocumentInstance',
+                userId: this.stateService.getUserId(),
+              }
+            );
+            if (error.status !== 401 && this.authService.authState.value) {
+              this._snackBar.open(
+                `Failed to upload document. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+                'Close',
+                { verticalPosition: 'top' }
+              );
+            }
 
             // Clear the input value even on error to allow retry with same file
             input.value = '';
@@ -339,8 +386,33 @@ export class ResponseDocumentsComponent implements OnInit {
               document.body.removeChild(a);
               URL.revokeObjectURL(blobUrl);
             },
-            error: (err) => {
-              console.error('Failed to fetch document:', err);
+            error: (error) => {
+              console.error('Failed to fetch document:', error);
+              // Extract correlationId
+              const correlationId = error?.error?.correlationId;
+
+              this.loggingService.logException(
+                new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+                3,
+                {
+                  requestId: requestId,
+                  agencyOrganizationId: agencyOrganizationId,
+                  organizationId: this.stateService.getOrganizationId(),
+                  organizationDocumentId: organizationDocumentId,
+                  correlationId: correlationId,
+                  methodName: 'onDownloadRequiredAgencyDocuments',
+                  className: 'ResponseDocumentsComponent',
+                  operation: 'GetAgencySpecificDocumentContent',
+                  userId: this.stateService.getUserId(),
+                }
+              );
+              if (error.status !== 401 && this.authService.authState.value) {
+                this._snackBar.open(
+                  `Failed to download document. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+                  'Close',
+                  { verticalPosition: 'top' }
+                );
+              }
             },
           });
       } else {
@@ -372,8 +444,33 @@ export class ResponseDocumentsComponent implements OnInit {
             document.body.removeChild(a);
             URL.revokeObjectURL(blobUrl);
           },
-          error: (err) => {
-            console.error('Failed to fetch document:', err);
+          error: (error) => {
+            console.error('Failed to fetch document:', error);
+
+            // Extract correlationId
+            const correlationId = error?.error?.correlationId;
+
+            this.loggingService.logException(
+              new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+              3,
+              {
+                requestId: requestId,
+                organizationId: this.stateService.getOrganizationId(),
+                documentId: documentId,
+                correlationId: correlationId,
+                methodName: 'onDownloadRequiredAgencyDocuments',
+                className: 'ResponseDocumentsComponent',
+                operation: 'GetStateDocumentContent',
+                userId: this.stateService.getUserId(),
+              }
+            );
+            if (error.status !== 401 && this.authService.authState.value) {
+              this._snackBar.open(
+                `Failed to download document. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+                'Close',
+                { verticalPosition: 'top' }
+              );
+            }
           },
         });
       }
@@ -405,8 +502,33 @@ export class ResponseDocumentsComponent implements OnInit {
           document.body.removeChild(a);
           URL.revokeObjectURL(blobUrl);
         },
-        error: (err) => {
-          console.error('Failed to fetch document:', err);
+        error: (error) => {
+          console.error('Failed to fetch document:', error);
+
+          // Extract correlationId
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              requestId: requestId,
+              organizationId: this.stateService.getOrganizationId(),
+              requestDocumentId: requestDocumentId,
+              correlationId: correlationId,
+              methodName: 'onDownloadRequiredAgencyDocuments',
+              className: 'ResponseDocumentsComponent',
+              operation: 'GetDocumentInstance',
+              userId: this.stateService.getUserId(),
+            }
+          );
+          if (error.status !== 401 && this.authService.authState.value) {
+            this._snackBar.open(
+              `Failed to download document. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+              'Close',
+              { verticalPosition: 'top' }
+            );
+          }
         },
       });
     }
@@ -465,7 +587,7 @@ export class ResponseDocumentsComponent implements OnInit {
       next: (response) => {
         // Extract filename from Content-Disposition header
         const contentDisposition = response.headers.get('content-disposition');
-        let fileName = 'download'; // fallback name
+        let fileName = 'download';
 
         if (contentDisposition) {
           const fileNameMatch = contentDisposition.match(
@@ -489,8 +611,33 @@ export class ResponseDocumentsComponent implements OnInit {
           URL.revokeObjectURL(blobUrl);
         }
       },
-      error: (err: any) => {
-        console.error('Failed to fetch document:', err);
+      error: (error: any) => {
+        console.error('Failed to fetch document:', error);
+
+        // Extract correlationId
+        const correlationId = error?.error?.correlationId;
+
+        this.loggingService.logException(
+          new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+          3,
+          {
+            requestId: this.requestId,
+            organizationId: this.stateService.getOrganizationId(),
+            requestDocumentId: requestDocumentId,
+            correlationId: correlationId,
+            methodName: 'onDownloadOfferorDocument',
+            className: 'ResponseDocumentsComponent',
+            operation: 'GetOfferorDocumentContent',
+            userId: this.stateService.getUserId(),
+          }
+        );
+        if (error.status !== 401 && this.authService.authState.value) {
+          this._snackBar.open(
+            `Failed to download document. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+            'Close',
+            { verticalPosition: 'top' }
+          );
+        }
       },
     });
   }
@@ -524,6 +671,31 @@ export class ResponseDocumentsComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error deleting document:', error);
+
+          // Extract correlationId
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              requestId: this.requestId,
+              organizationId: this.stateService.getOrganizationId(),
+              requestDocumentId: requestDocumentId,
+              correlationId: correlationId,
+              methodName: 'deleteForm',
+              className: 'ResponseDocumentsComponent',
+              operation: 'deleteRequestDocument',
+              userId: this.stateService.getUserId(),
+            }
+          );
+          if (error.status !== 401 && this.authService.authState.value) {
+            this._snackBar.open(
+              `Failed to delete document. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+              'Close',
+              { verticalPosition: 'top' }
+            );
+          }
         },
       });
   }

@@ -17,6 +17,7 @@ import { LoggingService } from '../../exceptionhandling/logging.service';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { StateService } from '../../Request/services/state.service';
+import { AuthService } from '../../authorization/auth.service';
 
 @Component({
   imports: [MatDialogModule, MatButtonModule],
@@ -61,12 +62,24 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
   // Session/auth check endpoints that fail silently
   private readonly silentPaths: string[] = ['/me', '/auth/check'];
 
+  // URLs where users are EXPECTED to be unauthenticated
+  private readonly guestUrls = new Set([
+    '/',
+    '/login',
+    '/signup',
+    '/forgot-password',
+    '/email-verification',
+    '/validateuser',
+    '/reset-password',
+  ]);
+
   constructor(
     private snackBar: MatSnackBar,
     private loggingService: LoggingService,
     private dialog: MatDialog,
     private router: Router,
-    private stateService: StateService
+    private stateService: StateService,
+    private authService: AuthService
   ) {}
 
   intercept(
@@ -83,6 +96,12 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
           req.url.includes(path)
         );
 
+        // Handle 401 errors with context awareness
+        if (error.status === 401 && !isPublicPath) {
+          this.handle401Error(isSilentPath);
+          return throwError(() => error);
+        }
+
         // Handle 422 status with dialog and redirect
         if (error.status === 422 && !isPublicPath && !isSilentPath) {
           this.handle422Error();
@@ -97,6 +116,35 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
         return throwError(() => error);
       })
     );
+  }
+
+  // 401 handler that considers user context
+  private handle401Error(isSilentPath: boolean): void {
+    const currentUrl = this.router.url;
+    const isGuestUrl = this.guestUrls.has(currentUrl);
+
+    this.authService.setAuthenticated(false);
+
+    // If user is on a guest URL, fail silently
+    if (isGuestUrl || isSilentPath) {
+      // Don't show any message, don't redirect
+      // This is expected behavior during signup/login flows
+      return;
+    }
+
+    // Alert user if authenticated and working, but session expired
+    this.dialog.closeAll();
+
+    this.snackBar.open(
+      'Your session has expired. Please log in again.',
+      'Dismiss',
+      {
+        verticalPosition: 'top',
+        panelClass: ['error-snackbar'],
+      }
+    );
+
+    this.router.navigate(['/login']);
   }
 
   private handle422Error(): void {

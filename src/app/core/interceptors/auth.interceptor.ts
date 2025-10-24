@@ -64,7 +64,7 @@ export class AuthInterceptor implements HttpInterceptor {
           const isSessionCheck = req.url.includes('/auth/check');
           const isLoggedIn = this.authService.authState.value;
 
-          // 🟢 Check if current route is public
+          // Check if current route is public
           const isPublicRoute = this.publicRoutes.some((route) =>
             this.router.url.startsWith(route)
           );
@@ -123,10 +123,7 @@ export class AuthInterceptor implements HttpInterceptor {
   ],
 })
 export class SessionExpiredDialogComponent {
-  constructor(
-    public dialogRef: MatDialogRef<SessionExpiredDialogComponent>,
-    private router: Router
-  ) {}
+  constructor(public dialogRef: MatDialogRef<SessionExpiredDialogComponent>) {}
 
   onClose(): void {
     this.dialogRef.close();
