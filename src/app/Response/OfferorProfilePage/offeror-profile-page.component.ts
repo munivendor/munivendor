@@ -323,6 +323,7 @@ export class OfferorProfilePageComponent implements OnInit {
   private showSnackBar(message: string): void {
     this.snackBar.open(message, 'Close', {
       verticalPosition: 'top',
+      duration: 15000,
     });
   }
 

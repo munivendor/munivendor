@@ -1,4 +1,4 @@
-import { inject, Injectable, PLATFORM_ID, Inject } from '@angular/core';
+import { Injectable, PLATFORM_ID, Inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { SocialAuthService } from '@abacritt/angularx-social-login';
 import {
@@ -27,6 +27,7 @@ import { FlowNavigationService } from '../shared/service/flow-navigation.service
 import { UserService } from '../shared/service/user.service';
 import { User } from '../shared/model/user.model';
 import { StateService } from '../Request/services/state.service';
+import { LoggingService } from '../exceptionhandling/logging.service';
 
 export interface ForgotPasswordResponse {
   message?: string;
@@ -47,8 +48,6 @@ export class AuthService {
   setSignupInProgress(inProgress: boolean): void {
     this.signupInProgressSubject.next(inProgress);
   }
-
-  private _snackBar = inject(MatSnackBar);
   private url = environment.apiUrl;
   private userSubject = new BehaviorSubject<number | null>(null);
 
@@ -85,6 +84,8 @@ export class AuthService {
     private flowNavigationService: FlowNavigationService,
     private userService: UserService,
     private stateService: StateService,
+    private loggingService: LoggingService,
+    private _snackBar: MatSnackBar,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
@@ -366,7 +367,28 @@ export class AuthService {
           this.setAuthenticated(true, userId);
         },
         error: (error: any) => {
-          this.setAuthenticated(true, userId);
+          // Extract correlationId
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              userId: userId,
+              correlationId: correlationId,
+              methodName: 'completeLoginProcess',
+              className: 'AuthService',
+              operation: 'getUser',
+            }
+          );
+
+          this.setAuthenticated(false, undefined);
+
+          this._snackBar.open(
+            `Login failed. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+            'Close',
+            { verticalPosition: 'top', duration: 15000 }
+          );
         },
       });
   }

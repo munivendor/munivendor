@@ -21,6 +21,8 @@ import {
 } from '@angular/material/dialog';
 import { Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../authorization/auth.service';
+import { LoggingService } from '../exceptionhandling/logging.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   imports: [
@@ -47,13 +49,15 @@ import { AuthService } from '../authorization/auth.service';
     </mat-dialog-actions>
   `,
 })
-export class SimpleDialogComponent {
+export class ResendPasswordResetDialog {
   message = '';
   isLoading = false;
   email = '';
 
   constructor(
-    public dialogRef: MatDialogRef<SimpleDialogComponent>,
+    public dialogRef: MatDialogRef<ResendPasswordResetDialog>,
+    private loggingService: LoggingService,
+    private _snackBar: MatSnackBar,
     @Inject(MAT_DIALOG_DATA) public data: any,
     private authService: AuthService
   ) {
@@ -69,6 +73,27 @@ export class SimpleDialogComponent {
       },
       error: (error) => {
         this.isLoading = false;
+
+        // Extract correlationId
+        const correlationId = error?.error?.correlationId;
+
+        this.loggingService.logException(
+          new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+          3,
+          {
+            email: this.email,
+            correlationId: correlationId,
+            methodName: 'onResendClick',
+            className: 'ResendPasswordResetDialog',
+            operation: 'sendPasswordReset',
+          }
+        );
+
+        this._snackBar.open(
+          `Failed to resend password reset link. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+          'Close',
+          { verticalPosition: 'top', duration: 15000 }
+        );
       },
     });
   }
@@ -103,7 +128,9 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     public dialog: MatDialog,
-    private authService: AuthService
+    private authService: AuthService,
+    private loggingService: LoggingService,
+    private _snackBar: MatSnackBar
   ) {}
 
   onSubmit() {
@@ -139,12 +166,33 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
       error: (error) => {
         this.isLoading = false;
         this.forgotPasswordForm.get('email')?.enable();
+
+        // Extract correlationId
+        const correlationId = error?.error?.correlationId;
+
+        this.loggingService.logException(
+          new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+          3,
+          {
+            email: this.currentEmail,
+            correlationId: correlationId,
+            methodName: 'onResendClick',
+            className: 'ForgotPasswordComponent',
+            operation: 'sendPasswordReset',
+          }
+        );
+
+        this._snackBar.open(
+          `Failed to resend password reset link. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+          'Close',
+          { verticalPosition: 'top', duration: 15000 }
+        );
       },
     });
   }
 
   private openDialog() {
-    const dialogRef = this.dialog.open(SimpleDialogComponent, {
+    const dialogRef = this.dialog.open(ResendPasswordResetDialog, {
       width: '400px',
       data: { email: this.currentEmail },
     });

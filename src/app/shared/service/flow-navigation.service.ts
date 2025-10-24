@@ -4,7 +4,8 @@ import { Observable } from 'rxjs';
 import { FlowProgressService } from './flow-progress.service';
 import { UserService } from './user.service';
 import { User } from '../model/user.model';
-
+import { LoggingService } from '../../exceptionhandling/logging.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 @Injectable({
   providedIn: 'root',
 })
@@ -42,7 +43,9 @@ export class FlowNavigationService {
   constructor(
     private router: Router,
     private flowProgressService: FlowProgressService,
-    private userService: UserService
+    private userService: UserService,
+    private loggingService: LoggingService,
+    private _snackBar: MatSnackBar
   ) {}
 
   navigateAfterLogin(userId: number, email: string): Observable<void> {
@@ -62,6 +65,26 @@ export class FlowNavigationService {
         error: (error) => {
           console.error('Error fetching user data:', error);
           observer.error(error);
+          // Extract correlationId
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              userId: userId,
+              correlationId: correlationId,
+              methodName: 'navigateAfterLogin',
+              className: 'FlowNavigationService',
+              operation: 'getUser',
+            }
+          );
+
+          this._snackBar.open(
+            `Login failed. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+            'Close',
+            { verticalPosition: 'top', duration: 15000 }
+          );
         },
       });
     });
@@ -81,9 +104,31 @@ export class FlowNavigationService {
           observer.next();
           observer.complete();
         },
-        error: (err) => {
-          console.error('Error fetching flow progress:', err);
-          observer.error(err);
+        error: (error) => {
+          console.error('Error fetching flow progress:', error);
+          observer.error(error);
+          // Extract correlationId
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              userId: userId,
+              flowType: flowType,
+              flowId: flowConfig.flowId,
+              correlationId: correlationId,
+              methodName: 'handleNavigation',
+              className: 'FlowNavigationService',
+              operation: 'getFlowProgress',
+            }
+          );
+
+          this._snackBar.open(
+            `Navigation failed. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+            'Close',
+            { verticalPosition: 'top', duration: 15000 }
+          );
         },
       });
   }
