@@ -206,7 +206,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
                 this._snackBar.open(
                   `Failed to download document. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
                   'Close',
-                  { verticalPosition: 'top' }
+                  { verticalPosition: 'top', duration: 15000 }
                 );
               }
             },
@@ -261,7 +261,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
               this._snackBar.open(
                 `Failed to download document. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
                 'Close',
-                { verticalPosition: 'top' }
+                { verticalPosition: 'top', duration: 15000 }
               );
             }
           },
@@ -317,7 +317,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
             this._snackBar.open(
               `Failed to download document. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
               'Close',
-              { verticalPosition: 'top' }
+              { verticalPosition: 'top', duration: 15000 }
             );
           }
         },
@@ -380,7 +380,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
           this._snackBar.open(
             `Failed to download document. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
             'Close',
-            { verticalPosition: 'top' }
+            { verticalPosition: 'top', duration: 15000 }
           );
         }
       },
@@ -505,7 +505,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
             this._snackBar.open(
               `Failed to load categories. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
               'Close',
-              { verticalPosition: 'top' }
+              { verticalPosition: 'top', duration: 15000 }
             );
           }
         },
@@ -576,7 +576,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
             this._snackBar.open(
               `Failed to load documents. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
               'Close',
-              { verticalPosition: 'top' }
+              { verticalPosition: 'top', duration: 15000 }
             );
           }
         },
@@ -660,7 +660,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
             this._snackBar.open(
               `Failed to load offeror details. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
               'Close',
-              { verticalPosition: 'top' }
+              { verticalPosition: 'top', duration: 15000 }
             );
           }
         }
@@ -737,7 +737,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
             this._snackBar.open(
               `Failed to load agency details. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
               'Close',
-              { verticalPosition: 'top' }
+              { verticalPosition: 'top', duration: 15000 }
             );
           }
         }

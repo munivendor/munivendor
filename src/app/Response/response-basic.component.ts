@@ -100,11 +100,6 @@ export class ResponseBasicComponent implements OnInit {
     private authService: AuthService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
-    this._snackBar.open(
-      `Failed to update offer status. (Correlation ID: 12AJdsaR839029jdsD). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-      'Close',
-      { verticalPosition: 'top' }
-    );
     this.responseForm = this.fb.group({
       responseName: ['', Validators.required],
       authorizingOfficial: [null, Validators.required],
@@ -161,7 +156,7 @@ export class ResponseBasicComponent implements OnInit {
             this._snackBar.open(
               `Failed to load list of authorizing officials. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
               'Close',
-              { verticalPosition: 'top' }
+              { verticalPosition: 'top', duration: 15000 }
             );
           }
         }
@@ -301,7 +296,7 @@ export class ResponseBasicComponent implements OnInit {
             this._snackBar.open(
               `Failed to load agency basic details. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
               'Close',
-              { verticalPosition: 'top' }
+              { verticalPosition: 'top', duration: 15000 }
             );
           }
         },
@@ -430,7 +425,7 @@ export class ResponseBasicComponent implements OnInit {
             this._snackBar.open(
               `Failed to load offer details. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
               'Close',
-              { verticalPosition: 'top' }
+              { verticalPosition: 'top', duration: 15000 }
             );
           }
         }
@@ -523,7 +518,7 @@ export class ResponseBasicComponent implements OnInit {
               this._snackBar.open(
                 `Failed to update offer basic details. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
                 'Close',
-                { verticalPosition: 'top' }
+                { verticalPosition: 'top', duration: 15000 }
               );
             }
           }
@@ -576,7 +571,7 @@ export class ResponseBasicComponent implements OnInit {
                     this._snackBar.open(
                       `Failed to update offer status. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
                       'Close',
-                      { verticalPosition: 'top' }
+                      { verticalPosition: 'top', duration: 15000 }
                     );
                   }
                 }
@@ -604,7 +599,7 @@ export class ResponseBasicComponent implements OnInit {
               this._snackBar.open(
                 `Failed to create offer basics details. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
                 'Close',
-                { verticalPosition: 'top' }
+                { verticalPosition: 'top', duration: 15000 }
               );
             }
           }

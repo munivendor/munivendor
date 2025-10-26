@@ -5,6 +5,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { CommonModule } from '@angular/common';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { LoggingService } from '../exceptionhandling/logging.service';
 
 @Component({
   selector: 'token-validation',
@@ -22,7 +23,8 @@ export class TokenValidationComponent implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private userService: UserService,
-    private router: Router
+    private router: Router,
+    private loggingService: LoggingService
   ) {}
 
   ngOnInit() {
@@ -59,9 +61,23 @@ export class TokenValidationComponent implements OnInit, OnDestroy {
             setTimeout(() => this.router.navigate(['/signup']), 5000);
           }
         },
-        error: () => {
-          this.verificationStatus =
-            'An unexpected error occurred. Please try again later.';
+        error: (error) => {
+          // Extract correlationId
+          const correlationId = error?.error?.correlationId;
+          this.verificationStatus = `An unexpected error occurred. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              token: token,
+              userId: userId,
+              correlationId: correlationId,
+              methodName: 'validateToken',
+              className: 'TokenValidationComponent',
+              operation: 'ValidateEmailToken',
+            }
+          );
         },
       });
   }

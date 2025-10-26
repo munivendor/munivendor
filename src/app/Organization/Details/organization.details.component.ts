@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -18,6 +18,7 @@ import { State } from '../../shared/model/state.model';
 import { FlowProgressService } from '../../shared/service/flow-progress.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { LoggingService } from '../../exceptionhandling/logging.service';
+import { AuthService } from '../../authorization/auth.service';
 
 @Component({
   selector: 'app-organization-details',
@@ -36,8 +37,6 @@ import { LoggingService } from '../../exceptionhandling/logging.service';
   ],
 })
 export class OrganizationDetailsComponent implements OnInit {
-  private _snackBar = inject(MatSnackBar);
-  private _logger = inject(LoggingService);
   loginForm!: FormGroup;
   organizationDetailForm!: FormGroup;
   states: State[] = [];
@@ -52,7 +51,10 @@ export class OrganizationDetailsComponent implements OnInit {
     private organizationService: OrganizationService,
     private router: Router,
     private stateService: StateService,
-    private flowProgressService: FlowProgressService
+    private flowProgressService: FlowProgressService,
+    private loggingService: LoggingService,
+    private _snackBar: MatSnackBar,
+    private authService: AuthService
   ) {
     this.organizationDetailForm = this.fb.group({});
 
@@ -69,11 +71,36 @@ export class OrganizationDetailsComponent implements OnInit {
     this.organizationTypeId = this.stateService.getOrganizationTypeId();
     this.organizationId = this.stateService.getOrganizationId();
     this.initializeForm();
+
     this.organizationService
       .getStates()
       .pipe(takeUntil(this.destroy$))
-      .subscribe((states) => {
-        this.states = states;
+      .subscribe({
+        next: (states) => {
+          this.states = states;
+        },
+        error: (error) => {
+          // Extract correlationId
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              correlationId: correlationId,
+              methodName: 'ngOnInit',
+              className: 'OrganizationDetailsComponent',
+              operation: 'getStates',
+            }
+          );
+          if (error.status !== 401 && this.authService.authState.value) {
+            this._snackBar.open(
+              `Failed to load states. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+              'Close',
+              { verticalPosition: 'top', duration: 15000 }
+            );
+          }
+        },
       });
   }
 
@@ -135,7 +162,7 @@ export class OrganizationDetailsComponent implements OnInit {
       .pipe(
         switchMap((organizationId: any) => {
           // required where organizationId is [object Object] for agency/offeror grid API
-          // backend returns { organizationId: number } instead of just a numberW
+          // backend returns { organizationId: number } instead of just a number
           let orgId: number;
           if (typeof organizationId === 'object' && organizationId !== null) {
             orgId = organizationId.organizationId;
@@ -149,64 +176,66 @@ export class OrganizationDetailsComponent implements OnInit {
 
           return this.flowProgressService
             .saveFlowProgress(Number(this.userId), 1, this.framePageNumber)
-            .pipe(tap(() => this.router.navigate(['/user-details'])));
+            .pipe(
+              tap(() => this.router.navigate(['/user-details'])),
+              catchError((error) => {
+                // Extract correlationId
+                const correlationId = error?.error?.correlationId;
+
+                this.loggingService.logException(
+                  new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+                  3,
+                  {
+                    userId: this.userId,
+                    framePageNumber: this.framePageNumber,
+                    correlationId: correlationId,
+                    methodName: 'onSubmit',
+                    className: 'OrganizationDetailsComponent',
+                    operation: 'saveFlowProgress',
+                  }
+                );
+
+                if (error.status !== 401 && this.authService.authState.value) {
+                  this._snackBar.open(
+                    `Failed to save progress. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+                    'Close',
+                    { verticalPosition: 'top', duration: 15000 }
+                  );
+                }
+
+                return throwError(() => error);
+              })
+            );
         }),
 
         catchError((error) => {
-          console.error('Error saving organization or flow progress:', error);
+          // Extract correlationId
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              organization: organization,
+              correlationId: correlationId,
+              methodName: 'onSubmit',
+              className: 'OrganizationDetailsComponent',
+              operation: 'updateOrganization',
+            }
+          );
+          if (error.status !== 401 && this.authService.authState.value) {
+            this._snackBar.open(
+              `Failed to update organization. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+              'Close',
+              { verticalPosition: 'top', duration: 15000 }
+            );
+          }
+
           return throwError(() => error);
         }),
         takeUntil(this.destroy$)
       )
       .subscribe();
-
-    // this.organizationService
-    //   .updateOrganization(organization)
-    //   .pipe(
-    //     switchMap((organizationId: number) => {
-    //       this.stateService.setOrganizationId(organizationId);
-
-    //       return this.flowProgressService
-    //         .saveFlowProgress(Number(this.userId), 1, this.framePageNumber)
-    //         .pipe(
-    //           tap(() => this.router.navigate(['/user-details'])),
-    //           catchError((flowError) => {
-    //             const err = new Error(flowError.message);
-    //             err.name = 'FlowProgressSaveFailed';
-    //             this._logger.logException(err, 3, {
-    //               userId: this.userId,
-    //               methodName: 'saveFlowProgress',
-    //               className: 'ORGDetailsComponent',
-    //               operation: 'flow_progress_save',
-    //             });
-    //             this._snackBar.open(
-    //               'Failed to save progress. Please try again.',
-    //               'Close',
-    //               { verticalPosition: 'top' }
-    //             );
-    //             return throwError(() => flowError);
-    //           })
-    //         );
-    //     }),
-    //     catchError((orgError) => {
-    //       const err = new Error(orgError.message);
-    //       err.name = 'OrganizationUpdateFailed';
-    //       this._logger.logException(err, 3, {
-    //         userId: this.userId,
-    //         methodName: 'updateOrganization',
-    //         className: 'ORGDetailsComponent',
-    //         operation: 'organization_update',
-    //       });
-    //       this._snackBar.open(
-    //         'Failed to update organization. Please check your input and try again.',
-    //         'Close',
-    //         { verticalPosition: 'top' }
-    //       );
-    //       return throwError(() => orgError);
-    //     }),
-    //     takeUntil(this.destroy$)
-    //   )
-    //   .subscribe();
   }
 
   ngOnDestroy(): void {

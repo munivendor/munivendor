@@ -1,4 +1,11 @@
-import { Component, Inject, EventEmitter, Output, Input } from '@angular/core';
+import {
+  Component,
+  Inject,
+  EventEmitter,
+  Output,
+  Input,
+  OnDestroy,
+} from '@angular/core';
 import {
   MatDialog,
   MatDialogRef,
@@ -19,6 +26,7 @@ import { Router } from '@angular/router';
 import { DocumentService } from '../../shared/service/document.service';
 import { RequestService } from '../services/request.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
+import { Subject, takeUntil } from 'rxjs';
 
 export interface DialogData {
   action: string;
@@ -39,7 +47,7 @@ export interface DialogData {
     MatDialogActions,
   ],
 })
-export class ConfirmationDialog {
+export class ConfirmationDialog implements OnDestroy {
   @Output() cancellationRequested = new EventEmitter<{
     request: any;
     action: string;
@@ -78,10 +86,10 @@ export class ConfirmationDialog {
 
     switch (this.requestObjAndUserAction.action) {
       case 'delete':
-        if (!this.requestObjAndUserAction.request?.sourceRequestId) {
+        if (!this.requestObjAndUserAction.request?.offerorRequestId) {
           return 'If you delete this solicitation your progress will not be saved. Are you sure you want to delete this solicitation?';
         } else {
-          return 'If you delete your response, it will be permanently removed. Are you sure you want to delete your response to this solicitation?';
+          return `If you delete your offer (this response), then your progress will not be saved, and any data you uploaded for this response will be permanently deleted. If you decide to begin a new offer in response to this solicitation before the solicitation's close date and time, you will need to start your offer from scratch. Are you sure you want to delete this response?`;
         }
       case 'edit':
         return 'Are you sure you want to edit this solicitation?';
@@ -134,32 +142,40 @@ export class ConfirmationDialog {
     }
 
     if (this.requestObjAndUserAction.action === 'open') {
-      this.requestService.UpdateRequestStatus(request.requestId, 6).subscribe({
-        next: (res) => {
-          console.log('Status updated successfully:', res);
-          this.statusUpdated.emit({
-            requestId: request.requestId,
-            newStatusId: 6,
-            newStatusDesc: 'Opened',
-          });
+      this.requestService
+        .UpdateRequestStatus(request.requestId, 6)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (res) => {
+            console.log('Status updated successfully:', res);
+            this.statusUpdated.emit({
+              requestId: request.requestId,
+              newStatusId: 6,
+              newStatusDesc: 'Opened',
+            });
 
-          this.downloadZipDocuments(request);
-        },
-        error: (error) => {
-          console.error('Failed to update status:', error);
+            this.downloadZipDocuments(request);
+          },
+          error: (error) => {
+            console.error('Failed to update status:', error);
 
-          // Extract correlationId
-          const correlationId = error?.error?.correlationId;
+            // Extract correlationId
+            const correlationId = error?.error?.correlationId;
 
-          this.loggingService.logException(error, 3, {
-            // organizationId: this.organizationId,
-            correlationId: correlationId,
-            methodName: 'confirm',
-            className: 'ConfirmationDialog',
-            operation: 'UpdateRequestStatus',
-          });
-        },
-      });
+            this.loggingService.logException(
+              new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+              3,
+              {
+                requestId: request.requestId,
+                newRequestStatus: 6,
+                correlationId: correlationId,
+                methodName: 'confirm',
+                className: 'ConfirmationDialog',
+                operation: 'UpdateRequestStatus',
+              }
+            );
+          },
+        });
     }
 
     if (this.requestObjAndUserAction.action === 'redownload') {
@@ -168,10 +184,17 @@ export class ConfirmationDialog {
 
     this.dialogRef.close(true);
   }
+  private destroy$ = new Subject<void>();
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   downloadZipDocuments(request: any) {
     this.documentService
       .GetZipDocuments(request.requestId)
+      .pipe(takeUntil(this.destroy$))
       .subscribe((zipBlob) => {
         // Convert publishDate -> MMddyyyy
         const date = new Date(request.publishDate);
@@ -197,10 +220,13 @@ export class ConfirmationDialog {
       data: { action, request },
     });
 
-    cancelDialogRef.componentInstance.cancelConfirmed.subscribe(
-      (cancelData: { request: any; action: string }) => {
-        this.cancellationRequested.emit(cancelData);
-      }
-    );
+    cancelDialogRef
+      .afterClosed()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((cancelData) => {
+        if (cancelData) {
+          this.cancellationRequested.emit(cancelData);
+        }
+      });
   }
 }

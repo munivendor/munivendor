@@ -47,6 +47,7 @@ import {
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { StateService } from '../Request/services/state.service';
 import { MatIconModule } from '@angular/material/icon';
+import { LoggingService } from '../exceptionhandling/logging.service';
 
 @Component({
   selector: 'dialog-elements-example-dialog',
@@ -116,8 +117,9 @@ export class SignupComponent implements OnInit, OnDestroy {
     private signupService: SignupService,
     private organizationService: OrganizationService,
     public dialog: MatDialog,
-    private snackBar: MatSnackBar,
-    private stateService: StateService
+    private stateService: StateService,
+    private loggingService: LoggingService,
+    private _snackBar: MatSnackBar
   ) {}
 
   togglePasswordVisibility(): void {
@@ -146,8 +148,31 @@ export class SignupComponent implements OnInit, OnDestroy {
     this.signupService
       .getOrganizationTypes()
       .pipe(takeUntil(this.destroy$))
-      .subscribe((organizationTypes) => {
-        this.organizationTypes = organizationTypes;
+      .subscribe({
+        next: (organizationTypes) => {
+          this.organizationTypes = organizationTypes;
+        },
+        error: (error) => {
+          // Extract correlationId
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              correlationId: correlationId,
+              methodName: 'ngOnInit',
+              className: 'SignupComponent',
+              operation: 'getOrganizationTypes',
+            }
+          );
+
+          this._snackBar.open(
+            `Failed to fetch organization Types. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+            'Close',
+            { verticalPosition: 'top', duration: 15000 }
+          );
+        },
       });
 
     this.signupFormGoogle
@@ -315,8 +340,26 @@ export class SignupComponent implements OnInit, OnDestroy {
           this.createUserByEmail(organizationUser);
           this.stateService.setOrganizationId(response.organizationId);
         },
-        error: (err) => {
-          console.error('Failed to save organization:', err);
+        error: (error) => {
+          // Extract correlationId
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              correlationId: correlationId,
+              methodName: 'onSubmitByEmail',
+              className: 'SignupComponent',
+              operation: 'saveOrganization',
+            }
+          );
+
+          this._snackBar.open(
+            `Failed to save organization. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+            'Close',
+            { verticalPosition: 'top', duration: 15000 }
+          );
         },
       });
     } else {
@@ -371,7 +414,7 @@ export class SignupComponent implements OnInit, OnDestroy {
                 this.authService.setSignupInProgress(false);
                 this.authService.setSkipNextAuthState(false);
 
-                this.snackBar.open(
+                this._snackBar.open(
                   `Sign up failed. This email may already exist or an error occurred.`,
                   'Close',
                   { verticalPosition: 'top', duration: 15000 }
@@ -399,6 +442,27 @@ export class SignupComponent implements OnInit, OnDestroy {
         if (error.status === 409) {
           return of(null);
         }
+
+        // Extract correlationId
+        const correlationId = error?.error?.correlationId;
+
+        this.loggingService.logException(
+          new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+          3,
+          {
+            correlationId: correlationId,
+            methodName: 'createOrLoginGoogleUser',
+            className: 'SignupComponent',
+            operation: 'createUser',
+          }
+        );
+
+        this._snackBar.open(
+          `Failed to create user. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+          'Close',
+          { verticalPosition: 'top', duration: 15000 }
+        );
+
         return throwError(() => error);
       }),
       switchMap(() => {
@@ -410,6 +474,28 @@ export class SignupComponent implements OnInit, OnDestroy {
           tap(() => this.authService.setSkipNextAuthState(false)),
           catchError((loginError) => {
             this.authService.setSkipNextAuthState(false);
+
+            // Add logging for login error
+            const correlationId = loginError?.error?.correlationId;
+
+            this.loggingService.logException(
+              new Error(
+                `HTTP Error ${loginError.status}: ${loginError.statusText}`
+              ),
+              3,
+              {
+                correlationId: correlationId,
+                methodName: 'createOrLoginGoogleUser',
+                className: 'SignupComponent',
+                operation: 'login',
+              }
+            );
+
+            this._snackBar.open(
+              `Failed to login after user creation. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+              'Close',
+              { verticalPosition: 'top', duration: 15000 }
+            );
             return throwError(() => loginError);
           })
         );
@@ -430,19 +516,53 @@ export class SignupComponent implements OnInit, OnDestroy {
               this.router.navigate(['/email-verification'], {
                 queryParams: { email: user.workEmail },
               });
+            }),
+            catchError((error) => {
+              // Extract correlationId
+              const correlationId = error?.error?.correlationId;
+
+              this.loggingService.logException(
+                new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+                3,
+                {
+                  correlationId: correlationId,
+                  methodName: 'createUserByEmail',
+                  className: 'SignupComponent',
+                  operation: 'SendUserVerificationEmail',
+                }
+              );
+
+              this._snackBar.open(
+                `Failed to send verification email. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+                'Close',
+                { verticalPosition: 'top', duration: 15000 }
+              );
+
+              return throwError(() => error);
             })
           )
         )
       )
       .subscribe({
         error: (error) => {
-          this.snackBar.open(
-            `Sign up failed. This email is already signed up or an error occurred.`,
-            'Close',
+          // Extract correlationId
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
             {
-              verticalPosition: 'top',
-              duration: 15000,
+              correlationId: correlationId,
+              methodName: 'createUserByEmail',
+              className: 'SignupComponent',
+              operation: 'createUser',
             }
+          );
+
+          this._snackBar.open(
+            `Failed to sign up. This email is already signed up or an error occurred. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+            'Close',
+            { verticalPosition: 'top', duration: 15000 }
           );
         },
       });

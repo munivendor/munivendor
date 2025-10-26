@@ -13,6 +13,9 @@ import { Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../../authorization/auth.service';
 import { FlowProgressService } from '../../shared/service/flow-progress.service';
+import { LoggingService } from '../../exceptionhandling/logging.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
+
 @Component({
   selector: 'app-contact-form',
   templateUrl: './user-signup-details.component.html',
@@ -42,7 +45,9 @@ export class UserSignUpDetails implements OnInit {
     private userService: UserService,
     private router: Router,
     private authService: AuthService,
-    private flowProgressService: FlowProgressService
+    private flowProgressService: FlowProgressService,
+    private loggingService: LoggingService,
+    private _snackBar: MatSnackBar
   ) {
     this.userSignupDetailForm = this.fb.group({
       email: [{ value: '', disabled: true }, [Validators.required]],
@@ -64,11 +69,7 @@ export class UserSignUpDetails implements OnInit {
     this.authService.user$.pipe(takeUntil(this.destroy$)).subscribe((user) => {
       if (user) {
         const userId = user;
-        if (userId) {
-          this.getUserDetails(userId);
-        } else {
-          console.error('No user ID available in authentication state');
-        }
+        this.getUserDetails(userId);
       } else {
         this.router.navigate(['/login']);
       }
@@ -76,8 +77,8 @@ export class UserSignUpDetails implements OnInit {
   }
 
   getUserDetails(userId: number): void {
-    this.userService.getUser(userId).subscribe(
-      (user: User) => {
+    this.userService.getUser(userId).subscribe({
+      next: (user: User) => {
         this.user = user;
         this.userId = userId;
         this.userSignupDetailForm.patchValue({
@@ -88,19 +89,59 @@ export class UserSignUpDetails implements OnInit {
         this.userSignupDetailForm.updateValueAndValidity({ onlySelf: true });
         this.organizationTypeId = user.organizationTypeId;
       },
-      (error) => {
-        console.error('Error fetching user data:', error);
-      }
-    );
+      error: (error) => {
+        // Extract correlationId
+        const correlationId = error?.error?.correlationId;
+
+        this.loggingService.logException(
+          new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+          3,
+          {
+            userId: userId,
+            correlationId: correlationId,
+            methodName: 'getUserDetails',
+            className: 'UserSignUpDetails',
+            operation: 'getUser',
+          }
+        );
+        if (error.status !== 401 && this.authService.authState.value) {
+          this._snackBar.open(
+            `Failed to load user details. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+            'Close',
+            { verticalPosition: 'top', duration: 15000 }
+          );
+        }
+      },
+    });
   }
 
   updateUser(user: User): void {
-    this.userService.updateUser(user).subscribe(
-      () => {},
-      (error) => {
-        console.error('Error fetching user data:', error);
-      }
-    );
+    this.userService.updateUser(user).subscribe({
+      next: () => {},
+      error: (error) => {
+        // Extract correlationId
+        const correlationId = error?.error?.correlationId;
+
+        this.loggingService.logException(
+          new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+          3,
+          {
+            user: user,
+            correlationId: correlationId,
+            methodName: 'updateUser',
+            className: 'UserSignUpDetails',
+            operation: 'updateUser',
+          }
+        );
+        if (error.status !== 401 && this.authService.authState.value) {
+          this._snackBar.open(
+            `Failed to update user. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+            'Close',
+            { verticalPosition: 'top', duration: 15000 }
+          );
+        }
+      },
+    });
   }
 
   onSubmit(): void {
@@ -133,12 +174,38 @@ export class UserSignUpDetails implements OnInit {
               this.router.navigate(['/offeror-requests-view']);
             }
           },
-          error: (err) => {
-            console.error('Error saving flow progress:', err);
+          error: (error) => {
+            // Extract correlationId
+            const correlationId = error?.error?.correlationId;
+
+            this.loggingService.logException(
+              new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+              3,
+              {
+                userId: this.userId,
+                flowId: flowId,
+                framePageNumber: this.framePageNumber,
+                correlationId: correlationId,
+                methodName: 'onSubmit',
+                className: 'UserSignUpDetails',
+                operation: 'saveFlowProgress',
+              }
+            );
+            if (error.status !== 401 && this.authService.authState.value) {
+              this._snackBar.open(
+                `Failed to save progress. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+                'Close',
+                { verticalPosition: 'top', duration: 15000 }
+              );
+            }
           },
         });
     } else {
-      console.error('Form is invalid or user data is not loaded yet.');
+      this._snackBar.open(
+        'Form is invalid or user data is not loaded yet. Please complete all required fields.',
+        'Close',
+        { verticalPosition: 'top', duration: 5000 }
+      );
     }
   }
 

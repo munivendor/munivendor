@@ -198,7 +198,7 @@ export class ResponseDetailsComponent implements OnInit {
             this._snackBar.open(
               `Failed to load section details. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
               'Close',
-              { verticalPosition: 'top' }
+              { verticalPosition: 'top', duration: 15000 }
             );
           }
         },
@@ -229,7 +229,7 @@ export class ResponseDetailsComponent implements OnInit {
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = 'Proposals.pdf';
+          a.download = 'Solicitations.pdf';
           a.click();
           window.URL.revokeObjectURL(url);
         },
@@ -257,7 +257,7 @@ export class ResponseDetailsComponent implements OnInit {
             this._snackBar.open(
               `Failed to download PDF. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
               'Close',
-              { verticalPosition: 'top' }
+              { verticalPosition: 'top', duration: 15000 }
             );
           }
         },
