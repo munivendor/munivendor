@@ -16,7 +16,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../authorization/auth.service';
 import { Request } from '../Request/model/request.model';
 // commented out code are all needed for autofill
@@ -35,6 +34,7 @@ import {
 } from '@angular/material/dialog';
 import { HttpClient } from '@angular/common/http';
 import { LoggingService } from '../exceptionhandling/logging.service';
+import { SnackbarNotificationService } from '../shared/service/snackbar-notification.service';
 
 @Component({
   selector: 'response-details',
@@ -81,8 +81,8 @@ export class ResponseDetailsComponent implements OnInit {
     private http: HttpClient,
     public dialog: MatDialog,
     private loggingService: LoggingService,
-    private _snackBar: MatSnackBar,
-    private authService: AuthService
+    private authService: AuthService,
+    private snackbarNotificationService: SnackbarNotificationService
   ) {
     this.responseForm = this.fb.group({
       responseName: ['', Validators.required],
@@ -197,11 +197,7 @@ export class ResponseDetailsComponent implements OnInit {
           );
 
           if (error.status !== 401 && this.authService.authState.value) {
-            this._snackBar.open(
-              `Failed to load agency request details. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-              'Close',
-              { verticalPosition: 'top', duration: 15000 }
-            );
+            this.snackbarNotificationService.showUploadError(correlationId);
           }
         },
       });
@@ -240,11 +236,7 @@ export class ResponseDetailsComponent implements OnInit {
             }
           );
           if (error.status !== 401 && this.authService.authState.value) {
-            this._snackBar.open(
-              `Failed to load section details. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-              'Close',
-              { verticalPosition: 'top', duration: 15000 }
-            );
+            this.snackbarNotificationService.showUploadError(correlationId);
           }
         },
       });
@@ -301,11 +293,7 @@ export class ResponseDetailsComponent implements OnInit {
           );
 
           if (error.status !== 401 && this.authService.authState.value) {
-            this._snackBar.open(
-              `Failed to download PDF. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-              'Close',
-              { verticalPosition: 'top', duration: 15000 }
-            );
+            this.snackbarNotificationService.showUploadError(correlationId);
           }
         },
       });

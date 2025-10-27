@@ -16,9 +16,9 @@ import { Subject, throwError } from 'rxjs';
 import { takeUntil, tap, catchError, switchMap } from 'rxjs/operators';
 import { State } from '../../shared/model/state.model';
 import { FlowProgressService } from '../../shared/service/flow-progress.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { LoggingService } from '../../exceptionhandling/logging.service';
 import { AuthService } from '../../authorization/auth.service';
+import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
 
 @Component({
   selector: 'app-organization-details',
@@ -53,8 +53,8 @@ export class OrganizationDetailsComponent implements OnInit {
     private stateService: StateService,
     private flowProgressService: FlowProgressService,
     private loggingService: LoggingService,
-    private _snackBar: MatSnackBar,
-    private authService: AuthService
+    private authService: AuthService,
+    private snackbarNotificationService: SnackbarNotificationService
   ) {
     this.organizationDetailForm = this.fb.group({});
 
@@ -94,11 +94,7 @@ export class OrganizationDetailsComponent implements OnInit {
             }
           );
           if (error.status !== 401 && this.authService.authState.value) {
-            this._snackBar.open(
-              `Failed to load states. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-              'Close',
-              { verticalPosition: 'top', duration: 15000 }
-            );
+            this.snackbarNotificationService.showUploadError(correlationId);
           }
         },
       });
@@ -196,10 +192,8 @@ export class OrganizationDetailsComponent implements OnInit {
                 );
 
                 if (error.status !== 401 && this.authService.authState.value) {
-                  this._snackBar.open(
-                    `Failed to save progress. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-                    'Close',
-                    { verticalPosition: 'top', duration: 15000 }
+                  this.snackbarNotificationService.showUploadError(
+                    correlationId
                   );
                 }
 
@@ -224,11 +218,7 @@ export class OrganizationDetailsComponent implements OnInit {
             }
           );
           if (error.status !== 401 && this.authService.authState.value) {
-            this._snackBar.open(
-              `Failed to update organization. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-              'Close',
-              { verticalPosition: 'top', duration: 15000 }
-            );
+            this.snackbarNotificationService.showUploadError(correlationId);
           }
 
           return throwError(() => error);

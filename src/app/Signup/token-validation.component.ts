@@ -6,6 +6,7 @@ import { MatCardModule } from '@angular/material/card';
 import { CommonModule } from '@angular/common';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { LoggingService } from '../exceptionhandling/logging.service';
+import { AppConstants } from '../constants/app.constants';
 
 @Component({
   selector: 'token-validation',
@@ -64,7 +65,7 @@ export class TokenValidationComponent implements OnInit, OnDestroy {
         error: (error) => {
           // Extract correlationId
           const correlationId = error?.error?.correlationId;
-          this.verificationStatus = `An unexpected error occurred. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`;
+          this.verificationStatus = `Something went wrong. Please try again later. (Correlation ID: ${correlationId}). ${AppConstants.SUPPORT_MESSAGE}`;
 
           this.loggingService.logException(
             new Error(`HTTP Error ${error.status}: ${error.statusText}`),

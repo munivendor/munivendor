@@ -33,6 +33,8 @@ import { Router } from '@angular/router';
 // import { BidProposalFormDialogComponent } from '../BidProposalForm/bid-proposal-form.component';
 import { LoggingService } from '../exceptionhandling/logging.service';
 import { AuthService } from '../authorization/auth.service';
+import { SnackbarNotificationService } from '../shared/service/snackbar-notification.service';
+
 @Component({
   selector: 'response-documents',
   standalone: true,
@@ -92,7 +94,8 @@ export class ResponseDocumentsComponent implements OnInit {
     private _snackBar: MatSnackBar,
     private router: Router,
     private loggingService: LoggingService,
-    private authService: AuthService
+    private authService: AuthService,
+    private snackbarNotificationService: SnackbarNotificationService
   ) {}
 
   ngOnInit(): void {
@@ -178,11 +181,7 @@ export class ResponseDocumentsComponent implements OnInit {
             }
           );
           if (error.status !== 401 && this.authService.authState.value) {
-            this._snackBar.open(
-              `Failed to load documents. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-              'Close',
-              { verticalPosition: 'top', duration: 15000 }
-            );
+            this.snackbarNotificationService.showUploadError(correlationId);
           }
         },
       });
@@ -306,11 +305,7 @@ export class ResponseDocumentsComponent implements OnInit {
               }
             );
             if (error.status !== 401 && this.authService.authState.value) {
-              this._snackBar.open(
-                `Failed to upload document. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-                'Close',
-                { verticalPosition: 'top', duration: 15000 }
-              );
+              this.snackbarNotificationService.showUploadError(correlationId);
             }
 
             // Clear the input value even on error to allow retry with same file
@@ -428,11 +423,7 @@ export class ResponseDocumentsComponent implements OnInit {
                 }
               );
               if (error.status !== 401 && this.authService.authState.value) {
-                this._snackBar.open(
-                  `Failed to download document. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-                  'Close',
-                  { verticalPosition: 'top', duration: 15000 }
-                );
+                this.snackbarNotificationService.showUploadError(correlationId);
               }
             },
           });
@@ -486,11 +477,7 @@ export class ResponseDocumentsComponent implements OnInit {
               }
             );
             if (error.status !== 401 && this.authService.authState.value) {
-              this._snackBar.open(
-                `Failed to download document. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-                'Close',
-                { verticalPosition: 'top', duration: 15000 }
-              );
+              this.snackbarNotificationService.showUploadError(correlationId);
             }
           },
         });
@@ -550,11 +537,7 @@ export class ResponseDocumentsComponent implements OnInit {
             }
           );
           if (error.status !== 401 && this.authService.authState.value) {
-            this._snackBar.open(
-              `Failed to download document. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-              'Close',
-              { verticalPosition: 'top', duration: 15000 }
-            );
+            this.snackbarNotificationService.showUploadError(correlationId);
           }
         },
       });
@@ -659,11 +642,7 @@ export class ResponseDocumentsComponent implements OnInit {
           }
         );
         if (error.status !== 401 && this.authService.authState.value) {
-          this._snackBar.open(
-            `Failed to download document. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-            'Close',
-            { verticalPosition: 'top', duration: 15000 }
-          );
+          this.snackbarNotificationService.showUploadError(correlationId);
         }
       },
     });
@@ -717,11 +696,7 @@ export class ResponseDocumentsComponent implements OnInit {
             }
           );
           if (error.status !== 401 && this.authService.authState.value) {
-            this._snackBar.open(
-              `Failed to delete document. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-              'Close',
-              { verticalPosition: 'top', duration: 15000 }
-            );
+            this.snackbarNotificationService.showUploadError(correlationId);
           }
         },
       });

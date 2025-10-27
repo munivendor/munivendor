@@ -23,6 +23,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../authorization/auth.service';
 import { LoggingService } from '../exceptionhandling/logging.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { SnackbarNotificationService } from '../shared/service/snackbar-notification.service';
 
 @Component({
   imports: [
@@ -59,7 +60,8 @@ export class ResendPasswordResetDialog {
     private loggingService: LoggingService,
     private _snackBar: MatSnackBar,
     @Inject(MAT_DIALOG_DATA) public data: any,
-    private authService: AuthService
+    private authService: AuthService,
+    private snackbarNotificationService: SnackbarNotificationService
   ) {
     this.email = data?.email || '';
   }
@@ -89,11 +91,7 @@ export class ResendPasswordResetDialog {
           }
         );
 
-        this._snackBar.open(
-          `Failed to resend password reset link. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-          'Close',
-          { verticalPosition: 'top', duration: 15000 }
-        );
+        this.snackbarNotificationService.showUploadError(correlationId);
       },
     });
   }
@@ -130,7 +128,7 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
     public dialog: MatDialog,
     private authService: AuthService,
     private loggingService: LoggingService,
-    private _snackBar: MatSnackBar
+    private snackbarNotificationService: SnackbarNotificationService
   ) {}
 
   onSubmit() {
@@ -182,11 +180,7 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
           }
         );
 
-        this._snackBar.open(
-          `Failed to resend password reset link. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-          'Close',
-          { verticalPosition: 'top', duration: 15000 }
-        );
+        this.snackbarNotificationService.showUploadError(correlationId);
       },
     });
   }

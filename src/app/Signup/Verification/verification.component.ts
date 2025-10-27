@@ -6,7 +6,7 @@ import { UserService } from '../../shared/service/user.service';
 import { StateService } from '../../Request/services/state.service';
 import { MatButtonModule } from '@angular/material/button';
 import { LoggingService } from '../../exceptionhandling/logging.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
 
 @Component({
   selector: 'verification',
@@ -30,7 +30,7 @@ export class EmailVerification implements OnInit, OnDestroy {
     private userService: UserService,
     private stateService: StateService,
     private loggingService: LoggingService,
-    private _snackBar: MatSnackBar
+    private snackbarNotificationService: SnackbarNotificationService
   ) {
     this.userId = this.stateService.getUserId();
   }
@@ -116,11 +116,7 @@ export class EmailVerification implements OnInit, OnDestroy {
       }
     );
 
-    this._snackBar.open(
-      `Failed to resend verification email. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-      'Close',
-      { verticalPosition: 'top', duration: 15000 }
-    );
+    this.snackbarNotificationService.showUploadError(correlationId);
   }
 
   private startCountdown(seconds: number) {

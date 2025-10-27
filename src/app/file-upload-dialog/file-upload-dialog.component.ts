@@ -16,6 +16,7 @@ import { LoggingService } from '../exceptionhandling/logging.service';
 import { StateService } from '../Request/services/state.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../authorization/auth.service';
+import { SnackbarNotificationService } from '../shared/service/snackbar-notification.service';
 
 export type FileUploadDialogData =
   | { organizationId: number; municipalityDocuments: Document[] }
@@ -47,6 +48,7 @@ export class FileUploadDialogComponent {
     private stateService: StateService,
     private _snackBar: MatSnackBar,
     private authService: AuthService,
+    private snackbarNotificationService: SnackbarNotificationService,
     public dialogRef: MatDialogRef<FileUploadDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: FileUploadDialogData
   ) {}
@@ -142,11 +144,7 @@ export class FileUploadDialogComponent {
               }
             );
             if (error.status !== 401 && this.authService.authState.value) {
-              this._snackBar.open(
-                `Failed to upload document. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-                'Close',
-                { verticalPosition: 'top', duration: 15000 }
-              );
+              this.snackbarNotificationService.showUploadError(correlationId);
             }
           },
         });
@@ -194,11 +192,7 @@ export class FileUploadDialogComponent {
               }
             );
             if (error.status !== 401 && this.authService.authState.value) {
-              this._snackBar.open(
-                `Failed to upload document. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-                'Close',
-                { verticalPosition: 'top', duration: 15000 }
-              );
+              this.snackbarNotificationService.showUploadError(correlationId);
             }
           },
         });

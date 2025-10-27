@@ -28,6 +28,7 @@ import { UserService } from '../shared/service/user.service';
 import { User } from '../shared/model/user.model';
 import { StateService } from '../Request/services/state.service';
 import { LoggingService } from '../exceptionhandling/logging.service';
+import { SnackbarNotificationService } from '../shared/service/snackbar-notification.service';
 
 export interface ForgotPasswordResponse {
   message?: string;
@@ -86,6 +87,7 @@ export class AuthService {
     private stateService: StateService,
     private loggingService: LoggingService,
     private _snackBar: MatSnackBar,
+    private snackbarNotificationService: SnackbarNotificationService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
@@ -384,11 +386,7 @@ export class AuthService {
 
           this.setAuthenticated(false, undefined);
 
-          this._snackBar.open(
-            `Login failed. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-            'Close',
-            { verticalPosition: 'top', duration: 15000 }
-          );
+          this.snackbarNotificationService.showUploadError(correlationId);
         },
       });
   }
