@@ -492,7 +492,6 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
             // Extract correlationId
             const correlationId = error?.error?.correlationId;
 
-            // Identify likely failing operation (based on backend message or URL)
             let operation = 'UnknownOperation';
             const errorUrl = error?.url?.toLowerCase?.() || '';
 
@@ -513,7 +512,6 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
               3,
               {
                 organizationId: organizationId,
-                requestId: requestParams,
                 correlationId: correlationId,
                 methodName: 'loadAndJoinRequestData',
                 className: 'OfferorRequestTableDetailsComponent',
