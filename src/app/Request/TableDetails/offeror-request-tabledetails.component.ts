@@ -172,7 +172,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
         actions.push('continue', 'delete');
       }
     } else if (
-      ['Canceled', 'Opened'].includes(agencyStatus) &&
+      ['Cancelled', 'Opened'].includes(agencyStatus) &&
       offerorStatus === 'Submitted'
     ) {
       actions.push('noneDisabled');
@@ -251,7 +251,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
     closeDateTo: [null],
     live: [false],
     closed: [false],
-    canceled: [false],
+    cancelled: [false],
     opened: [false],
     inProgress: [false],
     submitted: [false],
@@ -307,7 +307,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
   readonly agencyRequestStatusMap = {
     live: 3,
     closed: 4,
-    canceled: 5,
+    cancelled: 5,
     opened: 6,
   };
 

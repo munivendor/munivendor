@@ -18,6 +18,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../authorization/auth.service';
+import { Request } from '../Request/model/request.model';
 // commented out code are all needed for autofill
 // import { DocumentService } from '../shared/service/document.service';
 import {
@@ -61,6 +62,7 @@ export class ResponseDetailsComponent implements OnInit {
   requestSections: RequestSection[] = [];
   responseForm: FormGroup;
   responseIdFromStateService = this.stateService.getRequestId();
+  agencyRequest?: Request;
 
   private destroy$ = new Subject<void>();
 
@@ -89,6 +91,10 @@ export class ResponseDetailsComponent implements OnInit {
 
   ngOnInit(): void {
     this.initializaRequestSections();
+
+    if (this.sourceIdParam) {
+      this.loadAgencyRequest(Number(this.sourceIdParam));
+    }
 
     // const requestId = this.responseIdParam
     //   ? Number(this.responseIdParam)
@@ -162,6 +168,45 @@ export class ResponseDetailsComponent implements OnInit {
     // }
   }
 
+  private loadAgencyRequest(requestId: number): void {
+    this.requestService
+      .GetRequestDetailsById(requestId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (request) => {
+          this.agencyRequest = request;
+          console.log('Agency request loaded:', this.agencyRequest);
+        },
+        error: (error) => {
+          console.error('Error loading agency request:', error);
+
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              requestId: requestId,
+              organizationId: this.stateService.getOrganizationId(),
+              correlationId: correlationId,
+              methodName: 'loadAgencyRequest',
+              className: 'ResponseDetailsComponent',
+              operation: 'GetRequestDetailsById',
+              userId: this.stateService.getUserId(),
+            }
+          );
+
+          if (error.status !== 401 && this.authService.authState.value) {
+            this._snackBar.open(
+              `Failed to load agency request details. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
+              'Close',
+              { verticalPosition: 'top', duration: 15000 }
+            );
+          }
+        },
+      });
+  }
+
   initializaRequestSections(): void {
     if (this.sourceIdParam) {
       this.getRequestSectionsById(Number(this.sourceIdParam));
@@ -216,6 +261,8 @@ export class ResponseDetailsComponent implements OnInit {
   downloadPDFv2() {
     const content = document.querySelector('.content')?.innerHTML ?? '';
 
+    const filename = this.generateFilename();
+
     this.http
       .post(
         '/api/generate-pdf/' + this.sourceIdParam,
@@ -229,7 +276,7 @@ export class ResponseDetailsComponent implements OnInit {
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = 'Solicitations.pdf';
+          a.download = filename;
           a.click();
           window.URL.revokeObjectURL(url);
         },
@@ -262,6 +309,42 @@ export class ResponseDetailsComponent implements OnInit {
           }
         },
       });
+  }
+
+  private generateFilename(): string {
+    const sanitize = (str: string): string => {
+      return str
+        .replace(/[^a-zA-Z0-9\s-_]/g, '')
+        .replace(/\s+/g, '_')
+        .trim();
+    };
+
+    const formatDate = (date: Date | string): string => {
+      let utcDate: Date;
+
+      if (typeof date === 'string') {
+        utcDate = new Date(date + 'Z');
+      } else {
+        utcDate = date;
+      }
+
+      const month = String(utcDate.getMonth() + 1).padStart(2, '0');
+      const day = String(utcDate.getDate()).padStart(2, '0');
+      const year = utcDate.getFullYear();
+
+      return `${month}-${day}-${year}`;
+    };
+
+    if (this.agencyRequest) {
+      const solicitationName = this.agencyRequest.requestName || 'Unknown';
+
+      const closeDate = this.agencyRequest.closeDate
+        ? formatDate(this.agencyRequest.closeDate)
+        : 'NoDate';
+      return `Solicitation_${sanitize(solicitationName)}_${closeDate}.pdf`;
+    }
+
+    return 'Solicitation.pdf';
   }
 
   ngOnDestroy(): void {
