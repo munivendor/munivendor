@@ -23,6 +23,7 @@ import { OfferorTableDetailsComponent } from './Request/TableDetails/offeror-req
 import { CreateRequestStepper } from './Request/CreateRequestStepper/create-request-stepper.component';
 import { CategoryTreeComponent } from './CategoryTree/category-tree.component';
 import { DefinitionsComponent } from './DefinitionsPage/definitions.component';
+import { UserGuideComponent } from './Response/ReadMePage/read-me.component';
 
 import { OfferorProfilePageComponent } from './Response/OfferorProfilePage/offeror-profile-page.component';
 
@@ -154,6 +155,12 @@ export const routes: Routes = [
   {
     path: 'offeror-profile-page',
     component: OfferorProfilePageComponent,
+    canActivate: [AuthGuard],
+    data: { showSidenav: true },
+  },
+  {
+    path: 'user-guide',
+    component: UserGuideComponent,
     canActivate: [AuthGuard],
     data: { showSidenav: true },
   },
