@@ -60,7 +60,34 @@ export class FileUploadDialogComponent {
   }
 
   onFileSelected(event: any): void {
-    this.selectedFile = event.target.files[0];
+    const file = event.target.files[0];
+
+    if (file) {
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg'];
+      const allowedExtensions = ['.pdf', '.jpg', '.jpeg'];
+      const fileExtension = file.name
+        .toLowerCase()
+        .substring(file.name.lastIndexOf('.'));
+
+      if (
+        !allowedTypes.includes(file.type) &&
+        !allowedExtensions.includes(fileExtension)
+      ) {
+        this._snackBar.open(
+          'Invalid file type. Only PDF and JPG/JPEG files are allowed.',
+          'Close',
+          {
+            duration: 5000,
+            verticalPosition: 'top',
+          }
+        );
+
+        event.target.value = '';
+        return;
+      }
+
+      this.selectedFile = file;
+    }
   }
 
   onUpload(): void {

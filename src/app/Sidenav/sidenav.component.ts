@@ -67,7 +67,8 @@ export class Sidenav implements OnInit, AfterViewInit {
       label: 'Offeror Profile',
       route: '/offeror-profile-page',
     },
-    { icon: 'help_outline', label: 'Definitions', route: '/definitions' },
+    { icon: 'help', label: 'Definitions', route: '/definitions' },
+    { icon: 'warning', label: 'User Guide', route: '/user-guide' },
   ];
 
   constructor(

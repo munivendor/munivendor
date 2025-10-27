@@ -58,8 +58,8 @@
         style="font-size: medium; color: #0b74fd; cursor: pointer"
         [appTooltip]="{
           header: 'File Actions',
-          body: 'Clicking on each download button will download a copy of the Agency required form. Clicking on each upload button will enable you to upload your completed document.',
-          width: 'auto',
+          body: 'Clicking on each download button will download a copy of the Agency required form. Clicking on each upload button will enable you to upload your completed document. Only PDF and JPG/JPEG files are allowed.',
+          width: '500px',
           showCloseButton: false,
           showActionButton: false
         }"
@@ -89,7 +89,7 @@
     type="file"
     style="display: none"
     (change)="onFileSelected($event)"
-    accept=".pdf,.doc,.docx,.txt"
+    accept=".pdf,.jpg,.jpeg"
   />
 
   <!-- <ng-container matColumnDef="autofillStatus">
@@ -197,8 +197,8 @@
           style="font-size: medium; color: #0b74fd; cursor: pointer"
           [appTooltip]="{
             header: 'File Actions',
-            body: 'Clicking on each download button will download a copy of the Agency required form. Clicking on each upload button will enable you to upload your completed document.',
-            width: 'auto',
+            body: 'Clicking on each download button will download a copy of the Agency required form. Clicking on each upload button will enable you to upload your completed document. Only PDF and JPG/JPEG files are allowed.',
+            width: '500px',
             showCloseButton: false,
             showActionButton: false
           }"

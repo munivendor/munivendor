@@ -234,6 +234,28 @@ export class ResponseDocumentsComponent implements OnInit {
       : this.responseIdFromStateService;
 
     if (file && this.currentRow) {
+      // Validate file type
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg'];
+      const allowedExtensions = ['.pdf', '.jpg', '.jpeg'];
+      const fileExtension = file.name
+        .toLowerCase()
+        .substring(file.name.lastIndexOf('.'));
+
+      if (
+        !allowedTypes.includes(file.type) &&
+        !allowedExtensions.includes(fileExtension)
+      ) {
+        this._snackBar.open(
+          'Invalid file type. Only PDF and JPG/JPEG files are allowed.',
+          'Close',
+          {
+            duration: 5000,
+            verticalPosition: 'top',
+          }
+        );
+        input.value = '';
+        return;
+      }
       this.documentService
         .UploadDocumentInstance(
           Number(requestId),
@@ -355,7 +377,7 @@ export class ResponseDocumentsComponent implements OnInit {
           console.error('organizationDocumentId is required but missing.');
           return;
         }
-        // Handle regular blob response (no headers) - force download
+
         this.requestService
           .GetAgencySpecificDocumentContent(
             organizationDocumentId,
@@ -376,7 +398,7 @@ export class ResponseDocumentsComponent implements OnInit {
                   fileName = match[1];
                 }
               }
-              // Force download with filename from headers
+
               const a = document.createElement('a');
               const blobUrl = URL.createObjectURL(blob);
               a.href = blobUrl;
@@ -387,7 +409,6 @@ export class ResponseDocumentsComponent implements OnInit {
               URL.revokeObjectURL(blobUrl);
             },
             error: (error) => {
-              console.error('Failed to fetch document:', error);
               // Extract correlationId
               const correlationId = error?.error?.correlationId;
 
@@ -485,14 +506,22 @@ export class ResponseDocumentsComponent implements OnInit {
             'Content-Disposition'
           );
           let fileName = 'document';
+
           if (contentDisposition) {
-            const match = contentDisposition.match(/filename="?([^"]+)"?/);
-            if (match && match[1]) {
-              fileName = match[1];
+            // Extract only the standard filename parameter (not filename*)
+            const standardMatch =
+              contentDisposition.match(/filename="([^"]+)"/);
+            if (standardMatch && standardMatch[1]) {
+              fileName = standardMatch[1];
+            } else {
+              const noQuotesMatch =
+                contentDisposition.match(/filename=([^;]+)/);
+              if (noQuotesMatch && noQuotesMatch[1]) {
+                fileName = noQuotesMatch[1].trim();
+              }
             }
           }
 
-          // Force download with filename from headers
           const a = document.createElement('a');
           const blobUrl = URL.createObjectURL(blob);
           a.href = blobUrl;
@@ -503,8 +532,6 @@ export class ResponseDocumentsComponent implements OnInit {
           URL.revokeObjectURL(blobUrl);
         },
         error: (error) => {
-          console.error('Failed to fetch document:', error);
-
           // Extract correlationId
           const correlationId = error?.error?.correlationId;
 

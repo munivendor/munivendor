@@ -55,7 +55,7 @@ const ACTION_PERMISSIONS: {
   Scheduled: { edit: true, delete: true },
   Live: { cancel: true },
   Closed: { open: true },
-  Canceled: { noneDisabled: true },
+  Cancelled: { noneDisabled: true },
   Opened: { redownload: true },
 };
 
@@ -113,7 +113,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     scheduled: [false],
     live: [false],
     closed: [false],
-    canceled: [false],
+    cancelled: [false],
     opened: [false],
     inProgress: [false],
     submitted: [false],
@@ -169,7 +169,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     scheduled: 2,
     live: 3,
     closed: 4,
-    canceled: 5,
+    cancelled: 5,
     opened: 6,
   };
 
