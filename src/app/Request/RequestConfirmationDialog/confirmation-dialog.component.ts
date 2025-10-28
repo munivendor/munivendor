@@ -159,7 +159,6 @@ export class ConfirmationDialog implements OnDestroy {
           error: (error) => {
             console.error('Failed to update status:', error);
 
-            // Extract correlationId
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(

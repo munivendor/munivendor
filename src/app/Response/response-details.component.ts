@@ -196,8 +196,8 @@ export class ResponseDetailsComponent implements OnInit {
             }
           );
 
-          if (error.status !== 401 && this.authService.authState.value) {
-            this.snackbarNotificationService.showUploadError(correlationId);
+          if (error.status !== 401 && this.authService.isAuthenticated) {
+            this.snackbarNotificationService.showSnackbarError(correlationId);
           }
         },
       });
@@ -219,7 +219,7 @@ export class ResponseDetailsComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error fetching request sections', error);
-          // Extract correlationId
+
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -235,8 +235,8 @@ export class ResponseDetailsComponent implements OnInit {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.authState.value) {
-            this.snackbarNotificationService.showUploadError(correlationId);
+          if (error.status !== 401 && this.authService.isAuthenticated) {
+            this.snackbarNotificationService.showSnackbarError(correlationId);
           }
         },
       });
@@ -275,7 +275,6 @@ export class ResponseDetailsComponent implements OnInit {
         error: (error) => {
           console.error('Error generating PDF', error);
 
-          // Extract correlationId
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -292,8 +291,8 @@ export class ResponseDetailsComponent implements OnInit {
             }
           );
 
-          if (error.status !== 401 && this.authService.authState.value) {
-            this.snackbarNotificationService.showUploadError(correlationId);
+          if (error.status !== 401 && this.authService.isAuthenticated) {
+            this.snackbarNotificationService.showSnackbarError(correlationId);
           }
         },
       });

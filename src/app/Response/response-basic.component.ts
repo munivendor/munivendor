@@ -138,7 +138,6 @@ export class ResponseBasicComponent implements OnInit {
             authorizingOfficial: null,
           });
 
-          // Extract correlationId
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -154,8 +153,8 @@ export class ResponseBasicComponent implements OnInit {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.authState.value) {
-            this.snackbarNotificationService.showUploadError(correlationId);
+          if (error.status !== 401 && this.authService.isAuthenticated) {
+            this.snackbarNotificationService.showSnackbarError(correlationId);
           }
         }
       );
@@ -264,7 +263,6 @@ export class ResponseBasicComponent implements OnInit {
         error: (error: any) => {
           console.error('Error loading template request:', error);
 
-          // Extract correlationId
           const correlationId = error?.error?.correlationId;
           let operation = 'UnknownOperation';
           const errorUrl = error?.url?.toLowerCase?.() || '';
@@ -290,8 +288,8 @@ export class ResponseBasicComponent implements OnInit {
             }
           );
 
-          if (error.status !== 401 && this.authService.authState.value) {
-            this.snackbarNotificationService.showUploadError(correlationId);
+          if (error.status !== 401 && this.authService.isAuthenticated) {
+            this.snackbarNotificationService.showSnackbarError(correlationId);
           }
         },
       });
@@ -391,7 +389,6 @@ export class ResponseBasicComponent implements OnInit {
         (error: any) => {
           console.error('Error loading response request', error);
 
-          // Extract correlationId
           const correlationId = error?.error?.correlationId;
           let operation = 'UnknownOperation';
           const errorUrl = error?.url?.toLowerCase?.() || '';
@@ -415,8 +412,8 @@ export class ResponseBasicComponent implements OnInit {
             }
           );
 
-          if (error.status !== 401 && this.authService.authState.value) {
-            this.snackbarNotificationService.showUploadError(correlationId);
+          if (error.status !== 401 && this.authService.isAuthenticated) {
+            this.snackbarNotificationService.showSnackbarError(correlationId);
           }
         }
       );
@@ -488,7 +485,7 @@ export class ResponseBasicComponent implements OnInit {
           },
           (error) => {
             console.error('Error updating response:', error);
-            // Extract correlationId
+
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(
@@ -504,8 +501,8 @@ export class ResponseBasicComponent implements OnInit {
                 userId: this.stateService.getUserId(),
               }
             );
-            if (error.status !== 401 && this.authService.authState.value) {
-              this.snackbarNotificationService.showUploadError(correlationId);
+            if (error.status !== 401 && this.authService.isAuthenticated) {
+              this.snackbarNotificationService.showSnackbarError(correlationId);
             }
           }
         );
@@ -533,7 +530,6 @@ export class ResponseBasicComponent implements OnInit {
                 (error) => {
                   console.error('Error updating response status:', error);
 
-                  // Extract correlationId
                   const correlationId = error?.error?.correlationId;
 
                   this.loggingService.logException(
@@ -554,7 +550,7 @@ export class ResponseBasicComponent implements OnInit {
                     error.status !== 401 &&
                     this.authService.authState.value
                   ) {
-                    this.snackbarNotificationService.showUploadError(
+                    this.snackbarNotificationService.showSnackbarError(
                       correlationId
                     );
                   }
@@ -564,7 +560,6 @@ export class ResponseBasicComponent implements OnInit {
           (error) => {
             console.error('Error creating response:', error);
 
-            // Extract correlationId
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(
@@ -579,8 +574,8 @@ export class ResponseBasicComponent implements OnInit {
                 userId: this.stateService.getUserId(),
               }
             );
-            if (error.status !== 401 && this.authService.authState.value) {
-              this.snackbarNotificationService.showUploadError(correlationId);
+            if (error.status !== 401 && this.authService.isAuthenticated) {
+              this.snackbarNotificationService.showSnackbarError(correlationId);
             }
           }
         );

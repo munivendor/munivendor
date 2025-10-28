@@ -155,7 +155,6 @@ export class SignupComponent implements OnInit, OnDestroy {
           this.organizationTypes = organizationTypes;
         },
         error: (error) => {
-          // Extract correlationId
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -169,7 +168,7 @@ export class SignupComponent implements OnInit, OnDestroy {
             }
           );
 
-          this.snackbarNotificationService.showUploadError(correlationId);
+          this.snackbarNotificationService.showSnackbarError(correlationId);
         },
       });
 
@@ -339,7 +338,6 @@ export class SignupComponent implements OnInit, OnDestroy {
           this.stateService.setOrganizationId(response.organizationId);
         },
         error: (error) => {
-          // Extract correlationId
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -353,7 +351,7 @@ export class SignupComponent implements OnInit, OnDestroy {
             }
           );
 
-          this.snackbarNotificationService.showUploadError(correlationId);
+          this.snackbarNotificationService.showSnackbarError(correlationId);
         },
       });
     } else {
@@ -440,7 +438,6 @@ export class SignupComponent implements OnInit, OnDestroy {
           return of(null);
         }
 
-        // Extract correlationId
         const correlationId = error?.error?.correlationId;
 
         this.loggingService.logException(
@@ -454,7 +451,7 @@ export class SignupComponent implements OnInit, OnDestroy {
           }
         );
 
-        this.snackbarNotificationService.showUploadError(correlationId);
+        this.snackbarNotificationService.showSnackbarError(correlationId);
 
         return throwError(() => error);
       }),
@@ -484,7 +481,7 @@ export class SignupComponent implements OnInit, OnDestroy {
               }
             );
 
-            this.snackbarNotificationService.showUploadError(correlationId);
+            this.snackbarNotificationService.showSnackbarError(correlationId);
             return throwError(() => loginError);
           })
         );
@@ -507,7 +504,6 @@ export class SignupComponent implements OnInit, OnDestroy {
               });
             }),
             catchError((error) => {
-              // Extract correlationId
               const correlationId = error?.error?.correlationId;
 
               this.loggingService.logException(
@@ -521,7 +517,7 @@ export class SignupComponent implements OnInit, OnDestroy {
                 }
               );
 
-              this.snackbarNotificationService.showUploadError(correlationId);
+              this.snackbarNotificationService.showSnackbarError(correlationId);
 
               return throwError(() => error);
             })
@@ -530,7 +526,6 @@ export class SignupComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         error: (error) => {
-          // Extract correlationId
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -544,7 +539,7 @@ export class SignupComponent implements OnInit, OnDestroy {
             }
           );
 
-          this.snackbarNotificationService.showUploadError(correlationId);
+          this.snackbarNotificationService.showSnackbarError(correlationId);
         },
       });
   }

@@ -171,7 +171,7 @@ export class CustomCategoryDropdownComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error fetching categories:', error);
-          // Extract correlationId
+
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -186,8 +186,8 @@ export class CustomCategoryDropdownComponent implements OnInit, OnDestroy {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.authState.value) {
-            this.snackbarNotificationService.showUploadError(correlationId);
+          if (error.status !== 401 && this.authService.isAuthenticated) {
+            this.snackbarNotificationService.showSnackbarError(correlationId);
           }
         },
       });

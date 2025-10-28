@@ -215,7 +215,6 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error('Error deleting the offer:', error);
 
-          // Extract correlationId
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -232,8 +231,8 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.authState.value) {
-            this.snackbarNotificationService.showUploadError(correlationId);
+          if (error.status !== 401 && this.authService.isAuthenticated) {
+            this.snackbarNotificationService.showSnackbarError(correlationId);
           }
         },
       });
@@ -488,7 +487,6 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
           error: (error: any) => {
             console.error('Error loading request data:', error);
 
-            // Extract correlationId
             const correlationId = error?.error?.correlationId;
 
             let operation = 'UnknownOperation';
@@ -519,8 +517,8 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
               }
             );
 
-            if (error.status !== 401 && this.authService.authState.value) {
-              this.snackbarNotificationService.showUploadError(correlationId);
+            if (error.status !== 401 && this.authService.isAuthenticated) {
+              this.snackbarNotificationService.showSnackbarError(correlationId);
             }
             this.dataSource = new MatTableDataSource<any>([]);
             this.hasLoadedData = false;

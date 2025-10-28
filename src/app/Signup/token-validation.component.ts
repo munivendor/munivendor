@@ -63,7 +63,6 @@ export class TokenValidationComponent implements OnInit, OnDestroy {
           }
         },
         error: (error) => {
-          // Extract correlationId
           const correlationId = error?.error?.correlationId;
           this.verificationStatus = `Something went wrong. Please try again later. (Correlation ID: ${correlationId}). ${AppConstants.SUPPORT_MESSAGE}`;
 

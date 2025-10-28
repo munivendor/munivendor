@@ -80,7 +80,6 @@ export class OrganizationDetailsComponent implements OnInit {
           this.states = states;
         },
         error: (error) => {
-          // Extract correlationId
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -93,8 +92,8 @@ export class OrganizationDetailsComponent implements OnInit {
               operation: 'getStates',
             }
           );
-          if (error.status !== 401 && this.authService.authState.value) {
-            this.snackbarNotificationService.showUploadError(correlationId);
+          if (error.status !== 401 && this.authService.isAuthenticated) {
+            this.snackbarNotificationService.showSnackbarError(correlationId);
           }
         },
       });
@@ -175,7 +174,6 @@ export class OrganizationDetailsComponent implements OnInit {
             .pipe(
               tap(() => this.router.navigate(['/user-details'])),
               catchError((error) => {
-                // Extract correlationId
                 const correlationId = error?.error?.correlationId;
 
                 this.loggingService.logException(
@@ -191,8 +189,8 @@ export class OrganizationDetailsComponent implements OnInit {
                   }
                 );
 
-                if (error.status !== 401 && this.authService.authState.value) {
-                  this.snackbarNotificationService.showUploadError(
+                if (error.status !== 401 && this.authService.isAuthenticated) {
+                  this.snackbarNotificationService.showSnackbarError(
                     correlationId
                   );
                 }
@@ -203,7 +201,6 @@ export class OrganizationDetailsComponent implements OnInit {
         }),
 
         catchError((error) => {
-          // Extract correlationId
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -217,8 +214,8 @@ export class OrganizationDetailsComponent implements OnInit {
               operation: 'updateOrganization',
             }
           );
-          if (error.status !== 401 && this.authService.authState.value) {
-            this.snackbarNotificationService.showUploadError(correlationId);
+          if (error.status !== 401 && this.authService.isAuthenticated) {
+            this.snackbarNotificationService.showSnackbarError(correlationId);
           }
 
           return throwError(() => error);

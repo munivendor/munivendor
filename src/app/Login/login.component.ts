@@ -66,7 +66,6 @@ export class LoginComponent implements OnInit {
         this.authService.completeEmailLogin(response, email);
       },
       error: (error) => {
-        // Extract correlationId
         const correlationId = error?.error?.correlationId;
         this.loggingService.logException(
           new Error(`HTTP Error ${error.status}: ${error.statusText}`),
@@ -79,7 +78,7 @@ export class LoginComponent implements OnInit {
             operation: 'login',
           }
         );
-        this.snackbarNotificationService.showUploadError(correlationId);
+        this.snackbarNotificationService.showSnackbarError(correlationId);
       },
     });
   }

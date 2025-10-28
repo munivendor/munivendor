@@ -66,7 +66,7 @@ export class FlowNavigationService {
         error: (error) => {
           console.error('Error fetching user data:', error);
           observer.error(error);
-          // Extract correlationId
+
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -81,7 +81,7 @@ export class FlowNavigationService {
             }
           );
 
-          this.snackbarNotificationService.showUploadError(correlationId);
+          this.snackbarNotificationService.showSnackbarError(correlationId);
         },
       });
     });
@@ -104,7 +104,7 @@ export class FlowNavigationService {
         error: (error) => {
           console.error('Error fetching flow progress:', error);
           observer.error(error);
-          // Extract correlationId
+
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -121,7 +121,7 @@ export class FlowNavigationService {
             }
           );
 
-          this.snackbarNotificationService.showUploadError(correlationId);
+          this.snackbarNotificationService.showSnackbarError(correlationId);
         },
       });
   }

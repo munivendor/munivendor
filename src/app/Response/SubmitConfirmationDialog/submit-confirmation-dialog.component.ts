@@ -52,7 +52,6 @@ export class SubmitConfirmationDialogComponent implements OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response: any) => {
-          // Extract correlationId
           const correlationId = response?.correlationId;
           sessionStorage.removeItem('currentResponseId');
           sessionStorage.removeItem('response_in_creation_mode');
@@ -76,7 +75,6 @@ export class SubmitConfirmationDialogComponent implements OnDestroy {
           this.dialogRef.close(true);
         },
         error: (error: any) => {
-          // Extract correlationId
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -93,8 +91,8 @@ export class SubmitConfirmationDialogComponent implements OnDestroy {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.authState.value) {
-            this.snackbarNotificationService.showUploadError(correlationId);
+          if (error.status !== 401 && this.authService.isAuthenticated) {
+            this.snackbarNotificationService.showSnackbarError(correlationId);
           }
         },
       });

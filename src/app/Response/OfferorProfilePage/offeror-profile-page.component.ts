@@ -124,7 +124,7 @@ export class OfferorProfilePageComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error fetching organization:', error);
-        // Extract correlationId
+
         const correlationId = error?.error?.correlationId;
 
         this.loggingService.logException(
@@ -140,8 +140,8 @@ export class OfferorProfilePageComponent implements OnInit {
           }
         );
 
-        if (error.status !== 401 && this.authService.authState.value) {
-          this.snackbarNotificationService.showUploadError(correlationId);
+        if (error.status !== 401 && this.authService.isAuthenticated) {
+          this.snackbarNotificationService.showSnackbarError(correlationId);
         }
       },
     });
@@ -156,7 +156,7 @@ export class OfferorProfilePageComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error fetching authorizing officials:', error);
-          // Extract correlationId
+
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -172,8 +172,8 @@ export class OfferorProfilePageComponent implements OnInit {
             }
           );
 
-          if (error.status !== 401 && this.authService.authState.value) {
-            this.snackbarNotificationService.showUploadError(correlationId);
+          if (error.status !== 401 && this.authService.isAuthenticated) {
+            this.snackbarNotificationService.showSnackbarError(correlationId);
           }
         },
       });
@@ -237,7 +237,6 @@ export class OfferorProfilePageComponent implements OnInit {
           this.loadAuthorizingOfficials(official.organizationId);
         },
         error: (error) => {
-          // Extract correlationId
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -252,8 +251,8 @@ export class OfferorProfilePageComponent implements OnInit {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.authState.value) {
-            this.snackbarNotificationService.showUploadError(correlationId);
+          if (error.status !== 401 && this.authService.isAuthenticated) {
+            this.snackbarNotificationService.showSnackbarError(correlationId);
           }
         },
       });
@@ -272,7 +271,6 @@ export class OfferorProfilePageComponent implements OnInit {
           this.loadAuthorizingOfficials(official.organizationId);
         },
         error: (error) => {
-          // Extract correlationId
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -288,8 +286,8 @@ export class OfferorProfilePageComponent implements OnInit {
             }
           );
 
-          if (error.status !== 401 && this.authService.authState.value) {
-            this.snackbarNotificationService.showUploadError(correlationId);
+          if (error.status !== 401 && this.authService.isAuthenticated) {
+            this.snackbarNotificationService.showSnackbarError(correlationId);
           }
         },
       });

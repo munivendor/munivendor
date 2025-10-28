@@ -6,7 +6,7 @@ import { AppConstants } from '../../constants/app.constants';
 export class SnackbarNotificationService {
   constructor(private snackBar: MatSnackBar) {}
 
-  showUploadError(correlationId?: string): void {
+  showSnackbarError(correlationId?: string): void {
     const message = `Something went wrong. Please try again later. (Correlation ID: ${
       correlationId ?? 'N/A'
     }). ${AppConstants.SUPPORT_MESSAGE}`;

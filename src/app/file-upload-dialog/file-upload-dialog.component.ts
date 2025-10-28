@@ -126,7 +126,6 @@ export class FileUploadDialogComponent {
           error: (error) => {
             console.error('Error uploading document:', error);
 
-            // Extract correlationId
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(
@@ -143,8 +142,8 @@ export class FileUploadDialogComponent {
                 userId: this.stateService.getUserId(),
               }
             );
-            if (error.status !== 401 && this.authService.authState.value) {
-              this.snackbarNotificationService.showUploadError(correlationId);
+            if (error.status !== 401 && this.authService.isAuthenticated) {
+              this.snackbarNotificationService.showSnackbarError(correlationId);
             }
           },
         });
@@ -174,7 +173,6 @@ export class FileUploadDialogComponent {
           error: (error) => {
             console.error('Error uploading document:', error);
 
-            // Extract correlationId
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(
@@ -191,8 +189,8 @@ export class FileUploadDialogComponent {
                 userId: this.stateService.getUserId(),
               }
             );
-            if (error.status !== 401 && this.authService.authState.value) {
-              this.snackbarNotificationService.showUploadError(correlationId);
+            if (error.status !== 401 && this.authService.isAuthenticated) {
+              this.snackbarNotificationService.showSnackbarError(correlationId);
             }
           },
         });

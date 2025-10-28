@@ -92,7 +92,6 @@ export class UserSignUpDetails implements OnInit {
         this.organizationTypeId = user.organizationTypeId;
       },
       error: (error) => {
-        // Extract correlationId
         const correlationId = error?.error?.correlationId;
 
         this.loggingService.logException(
@@ -106,8 +105,8 @@ export class UserSignUpDetails implements OnInit {
             operation: 'getUser',
           }
         );
-        if (error.status !== 401 && this.authService.authState.value) {
-          this.snackbarNotificationService.showUploadError(correlationId);
+        if (error.status !== 401 && this.authService.isAuthenticated) {
+          this.snackbarNotificationService.showSnackbarError(correlationId);
         }
       },
     });
@@ -117,7 +116,6 @@ export class UserSignUpDetails implements OnInit {
     this.userService.updateUser(user).subscribe({
       next: () => {},
       error: (error) => {
-        // Extract correlationId
         const correlationId = error?.error?.correlationId;
 
         this.loggingService.logException(
@@ -131,8 +129,8 @@ export class UserSignUpDetails implements OnInit {
             operation: 'updateUser',
           }
         );
-        if (error.status !== 401 && this.authService.authState.value) {
-          this.snackbarNotificationService.showUploadError(correlationId);
+        if (error.status !== 401 && this.authService.isAuthenticated) {
+          this.snackbarNotificationService.showSnackbarError(correlationId);
         }
       },
     });
@@ -169,7 +167,6 @@ export class UserSignUpDetails implements OnInit {
             }
           },
           error: (error) => {
-            // Extract correlationId
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(
@@ -185,8 +182,8 @@ export class UserSignUpDetails implements OnInit {
                 operation: 'saveFlowProgress',
               }
             );
-            if (error.status !== 401 && this.authService.authState.value) {
-              this.snackbarNotificationService.showUploadError(correlationId);
+            if (error.status !== 401 && this.authService.isAuthenticated) {
+              this.snackbarNotificationService.showSnackbarError(correlationId);
             }
           },
         });

@@ -184,7 +184,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
             error: (error) => {
               console.error('Failed to fetch document:', error);
 
-              // Extract correlationId
               const correlationId = error?.error?.correlationId;
 
               this.loggingService.logException(
@@ -202,8 +201,10 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
                   userId: this.stateService.getUserId(),
                 }
               );
-              if (error.status !== 401 && this.authService.authState.value) {
-                this.snackbarNotificationService.showUploadError(correlationId);
+              if (error.status !== 401 && this.authService.isAuthenticated) {
+                this.snackbarNotificationService.showSnackbarError(
+                  correlationId
+                );
               }
             },
           });
@@ -236,7 +237,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
           error: (error) => {
             console.error('Failed to fetch document:', error);
 
-            // Extract correlationId
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(
@@ -253,8 +253,8 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
                 userId: this.stateService.getUserId(),
               }
             );
-            if (error.status !== 401 && this.authService.authState.value) {
-              this.snackbarNotificationService.showUploadError(correlationId);
+            if (error.status !== 401 && this.authService.isAuthenticated) {
+              this.snackbarNotificationService.showSnackbarError(correlationId);
             }
           },
         });
@@ -288,7 +288,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error('Failed to fetch document:', error);
 
-          // Extract correlationId
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -305,8 +304,8 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.authState.value) {
-            this.snackbarNotificationService.showUploadError(correlationId);
+          if (error.status !== 401 && this.authService.isAuthenticated) {
+            this.snackbarNotificationService.showSnackbarError(correlationId);
           }
         },
       });
@@ -347,7 +346,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
       },
       error: (error: any) => {
         console.error('Failed to fetch document:', error);
-        // Extract correlationId
+
         const correlationId = error?.error?.correlationId;
 
         this.loggingService.logException(
@@ -364,8 +363,8 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
             userId: this.stateService.getUserId(),
           }
         );
-        if (error.status !== 401 && this.authService.authState.value) {
-          this.snackbarNotificationService.showUploadError(correlationId);
+        if (error.status !== 401 && this.authService.isAuthenticated) {
+          this.snackbarNotificationService.showSnackbarError(correlationId);
         }
       },
     });
@@ -469,7 +468,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
         },
         error: (error: any) => {
           console.error('Error fetching categories:', error);
-          // Extract correlationId
+
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -485,8 +484,8 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.authState.value) {
-            this.snackbarNotificationService.showUploadError(correlationId);
+          if (error.status !== 401 && this.authService.isAuthenticated) {
+            this.snackbarNotificationService.showSnackbarError(correlationId);
           }
         },
       });
@@ -536,7 +535,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error('Error loading documents:', error);
 
-          // Extract correlationId
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -552,8 +550,8 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.authState.value) {
-            this.snackbarNotificationService.showUploadError(correlationId);
+          if (error.status !== 401 && this.authService.isAuthenticated) {
+            this.snackbarNotificationService.showSnackbarError(correlationId);
           }
         },
       });
@@ -608,7 +606,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
         (error: any) => {
           console.error('Error loading response request', error);
 
-          // Extract correlationId
           const correlationId = error?.error?.correlationId;
 
           let operation = 'UnknownOperation';
@@ -632,8 +629,8 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.authState.value) {
-            this.snackbarNotificationService.showUploadError(correlationId);
+          if (error.status !== 401 && this.authService.isAuthenticated) {
+            this.snackbarNotificationService.showSnackbarError(correlationId);
           }
         }
       );
@@ -682,7 +679,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
         (error) => {
           console.error('Error fetching data', error);
 
-          // Extract correlationId
           const correlationId = error?.error?.correlationId;
           let operation = 'UnknownOperation';
           const errorUrl = error?.url?.toLowerCase?.() || '';
@@ -705,8 +701,8 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.authState.value) {
-            this.snackbarNotificationService.showUploadError(correlationId);
+          if (error.status !== 401 && this.authService.isAuthenticated) {
+            this.snackbarNotificationService.showSnackbarError(correlationId);
           }
         }
       );

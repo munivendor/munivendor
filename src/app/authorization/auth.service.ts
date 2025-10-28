@@ -338,6 +338,10 @@ export class AuthService {
     this.isLoggingIn.next(false);
   }
 
+  get isAuthenticated(): boolean {
+    return this.authState.value;
+  }
+
   /**
    * Handles the complete login process including navigation for email login
    * This is called from LoginComponent
@@ -369,7 +373,6 @@ export class AuthService {
           this.setAuthenticated(true, userId);
         },
         error: (error: any) => {
-          // Extract correlationId
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -386,7 +389,7 @@ export class AuthService {
 
           this.setAuthenticated(false, undefined);
 
-          this.snackbarNotificationService.showUploadError(correlationId);
+          this.snackbarNotificationService.showSnackbarError(correlationId);
         },
       });
   }

@@ -76,7 +76,6 @@ export class ResendPasswordResetDialog {
       error: (error) => {
         this.isLoading = false;
 
-        // Extract correlationId
         const correlationId = error?.error?.correlationId;
 
         this.loggingService.logException(
@@ -91,7 +90,7 @@ export class ResendPasswordResetDialog {
           }
         );
 
-        this.snackbarNotificationService.showUploadError(correlationId);
+        this.snackbarNotificationService.showSnackbarError(correlationId);
       },
     });
   }
@@ -165,7 +164,6 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
         this.isLoading = false;
         this.forgotPasswordForm.get('email')?.enable();
 
-        // Extract correlationId
         const correlationId = error?.error?.correlationId;
 
         this.loggingService.logException(
@@ -180,7 +178,7 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
           }
         );
 
-        this.snackbarNotificationService.showUploadError(correlationId);
+        this.snackbarNotificationService.showSnackbarError(correlationId);
       },
     });
   }

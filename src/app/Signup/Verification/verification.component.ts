@@ -101,7 +101,6 @@ export class EmailVerification implements OnInit, OnDestroy {
     this.isSuccess = false;
     this.resendMessage = 'Failed to resend email. Please try again.';
 
-    // Extract correlationId
     const correlationId = error?.error?.correlationId;
 
     this.loggingService.logException(
@@ -116,7 +115,7 @@ export class EmailVerification implements OnInit, OnDestroy {
       }
     );
 
-    this.snackbarNotificationService.showUploadError(correlationId);
+    this.snackbarNotificationService.showSnackbarError(correlationId);
   }
 
   private startCountdown(seconds: number) {
