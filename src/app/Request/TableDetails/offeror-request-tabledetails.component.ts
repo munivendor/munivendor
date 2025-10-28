@@ -35,6 +35,8 @@ import { LoadingService } from '../../shared/LoadingSpinner/loading.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../../authorization/auth.service';
+import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
+
 interface FlattenedCategoryNode {
   categoryId: string;
   name: string;
@@ -213,7 +215,6 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error('Error deleting the offer:', error);
 
-          // Extract correlationId
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -230,12 +231,8 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.authState.value) {
-            this._snackBar.open(
-              `Failed to delete offer. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-              'Close',
-              { verticalPosition: 'top', duration: 15000 }
-            );
+          if (error.status !== 401 && this.authService.isAuthenticated) {
+            this.snackbarNotificationService.showSnackbarError(correlationId);
           }
         },
       });
@@ -292,7 +289,8 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private loadingService: LoadingService,
     private loggingService: LoggingService,
-    private authService: AuthService
+    private authService: AuthService,
+    private snackbarNotificationService: SnackbarNotificationService
   ) {
     this.organizationId = this.stateService.getOrganizationId();
   }
@@ -489,7 +487,6 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
           error: (error: any) => {
             console.error('Error loading request data:', error);
 
-            // Extract correlationId
             const correlationId = error?.error?.correlationId;
 
             let operation = 'UnknownOperation';
@@ -520,22 +517,14 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
               }
             );
 
-            if (error.status !== 401 && this.authService.authState.value) {
-              this._snackBar.open(
-                `Failed to load requests. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-                'Close',
-                { verticalPosition: 'top', duration: 15000 }
-              );
+            if (error.status !== 401 && this.authService.isAuthenticated) {
+              this.snackbarNotificationService.showSnackbarError(correlationId);
             }
             this.dataSource = new MatTableDataSource<any>([]);
             this.hasLoadedData = false;
           },
         });
     } catch (error: any) {
-      console.error('Error getting organization ID:', error);
-      // display snackbar since this is a call to state service and
-      // will not return correlationId
-
       this.dataSource = new MatTableDataSource<any>([]);
     }
   }

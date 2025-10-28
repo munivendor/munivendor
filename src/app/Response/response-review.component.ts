@@ -31,8 +31,8 @@ import { MatDialog } from '@angular/material/dialog';
 // import { TooltipDirective } from '../shared/directive/tooltip.directive';
 import { OfferorProfileService } from '../shared/service/offeror-profile.service';
 import { LoggingService } from '../exceptionhandling/logging.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../authorization/auth.service';
+import { SnackbarNotificationService } from '../shared/service/snackbar-notification.service';
 
 interface FlattenedCategoryNode {
   categoryId: string;
@@ -97,8 +97,8 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
     public dialog: MatDialog,
     private offerorProfileService: OfferorProfileService,
     private loggingService: LoggingService,
-    private _snackBar: MatSnackBar,
-    private authService: AuthService
+    private authService: AuthService,
+    private snackbarNotificationService: SnackbarNotificationService
   ) {}
 
   onConfirmSubmission() {
@@ -184,7 +184,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
             error: (error) => {
               console.error('Failed to fetch document:', error);
 
-              // Extract correlationId
               const correlationId = error?.error?.correlationId;
 
               this.loggingService.logException(
@@ -202,11 +201,9 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
                   userId: this.stateService.getUserId(),
                 }
               );
-              if (error.status !== 401 && this.authService.authState.value) {
-                this._snackBar.open(
-                  `Failed to download document. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-                  'Close',
-                  { verticalPosition: 'top', duration: 15000 }
+              if (error.status !== 401 && this.authService.isAuthenticated) {
+                this.snackbarNotificationService.showSnackbarError(
+                  correlationId
                 );
               }
             },
@@ -240,7 +237,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
           error: (error) => {
             console.error('Failed to fetch document:', error);
 
-            // Extract correlationId
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(
@@ -257,12 +253,8 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
                 userId: this.stateService.getUserId(),
               }
             );
-            if (error.status !== 401 && this.authService.authState.value) {
-              this._snackBar.open(
-                `Failed to download document. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-                'Close',
-                { verticalPosition: 'top', duration: 15000 }
-              );
+            if (error.status !== 401 && this.authService.isAuthenticated) {
+              this.snackbarNotificationService.showSnackbarError(correlationId);
             }
           },
         });
@@ -296,7 +288,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error('Failed to fetch document:', error);
 
-          // Extract correlationId
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -313,12 +304,8 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.authState.value) {
-            this._snackBar.open(
-              `Failed to download document. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-              'Close',
-              { verticalPosition: 'top', duration: 15000 }
-            );
+          if (error.status !== 401 && this.authService.isAuthenticated) {
+            this.snackbarNotificationService.showSnackbarError(correlationId);
           }
         },
       });
@@ -359,7 +346,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
       },
       error: (error: any) => {
         console.error('Failed to fetch document:', error);
-        // Extract correlationId
+
         const correlationId = error?.error?.correlationId;
 
         this.loggingService.logException(
@@ -376,12 +363,8 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
             userId: this.stateService.getUserId(),
           }
         );
-        if (error.status !== 401 && this.authService.authState.value) {
-          this._snackBar.open(
-            `Failed to download document. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-            'Close',
-            { verticalPosition: 'top', duration: 15000 }
-          );
+        if (error.status !== 401 && this.authService.isAuthenticated) {
+          this.snackbarNotificationService.showSnackbarError(correlationId);
         }
       },
     });
@@ -485,7 +468,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
         },
         error: (error: any) => {
           console.error('Error fetching categories:', error);
-          // Extract correlationId
+
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -501,12 +484,8 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.authState.value) {
-            this._snackBar.open(
-              `Failed to load categories. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-              'Close',
-              { verticalPosition: 'top', duration: 15000 }
-            );
+          if (error.status !== 401 && this.authService.isAuthenticated) {
+            this.snackbarNotificationService.showSnackbarError(correlationId);
           }
         },
       });
@@ -556,7 +535,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error('Error loading documents:', error);
 
-          // Extract correlationId
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -572,12 +550,8 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.authState.value) {
-            this._snackBar.open(
-              `Failed to load documents. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-              'Close',
-              { verticalPosition: 'top', duration: 15000 }
-            );
+          if (error.status !== 401 && this.authService.isAuthenticated) {
+            this.snackbarNotificationService.showSnackbarError(correlationId);
           }
         },
       });
@@ -632,7 +606,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
         (error: any) => {
           console.error('Error loading response request', error);
 
-          // Extract correlationId
           const correlationId = error?.error?.correlationId;
 
           let operation = 'UnknownOperation';
@@ -656,12 +629,8 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.authState.value) {
-            this._snackBar.open(
-              `Failed to load offeror details. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-              'Close',
-              { verticalPosition: 'top', duration: 15000 }
-            );
+          if (error.status !== 401 && this.authService.isAuthenticated) {
+            this.snackbarNotificationService.showSnackbarError(correlationId);
           }
         }
       );
@@ -710,7 +679,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
         (error) => {
           console.error('Error fetching data', error);
 
-          // Extract correlationId
           const correlationId = error?.error?.correlationId;
           let operation = 'UnknownOperation';
           const errorUrl = error?.url?.toLowerCase?.() || '';
@@ -733,12 +701,8 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.authState.value) {
-            this._snackBar.open(
-              `Failed to load agency details. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-              'Close',
-              { verticalPosition: 'top', duration: 15000 }
-            );
+          if (error.status !== 401 && this.authService.isAuthenticated) {
+            this.snackbarNotificationService.showSnackbarError(correlationId);
           }
         }
       );

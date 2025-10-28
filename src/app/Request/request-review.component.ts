@@ -356,7 +356,7 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Failed to update request status:', error);
-          // Extract correlationId
+
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(

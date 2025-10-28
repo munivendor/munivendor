@@ -15,6 +15,7 @@ import { AuthService } from '../../authorization/auth.service';
 import { FlowProgressService } from '../../shared/service/flow-progress.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
 
 @Component({
   selector: 'app-contact-form',
@@ -47,7 +48,8 @@ export class UserSignUpDetails implements OnInit {
     private authService: AuthService,
     private flowProgressService: FlowProgressService,
     private loggingService: LoggingService,
-    private _snackBar: MatSnackBar
+    private _snackBar: MatSnackBar,
+    private snackbarNotificationService: SnackbarNotificationService
   ) {
     this.userSignupDetailForm = this.fb.group({
       email: [{ value: '', disabled: true }, [Validators.required]],
@@ -90,7 +92,6 @@ export class UserSignUpDetails implements OnInit {
         this.organizationTypeId = user.organizationTypeId;
       },
       error: (error) => {
-        // Extract correlationId
         const correlationId = error?.error?.correlationId;
 
         this.loggingService.logException(
@@ -104,12 +105,8 @@ export class UserSignUpDetails implements OnInit {
             operation: 'getUser',
           }
         );
-        if (error.status !== 401 && this.authService.authState.value) {
-          this._snackBar.open(
-            `Failed to load user details. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-            'Close',
-            { verticalPosition: 'top', duration: 15000 }
-          );
+        if (error.status !== 401 && this.authService.isAuthenticated) {
+          this.snackbarNotificationService.showSnackbarError(correlationId);
         }
       },
     });
@@ -119,7 +116,6 @@ export class UserSignUpDetails implements OnInit {
     this.userService.updateUser(user).subscribe({
       next: () => {},
       error: (error) => {
-        // Extract correlationId
         const correlationId = error?.error?.correlationId;
 
         this.loggingService.logException(
@@ -133,12 +129,8 @@ export class UserSignUpDetails implements OnInit {
             operation: 'updateUser',
           }
         );
-        if (error.status !== 401 && this.authService.authState.value) {
-          this._snackBar.open(
-            `Failed to update user. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-            'Close',
-            { verticalPosition: 'top', duration: 15000 }
-          );
+        if (error.status !== 401 && this.authService.isAuthenticated) {
+          this.snackbarNotificationService.showSnackbarError(correlationId);
         }
       },
     });
@@ -175,7 +167,6 @@ export class UserSignUpDetails implements OnInit {
             }
           },
           error: (error) => {
-            // Extract correlationId
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(
@@ -191,12 +182,8 @@ export class UserSignUpDetails implements OnInit {
                 operation: 'saveFlowProgress',
               }
             );
-            if (error.status !== 401 && this.authService.authState.value) {
-              this._snackBar.open(
-                `Failed to save progress. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-                'Close',
-                { verticalPosition: 'top', duration: 15000 }
-              );
+            if (error.status !== 401 && this.authService.isAuthenticated) {
+              this.snackbarNotificationService.showSnackbarError(correlationId);
             }
           },
         });

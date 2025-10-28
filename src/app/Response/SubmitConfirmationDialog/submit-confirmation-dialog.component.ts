@@ -12,6 +12,7 @@ import { Router } from '@angular/router';
 import { LoggingService } from '../../exceptionhandling/logging.service';
 import { StateService } from '../../Request/services/state.service';
 import { AuthService } from '../../authorization/auth.service';
+import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
 
 @Component({
   selector: 'submit-confirmation-dialog',
@@ -30,6 +31,7 @@ export class SubmitConfirmationDialogComponent implements OnDestroy {
     private loggingService: LoggingService,
     private authService: AuthService,
     private dialogRef: MatDialogRef<SubmitConfirmationDialogComponent>,
+    private snackbarNotificationService: SnackbarNotificationService,
     @Inject(MAT_DIALOG_DATA) public data: { responseId: string }
   ) {}
 
@@ -50,7 +52,6 @@ export class SubmitConfirmationDialogComponent implements OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response: any) => {
-          // Extract correlationId
           const correlationId = response?.correlationId;
           sessionStorage.removeItem('currentResponseId');
           sessionStorage.removeItem('response_in_creation_mode');
@@ -74,7 +75,6 @@ export class SubmitConfirmationDialogComponent implements OnDestroy {
           this.dialogRef.close(true);
         },
         error: (error: any) => {
-          // Extract correlationId
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -91,12 +91,8 @@ export class SubmitConfirmationDialogComponent implements OnDestroy {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.authState.value) {
-            this._snackBar.open(
-              `Failed to submit offer. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-              'Close',
-              { verticalPosition: 'top', duration: 15000 }
-            );
+          if (error.status !== 401 && this.authService.isAuthenticated) {
+            this.snackbarNotificationService.showSnackbarError(correlationId);
           }
         },
       });

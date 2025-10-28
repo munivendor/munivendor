@@ -32,6 +32,7 @@ import { TooltipDirective } from '../shared/directive/tooltip.directive';
 import { LoggingService } from '../exceptionhandling/logging.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../authorization/auth.service';
+import { SnackbarNotificationService } from '../shared/service/snackbar-notification.service';
 
 interface FlattenedCategoryNode {
   name: string;
@@ -98,6 +99,7 @@ export class ResponseBasicComponent implements OnInit {
     private loggingService: LoggingService,
     private _snackBar: MatSnackBar,
     private authService: AuthService,
+    private snackbarNotificationService: SnackbarNotificationService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.responseForm = this.fb.group({
@@ -136,7 +138,6 @@ export class ResponseBasicComponent implements OnInit {
             authorizingOfficial: null,
           });
 
-          // Extract correlationId
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -152,12 +153,8 @@ export class ResponseBasicComponent implements OnInit {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.authState.value) {
-            this._snackBar.open(
-              `Failed to load list of authorizing officials. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-              'Close',
-              { verticalPosition: 'top', duration: 15000 }
-            );
+          if (error.status !== 401 && this.authService.isAuthenticated) {
+            this.snackbarNotificationService.showSnackbarError(correlationId);
           }
         }
       );
@@ -266,7 +263,6 @@ export class ResponseBasicComponent implements OnInit {
         error: (error: any) => {
           console.error('Error loading template request:', error);
 
-          // Extract correlationId
           const correlationId = error?.error?.correlationId;
           let operation = 'UnknownOperation';
           const errorUrl = error?.url?.toLowerCase?.() || '';
@@ -292,12 +288,8 @@ export class ResponseBasicComponent implements OnInit {
             }
           );
 
-          if (error.status !== 401 && this.authService.authState.value) {
-            this._snackBar.open(
-              `Failed to load agency basic details. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-              'Close',
-              { verticalPosition: 'top', duration: 15000 }
-            );
+          if (error.status !== 401 && this.authService.isAuthenticated) {
+            this.snackbarNotificationService.showSnackbarError(correlationId);
           }
         },
       });
@@ -397,7 +389,6 @@ export class ResponseBasicComponent implements OnInit {
         (error: any) => {
           console.error('Error loading response request', error);
 
-          // Extract correlationId
           const correlationId = error?.error?.correlationId;
           let operation = 'UnknownOperation';
           const errorUrl = error?.url?.toLowerCase?.() || '';
@@ -421,12 +412,8 @@ export class ResponseBasicComponent implements OnInit {
             }
           );
 
-          if (error.status !== 401 && this.authService.authState.value) {
-            this._snackBar.open(
-              `Failed to load offer details. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-              'Close',
-              { verticalPosition: 'top', duration: 15000 }
-            );
+          if (error.status !== 401 && this.authService.isAuthenticated) {
+            this.snackbarNotificationService.showSnackbarError(correlationId);
           }
         }
       );
@@ -498,7 +485,7 @@ export class ResponseBasicComponent implements OnInit {
           },
           (error) => {
             console.error('Error updating response:', error);
-            // Extract correlationId
+
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(
@@ -514,12 +501,8 @@ export class ResponseBasicComponent implements OnInit {
                 userId: this.stateService.getUserId(),
               }
             );
-            if (error.status !== 401 && this.authService.authState.value) {
-              this._snackBar.open(
-                `Failed to update offer basic details. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-                'Close',
-                { verticalPosition: 'top', duration: 15000 }
-              );
+            if (error.status !== 401 && this.authService.isAuthenticated) {
+              this.snackbarNotificationService.showSnackbarError(correlationId);
             }
           }
         );
@@ -547,7 +530,6 @@ export class ResponseBasicComponent implements OnInit {
                 (error) => {
                   console.error('Error updating response status:', error);
 
-                  // Extract correlationId
                   const correlationId = error?.error?.correlationId;
 
                   this.loggingService.logException(
@@ -568,10 +550,8 @@ export class ResponseBasicComponent implements OnInit {
                     error.status !== 401 &&
                     this.authService.authState.value
                   ) {
-                    this._snackBar.open(
-                      `Failed to update offer status. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-                      'Close',
-                      { verticalPosition: 'top', duration: 15000 }
+                    this.snackbarNotificationService.showSnackbarError(
+                      correlationId
                     );
                   }
                 }
@@ -580,7 +560,6 @@ export class ResponseBasicComponent implements OnInit {
           (error) => {
             console.error('Error creating response:', error);
 
-            // Extract correlationId
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(
@@ -595,12 +574,8 @@ export class ResponseBasicComponent implements OnInit {
                 userId: this.stateService.getUserId(),
               }
             );
-            if (error.status !== 401 && this.authService.authState.value) {
-              this._snackBar.open(
-                `Failed to create offer basics details. (Correlation ID: ${correlationId}). If you need MuniVendor technical support, please feel free to email vendorsupport@munivenor.com, or call us Monday through Friday, 9am until 5pm EST at (732) 354-1215. In your email, please make sure to include either a screenshot of the error, or the specific Correlation ID code in this error message.`,
-                'Close',
-                { verticalPosition: 'top', duration: 15000 }
-              );
+            if (error.status !== 401 && this.authService.isAuthenticated) {
+              this.snackbarNotificationService.showSnackbarError(correlationId);
             }
           }
         );

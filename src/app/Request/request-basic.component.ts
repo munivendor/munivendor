@@ -685,7 +685,6 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
         error: (error: any) => {
           console.error('Error fetching request details:', error);
 
-          // Extract correlationId
           const correlationId = error?.error?.correlationId;
 
           // Identify likely failing operation (based on backend message or URL)
@@ -825,7 +824,6 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
               { verticalPosition: 'top' }
             );
 
-            // Extract correlationId
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(
@@ -862,7 +860,6 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
           (error) => {
             console.error('Error creating request:', error);
 
-            // Extract correlationId
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(
