@@ -61,30 +61,22 @@ export class EmailVerification implements OnInit, OnDestroy {
         next: (response) => {
           this.handleResendSuccess();
         },
-        error: (httpError) => {
-          // Handle different error types
-          if (httpError.status === 0) {
-            // Network error or CORS issue
-            this.handleResendError(
-              'Network error. Please check your connection.'
-            );
-          } else if (httpError.status >= 500) {
-            // Server error
-            this.handleResendError('Server error. Please try again later.');
-          } else if (httpError.status === 429) {
-            // Too many requests
-            this.handleResendError(
-              'Too many requests. Please wait before trying again.'
-            );
-          } else if (httpError.status >= 400) {
-            // Client error
-            const errorMessage =
-              httpError.error?.message || 'Request failed. Please try again.';
-            this.handleResendError(errorMessage);
-          } else {
-            // Unexpected error
-            this.handleResendError('An unexpected error occurred.');
-          }
+        error: (error) => {
+          this.handleResendError('An unexpected error occurred.');
+          const correlationId = error?.error?.correlationId;
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              userId: Number(this.userId),
+              correlationId: correlationId,
+              methodName: 'resendVerificationEmail',
+              className: 'EmailVerification',
+              operation: 'SendUserVerificationEmail',
+            }
+          );
+
+          this.snackbarNotificationService.showSnackbarError(correlationId);
         },
       });
   }
@@ -100,22 +92,6 @@ export class EmailVerification implements OnInit, OnDestroy {
     this.isResending = false;
     this.isSuccess = false;
     this.resendMessage = 'Failed to resend email. Please try again.';
-
-    const correlationId = error?.error?.correlationId;
-
-    this.loggingService.logException(
-      new Error(`HTTP Error ${error.status}: ${error.statusText}`),
-      3,
-      {
-        userId: this.userId,
-        correlationId: correlationId,
-        methodName: 'resendVerificationEmail',
-        className: 'EmailVerification',
-        operation: 'SendUserVerificationEmail',
-      }
-    );
-
-    this.snackbarNotificationService.showSnackbarError(correlationId);
   }
 
   private startCountdown(seconds: number) {

@@ -58,7 +58,6 @@ export class ResendPasswordResetDialog {
   constructor(
     public dialogRef: MatDialogRef<ResendPasswordResetDialog>,
     private loggingService: LoggingService,
-    private _snackBar: MatSnackBar,
     @Inject(MAT_DIALOG_DATA) public data: any,
     private authService: AuthService,
     private snackbarNotificationService: SnackbarNotificationService

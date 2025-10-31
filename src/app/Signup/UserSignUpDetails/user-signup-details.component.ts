@@ -47,9 +47,8 @@ export class UserSignUpDetails implements OnInit {
     private router: Router,
     private authService: AuthService,
     private flowProgressService: FlowProgressService,
-    private loggingService: LoggingService,
     private _snackBar: MatSnackBar,
-    private snackbarNotificationService: SnackbarNotificationService
+    private loggingService: LoggingService
   ) {
     this.userSignupDetailForm = this.fb.group({
       email: [{ value: '', disabled: true }, [Validators.required]],
@@ -105,9 +104,6 @@ export class UserSignUpDetails implements OnInit {
             operation: 'getUser',
           }
         );
-        if (error.status !== 401 && this.authService.isAuthenticated) {
-          this.snackbarNotificationService.showSnackbarError(correlationId);
-        }
       },
     });
   }
@@ -129,9 +125,6 @@ export class UserSignUpDetails implements OnInit {
             operation: 'updateUser',
           }
         );
-        if (error.status !== 401 && this.authService.isAuthenticated) {
-          this.snackbarNotificationService.showSnackbarError(correlationId);
-        }
       },
     });
   }
@@ -182,9 +175,6 @@ export class UserSignUpDetails implements OnInit {
                 operation: 'saveFlowProgress',
               }
             );
-            if (error.status !== 401 && this.authService.isAuthenticated) {
-              this.snackbarNotificationService.showSnackbarError(correlationId);
-            }
           },
         });
     } else {

@@ -47,8 +47,6 @@ export class FileUploadDialogComponent {
     private loggingService: LoggingService,
     private stateService: StateService,
     private _snackBar: MatSnackBar,
-    private authService: AuthService,
-    private snackbarNotificationService: SnackbarNotificationService,
     public dialogRef: MatDialogRef<FileUploadDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: FileUploadDialogData
   ) {}
@@ -142,9 +140,6 @@ export class FileUploadDialogComponent {
                 userId: this.stateService.getUserId(),
               }
             );
-            if (error.status !== 401 && this.authService.isAuthenticated) {
-              this.snackbarNotificationService.showSnackbarError(correlationId);
-            }
           },
         });
     } else if ('requestId' in this.data) {
@@ -189,9 +184,6 @@ export class FileUploadDialogComponent {
                 userId: this.stateService.getUserId(),
               }
             );
-            if (error.status !== 401 && this.authService.isAuthenticated) {
-              this.snackbarNotificationService.showSnackbarError(correlationId);
-            }
           },
         });
     }

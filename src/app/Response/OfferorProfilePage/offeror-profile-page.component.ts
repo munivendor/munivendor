@@ -73,9 +73,7 @@ export class OfferorProfilePageComponent implements OnInit {
     private stateService: StateService,
     private offerorProfileService: OfferorProfileService,
     private snackBar: MatSnackBar,
-    private loggingService: LoggingService,
-    private authService: AuthService,
-    private snackbarNotificationService: SnackbarNotificationService
+    private loggingService: LoggingService
   ) {}
 
   ngOnInit(): void {
@@ -139,10 +137,6 @@ export class OfferorProfilePageComponent implements OnInit {
             userId: this.stateService.getUserId(),
           }
         );
-
-        if (error.status !== 401 && this.authService.isAuthenticated) {
-          this.snackbarNotificationService.showSnackbarError(correlationId);
-        }
       },
     });
   }
@@ -171,10 +165,6 @@ export class OfferorProfilePageComponent implements OnInit {
               userId: this.stateService.getUserId(),
             }
           );
-
-          if (error.status !== 401 && this.authService.isAuthenticated) {
-            this.snackbarNotificationService.showSnackbarError(correlationId);
-          }
         },
       });
   }
@@ -251,9 +241,6 @@ export class OfferorProfilePageComponent implements OnInit {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.isAuthenticated) {
-            this.snackbarNotificationService.showSnackbarError(correlationId);
-          }
         },
       });
   }
@@ -285,10 +272,6 @@ export class OfferorProfilePageComponent implements OnInit {
               userId: this.stateService.getUserId(),
             }
           );
-
-          if (error.status !== 401 && this.authService.isAuthenticated) {
-            this.snackbarNotificationService.showSnackbarError(correlationId);
-          }
         },
       });
   }

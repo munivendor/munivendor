@@ -115,9 +115,7 @@ export class CustomCategoryDropdownComponent implements OnInit, OnDestroy {
     private categoryHierarchyService: CategoryHierarchyService,
     public dialog: MatDialog,
     private stateService: StateService,
-    private loggingService: LoggingService,
-    private authService: AuthService,
-    private snackbarNotificationService: SnackbarNotificationService
+    private loggingService: LoggingService
   ) {
     this.flattenCategories();
   }
@@ -186,9 +184,6 @@ export class CustomCategoryDropdownComponent implements OnInit, OnDestroy {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.isAuthenticated) {
-            this.snackbarNotificationService.showSnackbarError(correlationId);
-          }
         },
       });
   }

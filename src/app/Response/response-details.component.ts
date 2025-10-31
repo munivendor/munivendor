@@ -80,9 +80,7 @@ export class ResponseDetailsComponent implements OnInit {
     private stateService: StateService,
     private http: HttpClient,
     public dialog: MatDialog,
-    private loggingService: LoggingService,
-    private authService: AuthService,
-    private snackbarNotificationService: SnackbarNotificationService
+    private loggingService: LoggingService
   ) {
     this.responseForm = this.fb.group({
       responseName: ['', Validators.required],
@@ -175,7 +173,6 @@ export class ResponseDetailsComponent implements OnInit {
       .subscribe({
         next: (request) => {
           this.agencyRequest = request;
-          console.log('Agency request loaded:', this.agencyRequest);
         },
         error: (error) => {
           console.error('Error loading agency request:', error);
@@ -195,10 +192,6 @@ export class ResponseDetailsComponent implements OnInit {
               userId: this.stateService.getUserId(),
             }
           );
-
-          if (error.status !== 401 && this.authService.isAuthenticated) {
-            this.snackbarNotificationService.showSnackbarError(correlationId);
-          }
         },
       });
   }
@@ -235,8 +228,9 @@ export class ResponseDetailsComponent implements OnInit {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.isAuthenticated) {
-            this.snackbarNotificationService.showSnackbarError(correlationId);
+
+          if (error.status === 422) {
+            return;
           }
         },
       });
@@ -290,10 +284,6 @@ export class ResponseDetailsComponent implements OnInit {
               userId: this.stateService.getUserId(),
             }
           );
-
-          if (error.status !== 401 && this.authService.isAuthenticated) {
-            this.snackbarNotificationService.showSnackbarError(correlationId);
-          }
         },
       });
   }
