@@ -18,7 +18,6 @@ import { Observable } from 'rxjs';
 import { routes } from './app.routes';
 import { GlobalErrorHandler } from './exceptionhandling/global-error-handler';
 import { WithCredentialsInterceptor } from './core/interceptors/with-credentials.interceptor';
-import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { ErrorHandlerInterceptor } from './core/interceptors/error-handler.interceptor';
 
 const CLIENT_ID =
@@ -62,11 +61,6 @@ export const appConfig: ApplicationConfig = {
     {
       provide: HTTP_INTERCEPTORS,
       useClass: WithCredentialsInterceptor,
-      multi: true,
-    },
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: AuthInterceptor,
       multi: true,
     },
     {

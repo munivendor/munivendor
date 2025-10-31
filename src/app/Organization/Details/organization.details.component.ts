@@ -52,9 +52,7 @@ export class OrganizationDetailsComponent implements OnInit {
     private router: Router,
     private stateService: StateService,
     private flowProgressService: FlowProgressService,
-    private loggingService: LoggingService,
-    private authService: AuthService,
-    private snackbarNotificationService: SnackbarNotificationService
+    private loggingService: LoggingService
   ) {
     this.organizationDetailForm = this.fb.group({});
 
@@ -92,9 +90,6 @@ export class OrganizationDetailsComponent implements OnInit {
               operation: 'getStates',
             }
           );
-          if (error.status !== 401 && this.authService.isAuthenticated) {
-            this.snackbarNotificationService.showSnackbarError(correlationId);
-          }
         },
       });
   }
@@ -189,12 +184,6 @@ export class OrganizationDetailsComponent implements OnInit {
                   }
                 );
 
-                if (error.status !== 401 && this.authService.isAuthenticated) {
-                  this.snackbarNotificationService.showSnackbarError(
-                    correlationId
-                  );
-                }
-
                 return throwError(() => error);
               })
             );
@@ -214,9 +203,6 @@ export class OrganizationDetailsComponent implements OnInit {
               operation: 'updateOrganization',
             }
           );
-          if (error.status !== 401 && this.authService.isAuthenticated) {
-            this.snackbarNotificationService.showSnackbarError(correlationId);
-          }
 
           return throwError(() => error);
         }),

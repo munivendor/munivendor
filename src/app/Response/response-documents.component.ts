@@ -93,9 +93,7 @@ export class ResponseDocumentsComponent implements OnInit {
     private documentService: DocumentService,
     private _snackBar: MatSnackBar,
     private router: Router,
-    private loggingService: LoggingService,
-    private authService: AuthService,
-    private snackbarNotificationService: SnackbarNotificationService
+    private loggingService: LoggingService
   ) {}
 
   ngOnInit(): void {
@@ -179,8 +177,9 @@ export class ResponseDocumentsComponent implements OnInit {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.isAuthenticated) {
-            this.snackbarNotificationService.showSnackbarError(correlationId);
+
+          if (error.status === 422) {
+            return;
           }
         },
       });
@@ -303,9 +302,6 @@ export class ResponseDocumentsComponent implements OnInit {
                 userId: this.stateService.getUserId(),
               }
             );
-            if (error.status !== 401 && this.authService.isAuthenticated) {
-              this.snackbarNotificationService.showSnackbarError(correlationId);
-            }
 
             // Clear the input value even on error to allow retry with same file
             input.value = '';
@@ -420,11 +416,6 @@ export class ResponseDocumentsComponent implements OnInit {
                   userId: this.stateService.getUserId(),
                 }
               );
-              if (error.status !== 401 && this.authService.isAuthenticated) {
-                this.snackbarNotificationService.showSnackbarError(
-                  correlationId
-                );
-              }
             },
           });
       } else {
@@ -475,9 +466,6 @@ export class ResponseDocumentsComponent implements OnInit {
                 userId: this.stateService.getUserId(),
               }
             );
-            if (error.status !== 401 && this.authService.isAuthenticated) {
-              this.snackbarNotificationService.showSnackbarError(correlationId);
-            }
           },
         });
       }
@@ -534,9 +522,6 @@ export class ResponseDocumentsComponent implements OnInit {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.isAuthenticated) {
-            this.snackbarNotificationService.showSnackbarError(correlationId);
-          }
         },
       });
     }
@@ -638,9 +623,6 @@ export class ResponseDocumentsComponent implements OnInit {
             userId: this.stateService.getUserId(),
           }
         );
-        if (error.status !== 401 && this.authService.isAuthenticated) {
-          this.snackbarNotificationService.showSnackbarError(correlationId);
-        }
       },
     });
   }
@@ -691,9 +673,6 @@ export class ResponseDocumentsComponent implements OnInit {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.isAuthenticated) {
-            this.snackbarNotificationService.showSnackbarError(correlationId);
-          }
         },
       });
   }

@@ -96,9 +96,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
     private documentService: DocumentService,
     public dialog: MatDialog,
     private offerorProfileService: OfferorProfileService,
-    private loggingService: LoggingService,
-    private authService: AuthService,
-    private snackbarNotificationService: SnackbarNotificationService
+    private loggingService: LoggingService
   ) {}
 
   onConfirmSubmission() {
@@ -140,7 +138,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
     } = row;
 
     if (!requestDocumentId) {
-      console.error('Request Document ID is not available.');
       return;
     }
 
@@ -150,7 +147,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
     if (isIncompleteOrNull) {
       if (derived) {
         if (!organizationDocumentId || !agencyOrganizationId) {
-          console.error('organizationDocumentId is required but missing.');
           return;
         }
         this.requestService
@@ -182,8 +178,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
               URL.revokeObjectURL(blobUrl);
             },
             error: (error) => {
-              console.error('Failed to fetch document:', error);
-
               const correlationId = error?.error?.correlationId;
 
               this.loggingService.logException(
@@ -201,11 +195,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
                   userId: this.stateService.getUserId(),
                 }
               );
-              if (error.status !== 401 && this.authService.isAuthenticated) {
-                this.snackbarNotificationService.showSnackbarError(
-                  correlationId
-                );
-              }
             },
           });
       } else {
@@ -235,8 +224,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
             URL.revokeObjectURL(blobUrl);
           },
           error: (error) => {
-            console.error('Failed to fetch document:', error);
-
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(
@@ -253,9 +240,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
                 userId: this.stateService.getUserId(),
               }
             );
-            if (error.status !== 401 && this.authService.isAuthenticated) {
-              this.snackbarNotificationService.showSnackbarError(correlationId);
-            }
           },
         });
       }
@@ -286,8 +270,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
           URL.revokeObjectURL(blobUrl);
         },
         error: (error) => {
-          console.error('Failed to fetch document:', error);
-
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -304,9 +286,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.isAuthenticated) {
-            this.snackbarNotificationService.showSnackbarError(correlationId);
-          }
         },
       });
     }
@@ -345,8 +324,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
         }
       },
       error: (error: any) => {
-        console.error('Failed to fetch document:', error);
-
         const correlationId = error?.error?.correlationId;
 
         this.loggingService.logException(
@@ -363,9 +340,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
             userId: this.stateService.getUserId(),
           }
         );
-        if (error.status !== 401 && this.authService.isAuthenticated) {
-          this.snackbarNotificationService.showSnackbarError(correlationId);
-        }
       },
     });
   }
@@ -467,8 +441,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
             });
         },
         error: (error: any) => {
-          console.error('Error fetching categories:', error);
-
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -484,9 +456,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.isAuthenticated) {
-            this.snackbarNotificationService.showSnackbarError(correlationId);
-          }
         },
       });
 
@@ -533,8 +502,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
           this.checkRequiredDocumentsStatus();
         },
         error: (error) => {
-          console.error('Error loading documents:', error);
-
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -550,8 +517,9 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.isAuthenticated) {
-            this.snackbarNotificationService.showSnackbarError(correlationId);
+
+          if (error.status === 422) {
+            return;
           }
         },
       });
@@ -602,10 +570,12 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
               ? `${authorizingOfficial.firstName} ${authorizingOfficial.lastName}`
               : 'Not assigned',
           });
+
+          if (response.sourceRequestId) {
+            this.getRequestObjDetails(response.sourceRequestId);
+          }
         },
         (error: any) => {
-          console.error('Error loading response request', error);
-
           const correlationId = error?.error?.correlationId;
 
           let operation = 'UnknownOperation';
@@ -629,8 +599,9 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.isAuthenticated) {
-            this.snackbarNotificationService.showSnackbarError(correlationId);
+
+          if (error.status === 422) {
+            return;
           }
         }
       );
@@ -665,7 +636,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
             contractStart,
             contractEnd,
           };
-
           this.requestFinalReviewDetailsForm.patchValue({
             requestName: request.requestName,
             category: categoryBreadcrumb,
@@ -677,8 +647,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
           });
         },
         (error) => {
-          console.error('Error fetching data', error);
-
           const correlationId = error?.error?.correlationId;
           let operation = 'UnknownOperation';
           const errorUrl = error?.url?.toLowerCase?.() || '';
@@ -701,8 +669,9 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.isAuthenticated) {
-            this.snackbarNotificationService.showSnackbarError(correlationId);
+
+          if (error.status === 422) {
+            return;
           }
         }
       );
@@ -711,7 +680,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
   private formatDateTime(dateString: string): string {
     if (!dateString) return '';
 
-    // Handle if dateString is already just a date
     const date = new Date(
       dateString.includes('Z') ? dateString : dateString + 'Z'
     );
@@ -720,7 +688,6 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
 
     const formattedDate = date.toLocaleDateString('en-US');
 
-    // Check if the original string contained time information
     const hasTime = dateString.includes('T') || dateString.includes(':');
 
     if (hasTime) {

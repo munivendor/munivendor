@@ -29,9 +29,7 @@ export class SubmitConfirmationDialogComponent implements OnDestroy {
     private stateService: StateService,
     private _snackBar: MatSnackBar,
     private loggingService: LoggingService,
-    private authService: AuthService,
     private dialogRef: MatDialogRef<SubmitConfirmationDialogComponent>,
-    private snackbarNotificationService: SnackbarNotificationService,
     @Inject(MAT_DIALOG_DATA) public data: { responseId: string }
   ) {}
 
@@ -91,8 +89,9 @@ export class SubmitConfirmationDialogComponent implements OnDestroy {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.isAuthenticated) {
-            this.snackbarNotificationService.showSnackbarError(correlationId);
+
+          if (error.status === 422) {
+            return;
           }
         },
       });

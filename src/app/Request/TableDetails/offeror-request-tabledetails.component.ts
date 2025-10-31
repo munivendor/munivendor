@@ -231,9 +231,6 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.isAuthenticated) {
-            this.snackbarNotificationService.showSnackbarError(correlationId);
-          }
         },
       });
   }
@@ -288,9 +285,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
     private stateService: StateService,
     private cdr: ChangeDetectorRef,
     private loadingService: LoadingService,
-    private loggingService: LoggingService,
-    private authService: AuthService,
-    private snackbarNotificationService: SnackbarNotificationService
+    private loggingService: LoggingService
   ) {
     this.organizationId = this.stateService.getOrganizationId();
   }
@@ -517,9 +512,6 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
               }
             );
 
-            if (error.status !== 401 && this.authService.isAuthenticated) {
-              this.snackbarNotificationService.showSnackbarError(correlationId);
-            }
             this.dataSource = new MatTableDataSource<any>([]);
             this.hasLoadedData = false;
           },

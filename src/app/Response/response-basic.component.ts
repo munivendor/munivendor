@@ -97,9 +97,6 @@ export class ResponseBasicComponent implements OnInit {
     private stateService: StateService,
     private offerorProfileService: OfferorProfileService,
     private loggingService: LoggingService,
-    private _snackBar: MatSnackBar,
-    private authService: AuthService,
-    private snackbarNotificationService: SnackbarNotificationService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.responseForm = this.fb.group({
@@ -153,9 +150,6 @@ export class ResponseBasicComponent implements OnInit {
               userId: this.stateService.getUserId(),
             }
           );
-          if (error.status !== 401 && this.authService.isAuthenticated) {
-            this.snackbarNotificationService.showSnackbarError(correlationId);
-          }
         }
       );
   }
@@ -288,8 +282,8 @@ export class ResponseBasicComponent implements OnInit {
             }
           );
 
-          if (error.status !== 401 && this.authService.isAuthenticated) {
-            this.snackbarNotificationService.showSnackbarError(correlationId);
+          if (error.status === 422) {
+            return;
           }
         },
       });
@@ -411,10 +405,6 @@ export class ResponseBasicComponent implements OnInit {
               userId: this.stateService.getUserId(),
             }
           );
-
-          if (error.status !== 401 && this.authService.isAuthenticated) {
-            this.snackbarNotificationService.showSnackbarError(correlationId);
-          }
         }
       );
   }
@@ -484,8 +474,6 @@ export class ResponseBasicComponent implements OnInit {
             }
           },
           (error) => {
-            console.error('Error updating response:', error);
-
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(
@@ -501,9 +489,6 @@ export class ResponseBasicComponent implements OnInit {
                 userId: this.stateService.getUserId(),
               }
             );
-            if (error.status !== 401 && this.authService.isAuthenticated) {
-              this.snackbarNotificationService.showSnackbarError(correlationId);
-            }
           }
         );
     } else if (!responseIdFromStateService || !this.responseIdParam) {
@@ -517,16 +502,14 @@ export class ResponseBasicComponent implements OnInit {
             // Store in sessionStorage for reload detection - only in browser
             if (isPlatformBrowser(this.platformId)) {
               sessionStorage.setItem('currentResponseId', response.toString());
-              sessionStorage.setItem('response_in_creation_mode', 'true'); // Mark as creation mode
+              sessionStorage.setItem('response_in_creation_mode', 'true');
             }
 
             this.requestService
               .UpdateRequestStatus(response, 8)
               .pipe(takeUntil(this.destroy$))
               .subscribe(
-                (statusResponse) => {
-                  console.log('Response status updated successfully');
-                },
+                (statusResponse) => {},
                 (error) => {
                   console.error('Error updating response status:', error);
 
@@ -546,20 +529,10 @@ export class ResponseBasicComponent implements OnInit {
                       userId: this.stateService.getUserId(),
                     }
                   );
-                  if (
-                    error.status !== 401 &&
-                    this.authService.authState.value
-                  ) {
-                    this.snackbarNotificationService.showSnackbarError(
-                      correlationId
-                    );
-                  }
                 }
               );
           },
           (error) => {
-            console.error('Error creating response:', error);
-
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(
@@ -574,9 +547,6 @@ export class ResponseBasicComponent implements OnInit {
                 userId: this.stateService.getUserId(),
               }
             );
-            if (error.status !== 401 && this.authService.isAuthenticated) {
-              this.snackbarNotificationService.showSnackbarError(correlationId);
-            }
           }
         );
     }

@@ -18,6 +18,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { StateService } from '../../Request/services/state.service';
 import { AuthService } from '../../authorization/auth.service';
+import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
 
 @Component({
   imports: [MatDialogModule, MatButtonModule],
@@ -79,7 +80,8 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
     private dialog: MatDialog,
     private router: Router,
     private stateService: StateService,
-    private authService: AuthService
+    private authService: AuthService,
+    private snackbarNotificationService: SnackbarNotificationService
   ) {}
 
   intercept(
@@ -96,15 +98,22 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
           req.url.includes(path)
         );
 
-        // Handle 401 errors with context awareness
         if (error.status === 401 && !isPublicPath) {
-          this.handle401Error(isSilentPath);
+          this.handle401AuthenticatedSessionExpired(isSilentPath);
           return throwError(() => error);
         }
 
-        // Handle 422 status with dialog and redirect
         if (error.status === 422 && !isPublicPath && !isSilentPath) {
-          this.handle422Error();
+          this.handle422SolicitationClosed();
+          return throwError(() => error);
+        }
+
+        if (
+          !isPublicPath &&
+          !isSilentPath &&
+          this.authService.isAuthenticated
+        ) {
+          this.handleSnackbarNon401AuthenticatedError(error, req);
           return throwError(() => error);
         }
 
@@ -118,36 +127,38 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
     );
   }
 
-  // 401 handler that considers user context
-  private handle401Error(isSilentPath: boolean): void {
+  // display session expired snackbar if 401 and user is authenticated
+  // ignore 401 if user is on guest URL or unauthenticated
+  private handle401AuthenticatedSessionExpired(isSilentPath: boolean): void {
     const currentUrl = this.router.url;
     const isGuestUrl = this.guestUrls.has(currentUrl);
 
-    this.authService.setAuthenticated(false);
-
-    // If user is on a guest URL, fail silently
     if (isGuestUrl || isSilentPath) {
-      // Don't show any message, don't redirect
-      // This is expected behavior during signup/login flows
+      this.authService.setAuthenticated(false);
       return;
     }
 
-    // Alert user if authenticated and working, but session expired
-    this.dialog.closeAll();
+    if (this.authService.isAuthenticated) {
+      this.authService.setAuthenticated(false);
+      this.dialog.closeAll();
 
-    this.snackBar.open(
-      'Your session has expired. Please log in again.',
-      'Dismiss',
-      {
-        verticalPosition: 'top',
-        panelClass: ['error-snackbar'],
-      }
-    );
+      this.snackBar.open(
+        'Your session has expired. Please log in again.',
+        'Dismiss',
+        {
+          verticalPosition: 'top',
+          panelClass: ['error-snackbar'],
+        }
+      );
 
-    this.router.navigate(['/login']);
+      this.router.navigate(['/login']);
+    } else {
+      this.authService.setAuthenticated(false);
+    }
   }
 
-  private handle422Error(): void {
+  // display dialog for 422 solicitation closed and redirect to dashboard
+  private handle422SolicitationClosed(): void {
     this.dialog.closeAll();
 
     const dialogRef = this.dialog.open(RequestClosedDialogComponent, {
@@ -169,6 +180,16 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
     });
   }
 
+  // Generic error message for non-401 errors when user is authenticated
+  private handleSnackbarNon401AuthenticatedError(
+    error: HttpErrorResponse,
+    req: HttpRequest<any>
+  ): void {
+    const correlationId = error.error?.correlationId || 'N/A';
+    this.snackbarNotificationService.showSnackbarError(correlationId);
+  }
+
+  // backup error handler for APIs that do not have personalized logException
   private handleError(error: HttpErrorResponse, req: HttpRequest<any>): void {
     const errorDetails = {
       statusCode: error.status,
@@ -194,7 +215,6 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
     this.snackBar.open(message, 'Dismiss', {
       duration: 15000,
       verticalPosition: 'top',
-      panelClass: ['error-snackbar'],
     });
   }
 
@@ -204,8 +224,6 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
         return 'Unable to connect to the server. Please check your internet connection.';
       case 400:
         return 'Invalid request. Please check your input and try again.';
-      case 401:
-        return 'Your session has expired. Please log in again.';
       case 403:
         return 'You do not have permission to perform this action.';
       case 404:
