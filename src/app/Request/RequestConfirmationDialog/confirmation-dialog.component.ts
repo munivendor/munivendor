@@ -208,39 +208,41 @@ export class ConfirmationDialog implements OnDestroy {
   }
 
   downloadZipDocuments(request: any) {
-    this.documentService.GetZipDocuments(request.requestId).subscribe({
-      next: (zipBlob) => {
-        const date = new Date(request.publishDate);
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const year = date.getFullYear();
-        const formattedDate = `${month}${day}${year}`;
+    this.documentService
+      .DownloadOfferorZipDocuments(request.requestId)
+      .subscribe({
+        next: (zipBlob) => {
+          const date = new Date(request.publishDate);
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          const year = date.getFullYear();
+          const formattedDate = `${month}${day}${year}`;
 
-        const fileName = `${request.requestName}_${formattedDate}.zip`;
+          const fileName = `${request.requestName}_${formattedDate}.zip`;
 
-        const blobUrl = window.URL.createObjectURL(zipBlob);
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = fileName;
-        link.click();
-        window.URL.revokeObjectURL(blobUrl);
-      },
-      error: (error) => {
-        const correlationId = error?.error?.correlationId;
+          const blobUrl = window.URL.createObjectURL(zipBlob);
+          const link = document.createElement('a');
+          link.href = blobUrl;
+          link.download = fileName;
+          link.click();
+          window.URL.revokeObjectURL(blobUrl);
+        },
+        error: (error) => {
+          const correlationId = error?.error?.correlationId;
 
-        this.loggingService.logException(
-          new Error(`HTTP Error ${error.status}: ${error.statusText}`),
-          3,
-          {
-            requestId: request.requestId,
-            correlationId: correlationId,
-            methodName: 'downloadZipDocuments',
-            className: 'ConfirmationDialog',
-            operation: 'GetZipDocuments',
-          }
-        );
-      },
-    });
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              requestId: request.requestId,
+              correlationId: correlationId,
+              methodName: 'downloadZipDocuments',
+              className: 'ConfirmationDialog',
+              operation: 'DownloadOfferorZipDocuments',
+            }
+          );
+        },
+      });
   }
 
   openCancellationReasonDialog(action: string, request: any): void {
