@@ -77,7 +77,7 @@ export class DocumentService {
     });
   }
 
-  GetZipDocuments(
+  DownloadOfferorZipDocuments(
     requestId: number,
     requestTypeId?: number,
     requestStatusId?: number,

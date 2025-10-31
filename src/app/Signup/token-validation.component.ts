@@ -52,18 +52,14 @@ export class TokenValidationComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          if (response === true) {
-            this.verificationStatus =
-              'Verification successful! Redirecting to login...';
-            setTimeout(() => this.router.navigate(['/login']), 5000);
-          } else {
-            this.verificationStatus =
-              'Verification failed. Invalid or expired token. Redirecting...';
-            setTimeout(() => this.router.navigate(['/signup']), 5000);
-          }
+          this.verificationStatus =
+            'Verification successful! Redirecting to login...';
+
+          setTimeout(() => this.router.navigate(['/login']), 5000);
         },
         error: (error) => {
-          const correlationId = error?.error?.correlationId;
+          const correlationId = error?.error?.correlationId || 'N/A';
+
           this.verificationStatus = `Something went wrong. Please try again later. (Correlation ID: ${correlationId}). ${AppConstants.SUPPORT_MESSAGE}`;
 
           this.loggingService.logException(
@@ -78,6 +74,8 @@ export class TokenValidationComponent implements OnInit, OnDestroy {
               operation: 'ValidateEmailToken',
             }
           );
+
+          setTimeout(() => this.router.navigate(['/signup']), 15000);
         },
       });
   }
