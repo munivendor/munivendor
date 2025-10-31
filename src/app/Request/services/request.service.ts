@@ -319,9 +319,7 @@ export class RequestService {
     });
   }
 
-  NotifyAuthorizingOfficialSolicitationOpened(
-    requestId: number
-  ): Observable<any> {
+  NotifyOfferorSolicitationOpened(requestId: number): Observable<any> {
     return this.http.post(
       `${this.url}notifications/send/SolicitationOpened/${requestId}`,
       {}

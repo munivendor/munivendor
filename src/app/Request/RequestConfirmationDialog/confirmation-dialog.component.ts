@@ -156,14 +156,13 @@ export class ConfirmationDialog implements OnDestroy {
               newStatusDesc: 'Opened',
             });
             this.downloadZipDocuments(request);
-            return this.requestService.NotifyAuthorizingOfficialSolicitationOpened(
+            return this.requestService.NotifyOfferorSolicitationOpened(
               request.requestId
             );
           })
         )
         .subscribe({
           next: (notifyRes) => {
-            console.log('Offerors notified successfully:', notifyRes);
             this.dialogRef.close(true);
           },
           error: (error) => {
