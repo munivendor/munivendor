@@ -26,7 +26,7 @@ import { Router } from '@angular/router';
 import { DocumentService } from '../../shared/service/document.service';
 import { RequestService } from '../services/request.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, switchMap, takeUntil } from 'rxjs';
 
 export interface DialogData {
   action: string;
@@ -134,55 +134,73 @@ export class ConfirmationDialog implements OnDestroy {
       } else {
         this.router.navigate(['/edit-request-view', sourceId]);
       }
+      this.dialogRef.close(true);
+      return;
     }
 
     if (this.requestObjAndUserAction.action === 'respond') {
       const sourceId = request.requestId;
       this.router.navigate(['/response-basic', sourceId]);
+      this.dialogRef.close(true);
+      return;
     }
 
     if (this.requestObjAndUserAction.action === 'open') {
       this.requestService
         .UpdateRequestStatus(request.requestId, 6)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (res) => {
-            console.log('Status updated successfully:', res);
+        .pipe(
+          switchMap((res) => {
             this.statusUpdated.emit({
               requestId: request.requestId,
               newStatusId: 6,
               newStatusDesc: 'Opened',
             });
-
             this.downloadZipDocuments(request);
+            return this.requestService.NotifyAuthorizingOfficialSolicitationOpened(
+              request.requestId
+            );
+          })
+        )
+        .subscribe({
+          next: (notifyRes) => {
+            console.log('Offerors notified successfully:', notifyRes);
+            this.dialogRef.close(true);
           },
           error: (error) => {
-            console.error('Failed to update status:', error);
-
             const correlationId = error?.error?.correlationId;
+            const isNotifyError = error.url?.includes(
+              'NotifyOfferorSolicitationOpened'
+            );
 
             this.loggingService.logException(
               new Error(`HTTP Error ${error.status}: ${error.statusText}`),
               3,
               {
                 requestId: request.requestId,
-                newRequestStatus: 6,
+                ...(isNotifyError ? {} : { newRequestStatus: 6 }),
                 correlationId: correlationId,
                 methodName: 'confirm',
                 className: 'ConfirmationDialog',
-                operation: 'UpdateRequestStatus',
+                operation: isNotifyError
+                  ? 'NotifyOfferorSolicitationOpened'
+                  : 'UpdateRequestStatus',
               }
             );
+            this.dialogRef.close(false);
           },
         });
+      return;
     }
 
     if (this.requestObjAndUserAction.action === 'redownload') {
       this.downloadZipDocuments(request);
+      this.dialogRef.close(true);
+      return;
     }
 
     this.dialogRef.close(true);
   }
+
   private destroy$ = new Subject<void>();
 
   ngOnDestroy(): void {
@@ -191,11 +209,8 @@ export class ConfirmationDialog implements OnDestroy {
   }
 
   downloadZipDocuments(request: any) {
-    this.documentService
-      .GetZipDocuments(request.requestId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((zipBlob) => {
-        // Convert publishDate -> MMddyyyy
+    this.documentService.GetZipDocuments(request.requestId).subscribe({
+      next: (zipBlob) => {
         const date = new Date(request.publishDate);
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
@@ -210,7 +225,23 @@ export class ConfirmationDialog implements OnDestroy {
         link.download = fileName;
         link.click();
         window.URL.revokeObjectURL(blobUrl);
-      });
+      },
+      error: (error) => {
+        const correlationId = error?.error?.correlationId;
+
+        this.loggingService.logException(
+          new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+          3,
+          {
+            requestId: request.requestId,
+            correlationId: correlationId,
+            methodName: 'downloadZipDocuments',
+            className: 'ConfirmationDialog',
+            operation: 'GetZipDocuments',
+          }
+        );
+      },
+    });
   }
 
   openCancellationReasonDialog(action: string, request: any): void {
