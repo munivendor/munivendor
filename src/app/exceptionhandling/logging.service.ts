@@ -25,33 +25,19 @@ export class LoggingService {
     this.appInsights.trackEvent({ name }, properties);
   }
 
-  logException(error: Error, severityLevel = 3, additionalProps?: any) {
+  logException(error: Error, severityLevel = 3, customProps?: any) {
     try {
-      const props = additionalProps ?? {};
+      const filteredProps = Object.fromEntries(
+        Object.entries(customProps ?? {}).filter(([_, value]) => value != null)
+      );
 
       this.appInsights.trackException({
         exception: error instanceof Error ? error : new Error(String(error)),
         severityLevel,
-        properties: {
-          userId: props?.userId ?? null,
-          requestId: props?.requestId ?? null,
-          organizationId: props?.organizationId ?? null,
-          methodName: props?.methodName ?? 'unknown',
-          className: props?.className ?? 'unknown',
-          operation: props?.operation ?? null,
-          correlationId: props?.correlationId ?? null,
-        },
+        properties: filteredProps,
       });
-    } catch (ex) {
-      // Ensure logging never throws
-      try {
-        console.error('LoggingService - failed to log exception', ex, {
-          error,
-          additionalProps,
-        });
-      } catch {
-        // swallow silently as a last resort
-      }
+    } catch (e) {
+      console.error('Failed to log exception:', e);
     }
   }
 

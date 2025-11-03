@@ -22,6 +22,7 @@ import { RequestService } from '../services/request.service';
 import { CommonModule } from '@angular/common';
 import { CancellationReasons } from '../model/cancellationreasons.model';
 import { Request } from '../model/request.model';
+import { LoggingService } from '../../exceptionhandling/logging.service';
 
 export interface DialogData {
   action: string;
@@ -81,7 +82,8 @@ export class CancellationReasonDialog implements OnInit {
   constructor(
     public dialogRef: MatDialogRef<CancellationReasonDialog>,
     @Inject(MAT_DIALOG_DATA) public data: DialogData,
-    private requestService: RequestService
+    private requestService: RequestService,
+    private loggingService: LoggingService
   ) {}
 
   ngOnInit(): void {
@@ -111,7 +113,18 @@ export class CancellationReasonDialog implements OnInit {
         this.requestCancellationReasons = response;
       },
       (error) => {
-        console.error('Error fetching cancellation reasons:', error);
+        const correlationId = error?.error?.correlationId;
+
+        this.loggingService.logException(
+          new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+          3,
+          {
+            correlationId: correlationId,
+            methodName: 'getCancellationReasons',
+            className: 'CancellationReasonDialog',
+            operation: 'GetCancellationReasons',
+          }
+        );
       }
     );
   }

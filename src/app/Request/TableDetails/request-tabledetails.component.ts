@@ -6,7 +6,7 @@ import {
   TemplateRef,
   Input,
 } from '@angular/core';
-import { catchError, finalize, forkJoin, of, Subject, takeUntil } from 'rxjs';
+import { finalize, forkJoin, Subject, takeUntil } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ConfirmationDialog } from '../RequestConfirmationDialog/confirmation-dialog.component';
@@ -216,7 +216,6 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     return path.join(' > ');
   }
 
-  // Add method to flatten categories
   private flattenCategories(
     categories: CategoryNode[],
     parentId: string | null = null
@@ -333,119 +332,132 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     this.loadAndJoinRequestData(params);
   }
 
-  private loadAndJoinRequestData(params?: any): void {
-    if (!this.organizationId) {
-      this.dataSource = new MatTableDataSource<any>([]);
-      this.hasLoadedData = false;
-      return;
-    }
+  private async loadAndJoinRequestData(params?: any): Promise<void> {
+    try {
+      if (!this.organizationId) {
+        this.dataSource = new MatTableDataSource<any>([]);
+        this.hasLoadedData = false;
+        return;
+      }
 
-    const requestParams = {
-      organizationId: this.organizationId,
-      ...(params || {}),
-    };
+      const requestParams = {
+        organizationId: this.organizationId,
+        ...(params || {}),
+      };
 
-    const combinedData: any[] = [];
+      const combinedData: any[] = [];
 
-    this.loadingService.show();
+      this.loadingService.show();
 
-    forkJoin([
-      this.requestService.GetRequestsAgencyView(requestParams).pipe(
-        catchError((error) => {
-          console.error('Error loading requests:', error);
-          return of({ requests: [] });
-        })
-      ),
-      this.categoryHierarchyService.GetCategoryHierarchy().pipe(
-        catchError((error) => {
-          console.error('Error loading categories:', error);
-          return of([]);
-        })
-      ),
-      this.requestService.GetRequestTypes().pipe(
-        catchError((error) => {
-          console.error('Error loading request types:', error);
-          return of([]);
-        })
-      ),
-      this.requestService.GetRequestStatuses().pipe(
-        catchError((error) => {
-          console.error('Error loading request statuses:', error);
-          return of([]);
-        })
-      ),
-    ])
-      .pipe(
-        takeUntil(this.destroy$),
-        finalize(() => this.loadingService.hide())
-      )
-      .subscribe(
-        ([requests, categories, requestTypes, requestStatuses]) => {
-          const requestsData = requests?.requests || [];
-          this.hasLoadedData = requestsData.length > 0;
+      forkJoin([
+        this.requestService.GetRequestsAgencyView(requestParams),
+        this.categoryHierarchyService.GetCategoryHierarchy(),
+        this.requestService.GetRequestTypes(),
+        this.requestService.GetRequestStatuses(),
+      ])
+        .pipe(
+          takeUntil(this.destroy$),
+          finalize(() => this.loadingService.hide())
+        )
+        .subscribe({
+          next: ([requests, categories, requestTypes, requestStatuses]) => {
+            const requestsData = requests?.requests || [];
+            this.hasLoadedData = requestsData.length > 0;
 
-          if (categories && categories.length > 0) {
-            this.hierarchicalCategories =
-              this.prepareCategoriesForTreeRendering(categories);
-            this.flattenedCategories = this.flattenCategories(
-              this.hierarchicalCategories
-            );
-          }
+            if (categories && categories.length > 0) {
+              this.hierarchicalCategories =
+                this.prepareCategoriesForTreeRendering(categories);
+              this.flattenedCategories = this.flattenCategories(
+                this.hierarchicalCategories
+              );
+            }
 
-          requestsData.forEach((request: any) => {
-            const category = this.findCategoryById(
-              categories || [],
-              request.categoryId
-            );
-            const requestType = (requestTypes || []).find(
-              (r) => r.requestTypeId === request.requestTypeId
-            );
+            requestsData.forEach((request: any) => {
+              const category = this.findCategoryById(
+                categories || [],
+                request.categoryId
+              );
+              const requestType = (requestTypes || []).find(
+                (r) => r.requestTypeId === request.requestTypeId
+              );
 
-            const agencyRequestStatus = (requestStatuses || []).find(
-              (rs: { requestStatusId: any }) =>
-                rs.requestStatusId === request.agencyRequestStatusId
-            );
+              const agencyRequestStatus = (requestStatuses || []).find(
+                (rs: { requestStatusId: any }) =>
+                  rs.requestStatusId === request.agencyRequestStatusId
+              );
 
-            const submittedOffersCount = (request.responses || []).filter(
-              (r: any) => r.offerorRequestStatusId === 9
-            ).length;
+              const submittedOffersCount = (request.responses || []).filter(
+                (r: any) => r.offerorRequestStatusId === 9
+              ).length;
 
-            request.publishDate = request.publishDate
-              ? new Date(request.publishDate + 'Z')
-              : null;
+              request.publishDate = request.publishDate
+                ? new Date(request.publishDate + 'Z')
+                : null;
 
-            request.closeDate = request.closeDate
-              ? new Date(request.closeDate + 'Z')
-              : null;
+              request.closeDate = request.closeDate
+                ? new Date(request.closeDate + 'Z')
+                : null;
 
-            combinedData.push({
-              ...request,
-              category,
-              requestType,
-              agencyRequestStatus,
-              submittedOffersCount,
+              combinedData.push({
+                ...request,
+                category,
+                requestType,
+                agencyRequestStatus,
+                submittedOffersCount,
+              });
             });
-          });
 
-          this.dataSource = new MatTableDataSource(combinedData);
-          this.cdr.detectChanges();
+            this.dataSource = new MatTableDataSource(combinedData);
+            this.cdr.detectChanges();
 
-          setTimeout(() => {
-            if (this.paginator) {
-              this.dataSource.paginator = this.paginator;
-              this.paginator.firstPage();
-            }
-            if (this.sort) {
-              this.dataSource.sort = this.sort;
-            }
-          }, 0);
-        },
-        (error) => {
-          console.error('Unexpected error in forkJoin:', error);
-          this.dataSource = new MatTableDataSource<any>([]);
-          this.hasLoadedData = false;
-        }
-      );
+            setTimeout(() => {
+              if (this.paginator) {
+                this.dataSource.paginator = this.paginator;
+                this.paginator.firstPage();
+              }
+              if (this.sort) {
+                this.dataSource.sort = this.sort;
+              }
+            }, 0);
+          },
+          error: (error: any) => {
+            const correlationId = error?.error?.correlationId;
+
+            let operation = 'UnknownOperation';
+            const errorUrl = error?.url?.toLowerCase?.() || '';
+
+            if (
+              errorUrl.includes('requestsagencyview') ||
+              errorUrl.includes('requests')
+            )
+              operation = 'GetRequestsAgencyView';
+            else if (errorUrl.includes('categoryhierarchy'))
+              operation = 'GetCategoryHierarchy';
+            else if (errorUrl.includes('requesttypes'))
+              operation = 'GetRequestTypes';
+            else if (errorUrl.includes('requeststatuses'))
+              operation = 'GetRequestStatuses';
+
+            this.loggingService.logException(
+              new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+              3,
+              {
+                organizationId: this.organizationId,
+                correlationId: correlationId,
+                methodName: 'loadAndJoinRequestData',
+                className: 'AgencyRequestTableDetailsComponent',
+                operation: operation,
+                userId: this.stateService.getUserId(),
+              }
+            );
+
+            this.dataSource = new MatTableDataSource<any>([]);
+            this.hasLoadedData = false;
+          },
+        });
+    } catch (error: any) {
+      this.dataSource = new MatTableDataSource<any>([]);
+    }
   }
 
   // future for dynamic filtering of solicitation name
@@ -573,14 +585,9 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          console.log(
-            `Request with ID ${request.requestId} deleted successfully.`
-          );
           this.loadAndJoinRequestData();
         },
         error: (error) => {
-          console.error('Error deleting the request:', error);
-
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(error, 3, {
@@ -588,8 +595,9 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
             organizationId: this.organizationId,
             correlationId: correlationId,
             methodName: 'deleteRequest',
-            className: 'OfferorTableComponent',
+            className: 'AgencyRequestTableDetailsComponent',
             operation: 'DeleteRequest',
+            userId: this.stateService.getUserId(),
           });
         },
       });
@@ -636,7 +644,20 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
             this.dataSource.data = this.joinedRequestData;
           },
           error: (error) => {
-            console.error('Error updating Request status:', error);
+            const correlationId = error?.error?.correlationId;
+
+            this.loggingService.logException(
+              new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+              3,
+              {
+                requestId: request.requestId,
+                newRequestStatusId: newRequestStatusId,
+                correlationId: correlationId,
+                methodName: 'onCancelUpdateRequestStatus',
+                className: 'AgencyTableDetailsComponent',
+                operation: 'UpdateRequestStatus',
+              }
+            );
           },
         });
     }
@@ -657,7 +678,21 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
           );
         },
         error: (error) => {
-          console.error('Error updating the request:', error);
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              requestId: request.requestId,
+              reasonId: reasonId,
+              reasonNote: reasonNote,
+              correlationId: correlationId,
+              methodName: 'onCancelUpdateRequestCancelReason',
+              className: 'AgencyTableDetailsComponent',
+              operation: 'UpdateRequestCancelReason',
+            }
+          );
         },
       });
   }

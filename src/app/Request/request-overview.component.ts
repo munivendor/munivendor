@@ -31,6 +31,7 @@ import {
 import { RequestService } from './services/request.service';
 import { StateService } from './services/state.service';
 import { Subject, takeUntil, Observable } from 'rxjs';
+import { LoggingService } from '../exceptionhandling/logging.service';
 
 function atLeastOneFieldFilledValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
@@ -122,7 +123,8 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private requestService: RequestService,
     private cdr: ChangeDetectorRef,
-    private stateService: StateService
+    private stateService: StateService,
+    private loggingService: LoggingService
   ) {
     this.organizationId = this.stateService.getOrganizationId() ?? 0;
   }
@@ -168,7 +170,24 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
             this.proposalSections.push(this.createSectionGroup(section));
           });
         },
-        error: (err) => console.error('Error fetching default sections', err),
+        error: (error) => {
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              organizationId: this.organizationId,
+              correlationId: correlationId,
+
+              methodName: 'initializeProposalSections',
+              className: 'RequestOverviewComponent',
+              operation: 'SaveRequestSections',
+              userId: this.stateService.getUserId(),
+              requestId: this.requestId,
+            }
+          );
+        },
       });
     } else {
       this.getRequestSectionsById(Number(this.idParam)).subscribe({
@@ -337,9 +356,21 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
                 }
               },
               error: (error) => {
-                console.error(
-                  `Error saving section ${section.requestSectionTitle}`,
-                  error
+                const correlationId = error?.error?.correlationId;
+
+                this.loggingService.logException(
+                  new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+                  3,
+                  {
+                    organizationId: this.organizationId,
+                    correlationId: correlationId,
+                    requestSectionsObj: payload,
+                    methodName: 'saveSections',
+                    className: 'RequestOverviewComponent',
+                    operation: 'SaveRequestSections',
+                    userId: this.stateService.getUserId(),
+                    requestId: this.requestId,
+                  }
                 );
               },
             });
