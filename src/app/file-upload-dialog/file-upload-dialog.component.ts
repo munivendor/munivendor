@@ -111,7 +111,6 @@ export class FileUploadDialogComponent {
         )
         .subscribe({
           next: (response) => {
-            console.log('Document uploaded and saved successfully:', response);
             this.dialogRef.close({
               documentId: response.documentId,
               documentName: municipalityDocument.documentName,
@@ -122,8 +121,6 @@ export class FileUploadDialogComponent {
             });
           },
           error: (error) => {
-            console.error('Error uploading document:', error);
-
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(
@@ -158,7 +155,6 @@ export class FileUploadDialogComponent {
         )
         .subscribe({
           next: (response) => {
-            console.log('Document uploaded and saved successfully:', response);
             this.dialogRef.close({
               documentId: response.documentId,
               documentName: this.documentName,
@@ -166,8 +162,6 @@ export class FileUploadDialogComponent {
             });
           },
           error: (error) => {
-            console.error('Error uploading document:', error);
-
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(

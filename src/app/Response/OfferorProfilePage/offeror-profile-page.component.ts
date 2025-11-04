@@ -125,8 +125,6 @@ export class OfferorProfilePageComponent implements OnInit {
         });
       },
       error: (error) => {
-        console.error('Error fetching organization:', error);
-
         const correlationId = error?.error?.correlationId;
 
         this.loggingService.logException(
@@ -153,8 +151,6 @@ export class OfferorProfilePageComponent implements OnInit {
           this.authorizingOfficials = officials;
         },
         error: (error) => {
-          console.error('Error fetching authorizing officials:', error);
-
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(

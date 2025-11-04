@@ -170,24 +170,8 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
             this.proposalSections.push(this.createSectionGroup(section));
           });
         },
-        error: (error) => {
-          const correlationId = error?.error?.correlationId;
-
-          this.loggingService.logException(
-            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
-            3,
-            {
-              organizationId: this.organizationId,
-              correlationId: correlationId,
-
-              methodName: 'initializeProposalSections',
-              className: 'RequestOverviewComponent',
-              operation: 'SaveRequestSections',
-              userId: this.stateService.getUserId(),
-              requestId: this.requestId,
-            }
-          );
-        },
+        error: (error) =>
+          this.handleSectionLoadError(error, 'getRequestSectionDefaultTitle'),
       });
     } else {
       this.getRequestSectionsById(Number(this.idParam)).subscribe({
@@ -198,24 +182,12 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
             });
             this.cdr.detectChanges();
           } else {
-            this.getRequestSectionDefaultTitle().subscribe({
-              next: (response) => {
-                response.forEach((section) => {
-                  this.proposalSections.push(this.createSectionGroup(section));
-                });
-              },
-            });
+            this.loadDefaultSections();
           }
         },
         error: (err) => {
-          console.error('Error fetching request sections', err);
-          this.getRequestSectionDefaultTitle().subscribe({
-            next: (response) => {
-              response.forEach((section) => {
-                this.proposalSections.push(this.createSectionGroup(section));
-              });
-            },
-          });
+          this.handleSectionLoadError(err, 'getRequestSectionsById');
+          this.loadDefaultSections();
         },
       });
     }
@@ -225,6 +197,36 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
       .subscribe(() => {
         this.formValidityChange.emit(this.proposalsOverviewFormGroup.valid);
       });
+  }
+
+  private loadDefaultSections(): void {
+    this.getRequestSectionDefaultTitle().subscribe({
+      next: (response) => {
+        response.forEach((section) => {
+          this.proposalSections.push(this.createSectionGroup(section));
+        });
+      },
+      error: (error) =>
+        this.handleSectionLoadError(error, 'loadDefaultSections'),
+    });
+  }
+
+  private handleSectionLoadError(error: any, operation: string): void {
+    const correlationId = error?.error?.correlationId;
+
+    this.loggingService.logException(
+      new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+      3,
+      {
+        organizationId: this.organizationId,
+        correlationId: correlationId,
+        methodName: 'initializeProposalSections',
+        className: 'RequestOverviewComponent',
+        operation: operation,
+        userId: this.stateService.getUserId(),
+        requestId: this.requestId,
+      }
+    );
   }
 
   get proposalSections(): FormArray {

@@ -842,13 +842,6 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Add method to normalize date to midnight local time when saving
-  private normalizeDateOnly(date: Date): Date {
-    const normalized = new Date(date);
-    normalized.setHours(0, 0, 0, 0);
-    return normalized;
-  }
-
   createRequest(): Request {
     const formValues = this.basicsFormGroup.value;
     let request = new Request();
@@ -865,10 +858,10 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     const closeTime = formValues.closeTime;
     request.closeDate = this.combineDateAndTime(closeDate, closeTime);
 
-    request.contractStart = this.normalizeDateOnly(
+    request.contractStart = this.normalizeDateToUTCNoon(
       new Date(formValues.contractStartDate)
     );
-    request.contractEnd = this.normalizeDateOnly(
+    request.contractEnd = this.normalizeDateToUTCNoon(
       new Date(formValues.contractEndDate)
     );
     request.decisionMakerSelections = formValues.dropdowns.map(
@@ -879,6 +872,14 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     );
 
     return request;
+  }
+
+  private normalizeDateToUTCNoon(date: Date): Date {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const day = date.getDate();
+    // Create date at UTC noon to avoid timezone boundary issues
+    return new Date(Date.UTC(year, month, day, 12, 0, 0, 0));
   }
 
   private combineDateAndTime(date: Date, timeString: string) {

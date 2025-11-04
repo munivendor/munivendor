@@ -144,6 +144,22 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
         error: (error) => {
           this.isLoading = false;
           this.forgotPasswordForm.get('email')?.enable();
+
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              email: this.currentEmail,
+              correlationId: correlationId,
+              methodName: 'onSubmit',
+              className: 'ForgotPasswordComponent',
+              operation: 'sendPasswordReset',
+            }
+          );
+
+          this.snackbarNotificationService.showSnackbarError(correlationId);
         },
       });
     }

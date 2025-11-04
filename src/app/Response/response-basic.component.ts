@@ -30,9 +30,6 @@ import { Response } from '../shared/model/response.model';
 import { StateService } from '../Request/services/state.service';
 import { TooltipDirective } from '../shared/directive/tooltip.directive';
 import { LoggingService } from '../exceptionhandling/logging.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { AuthService } from '../authorization/auth.service';
-import { SnackbarNotificationService } from '../shared/service/snackbar-notification.service';
 
 interface FlattenedCategoryNode {
   name: string;
@@ -255,8 +252,6 @@ export class ResponseBasicComponent implements OnInit {
           });
         },
         error: (error: any) => {
-          console.error('Error loading template request:', error);
-
           const correlationId = error?.error?.correlationId;
           let operation = 'UnknownOperation';
           const errorUrl = error?.url?.toLowerCase?.() || '';

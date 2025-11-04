@@ -672,11 +672,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
       .UpdateRequestCancelReason(request.requestId, reasonId, reasonNote)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: () => {
-          console.log(
-            `Request with ID ${request.requestId} updated successfully with cancel reason ID ${reasonId}.`
-          );
-        },
+        next: () => {},
         error: (error) => {
           const correlationId = error?.error?.correlationId;
 
