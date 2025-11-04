@@ -61,6 +61,8 @@ export class ResponseStepper implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
   allRequiredDocumentsUploaded = false;
+  hasOfferorDocuments = false;
+
   requestId?: number;
   responseId?: number;
   sourceIdParam?: string | undefined | null;
@@ -171,6 +173,7 @@ export class ResponseStepper implements OnInit, OnDestroy {
 
   onDocumentsValidityChange(valid: boolean): void {
     this.allRequiredDocumentsUploaded = valid;
+    this.hasOfferorDocuments = valid;
   }
 
   goToOfferorProfilePage() {

@@ -31,8 +31,6 @@ import { MatDialog } from '@angular/material/dialog';
 // import { TooltipDirective } from '../shared/directive/tooltip.directive';
 import { OfferorProfileService } from '../shared/service/offeror-profile.service';
 import { LoggingService } from '../exceptionhandling/logging.service';
-import { AuthService } from '../authorization/auth.service';
-import { SnackbarNotificationService } from '../shared/service/snackbar-notification.service';
 
 interface FlattenedCategoryNode {
   categoryId: string;
@@ -61,6 +59,7 @@ interface FlattenedCategoryNode {
 export class ResponseReviewComponent implements OnInit, OnDestroy {
   @Output() documentsValidityChange = new EventEmitter<boolean>();
   allRequiredDocumentsUploaded = false;
+  hasOfferorDocuments = false;
 
   @Input() sourceIdParam?: string | null | undefined;
   @Input() responseIdParam?: string | null | undefined;
@@ -526,19 +525,21 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
   }
 
   private checkRequiredDocumentsStatus(): void {
-    // Check if all required documents have been uploaded
-    // A document is considered uploaded if documentInstanceStatus is not 'Incomplete' or null
     this.allRequiredDocumentsUploaded = this.requiredDocumentsDatasource.every(
       (doc: any) =>
         doc.documentInstanceStatus &&
         doc.documentInstanceStatus !== 'Incomplete'
     );
 
-    this.documentsValidityChange.emit(this.allRequiredDocumentsUploaded);
+    this.hasOfferorDocuments = this.offerorDocumentsDatasource.length > 0;
+
+    const isValid =
+      this.allRequiredDocumentsUploaded && this.hasOfferorDocuments;
+    this.documentsValidityChange.emit(isValid);
   }
 
-  get hasAllRequiredDocuments(): boolean {
-    return this.allRequiredDocumentsUploaded;
+  get canSubmit(): boolean {
+    return this.allRequiredDocumentsUploaded && this.hasOfferorDocuments;
   }
 
   ngOnDestroy(): void {

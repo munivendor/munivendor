@@ -188,7 +188,21 @@
 </section>
 <br />
 <section>
-  <h2>Offeror Documents</h2>
+  <h2>
+    Offeror Documents
+    <mat-icon
+      *ngIf="!hasOfferorDocuments"
+      style="
+        font-size: medium;
+        color: #f44336;
+        vertical-align: middle;
+        margin-left: 8px;
+      "
+      matTooltip="At least one offeror document is required before submission"
+    >
+      warning
+    </mat-icon>
+  </h2>
   <table
     *ngIf="offerorDocumentsDatasource.length > 0"
     mat-table
@@ -221,8 +235,10 @@
   <p
     *ngIf="offerorDocumentsDatasource.length === 0"
     class="no-documents-message"
+    style="color: #f44336; font-weight: 500"
   >
-    No documents have been uploaded.
+    No documents have been uploaded. At least one offeror document is required
+    before submission.
   </p>
 </section>
 <br />
