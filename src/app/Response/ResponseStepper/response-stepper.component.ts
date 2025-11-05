@@ -85,7 +85,6 @@ export class ResponseStepper implements OnInit, OnDestroy {
         ? params.get('responseId')
         : this.stateService.getRequestId()?.toString();
 
-      // Check for redirect after route params are loaded
       this.checkAndRedirectOnReload();
     });
   }
@@ -115,7 +114,6 @@ export class ResponseStepper implements OnInit, OnDestroy {
         takeUntil(this.destroy$)
       )
       .subscribe((event) => {
-        // Check if navigating away from create-request-view
         if (!event.url.includes('/response-basic-view')) {
           this.clearCreationSessionStorage();
         }
@@ -125,18 +123,16 @@ export class ResponseStepper implements OnInit, OnDestroy {
   onStepChange(event: StepperSelectionEvent): void {
     // Check if we're navigating to the Review step (index 3, assuming 0-based)
     if (event.selectedIndex === 3 && this.responseReviewComponent) {
-      // Refresh the documents data when entering the review step
-      this.responseReviewComponent.initializeDocuments();
+      // Re-fetch all data (will display updated response name and updated document completion status)
+      this.responseReviewComponent.ngOnInit();
     }
   }
 
   private checkAndRedirectOnReload(): void {
-    // Only run in browser environment
     if (!isPlatformBrowser(this.platformId)) {
       return;
     }
 
-    // Check if we're in creation mode (not edit mode)
     const isCreationMode =
       sessionStorage.getItem('response_in_creation_mode') === 'true';
 
@@ -153,7 +149,6 @@ export class ResponseStepper implements OnInit, OnDestroy {
 
     // Only redirect if in creation mode AND page was reloaded
     if (hasResponseId && isPageReload && isCreationMode) {
-      // Clear the session storage before redirecting
       this.clearCreationSessionStorage();
       this.router.navigate(['/offeror-requests-view']);
     }
@@ -192,8 +187,6 @@ export class ResponseStepper implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
     this.stateService.clearRequestId();
-
-    // Always clear sessionStorage on component destroy (navigation away)
     this.clearCreationSessionStorage();
   }
 
