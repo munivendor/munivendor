@@ -51,7 +51,6 @@ import {
 } from 'rxjs/operators';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { LoggingService } from '../exceptionhandling/logging.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
 
 interface FlattenedCategoryNode {
   name: string;
@@ -91,7 +90,6 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     decisionMakerId: number | null;
   }>();
   @Output() formValidityChange = new EventEmitter<boolean>();
-  private _snackBar = inject(MatSnackBar);
   private _logger = inject(LoggingService);
 
   filteredCategoriesSubject = new BehaviorSubject<FlattenedCategoryNode[]>([]);
@@ -517,79 +515,55 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
   };
 
   private fetchInitialData(): void {
-    this.categoryHierarchyService
-      .GetCategoryHierarchy()
+    forkJoin({
+      categories: this.categoryHierarchyService.GetCategoryHierarchy(),
+      decisionMakers: this.requestService.GetDecisionMakers(
+        this.organizationId ?? 0
+      ),
+      requestTypes: this.requestService.GetRequestTypes(),
+    })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (categories) => {
+        next: ({ categories, decisionMakers, requestTypes }) => {
           this.hierarchicalCategories =
             this.prepareCategoriesForTreeRendering(categories);
           this.flattenCategories();
 
           const categoryControl = this.basicsFormGroup.get('category');
-          if (categoryControl && categoryControl.value) {
-            const currentValue = categoryControl.value;
-            categoryControl.setValue(currentValue, { emitEvent: true });
+          if (categoryControl?.value) {
+            categoryControl.setValue(categoryControl.value, {
+              emitEvent: true,
+            });
           }
-        },
-        error: (error) => {
-          const err = new Error(error.message || error.toString());
-          err.name = 'Fetch Category Hierarchy Failed';
-          this._logger.logException(err, 3, {
-            methodName: 'fetchInitialData',
-            className: 'RequestBasicComponent',
-            operation: 'GetCategoryHierarchy',
-            organizationId: this.organizationId,
-          });
-          this._snackBar.open(
-            'Failed to load categories. Please try again later.',
-            'Close',
-            { verticalPosition: 'top' }
-          );
-        },
-      });
 
-    this.requestService
-      .GetDecisionMakers(this.organizationId ?? 0)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (decisionMakers: DecisionMaker[]) =>
-          (this.decisionMakers = decisionMakers),
-        error: (error) => {
-          const err = new Error(error.message || error.toString());
-          err.name = 'Fetch Decision Makers Failed';
-          this._logger.logException(err, 3, {
-            methodName: 'fetchInitialData',
-            className: 'RequestBasicComponent',
-            operation: 'GetDecisionMakers',
-            organizationId: this.organizationId,
-          });
-          this._snackBar.open(
-            'Failed to load decision makers. Please try again later.',
-            'Close',
-            { verticalPosition: 'top' }
-          );
+          this.decisionMakers = decisionMakers;
+          this.requestTypes = requestTypes;
         },
-      });
+        error: (error: any) => {
+          const errorUrl = error?.url?.toLowerCase?.() || '';
+          const correlationId = error?.error?.correlationId;
 
-    this.requestService
-      .GetRequestTypes()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (requestTypes: RequestType[]) =>
-          (this.requestTypes = requestTypes),
-        error: (error) => {
-          const err = new Error(error.message || error.toString());
-          err.name = 'Fetch Request Types Failed';
-          this._logger.logException(err, 3, {
-            methodName: 'fetchInitialData',
-            className: 'YourComponent',
-            operation: 'GetRequestTypes',
-          });
-          this._snackBar.open(
-            'Failed to load request types. Please try again later.',
-            'Close',
-            { verticalPosition: 'top' }
+          let operation = 'UnknownOperation';
+
+          if (errorUrl.includes('categoryhierarchy')) {
+            operation = 'GetCategoryHierarchy';
+          } else if (errorUrl.includes('decisionmakers')) {
+            operation = 'GetDecisionMakers';
+          } else if (errorUrl.includes('requesttypes')) {
+            operation = 'GetRequestTypes';
+          }
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              methodName: 'fetchInitialData',
+              className: 'BasicRequestComponent',
+              operation: operation,
+              organizationId: this.organizationId,
+              correlationId: correlationId,
+              userId: this.stateService.getUserId(),
+            }
           );
         },
       });
@@ -683,8 +657,6 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
           this.cdr.detectChanges();
         },
         error: (error: any) => {
-          console.error('Error fetching request details:', error);
-
           const correlationId = error?.error?.correlationId;
 
           // Identify likely failing operation (based on backend message or URL)
@@ -711,14 +683,6 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
               className: 'RequestBasicsComponent',
               operation: operation,
               userId: this.stateService.getUserId(),
-            }
-          );
-
-          this._snackBar.open(
-            'An error occurred while fetching request data.',
-            'Close',
-            {
-              verticalPosition: 'top',
             }
           );
         },
@@ -764,15 +728,23 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
         .subscribe({
           next: () => {
             this.dropdowns.removeAt(index);
-            console.log(
-              `Decision Maker with ID ${decisionMakerId} removed successfully.`
+          },
+          error: (error) => {
+            const correlationId = error?.error?.correlationId;
+            this.loggingService.logException(
+              new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+              3,
+              {
+                requestId: this.requestId ?? Number(this.idParam),
+                organizationId: this.organizationId,
+                correlationId: correlationId,
+                methodName: 'removeDropdown',
+                className: 'RequestBasicsComponent',
+                operation: 'DeleteDecisionMaker',
+                userId: this.stateService.getUserId(),
+              }
             );
           },
-          error: (error) =>
-            console.error(
-              `Error removing Decision Maker with ID ${decisionMakerId}:`,
-              error
-            ),
         });
     } else {
       this.dropdowns.removeAt(index);
@@ -817,13 +789,6 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
             }
           },
           (error) => {
-            console.error('Error updating Request:', error);
-            this._snackBar.open(
-              'An error occurred while saving the request. Please try again.',
-              'Close',
-              { verticalPosition: 'top' }
-            );
-
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(
@@ -858,8 +823,6 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
             this.cdr.detectChanges();
           },
           (error) => {
-            console.error('Error creating request:', error);
-
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(
@@ -879,13 +842,6 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Add method to normalize date to midnight local time when saving
-  private normalizeDateOnly(date: Date): Date {
-    const normalized = new Date(date);
-    normalized.setHours(0, 0, 0, 0);
-    return normalized;
-  }
-
   createRequest(): Request {
     const formValues = this.basicsFormGroup.value;
     let request = new Request();
@@ -902,10 +858,10 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     const closeTime = formValues.closeTime;
     request.closeDate = this.combineDateAndTime(closeDate, closeTime);
 
-    request.contractStart = this.normalizeDateOnly(
+    request.contractStart = this.normalizeDateToUTCNoon(
       new Date(formValues.contractStartDate)
     );
-    request.contractEnd = this.normalizeDateOnly(
+    request.contractEnd = this.normalizeDateToUTCNoon(
       new Date(formValues.contractEndDate)
     );
     request.decisionMakerSelections = formValues.dropdowns.map(
@@ -916,6 +872,14 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     );
 
     return request;
+  }
+
+  private normalizeDateToUTCNoon(date: Date): Date {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const day = date.getDate();
+    // Create date at UTC noon to avoid timezone boundary issues
+    return new Date(Date.UTC(year, month, day, 12, 0, 0, 0));
   }
 
   private combineDateAndTime(date: Date, timeString: string) {

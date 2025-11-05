@@ -16,6 +16,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../authorization/auth.service';
+import { LoggingService } from '../exceptionhandling/logging.service';
+import { SnackbarNotificationService } from '../shared/service/snackbar-notification.service';
 
 @Component({
   selector: 'reset-password',
@@ -54,7 +56,9 @@ export class ForgotPasswordResetComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private loggingService: LoggingService,
+    private snackbarNotificationService: SnackbarNotificationService
   ) {}
 
   ngOnInit() {
@@ -145,19 +149,25 @@ export class ForgotPasswordResetComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           this.isSubmitting = false;
+          this.tokenError =
+            error.error || 'Something went wrong. Please try again later.';
+          this.isTokenValid = false;
 
-          if (error.status === 400) {
-            this.tokenError =
-              error.error ||
-              'This password reset link has expired or is invalid. Please request a new one.';
-            this.isTokenValid = false;
-          }
+          const correlationId = error?.error?.correlationId;
 
-          if (error.status === 500) {
-            this.tokenError =
-              error.error || 'Something went wrong. Please try again later.';
-            this.isTokenValid = false;
-          }
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              correlationId: correlationId,
+              methodName: 'onSubmit',
+              className: 'ForgotPasswordResetComponent',
+              operation: 'resetPassword',
+              token: this.token,
+            }
+          );
+
+          this.snackbarNotificationService.showSnackbarError(correlationId);
         },
       });
     }

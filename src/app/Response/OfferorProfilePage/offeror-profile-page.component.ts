@@ -19,8 +19,6 @@ import { Organization } from '../../Organization/Details/model/organization.mode
 import { StateService } from '../../Request/services/state.service';
 import { OfferorProfileService } from '../../shared/service/offeror-profile.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
-import { AuthService } from '../../authorization/auth.service';
-import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
 
 interface AuthorizingOfficial {
   vendorAuthorizingOfficialId?: number;
@@ -67,6 +65,9 @@ export class OfferorProfilePageComponent implements OnInit {
   isAddingNew = false;
   editingOfficialId: number | null = null;
 
+  private phonePattern =
+    /^(\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})$/;
+
   constructor(
     private fb: FormBuilder,
     private organizationService: OrganizationService,
@@ -104,7 +105,10 @@ export class OfferorProfilePageComponent implements OnInit {
         '',
         [Validators.required, Validators.email, Validators.maxLength(255)],
       ],
-      phone: ['', [Validators.maxLength(20)]],
+      phone: [
+        '',
+        [Validators.maxLength(20), Validators.pattern(this.phonePattern)],
+      ],
     });
   }
 
@@ -121,8 +125,6 @@ export class OfferorProfilePageComponent implements OnInit {
         });
       },
       error: (error) => {
-        console.error('Error fetching organization:', error);
-
         const correlationId = error?.error?.correlationId;
 
         this.loggingService.logException(
@@ -149,8 +151,6 @@ export class OfferorProfilePageComponent implements OnInit {
           this.authorizingOfficials = officials;
         },
         error: (error) => {
-          console.error('Error fetching authorizing officials:', error);
-
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(

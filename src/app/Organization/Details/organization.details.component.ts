@@ -17,8 +17,6 @@ import { takeUntil, tap, catchError, switchMap } from 'rxjs/operators';
 import { State } from '../../shared/model/state.model';
 import { FlowProgressService } from '../../shared/service/flow-progress.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
-import { AuthService } from '../../authorization/auth.service';
-import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
 
 @Component({
   selector: 'app-organization-details',
@@ -103,7 +101,7 @@ export class OrganizationDetailsComponent implements OnInit {
           Validators.required,
           Validators.minLength(3),
           Validators.maxLength(100),
-          Validators.pattern(/^[A-Za-z ]+$/),
+          Validators.pattern(/^[A-Za-z0-9 &.,\-']+$/),
         ],
       ],
       address: [

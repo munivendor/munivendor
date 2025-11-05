@@ -232,7 +232,7 @@ export class AuthService {
             error: () => {
               this.safeResetAuthState();
               this._snackBar.open(
-                'Login failed: Invalid email, password, or unauthorized email.',
+                'Login failed. Please check your credentials and try again.',
                 'Close',
                 { verticalPosition: 'top' }
               );

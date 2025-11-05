@@ -34,8 +34,6 @@ import { ChangeDetectorRef } from '@angular/core';
 import { LoadingService } from '../../shared/LoadingSpinner/loading.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { AuthService } from '../../authorization/auth.service';
-import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
 
 interface FlattenedCategoryNode {
   categoryId: string;
@@ -204,17 +202,12 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          console.log(
-            `Response with ID ${request.offerorRequestId} deleted successfully.`
-          );
           this._snackBar.open(`Offer successfully deleted.`, 'Close', {
             verticalPosition: 'top',
           });
           this.loadAndJoinRequestData();
         },
         error: (error) => {
-          console.error('Error deleting the offer:', error);
-
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -480,8 +473,6 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
             }, 0);
           },
           error: (error: any) => {
-            console.error('Error loading request data:', error);
-
             const correlationId = error?.error?.correlationId;
 
             let operation = 'UnknownOperation';

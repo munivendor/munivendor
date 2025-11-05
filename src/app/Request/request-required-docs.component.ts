@@ -16,7 +16,15 @@ import { RequestService } from './services/request.service';
 import { Document } from './model/document.model';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RequestDocument } from './model/requestdocument.model';
-import { forkJoin, map, Observable, Subject, takeUntil, tap } from 'rxjs';
+import {
+  catchError,
+  forkJoin,
+  map,
+  Observable,
+  Subject,
+  takeUntil,
+  tap,
+} from 'rxjs';
 import { StateService } from './services/state.service';
 import { SelectionModel } from '@angular/cdk/collections';
 import { MatTableModule } from '@angular/material/table';
@@ -24,6 +32,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DocumentService } from '../shared/service/document.service';
+import { LoggingService } from '../exceptionhandling/logging.service';
 
 @Component({
   selector: 'request-required-documents',
@@ -74,7 +83,8 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
     private requestService: RequestService,
     private stateService: StateService,
     private documentService: DocumentService,
-    public dialog: MatDialog
+    public dialog: MatDialog,
+    private loggingService: LoggingService
   ) {}
 
   ngOnInit(): void {
@@ -128,7 +138,11 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
           console.log('Documents fetched and form initialized for creation.');
         },
         error: (error) => {
-          console.error('Error fetching documents for creation:', error);
+          this.handleDocumentLoadError(
+            error,
+            'initializeForCreation',
+            'getAllDocumentTypes - GetRequiredDocuments/GetOptionalDocuments/GetMunicipalityDocuments'
+          );
         },
       });
   }
@@ -174,6 +188,11 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
                 }
               },
               error: (error) => {
+                this.handleDocumentLoadError(
+                  error,
+                  'initializeForEditing',
+                  'getAllDocumentTypes'
+                );
                 if (error.status >= 500) {
                   this.fallbackToCreation();
                 }
@@ -181,6 +200,11 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
             });
         },
         error: (error) => {
+          this.handleDocumentLoadError(
+            error,
+            'initializeForEditing',
+            'GetRequestRequiredDocumentsById'
+          );
           if (error.status >= 500) {
             this.fallbackToCreation();
           }
@@ -212,18 +236,36 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
     this.getAllDocumentTypes(Number(this.organizationId), undefined, true)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: () => {
-          console.log(
-            'Documents fetched and form initialized for creation (fallback).'
-          );
-        },
+        next: () => {},
         error: (error) => {
-          console.error(
-            'Error fetching documents for creation (fallback):',
-            error
+          this.handleDocumentLoadError(
+            error,
+            'fallbackToCreation',
+            'getAllDocumentTypes'
           );
         },
       });
+  }
+
+  private handleDocumentLoadError(
+    error: any,
+    methodContext: string,
+    operation: string
+  ): void {
+    const correlationId = error?.error?.correlationId;
+    this.loggingService.logException(
+      new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+      3,
+      {
+        organizationId: this.organizationId,
+        correlationId: correlationId,
+        methodName: methodContext,
+        className: 'RequestRequiredDocumentsComponent',
+        operation: operation,
+        userId: this.stateService.getUserId(),
+        requestId: this.idParam,
+      }
+    );
   }
 
   getAllDocumentTypes(
@@ -461,9 +503,20 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
           }
         },
         (error) => {
-          console.error(
-            'Error deleting optional organization document:',
-            error
+          const correlationId = error?.error?.correlationId;
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              organizationId: this.organizationId,
+              correlationId: correlationId,
+              documentId: documentId,
+              methodName: 'deleteOrganizationDocument',
+              className: 'RequestRequiredDocumentsComponent',
+              operation: 'DeleteOrganizationDocument',
+              userId: this.stateService.getUserId(),
+              requestId: this.idParam,
+            }
           );
         }
       );
@@ -501,8 +554,22 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
           document.body.removeChild(a);
           URL.revokeObjectURL(blobUrl);
         },
-        error: (err) => {
-          console.error('Failed to fetch document:', err);
+        error: (error) => {
+          const correlationId = error?.error?.correlationId;
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              organizationId: this.organizationId,
+              correlationId: correlationId,
+              organizationDocumentId: organizationDocumentId,
+              methodName: 'onDownloadAgencySpecificDocument',
+              className: 'RequestRequiredDocumentsComponent',
+              operation: 'GetAgencySpecificDocumentContent',
+              userId: this.stateService.getUserId(),
+              requestId: this.idParam,
+            }
+          );
         },
       });
   }
@@ -537,8 +604,22 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
         document.body.removeChild(a);
         URL.revokeObjectURL(blobUrl);
       },
-      error: (err: any) => {
-        console.error('Failed to fetch document:', err);
+      error: (error: any) => {
+        const correlationId = error?.error?.correlationId;
+        this.loggingService.logException(
+          new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+          3,
+          {
+            organizationId: this.organizationId,
+            correlationId: correlationId,
+            documentId: documentId,
+            methodName: 'onDownloadStateDocument',
+            className: 'RequestRequiredDocumentsComponent',
+            operation: 'GetStateDocumentContent',
+            userId: this.stateService.getUserId(),
+            requestId: this.idParam,
+          }
+        );
       },
     });
   }
@@ -581,7 +662,22 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
           this.stateService.setRequestHasBeenSaved(true);
         },
         error: (error) => {
-          console.error('Error saving documents:', error);
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              organizationId: this.organizationId,
+              correlationId: correlationId,
+              requestDocuments: requestDocuments,
+              methodName: 'saveDocuments',
+              className: 'RequestOverviewComponent',
+              operation: 'SaveRequestDocuments',
+              userId: this.stateService.getUserId(),
+              requestId: this.requestId,
+            }
+          );
         },
       });
   }

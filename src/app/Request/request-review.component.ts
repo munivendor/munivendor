@@ -73,7 +73,21 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
             this.hierarchicalCategories
           );
         },
-        error: (err) => console.error('Error fetching categories:', err),
+        error: (error) => {
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              userId: this.stateService.getUserId(),
+              correlationId: correlationId,
+              methodName: 'getCategoryHierarchy',
+              className: 'RequestReviewComponent',
+              operation: 'GetCategoryHierarchy',
+            }
+          );
+        },
       });
   }
 
@@ -172,11 +186,6 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
     });
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
   getRequestObjDetails(requestId: number) {
     const request$ = this.requestService.GetRequestDetailsById(requestId);
     const requestTypes$ = this.requestService.GetRequestTypes();
@@ -260,7 +269,32 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
           );
         },
         (error) => {
-          console.error('Error fetching data', error);
+          const correlationId = error?.error?.correlationId;
+          let operation = 'UnknownOperation';
+          const errorUrl = error?.url?.toLowerCase?.() || '';
+
+          if (errorUrl.includes('requestdetails'))
+            operation = 'GetRequestDetailsById';
+          else if (errorUrl.includes('requesttypes'))
+            operation = 'GetRequestTypes';
+          else if (errorUrl.includes('decisionmakers'))
+            operation = 'GetDecisionMakers';
+          else if (errorUrl.includes('requestrequireddocuments'))
+            operation = 'GetRequestRequiredDocumentsById';
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              requestId: requestId,
+              organizationId: this.organizationId,
+              correlationId: correlationId,
+              methodName: 'getRequestObjDetails',
+              className: 'RequestReviewComponent',
+              operation: operation,
+              userId: this.stateService.getUserId(),
+            }
+          );
         }
       );
   }
@@ -355,8 +389,6 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
           this.router.navigate(['/requests-view']);
         },
         error: (error) => {
-          console.error('Failed to update request status:', error);
-
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -374,5 +406,10 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
           );
         },
       });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

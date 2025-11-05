@@ -151,15 +151,19 @@
     </mat-card-content>
   </mat-card>
 
-  <div class="mat-elevation-z8" *ngIf="hasLoadedData">
+  <div class="mat-elevation-z8" *ngIf="hasLoadedData" matSort>
     <table mat-table [dataSource]="dataSource">
       <ng-container matColumnDef="requestName">
-        <th mat-header-cell *matHeaderCellDef>Solicitation Name</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>
+          Solicitation Name
+        </th>
         <td mat-cell *matCellDef="let request">{{ request.requestName }}</td>
       </ng-container>
 
       <ng-container matColumnDef="requestId">
-        <th mat-header-cell *matHeaderCellDef>Solicitation ID</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>
+          Solicitation ID
+        </th>
         <td mat-cell *matCellDef="let request">{{ request.requestId }}</td>
       </ng-container>
 

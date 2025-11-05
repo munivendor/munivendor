@@ -1,10 +1,11 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router, ActivatedRouteSnapshot } from '@angular/router';
 import { AuthService } from './auth.service';
-import { map, Observable, of, switchMap } from 'rxjs';
+import { catchError, map, Observable, of, switchMap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { StateService } from '../Request/services/state.service';
 import { FlowProgressService } from '../shared/service/flow-progress.service';
+import { LoggingService } from '../exceptionhandling/logging.service';
 
 export const AuthGuard: CanActivateFn = (
   route: ActivatedRouteSnapshot
@@ -35,6 +36,7 @@ export const GuestGuard: CanActivateFn = (
   const router = inject(Router);
   const stateService = inject(StateService);
   const flowProgressService = inject(FlowProgressService);
+  const loggingService = inject(LoggingService);
 
   return authService.isAuthenticated$.pipe(
     switchMap((isAuthenticated) => {
@@ -74,6 +76,25 @@ export const GuestGuard: CanActivateFn = (
             signupRoutes[lastCompletedPageId] || '/organization-details';
           router.navigate([route]);
           return false;
+        }),
+        catchError((error) => {
+          const correlationId = error?.error?.correlationId;
+
+          loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              organizationId: stateService.getOrganizationId(),
+              flowId: flowId,
+              correlationId: correlationId,
+              methodName: 'GuestGuard',
+              className: 'auth.guard.ts',
+              operation: 'getFlowProgress',
+              userId: userId,
+            }
+          );
+          router.navigate(['/organization-details']);
+          return of(false);
         })
       );
     })
@@ -87,6 +108,7 @@ export const FlowCompletionGuard: CanActivateFn = (
   const router = inject(Router);
   const stateService = inject(StateService);
   const flowProgressService = inject(FlowProgressService);
+  const loggingService = inject(LoggingService);
 
   return authService.isAuthenticated$.pipe(
     switchMap((isAuthenticated) => {
@@ -119,6 +141,25 @@ export const FlowCompletionGuard: CanActivateFn = (
             signupRoutes[lastCompletedPageId] || '/organization-details';
           router.navigate([signupRoute]);
           return false;
+        }),
+        catchError((error) => {
+          const correlationId = error?.error?.correlationId;
+
+          loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              organizationId: stateService.getOrganizationId(),
+              flowId: flowId,
+              correlationId: correlationId,
+              methodName: 'FlowCompletionGuard',
+              className: 'auth.guard.ts',
+              operation: 'getFlowProgress',
+              userId: userId,
+            }
+          );
+          router.navigate(['/organization-details']);
+          return of(false);
         })
       );
     })

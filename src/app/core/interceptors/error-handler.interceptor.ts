@@ -25,11 +25,11 @@ import { SnackbarNotificationService } from '../../shared/service/snackbar-notif
   standalone: true,
   selector: 'app-request-closed-dialog',
   template: `
-    <h2 mat-dialog-title>Request Already Closed</h2>
+    <h2 mat-dialog-title>Request Already Closed/Cancelled</h2>
     <mat-dialog-content>
       <p>
-        The request you are trying to access/respond to has already been closed.
-        You will be re-directed to the dashboard.
+        The request you are trying to access/respond to has already been closed
+        or cancelled. You will be re-directed to the dashboard.
       </p>
     </mat-dialog-content>
     <mat-dialog-actions align="end">

@@ -31,6 +31,7 @@ import {
 import { RequestService } from './services/request.service';
 import { StateService } from './services/state.service';
 import { Subject, takeUntil, Observable } from 'rxjs';
+import { LoggingService } from '../exceptionhandling/logging.service';
 
 function atLeastOneFieldFilledValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
@@ -122,7 +123,8 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private requestService: RequestService,
     private cdr: ChangeDetectorRef,
-    private stateService: StateService
+    private stateService: StateService,
+    private loggingService: LoggingService
   ) {
     this.organizationId = this.stateService.getOrganizationId() ?? 0;
   }
@@ -168,7 +170,8 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
             this.proposalSections.push(this.createSectionGroup(section));
           });
         },
-        error: (err) => console.error('Error fetching default sections', err),
+        error: (error) =>
+          this.handleSectionLoadError(error, 'getRequestSectionDefaultTitle'),
       });
     } else {
       this.getRequestSectionsById(Number(this.idParam)).subscribe({
@@ -179,24 +182,12 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
             });
             this.cdr.detectChanges();
           } else {
-            this.getRequestSectionDefaultTitle().subscribe({
-              next: (response) => {
-                response.forEach((section) => {
-                  this.proposalSections.push(this.createSectionGroup(section));
-                });
-              },
-            });
+            this.loadDefaultSections();
           }
         },
         error: (err) => {
-          console.error('Error fetching request sections', err);
-          this.getRequestSectionDefaultTitle().subscribe({
-            next: (response) => {
-              response.forEach((section) => {
-                this.proposalSections.push(this.createSectionGroup(section));
-              });
-            },
-          });
+          this.handleSectionLoadError(err, 'getRequestSectionsById');
+          this.loadDefaultSections();
         },
       });
     }
@@ -206,6 +197,36 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
       .subscribe(() => {
         this.formValidityChange.emit(this.proposalsOverviewFormGroup.valid);
       });
+  }
+
+  private loadDefaultSections(): void {
+    this.getRequestSectionDefaultTitle().subscribe({
+      next: (response) => {
+        response.forEach((section) => {
+          this.proposalSections.push(this.createSectionGroup(section));
+        });
+      },
+      error: (error) =>
+        this.handleSectionLoadError(error, 'loadDefaultSections'),
+    });
+  }
+
+  private handleSectionLoadError(error: any, operation: string): void {
+    const correlationId = error?.error?.correlationId;
+
+    this.loggingService.logException(
+      new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+      3,
+      {
+        organizationId: this.organizationId,
+        correlationId: correlationId,
+        methodName: 'initializeProposalSections',
+        className: 'RequestOverviewComponent',
+        operation: operation,
+        userId: this.stateService.getUserId(),
+        requestId: this.requestId,
+      }
+    );
   }
 
   get proposalSections(): FormArray {
@@ -337,9 +358,21 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
                 }
               },
               error: (error) => {
-                console.error(
-                  `Error saving section ${section.requestSectionTitle}`,
-                  error
+                const correlationId = error?.error?.correlationId;
+
+                this.loggingService.logException(
+                  new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+                  3,
+                  {
+                    organizationId: this.organizationId,
+                    correlationId: correlationId,
+                    requestSectionsObj: payload,
+                    methodName: 'saveSections',
+                    className: 'RequestOverviewComponent',
+                    operation: 'SaveRequestSections',
+                    userId: this.stateService.getUserId(),
+                    requestId: this.requestId,
+                  }
                 );
               },
             });
