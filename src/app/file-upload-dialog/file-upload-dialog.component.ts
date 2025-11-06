@@ -135,6 +135,7 @@ export class FileUploadDialogComponent {
                 className: 'FileUploadDialogComponent',
                 operation: 'SaveOrganizationDocument',
                 userId: this.stateService.getUserId(),
+                fileSize: this.selectedFile.size,
               }
             );
           },
@@ -176,6 +177,7 @@ export class FileUploadDialogComponent {
                 className: 'FileUploadDialogComponent',
                 operation: 'SaveOfferorDocument',
                 userId: this.stateService.getUserId(),
+                fileSize: this.selectedFile.size,
               }
             );
           },

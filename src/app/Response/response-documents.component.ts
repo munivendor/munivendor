@@ -300,6 +300,7 @@ export class ResponseDocumentsComponent implements OnInit {
                 className: 'ResponseDocumentsComponent',
                 operation: 'UploadDocumentInstance',
                 userId: this.stateService.getUserId(),
+                fileSize: file.size,
               }
             );
 
