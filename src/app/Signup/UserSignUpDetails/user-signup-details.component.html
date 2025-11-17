@@ -67,6 +67,7 @@
             matInput
             formControlName="title"
             placeholder="Enter your title"
+            id="title"
           />
           <mat-error
             *ngIf="userSignupDetailForm.get('title')?.hasError('required')"
@@ -86,6 +87,7 @@
                 matInput
                 formControlName="workPhoneNumber"
                 placeholder="Enter your work phone number"
+                id="workPhoneNumber"
               />
               <mat-error
                 *ngIf="
@@ -112,6 +114,7 @@
                 matInput
                 formControlName="personalPhoneNumber"
                 placeholder="Enter your mobile number"
+                id="personalPhoneNumber"
               />
               <mat-error
                 *ngIf="

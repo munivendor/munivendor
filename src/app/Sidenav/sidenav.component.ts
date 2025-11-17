@@ -53,22 +53,44 @@ export class Sidenav implements OnInit, AfterViewInit {
   agencyMenuItems = [
     // { icon: 'person', label: 'Agency Profile', route: '/profile' },
     {
+      id: 'create-solicitations',
       icon: 'add_box',
       label: 'Create Solicitations',
       route: '/create-request-view',
     },
-    { icon: 'dns', label: 'Categories', route: '/categories' },
-    { icon: 'help_outline', label: 'Definitions', route: '/definitions' },
+    {
+      id: 'categories',
+      icon: 'dns',
+      label: 'Categories',
+      route: '/categories',
+    },
+    {
+      id: 'definitions',
+      icon: 'help_outline',
+      label: 'Definitions',
+      route: '/definitions',
+    },
   ];
 
   offerorMenuItems = [
     {
+      id: 'offeror-profile',
       icon: 'person',
       label: 'Offeror Profile',
       route: '/offeror-profile-page',
     },
-    { icon: 'help', label: 'Definitions', route: '/definitions' },
-    { icon: 'warning', label: 'User Guide', route: '/user-guide' },
+    {
+      id: 'definitions',
+      icon: 'help',
+      label: 'Definitions',
+      route: '/definitions',
+    },
+    {
+      id: 'user-guide',
+      icon: 'warning',
+      label: 'User Guide',
+      route: '/user-guide',
+    },
   ];
 
   constructor(
@@ -173,6 +195,7 @@ export class Sidenav implements OnInit, AfterViewInit {
           : '/offeror-requests-view';
 
       items.unshift({
+        id: 'dashboard',
         icon: 'dashboard',
         label: 'Dashboard',
         route: dashboardRoute,

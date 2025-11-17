@@ -82,6 +82,7 @@
             matInput
             type="text"
             formControlName="firstname"
+            id="firstname"
             placeholder="Enter your First Name"
           />
           <mat-error
@@ -103,6 +104,7 @@
             matInput
             type="text"
             formControlName="lastname"
+            id="lastname"
             placeholder="Enter your Last Name"
           />
           <mat-error
@@ -147,6 +149,7 @@
             matInput
             type="email"
             formControlName="email"
+            id="email"
             placeholder="Enter your work email"
           />
           <mat-error *ngIf="signupFormEmail.get('email')?.hasError('required')">
@@ -168,6 +171,7 @@
             matInput
             [type]="hidePassword ? 'password' : 'text'"
             formControlName="password"
+            id="password"
             placeholder="Enter your password"
           />
           <button
@@ -197,6 +201,7 @@
             matInput
             [type]="hideConfirmPassword ? 'password' : 'text'"
             formControlName="confirmPassword"
+            id="confirmPassword"
             placeholder="Confirm your password"
             (cut)="$event.preventDefault()"
             (copy)="$event.preventDefault()"

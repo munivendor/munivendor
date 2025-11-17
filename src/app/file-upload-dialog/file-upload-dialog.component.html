@@ -4,7 +4,7 @@
     <div class="form-field-container">
       <mat-form-field>
         <mat-label>Enter Document Name</mat-label>
-        <input matInput [(ngModel)]="documentName" />
+        <input matInput [(ngModel)]="documentName" id="documentName" />
       </mat-form-field>
     </div>
     <input
@@ -13,6 +13,7 @@
       name="fileUpload"
       (change)="onFileSelected($event)"
       accept=".pdf,.jpg,.jpeg"
+      id="fileUploadDailog"
     />
   </div>
 
