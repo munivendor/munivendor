@@ -138,6 +138,25 @@ export class OrganizationDetailsComponent implements OnInit {
     });
   }
 
+  getOrganizationNameError(): string {
+    const control = this.organizationDetailForm.get('organizationName');
+
+    if (control?.hasError('required')) {
+      return 'Organization Name is required.';
+    }
+    if (control?.hasError('minlength')) {
+      return 'Organization Name must be at least 3 characters long.';
+    }
+    if (control?.hasError('maxlength')) {
+      return 'Organization Name cannot exceed 100 characters.';
+    }
+    if (control?.hasError('pattern')) {
+      return "Organization Name can only contain letters, numbers, spaces and the following special characters: , . & - '.";
+    }
+
+    return '';
+  }
+
   onSubmit(): void {
     if (this.organizationDetailForm.invalid) {
       return;

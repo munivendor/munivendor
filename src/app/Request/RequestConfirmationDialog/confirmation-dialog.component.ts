@@ -239,6 +239,7 @@ export class ConfirmationDialog implements OnDestroy {
               methodName: 'downloadZipDocuments',
               className: 'ConfirmationDialog',
               operation: 'DownloadOfferorZipDocuments',
+              message: error.detailedInfo.message,
             }
           );
         },

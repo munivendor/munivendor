@@ -14,6 +14,7 @@
             required
             (focus)="onCategoryFocus()"
             formControlName="category"
+            id="categoryInput"
             [matAutocomplete]="auto"
           />
           <mat-autocomplete
@@ -101,7 +102,7 @@
         <p>Solicitation Name</p>
         <mat-form-field appearance="fill" class="input-width">
           <mat-label>Solicitation Name</mat-label>
-          <input matInput formControlName="requestName" />
+          <input matInput formControlName="requestName" id="requestName" />
           <mat-error
             *ngIf="basicsFormGroup?.get('requestName')?.hasError('required')"
           >
@@ -122,6 +123,7 @@
             [matDatepicker]="publishDatePicker"
             [matDatepickerFilter]="disableWeekendsAndPastDates"
             formControlName="publishDate"
+            id="publishDate"
             (dateChange)="onSelectDate('publishDate', $event)"
             readonly
           />
@@ -142,7 +144,12 @@
         <p>What is the Publish Time?</p>
         <mat-form-field appearance="fill" class="input-width">
           <mat-label>Publish Time</mat-label>
-          <input matInput type="time" formControlName="publishTime" />
+          <input
+            matInput
+            type="time"
+            formControlName="publishTime"
+            id="publishTime"
+          />
           <mat-error
             *ngIf="basicsFormGroup?.get('publishTime')?.hasError('required')"
           >
@@ -162,6 +169,7 @@
             [matDatepicker]="closeDatePicker"
             [matDatepickerFilter]="disableCloseDates"
             formControlName="closeDate"
+            id="closeDate"
             (dateChange)="onSelectDate('closeDate', $event)"
             readonly
           />
@@ -182,7 +190,12 @@
         <p>What is the Close Time?</p>
         <mat-form-field appearance="fill" class="input-width">
           <mat-label>Close Time</mat-label>
-          <input matInput type="time" formControlName="closeTime" />
+          <input
+            matInput
+            type="time"
+            formControlName="closeTime"
+            id="closeTime"
+          />
           <mat-error
             *ngIf="basicsFormGroup?.get('closeTime')?.hasError('required')"
           >
@@ -202,6 +215,7 @@
             [matDatepicker]="contractStartDatePicker"
             [matDatepickerFilter]="disableWeekendsAndPastDates"
             formControlName="contractStartDate"
+            id="contractStartDate"
             (dateChange)="onSelectDate('contractStartDate', $event)"
             readonly
           />
@@ -229,6 +243,7 @@
             [matDatepicker]="contractEndDatePicker"
             [matDatepickerFilter]="disableContractEndDates"
             formControlName="contractEndDate"
+            id="contractEndDate"
             (dateChange)="onSelectDate('contractEndDate', $event)"
             readonly
           />
@@ -261,6 +276,7 @@
                 <mat-label>Decision Maker</mat-label>
                 <mat-select
                   formControlName="decisionMaker"
+                  id="decisionMaker"
                   placeholder="Choose Decision Maker"
                 >
                   <mat-option

@@ -23,44 +23,14 @@
           <input
             matInput
             formControlName="organizationName"
+            id="organizationName"
             required
             placeholder="Enter your organization name"
           />
           <mat-error
-            *ngIf="
-              organizationDetailForm
-                .get('organizationName')
-                ?.hasError('required')
-            "
+            *ngIf="organizationDetailForm.get('organizationName')?.invalid"
           >
-            Organization Name is required.
-          </mat-error>
-          <mat-error
-            *ngIf="
-              organizationDetailForm
-                .get('organizationName')
-                ?.hasError('minlength')
-            "
-          >
-            Organization Name must be at least 3 characters long.
-          </mat-error>
-          <mat-error
-            *ngIf="
-              organizationDetailForm
-                .get('organizationName')
-                ?.hasError('maxlength')
-            "
-          >
-            Organization Name cannot exceed 100 characters.
-          </mat-error>
-          <mat-error
-            *ngIf="
-              organizationDetailForm
-                .get('organizationName')
-                ?.hasError('pattern')
-            "
-          >
-            Organization Name can only contain letters and spaces.
+            {{ getOrganizationNameError() }}
           </mat-error>
         </mat-form-field>
 
@@ -69,6 +39,7 @@
           <input
             matInput
             formControlName="address"
+            id="address"
             required
             placeholder="Enter your address"
           />
@@ -100,6 +71,7 @@
           <input
             matInput
             formControlName="address2"
+            id="address2"
             placeholder="Enter your secondary Address (optional)"
           />
           <mat-error
@@ -129,6 +101,7 @@
           <input
             matInput
             formControlName="city"
+            id="city"
             required
             placeholder="Enter your city"
           />
@@ -173,6 +146,7 @@
           <input
             matInput
             formControlName="zipCode"
+            id="zipCode"
             required
             placeholder="Enter your zip code"
           />

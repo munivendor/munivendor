@@ -28,6 +28,7 @@
         <mat-list-item
           *ngFor="let item of menuItems"
           class="nav-item"
+          [id]="item.id"
           [class.active]="isActiveRoute(item.route)"
           (click)="onMenuClick(item)"
         >
