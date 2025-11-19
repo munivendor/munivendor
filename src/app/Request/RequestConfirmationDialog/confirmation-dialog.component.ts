@@ -26,7 +26,8 @@ import { Router } from '@angular/router';
 import { DocumentService } from '../../shared/service/document.service';
 import { RequestService } from '../services/request.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
-import { Subject, switchMap, takeUntil } from 'rxjs';
+import { Subject, switchMap, takeUntil, tap, Observable } from 'rxjs';
+import { LoadingService } from '../../shared/LoadingSpinner/loading.service';
 
 export interface DialogData {
   action: string;
@@ -67,7 +68,8 @@ export class ConfirmationDialog implements OnDestroy {
     private router: Router,
     private documentService: DocumentService,
     private requestService: RequestService,
-    private loggingService: LoggingService
+    private loggingService: LoggingService,
+    private loadingService: LoadingService
   ) {}
 
   getConfirmationMessage(): string {
@@ -146,16 +148,22 @@ export class ConfirmationDialog implements OnDestroy {
     }
 
     if (this.requestObjAndUserAction.action === 'open') {
-      this.requestService
-        .UpdateRequestStatus(request.requestId, 6)
+      this.loadingService.show('Downloading...');
+      this.downloadZipDocuments(request)
         .pipe(
+          switchMap(() => {
+            this.loadingService.hide();
+            return this.requestService.UpdateRequestStatus(
+              request.requestId,
+              6
+            );
+          }),
           switchMap((res) => {
             this.statusUpdated.emit({
               requestId: request.requestId,
               newStatusId: 6,
               newStatusDesc: 'Opened',
             });
-            this.downloadZipDocuments(request);
             return this.requestService.NotifyOfferorSolicitationOpened(
               request.requestId
             );
@@ -163,26 +171,37 @@ export class ConfirmationDialog implements OnDestroy {
         )
         .subscribe({
           next: (notifyRes) => {
+            this.loadingService.hide();
             this.dialogRef.close(true);
           },
           error: (error) => {
+            this.loadingService.hide();
+
+            const errorUrl = error?.url?.toLowerCase?.() || '';
             const correlationId = error?.error?.correlationId;
-            const isNotifyError = error.url?.includes(
-              'NotifyOfferorSolicitationOpened'
-            );
+
+            let operation = 'UnknownOperation';
+
+            if (
+              errorUrl.includes('downloadzipdocuments') ||
+              errorUrl.includes('download')
+            ) {
+              operation = 'DownloadZipDocuments';
+            } else if (errorUrl.includes('updaterequeststatus')) {
+              operation = 'UpdateRequestStatus';
+            } else if (errorUrl.includes('notifyofferorsolicitationopened')) {
+              operation = 'NotifyOfferorSolicitationOpened';
+            }
 
             this.loggingService.logException(
               new Error(`HTTP Error ${error.status}: ${error.statusText}`),
               3,
               {
                 requestId: request.requestId,
-                ...(isNotifyError ? {} : { newRequestStatus: 6 }),
-                correlationId: correlationId,
                 methodName: 'confirm',
                 className: 'ConfirmationDialog',
-                operation: isNotifyError
-                  ? 'NotifyOfferorSolicitationOpened'
-                  : 'UpdateRequestStatus',
+                operation: operation,
+                correlationId: correlationId,
               }
             );
             this.dialogRef.close(false);
@@ -192,8 +211,33 @@ export class ConfirmationDialog implements OnDestroy {
     }
 
     if (this.requestObjAndUserAction.action === 'redownload') {
-      this.downloadZipDocuments(request);
-      this.dialogRef.close(true);
+      this.loadingService.show('Re-downloading...');
+
+      this.downloadZipDocuments(request).subscribe({
+        next: () => {
+          this.loadingService.hide();
+          this.dialogRef.close(true);
+        },
+        error: (error) => {
+          this.loadingService.hide();
+
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              requestId: request.requestId,
+              methodName: 'confirm',
+              className: 'ConfirmationDialog',
+              operation: 'DownloadOfferorZipDocuments',
+              correlationId: correlationId,
+            }
+          );
+
+          this.dialogRef.close(false);
+        },
+      });
       return;
     }
 
@@ -207,11 +251,11 @@ export class ConfirmationDialog implements OnDestroy {
     this.destroy$.complete();
   }
 
-  downloadZipDocuments(request: any) {
-    this.documentService
+  downloadZipDocuments(request: any): Observable<Blob> {
+    return this.documentService
       .DownloadOfferorZipDocuments(request.requestId)
-      .subscribe({
-        next: (zipBlob) => {
+      .pipe(
+        tap((zipBlob) => {
           const date = new Date(request.publishDate);
           const month = String(date.getMonth() + 1).padStart(2, '0');
           const day = String(date.getDate()).padStart(2, '0');
@@ -226,24 +270,8 @@ export class ConfirmationDialog implements OnDestroy {
           link.download = fileName;
           link.click();
           window.URL.revokeObjectURL(blobUrl);
-        },
-        error: (error) => {
-          const correlationId = error?.error?.correlationId;
-
-          this.loggingService.logException(
-            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
-            3,
-            {
-              requestId: request.requestId,
-              correlationId: correlationId,
-              methodName: 'downloadZipDocuments',
-              className: 'ConfirmationDialog',
-              operation: 'DownloadOfferorZipDocuments',
-              message: error.detailedInfo.message,
-            }
-          );
-        },
-      });
+        })
+      );
   }
 
   openCancellationReasonDialog(action: string, request: any): void {
