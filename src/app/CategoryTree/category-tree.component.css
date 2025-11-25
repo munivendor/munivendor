@@ -1,34 +1,193 @@
+.categories-container {
+  background-color: white;
+  padding: 40px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header-banner {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30px;
+  border-radius: 8px 8px 0 0;
+  margin: -40px -40px 30px -40px;
+  text-align: center;
+}
+
+.header-banner h1 {
+  color: white;
+  margin: 0;
+  border: none;
+}
+
+.clean-tree {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
 .mat-tree-node {
   display: flex;
   align-items: center;
+  min-height: 44px;
+  padding: 6px 16px 6px 8px;
+  position: relative;
+  transition: background-color 0.2s ease;
+  border-radius: 6px;
+  margin: 2px 0;
+}
+
+.mat-tree-node:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
+.mat-tree-node span {
+  font-size: 14px;
+  color: #333;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.5;
+}
+
+.mat-nested-tree-node > .mat-tree-node span {
+  font-weight: 500;
+  color: #1a1a1a;
 }
 
 .mat-tree-node .mat-icon-button {
-  margin-right: 8px;
+  width: 32px;
+  height: 32px;
+  margin-right: 4px;
+  flex-shrink: 0;
 }
 
-.node-actions {
-  margin-left: auto;
-  display: flex;
+.mat-tree-node .mat-icon-button .mat-icon {
+  color: #666;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
 }
 
-.edit-input {
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-size: 14px;
-  margin-right: 8px;
+/* Leaf nodes (no children) */
+.mat-tree-node button[disabled] {
+  opacity: 0;
+  cursor: default;
 }
 
 .tree-invisible {
   display: none;
 }
 
-.badge {
-  margin-left: 8px;
-  background-color: #f44336;
-  color: white;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 10px;
+.mat-nested-tree-node {
+  margin-bottom: 4px;
+}
+
+.mat-nested-tree-node > div[role="group"] {
+  padding-left: 30px;
+  overflow: hidden;
+}
+
+/* Add subtle left border for nested items */
+.mat-nested-tree-node > div[role="group"]::before {
+  content: "";
+  position: absolute;
+  left: 28px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+
+.mat-tree-node[style*="padding-left"] {
+  position: relative;
+}
+
+.mat-icon-rtl-mirror {
+  transition: transform 0.2s ease;
+}
+
+.mat-tree-node .mat-icon-button:focus {
+  background-color: rgba(0, 0, 0, 0.1);
+  outline: 2px solid #1976d2;
+  outline-offset: 2px;
+}
+
+/* Top-level nodes - Blue accent (#1976d2) */
+.clean-tree > .mat-nested-tree-node > .mat-tree-node,
+.clean-tree > .mat-tree-node {
+  background-color: rgba(0, 0, 0, 0.04);
+  margin: 4px 0;
+  border-left: 3px solid transparent;
+}
+
+.clean-tree > .mat-nested-tree-node > .mat-tree-node:hover,
+.clean-tree > .mat-tree-node:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+  border-left-color: #1976d2;
+}
+
+/* Child nodes (level 1) - Purple accent (#9c27b0) */
+.clean-tree
+  > .mat-nested-tree-node
+  > div[role="group"]
+  > .mat-nested-tree-node
+  > .mat-tree-node,
+.clean-tree > .mat-nested-tree-node > div[role="group"] > .mat-tree-node {
+  background-color: rgba(0, 0, 0, 0.03);
+  margin: 3px 0;
+  border-left: 3px solid transparent;
+}
+
+.clean-tree
+  > .mat-nested-tree-node
+  > div[role="group"]
+  > .mat-nested-tree-node
+  > .mat-tree-node:hover,
+.clean-tree > .mat-nested-tree-node > div[role="group"] > .mat-tree-node:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+  border-left-color: #9c27b0;
+}
+
+/* Grandchild nodes (level 2) - Green accent (#5db920) */
+.clean-tree
+  > .mat-nested-tree-node
+  > div[role="group"]
+  > .mat-nested-tree-node
+  > div[role="group"]
+  > .mat-nested-tree-node
+  > .mat-tree-node,
+.clean-tree
+  > .mat-nested-tree-node
+  > div[role="group"]
+  > .mat-nested-tree-node
+  > div[role="group"]
+  > .mat-tree-node {
+  background-color: rgba(0, 0, 0, 0.02);
+  margin: 2px 0;
+  border-left: 3px solid transparent;
+}
+
+.clean-tree
+  > .mat-nested-tree-node
+  > div[role="group"]
+  > .mat-nested-tree-node
+  > div[role="group"]
+  > .mat-nested-tree-node
+  > .mat-tree-node:hover,
+.clean-tree
+  > .mat-nested-tree-node
+  > div[role="group"]
+  > .mat-nested-tree-node
+  > div[role="group"]
+  > .mat-tree-node:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-left-color: #5db920;
+}
+
+@media (max-width: 768px) {
+  .mat-tree-node {
+    min-height: 40px;
+    padding: 4px 12px 4px 0;
+  }
+
+  .mat-tree-node span {
+    font-size: 13px;
+  }
 }
