@@ -6,13 +6,12 @@ import {
   TemplateRef,
   Input,
 } from '@angular/core';
-import { finalize, forkJoin, Subject, takeUntil } from 'rxjs';
+import { finalize, Subject, takeUntil } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ConfirmationDialog } from '../RequestConfirmationDialog/confirmation-dialog.component';
 import { RequestService } from '../services/request.service';
 import { Request } from '../model/request.model';
-import { CategoryHierarchyService } from '../services/category-hierarchy.service';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatButtonModule } from '@angular/material/button';
@@ -149,7 +148,6 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
   constructor(
     public dialog: MatDialog,
     private requestService: RequestService,
-    private categoryHierarchyService: CategoryHierarchyService,
     private fb: FormBuilder,
     private stateService: StateService,
     private cdr: ChangeDetectorRef,
@@ -181,7 +179,16 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     'redownload',
   ] as const;
 
-  displayCategoryName = (categoryId: string | number | null): string => {
+  displayCategoryName = (
+    categoryId: string | number | null,
+    categoryFullPath?: string
+  ): string => {
+    // If categoryFullPath is provided, use it directly
+    if (categoryFullPath) {
+      return categoryFullPath;
+    }
+
+    // Fallback to old logic for backwards compatibility
     if (categoryId == null) {
       return '';
     }
@@ -214,32 +221,6 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     }
 
     return path.join(' > ');
-  }
-
-  private flattenCategories(
-    categories: CategoryNode[],
-    parentId: string | null = null
-  ): FlattenedCategoryNode[] {
-    const flattened: FlattenedCategoryNode[] = [];
-
-    for (const category of categories) {
-      flattened.push({
-        categoryId: category.categoryId || category.id?.toString() || '',
-        name: category.name || '',
-        parentId: parentId,
-      });
-
-      if (category.children && category.children.length > 0) {
-        flattened.push(
-          ...this.flattenCategories(
-            category.children,
-            category.categoryId || category.id?.toString() || ''
-          )
-        );
-      }
-    }
-
-    return flattened;
   }
 
   prepareCategoriesForTreeRendering(
@@ -349,42 +330,28 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
 
       this.loadingService.show();
 
-      forkJoin([
-        this.requestService.GetRequestsAgencyView(requestParams),
-        this.categoryHierarchyService.GetCategoryHierarchy(),
-        this.requestService.GetRequestTypes(),
-        this.requestService.GetRequestStatuses(),
-      ])
+      this.requestService
+        .GetRequestsAgencyView(requestParams)
         .pipe(
           takeUntil(this.destroy$),
           finalize(() => this.loadingService.hide())
         )
         .subscribe({
-          next: ([requests, categories, requestTypes, requestStatuses]) => {
+          next: (requests) => {
             const requestsData = requests?.requests || [];
             this.hasLoadedData = requestsData.length > 0;
 
-            if (categories && categories.length > 0) {
-              this.hierarchicalCategories =
-                this.prepareCategoriesForTreeRendering(categories);
-              this.flattenedCategories = this.flattenCategories(
-                this.hierarchicalCategories
-              );
-            }
-
             requestsData.forEach((request: any) => {
-              const category = this.findCategoryById(
-                categories || [],
-                request.categoryId
-              );
-              const requestType = (requestTypes || []).find(
-                (r) => r.requestTypeId === request.requestTypeId
-              );
+              // Map the friendly names from the API response
+              const requestType = {
+                requestTypeId: request.requestTypeId,
+                requestTypeDesc: request.requestTypeName,
+              };
 
-              const agencyRequestStatus = (requestStatuses || []).find(
-                (rs: { requestStatusId: any }) =>
-                  rs.requestStatusId === request.agencyRequestStatusId
-              );
+              const agencyRequestStatus = {
+                requestStatusId: request.agencyRequestStatusId,
+                requestStatusDesc: request.agencyRequestStatusName,
+              };
 
               const submittedOffersCount = (request.responses || []).filter(
                 (r: any) => r.offerorRequestStatusId === 9
@@ -400,7 +367,6 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
 
               combinedData.push({
                 ...request,
-                category,
                 requestType,
                 agencyRequestStatus,
                 submittedOffersCount,
@@ -423,21 +389,6 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
           error: (error: any) => {
             const correlationId = error?.error?.correlationId;
 
-            let operation = 'UnknownOperation';
-            const errorUrl = error?.url?.toLowerCase?.() || '';
-
-            if (
-              errorUrl.includes('requestsagencyview') ||
-              errorUrl.includes('requests')
-            )
-              operation = 'GetRequestsAgencyView';
-            else if (errorUrl.includes('categoryhierarchy'))
-              operation = 'GetCategoryHierarchy';
-            else if (errorUrl.includes('requesttypes'))
-              operation = 'GetRequestTypes';
-            else if (errorUrl.includes('requeststatuses'))
-              operation = 'GetRequestStatuses';
-
             this.loggingService.logException(
               new Error(`HTTP Error ${error.status}: ${error.statusText}`),
               3,
@@ -445,8 +396,8 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
                 organizationId: this.organizationId,
                 correlationId: correlationId,
                 methodName: 'loadAndJoinRequestData',
-                className: 'AgencyRequestTableDetailsComponent',
-                operation: operation,
+                className: 'AgencyTableDetailsComponent',
+                operation: 'GetRequestsAgencyView',
                 userId: this.stateService.getUserId(),
               }
             );
@@ -493,20 +444,6 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-  }
-
-  private findCategoryById(categories: any[], targetId: number): any {
-    for (const category of categories) {
-      if (category.id === targetId) {
-        return category;
-      }
-
-      if (category.children && category.children.length > 0) {
-        const found = this.findCategoryById(category.children, targetId);
-        if (found) return found;
-      }
-    }
-    return null;
   }
 
   openConfirmationDialog(action: string, request: any): void {
@@ -595,7 +532,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
             organizationId: this.organizationId,
             correlationId: correlationId,
             methodName: 'deleteRequest',
-            className: 'AgencyRequestTableDetailsComponent',
+            className: 'AgencyTableDetailsComponent',
             operation: 'DeleteRequest',
             userId: this.stateService.getUserId(),
           });

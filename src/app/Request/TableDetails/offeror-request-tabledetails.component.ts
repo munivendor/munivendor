@@ -7,14 +7,13 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
-import { finalize, forkJoin, Subject, takeUntil } from 'rxjs';
+import { finalize, Subject, takeUntil } from 'rxjs';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { RequestService } from '../services/request.service';
-import { CategoryHierarchyService } from '../services/category-hierarchy.service';
 import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -78,7 +77,16 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
 
   readonly AVAILABLE_ACTIONS = ['respond', 'delete', 'continue'] as const;
 
-  displayCategoryName = (categoryId: string | number | null): string => {
+  displayCategoryName = (
+    categoryId: string | number | null,
+    categoryFullPath?: string
+  ): string => {
+    // If categoryFullPath is provided, use it directly
+    if (categoryFullPath) {
+      return categoryFullPath;
+    }
+
+    // Fallback to old logic for backwards compatibility
     if (categoryId == null) {
       return '';
     }
@@ -111,32 +119,6 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
     }
 
     return path.join(' > ');
-  }
-
-  private flattenCategories(
-    categories: CategoryNode[],
-    parentId: string | null = null
-  ): FlattenedCategoryNode[] {
-    const flattened: FlattenedCategoryNode[] = [];
-
-    for (const category of categories) {
-      flattened.push({
-        categoryId: category.categoryId || category.id?.toString() || '',
-        name: category.name || '',
-        parentId: parentId,
-      });
-
-      if (category.children && category.children.length > 0) {
-        flattened.push(
-          ...this.flattenCategories(
-            category.children,
-            category.categoryId || category.id?.toString() || ''
-          )
-        );
-      }
-    }
-
-    return flattened;
   }
 
   prepareCategoriesForTreeRendering(
@@ -272,7 +254,6 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
 
   constructor(
     private requestService: RequestService,
-    private categoryHierarchyService: CategoryHierarchyService,
     private fb: FormBuilder,
     public dialog: MatDialog,
     private stateService: StateService,
@@ -400,46 +381,35 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
 
       this.loadingService.show();
 
-      forkJoin([
-        this.requestService.GetRequestsOfferorView(requestParams || {}),
-        this.categoryHierarchyService.GetCategoryHierarchy(),
-        this.requestService.GetRequestTypes(),
-        this.requestService.GetRequestStatuses(),
-      ])
+      this.requestService
+        .GetRequestsOfferorView(requestParams || {})
         .pipe(
           takeUntil(this.destroy$),
           finalize(() => this.loadingService.hide())
         )
         .subscribe({
-          next: ([requests, categories, requestTypes, requestStatuses]) => {
+          next: (requests) => {
             const requestsData = requests?.requests || [];
             this.hasLoadedData = requestsData.length > 0;
 
-            if (categories && categories.length > 0) {
-              this.hierarchicalCategories =
-                this.prepareCategoriesForTreeRendering(categories);
-              this.flattenedCategories = this.flattenCategories(
-                this.hierarchicalCategories
-              );
-            }
-
             requestsData.forEach((request: any) => {
-              const category = this.findCategoryById(
-                categories,
-                request.categoryId
-              );
-              const requestType = requestTypes.find(
-                (r) => r.requestTypeId === request.requestTypeId
-              );
-              const agencyRequestStatus = requestStatuses.find(
-                (rs: { requestStatusId: any }) =>
-                  rs.requestStatusId === request.agencyRequestStatusId
-              );
+              // Map the friendly names from the API response
+              const requestType = {
+                requestTypeId: request.requestTypeId,
+                requestTypeDesc: request.agencyRequestTypeName,
+              };
 
-              const offerorRequestStatus = requestStatuses.find(
-                (rs: { requestStatusId: any }) =>
-                  rs.requestStatusId === request.offerorRequestStatusId
-              );
+              const agencyRequestStatus = {
+                requestStatusId: request.agencyRequestStatusId,
+                requestStatusDesc: request.agencyRequestStatusName,
+              };
+
+              const offerorRequestStatus = request.offerorRequestStatusId
+                ? {
+                    requestStatusId: request.offerorRequestStatusId,
+                    requestStatusDesc: request.offerorRequestStatusName,
+                  }
+                : null;
 
               request.publishDate = request.publishDate
                 ? new Date(request.publishDate + 'Z')
@@ -451,7 +421,6 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
 
               combinedData.push({
                 ...request,
-                category,
                 requestType,
                 agencyRequestStatus,
                 offerorRequestStatus,
@@ -475,21 +444,6 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
           error: (error: any) => {
             const correlationId = error?.error?.correlationId;
 
-            let operation = 'UnknownOperation';
-            const errorUrl = error?.url?.toLowerCase?.() || '';
-
-            if (
-              errorUrl.includes('requestsofferorview') ||
-              errorUrl.includes('requests')
-            )
-              operation = 'GetRequestsOfferorView';
-            else if (errorUrl.includes('categoryhierarchy'))
-              operation = 'GetCategoryHierarchy';
-            else if (errorUrl.includes('requesttypes'))
-              operation = 'GetRequestTypes';
-            else if (errorUrl.includes('requeststatuses'))
-              operation = 'GetRequestStatuses';
-
             this.loggingService.logException(
               new Error(`HTTP Error ${error.status}: ${error.statusText}`),
               3,
@@ -498,7 +452,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
                 correlationId: correlationId,
                 methodName: 'loadAndJoinRequestData',
                 className: 'OfferorRequestTableDetailsComponent',
-                operation: operation,
+                operation: 'GetRequestsOfferorView',
                 userId: this.stateService.getUserId(),
               }
             );
@@ -510,20 +464,6 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
     } catch (error: any) {
       this.dataSource = new MatTableDataSource<any>([]);
     }
-  }
-
-  private findCategoryById(categories: any[], targetId: number): any {
-    for (const category of categories) {
-      if (category.id === targetId) {
-        return category;
-      }
-
-      if (category.children && category.children.length > 0) {
-        const found = this.findCategoryById(category.children, targetId);
-        if (found) return found;
-      }
-    }
-    return null;
   }
 
   // future for dynamic filtering of solicitation name

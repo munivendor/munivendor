@@ -177,7 +177,9 @@
       <ng-container matColumnDef="category">
         <th mat-header-cell *matHeaderCellDef>Category</th>
         <td mat-cell *matCellDef="let request">
-          {{ displayCategoryName(request.categoryId) }}
+          {{
+            displayCategoryName(request.categoryId, request.categoryFullPath)
+          }}
         </td>
       </ng-container>
 
