@@ -16,11 +16,12 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
-import { AuthService } from '../authorization/auth.service';
 import { Request } from '../Request/model/request.model';
+import { LoadingService } from '../shared/LoadingSpinner/loading.service';
 // commented out code are all needed for autofill
 // import { DocumentService } from '../shared/service/document.service';
 import {
+  forkJoin,
   // delay, EMPTY, expand, of, switchMap,
   Subject,
   takeUntil,
@@ -80,7 +81,8 @@ export class ResponseDetailsComponent implements OnInit {
     private stateService: StateService,
     private http: HttpClient,
     public dialog: MatDialog,
-    private loggingService: LoggingService
+    private loggingService: LoggingService,
+    private loadingService: LoadingService
   ) {
     this.responseForm = this.fb.group({
       responseName: ['', Validators.required],
@@ -88,10 +90,51 @@ export class ResponseDetailsComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.initializaRequestSections();
-
     if (this.sourceIdParam) {
-      this.loadAgencyRequest(Number(this.sourceIdParam));
+      this.loadingService.show();
+      const requestId = Number(this.sourceIdParam);
+
+      forkJoin({
+        agencyRequest: this.requestService.GetRequestDetailsById(requestId),
+        requestSections: this.requestService.GetRequestSections(requestId),
+      })
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: ({ agencyRequest, requestSections }) => {
+            this.agencyRequest = agencyRequest;
+            this.requestSections = requestSections.requestSections;
+            this.loadingService.hide();
+          },
+          error: (error) => {
+            this.loadingService.hide();
+            const errorUrl = error?.url?.toLowerCase?.() || '';
+            const correlationId = error?.error?.correlationId;
+
+            const operationMap: Record<string, string> = {
+              requestdetails: 'GetRequestDetailsById',
+              requestsections: 'GetRequestSections',
+            };
+
+            const operation =
+              Object.entries(operationMap).find(([key]) =>
+                errorUrl.includes(key)
+              )?.[1] || 'UnknownOperation';
+
+            this.loggingService.logException(
+              new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+              3,
+              {
+                requestId: requestId,
+                organizationId: this.stateService.getOrganizationId(),
+                correlationId: correlationId,
+                methodName: 'ngOnInit',
+                className: 'ResponseDetailsComponent',
+                operation: operation,
+                userId: this.stateService.getUserId(),
+              }
+            );
+          },
+        });
     }
 
     // const requestId = this.responseIdParam
@@ -166,76 +209,6 @@ export class ResponseDetailsComponent implements OnInit {
     // }
   }
 
-  private loadAgencyRequest(requestId: number): void {
-    this.requestService
-      .GetRequestDetailsById(requestId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (request) => {
-          this.agencyRequest = request;
-        },
-        error: (error) => {
-          console.error('Error loading agency request:', error);
-
-          const correlationId = error?.error?.correlationId;
-
-          this.loggingService.logException(
-            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
-            3,
-            {
-              requestId: requestId,
-              organizationId: this.stateService.getOrganizationId(),
-              correlationId: correlationId,
-              methodName: 'loadAgencyRequest',
-              className: 'ResponseDetailsComponent',
-              operation: 'GetRequestDetailsById',
-              userId: this.stateService.getUserId(),
-            }
-          );
-        },
-      });
-  }
-
-  initializaRequestSections(): void {
-    if (this.sourceIdParam) {
-      this.getRequestSectionsById(Number(this.sourceIdParam));
-    }
-  }
-
-  getRequestSectionsById(requestId: number): void {
-    this.requestService
-      .GetRequestSections(requestId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response) => {
-          this.requestSections = response.requestSections;
-        },
-        error: (error) => {
-          console.error('Error fetching request sections', error);
-
-          const correlationId = error?.error?.correlationId;
-
-          this.loggingService.logException(
-            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
-            3,
-            {
-              requestId: requestId,
-              organizationId: this.stateService.getOrganizationId(),
-              correlationId: correlationId,
-              methodName: 'getRequestSectionsById',
-              className: 'ResponseDetailsComponent',
-              operation: 'GetRequestSections',
-              userId: this.stateService.getUserId(),
-            }
-          );
-
-          if (error.status === 422) {
-            return;
-          }
-        },
-      });
-  }
-
   formattedHtml(html: string): string {
     const cleanedHtml = html
       .replace(/<p>&nbsp;<\/p>/g, '')
@@ -246,8 +219,8 @@ export class ResponseDetailsComponent implements OnInit {
 
   downloadPDFv2() {
     const content = document.querySelector('.content')?.innerHTML ?? '';
-
     const filename = this.generateFilename();
+    this.loadingService.show('Downloading...');
 
     this.http
       .post(
@@ -265,9 +238,10 @@ export class ResponseDetailsComponent implements OnInit {
           a.download = filename;
           a.click();
           window.URL.revokeObjectURL(url);
+          this.loadingService.hide();
         },
         error: (error) => {
-          console.error('Error generating PDF', error);
+          this.loadingService.hide();
 
           const correlationId = error?.error?.correlationId;
 

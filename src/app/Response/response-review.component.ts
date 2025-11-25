@@ -31,6 +31,7 @@ import { MatDialog } from '@angular/material/dialog';
 // import { TooltipDirective } from '../shared/directive/tooltip.directive';
 import { OfferorProfileService } from '../shared/service/offeror-profile.service';
 import { LoggingService } from '../exceptionhandling/logging.service';
+import { LoadingService } from '../shared/LoadingSpinner/loading.service';
 
 interface FlattenedCategoryNode {
   categoryId: string;
@@ -95,7 +96,8 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
     private documentService: DocumentService,
     public dialog: MatDialog,
     private offerorProfileService: OfferorProfileService,
-    private loggingService: LoggingService
+    private loggingService: LoggingService,
+    private loadingService: LoadingService
   ) {}
 
   onConfirmSubmission() {
@@ -142,7 +144,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
 
     const isIncompleteOrNull =
       !documentInstanceStatus || documentInstanceStatus === 'Incomplete';
-
+    this.loadingService.show('Downloading...');
     if (isIncompleteOrNull) {
       if (derived) {
         if (!organizationDocumentId || !agencyOrganizationId) {
@@ -175,8 +177,10 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
               a.click();
               document.body.removeChild(a);
               URL.revokeObjectURL(blobUrl);
+              this.loadingService.hide();
             },
             error: (error) => {
+              this.loadingService.hide();
               const correlationId = error?.error?.correlationId;
 
               this.loggingService.logException(
@@ -221,8 +225,10 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(blobUrl);
+            this.loadingService.hide();
           },
           error: (error) => {
+            this.loadingService.hide();
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(
@@ -267,8 +273,10 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
           a.click();
           document.body.removeChild(a);
           URL.revokeObjectURL(blobUrl);
+          this.loadingService.hide();
         },
         error: (error) => {
+          this.loadingService.hide();
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -295,7 +303,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
     if (!requestDocumentId) {
       return;
     }
-
+    this.loadingService.show('Downloading...');
     this.requestService.GetOfferorDocumentContent(requestDocumentId).subscribe({
       next: (response) => {
         const contentDisposition = response.headers.get('content-disposition');
@@ -321,8 +329,10 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
           document.body.removeChild(link);
           URL.revokeObjectURL(blobUrl);
         }
+        this.loadingService.hide();
       },
       error: (error: any) => {
+        this.loadingService.hide();
         const correlationId = error?.error?.correlationId;
 
         this.loggingService.logException(
@@ -405,6 +415,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.loadingService.show();
     this.categoryHierarchyService
       .GetCategoryHierarchy()
       .pipe(takeUntil(this.destroy$))
@@ -440,6 +451,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
             });
         },
         error: (error: any) => {
+          this.loadingService.hide();
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -578,14 +590,18 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
         },
         (error: any) => {
           const correlationId = error?.error?.correlationId;
-
-          let operation = 'UnknownOperation';
           const errorUrl = error?.url?.toLowerCase?.() || '';
-          // request is response in this case
-          if (errorUrl.includes('requestdetails'))
-            operation = 'GetRequestDetailsById';
-          else if (errorUrl.includes('authorizingofficials'))
-            operation = 'GetOfferorAuthorizingOfficials';
+
+          const operationMap: Record<string, string> = {
+            // request is response in this case
+            requestdetails: 'GetRequestDetailsById',
+            authorizingofficials: 'GetOfferorAuthorizingOfficials',
+          };
+
+          const operation =
+            Object.entries(operationMap).find(([key]) =>
+              errorUrl.includes(key)
+            )?.[1] ?? 'UnknownOperation';
 
           this.loggingService.logException(
             new Error(`HTTP Error ${error.status}: ${error.statusText}`),
@@ -646,16 +662,22 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
             contractStart: contractStart,
             contractEnd: contractEnd,
           });
+          this.loadingService.hide();
         },
         (error) => {
+          this.loadingService.hide();
           const correlationId = error?.error?.correlationId;
-          let operation = 'UnknownOperation';
           const errorUrl = error?.url?.toLowerCase?.() || '';
 
-          if (errorUrl.includes('requestdetails'))
-            operation = 'GetRequestDetailsById';
-          else if (errorUrl.includes('requesttypes'))
-            operation = 'GetRequestTypes';
+          const operationMap: Record<string, string> = {
+            requestdetails: 'GetRequestDetailsById',
+            requesttypes: 'GetRequestTypes',
+          };
+
+          const operation =
+            Object.entries(operationMap).find(([key]) =>
+              errorUrl.includes(key)
+            )?.[1] ?? 'UnknownOperation';
 
           this.loggingService.logException(
             new Error(`HTTP Error ${error.status}: ${error.statusText}`),
