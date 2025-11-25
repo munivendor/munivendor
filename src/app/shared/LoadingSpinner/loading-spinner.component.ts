@@ -11,7 +11,7 @@ import { LoadingService } from './loading.service';
     <div class="loading-overlay" *ngIf="loadingService.loading$ | async">
       <div class="spinner-container">
         <mat-spinner diameter="60"></mat-spinner>
-        <p class="loading-text">Loading...</p>
+        <p class="loading-text">{{ loadingService.message$ | async }}</p>
       </div>
     </div>
   `,
