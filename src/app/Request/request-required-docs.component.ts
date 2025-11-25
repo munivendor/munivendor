@@ -16,15 +16,7 @@ import { RequestService } from './services/request.service';
 import { Document } from './model/document.model';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RequestDocument } from './model/requestdocument.model';
-import {
-  catchError,
-  forkJoin,
-  map,
-  Observable,
-  Subject,
-  takeUntil,
-  tap,
-} from 'rxjs';
+import { forkJoin, map, Observable, Subject, takeUntil, tap } from 'rxjs';
 import { StateService } from './services/state.service';
 import { SelectionModel } from '@angular/cdk/collections';
 import { MatTableModule } from '@angular/material/table';
@@ -33,6 +25,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DocumentService } from '../shared/service/document.service';
 import { LoggingService } from '../exceptionhandling/logging.service';
+import { LoadingService } from '../shared/LoadingSpinner/loading.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'request-required-documents',
@@ -84,10 +78,13 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
     private stateService: StateService,
     private documentService: DocumentService,
     public dialog: MatDialog,
-    private loggingService: LoggingService
+    private loggingService: LoggingService,
+    private loadingService: LoadingService,
+    private _snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
+    this.loadingService.show();
     this.initializeRequestDocuments();
   }
 
@@ -136,8 +133,10 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           console.log('Documents fetched and form initialized for creation.');
+          this.loadingService.hide();
         },
         error: (error) => {
+          this.loadingService.hide();
           this.handleDocumentLoadError(
             error,
             'initializeForCreation',
@@ -182,12 +181,16 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
                     );
                   } else {
                     this.initializeForCreation(true);
+                    return;
                   }
+
+                  this.loadingService.hide();
                 } catch (err) {
                   this.fallbackToCreation();
                 }
               },
               error: (error) => {
+                this.loadingService.hide();
                 this.handleDocumentLoadError(
                   error,
                   'initializeForEditing',
@@ -236,8 +239,11 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
     this.getAllDocumentTypes(Number(this.organizationId), undefined, true)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: () => {},
+        next: () => {
+          this.loadingService.hide();
+        },
         error: (error) => {
+          this.loadingService.hide();
           this.handleDocumentLoadError(
             error,
             'fallbackToCreation',
@@ -501,6 +507,11 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
               ...formArray.controls,
             ] as FormGroup[];
           }
+
+          this._snackBar.open('Document successfully deleted.', 'Close', {
+            duration: 5000,
+            verticalPosition: 'top',
+          });
         },
         (error) => {
           const correlationId = error?.error?.correlationId;
@@ -524,6 +535,9 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
 
   onDownloadAgencySpecificDocument(row: FormGroup): void {
     const organizationDocumentId = row.get('organizationDocumentId')?.value;
+
+    this.loadingService.show('Downloading...');
+
     this.requestService
       .GetAgencySpecificDocumentContent(
         organizationDocumentId,
@@ -553,8 +567,11 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
           a.click();
           document.body.removeChild(a);
           URL.revokeObjectURL(blobUrl);
+
+          this.loadingService.hide();
         },
         error: (error) => {
+          this.loadingService.hide();
           const correlationId = error?.error?.correlationId;
           this.loggingService.logException(
             new Error(`HTTP Error ${error.status}: ${error.statusText}`),
@@ -581,6 +598,8 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.loadingService.show('Downloading...');
+
     this.documentService.GetStateDocumentContent(documentId).subscribe({
       next: (response) => {
         const blob = response.body;
@@ -603,8 +622,10 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(blobUrl);
+        this.loadingService.hide();
       },
       error: (error: any) => {
+        this.loadingService.hide();
         const correlationId = error?.error?.correlationId;
         this.loggingService.logException(
           new Error(`HTTP Error ${error.status}: ${error.statusText}`),
