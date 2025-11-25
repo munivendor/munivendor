@@ -27,8 +27,6 @@ import { CategoryNode } from '../../shared/model/category-tree.model';
 import { MatButtonModule } from '@angular/material/button';
 import { StateService } from '../../Request/services/state.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
-import { AuthService } from '../../authorization/auth.service';
-import { SnackbarNotificationService } from '../service/snackbar-notification.service';
 
 interface FlattenedCategoryNode {
   name: string;
@@ -168,8 +166,6 @@ export class CustomCategoryDropdownComponent implements OnInit, OnDestroy {
           this.flattenCategories();
         },
         error: (error) => {
-          console.error('Error fetching categories:', error);
-
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(

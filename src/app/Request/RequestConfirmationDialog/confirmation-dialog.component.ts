@@ -180,18 +180,18 @@ export class ConfirmationDialog implements OnDestroy {
             const errorUrl = error?.url?.toLowerCase?.() || '';
             const correlationId = error?.error?.correlationId;
 
-            let operation = 'UnknownOperation';
+            const operationMap: Record<string, string> = {
+              downloadzipdocuments: 'DownloadZipDocuments',
+              download: 'DownloadZipDocuments',
+              updaterequeststatus: 'UpdateRequestStatus',
+              notifyofferorsolicitationopened:
+                'NotifyOfferorSolicitationOpened',
+            };
 
-            if (
-              errorUrl.includes('downloadzipdocuments') ||
-              errorUrl.includes('download')
-            ) {
-              operation = 'DownloadZipDocuments';
-            } else if (errorUrl.includes('updaterequeststatus')) {
-              operation = 'UpdateRequestStatus';
-            } else if (errorUrl.includes('notifyofferorsolicitationopened')) {
-              operation = 'NotifyOfferorSolicitationOpened';
-            }
+            const operation =
+              Object.entries(operationMap).find(([key]) =>
+                errorUrl.includes(key)
+              )?.[1] ?? 'UnknownOperation';
 
             this.loggingService.logException(
               new Error(`HTTP Error ${error.status}: ${error.statusText}`),
