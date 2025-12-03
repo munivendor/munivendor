@@ -15,7 +15,8 @@ import { OrganizationDetailsComponent } from './Organization/Details/organizatio
 import { UserSignUpDetails } from './Signup/UserSignUpDetails/user-signup-details.component';
 // import { DesignationSelectionComponent } from './Organization/UserDesignationSelection/organization.user-designation-selection.component';
 // import { PaymentPlanConfirmationComponent } from './Signup/PaymentInformation/paymentplanconfirmation.component';
-// import { BillingProfileComponent } from './Signup/PaymentInformation/paymentinformation.component';
+import { BillingInformationComponent } from './Response/BillingInformation/billing-information.component';
+import { PurchasingHistoryComponent } from './Response/PurchasingHistory/purchasing-history.component';
 
 // import { DashboardComponent } from './dashboard/dashboard.component';
 import { AgencyTableDetailsComponent } from './Request/TableDetails/request-tabledetails.component';
@@ -92,16 +93,6 @@ export const routes: Routes = [
   //   component: DesignationSelectionComponent,
   //   canActivate: [AuthGuard],
   // },
-  // {
-  //   path: 'payment-plan-confirmation',
-  //   component: PaymentPlanConfirmationComponent,
-  //   canActivate: [AuthGuard],
-  // },
-  // {
-  //   path: 'billing-profile',
-  //   component: BillingProfileComponent,
-  //   canActivate: [AuthGuard],
-  // },
 
   {
     path: 'create-request-view',
@@ -163,5 +154,15 @@ export const routes: Routes = [
     component: UserGuideComponent,
     canActivate: [AuthGuard],
     data: { showSidenav: true },
+  },
+  {
+    path: 'purchasing-history',
+    component: PurchasingHistoryComponent,
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'billing-information',
+    component: BillingInformationComponent,
+    canActivate: [AuthGuard],
   },
 ];
