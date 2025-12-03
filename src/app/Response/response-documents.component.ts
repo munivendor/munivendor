@@ -32,8 +32,7 @@ import { Router } from '@angular/router';
 // import { DocumentInstance } from '../Request/model/documentinstance.model';
 // import { BidProposalFormDialogComponent } from '../BidProposalForm/bid-proposal-form.component';
 import { LoggingService } from '../exceptionhandling/logging.service';
-import { AuthService } from '../authorization/auth.service';
-import { SnackbarNotificationService } from '../shared/service/snackbar-notification.service';
+import { LoadingService } from '../shared/LoadingSpinner/loading.service';
 
 @Component({
   selector: 'response-documents',
@@ -93,11 +92,13 @@ export class ResponseDocumentsComponent implements OnInit {
     private documentService: DocumentService,
     private _snackBar: MatSnackBar,
     private router: Router,
-    private loggingService: LoggingService
+    private loggingService: LoggingService,
+    private loadingService: LoadingService
   ) {}
 
   ngOnInit(): void {
     this.initializeFormGroup();
+    this.loadingService.show();
     this.initializeDocuments();
 
     this.authorizingOfficialTooltip = {
@@ -158,9 +159,10 @@ export class ResponseDocumentsComponent implements OnInit {
           this.offerorDocuments = offerorDocs.map((doc: any) => ({ ...doc }));
           this.initializeFormArrayFromApiDocuments();
           this.updateCombinedDatasource();
+          this.loadingService.hide();
         },
         error: (error) => {
-          console.error('Error initializing documents:', error);
+          this.loadingService.hide();
 
           const correlationId = error?.error?.correlationId;
 
@@ -253,6 +255,9 @@ export class ResponseDocumentsComponent implements OnInit {
         input.value = '';
         return;
       }
+
+      this.loadingService.show('Uploading...');
+
       this.documentService
         .UploadDocumentInstance(
           Number(requestId),
@@ -261,6 +266,7 @@ export class ResponseDocumentsComponent implements OnInit {
         )
         .subscribe({
           next: (response) => {
+            this.loadingService.hide();
             if (response.isSuccess && this.currentRow?.requestDocumentId) {
               let dataSourceToUpdate =
                 this.currentSource === 'notarizationNotRequired'
@@ -275,7 +281,7 @@ export class ResponseDocumentsComponent implements OnInit {
                 rowToUpdate.documentInstanceStatus = 'Complete';
               }
 
-              this._snackBar.open('Document uploaded successfully!', '', {
+              this._snackBar.open('Document successfully uploaded.', 'Close', {
                 duration: 5000,
                 verticalPosition: 'top',
               });
@@ -285,7 +291,7 @@ export class ResponseDocumentsComponent implements OnInit {
             input.value = '';
           },
           error: (error) => {
-            console.error('Upload failed:', error);
+            this.loadingService.hide();
 
             const correlationId = error?.error?.correlationId;
             this.loggingService.logException(
@@ -362,10 +368,13 @@ export class ResponseDocumentsComponent implements OnInit {
     const isIncompleteOrNull =
       !documentInstanceStatus || documentInstanceStatus === 'Incomplete';
 
+    this.loadingService.show('Downloading...');
+
     if (isIncompleteOrNull) {
       if (derived) {
         if (!organizationDocumentId || !agencyOrganizationId) {
           console.error('organizationDocumentId is required but missing.');
+          this.loadingService.hide();
           return;
         }
 
@@ -377,7 +386,10 @@ export class ResponseDocumentsComponent implements OnInit {
           .subscribe({
             next: (response) => {
               const blob = response.body;
-              if (!blob) return;
+              if (!blob) {
+                this.loadingService.hide();
+                return;
+              }
               // Extract filename from Content-Disposition
               const contentDisposition = response.headers.get(
                 'Content-Disposition'
@@ -398,8 +410,10 @@ export class ResponseDocumentsComponent implements OnInit {
               a.click();
               document.body.removeChild(a);
               URL.revokeObjectURL(blobUrl);
+              this.loadingService.hide();
             },
             error: (error) => {
+              this.loadingService.hide();
               const correlationId = error?.error?.correlationId;
 
               this.loggingService.logException(
@@ -424,7 +438,10 @@ export class ResponseDocumentsComponent implements OnInit {
         this.documentService.GetStateDocumentContent(documentId).subscribe({
           next: (response) => {
             const blob = response.body;
-            if (!blob) return;
+            if (!blob) {
+              this.loadingService.hide();
+              return;
+            }
 
             // Extract filename from Content-Disposition
             const contentDisposition = response.headers.get(
@@ -505,8 +522,10 @@ export class ResponseDocumentsComponent implements OnInit {
           a.click();
           document.body.removeChild(a);
           URL.revokeObjectURL(blobUrl);
+          this.loadingService.hide();
         },
         error: (error) => {
+          this.loadingService.hide();
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -549,7 +568,6 @@ export class ResponseDocumentsComponent implements OnInit {
           );
 
           if (existingDoc) {
-            console.log('Document already exists!', newDocument.documentId);
             return;
           }
 
@@ -576,6 +594,8 @@ export class ResponseDocumentsComponent implements OnInit {
       console.error('Request Document ID is not available.');
       return;
     }
+
+    this.loadingService.show('Downloading...');
 
     this.requestService.GetOfferorDocumentContent(requestDocumentId).subscribe({
       next: (response) => {
@@ -604,9 +624,11 @@ export class ResponseDocumentsComponent implements OnInit {
           document.body.removeChild(link);
           URL.revokeObjectURL(blobUrl);
         }
+
+        this.loadingService.hide();
       },
       error: (error: any) => {
-        console.error('Failed to fetch document:', error);
+        this.loadingService.hide();
 
         const correlationId = error?.error?.correlationId;
 
@@ -651,13 +673,15 @@ export class ResponseDocumentsComponent implements OnInit {
               this.optionalOfferorDocuments.removeAt(optionalIndex);
               this.updateCombinedDatasource();
             }
+            this._snackBar.open('Document successfully deleted.', 'Close', {
+              duration: 5000,
+              verticalPosition: 'top',
+            });
           } else {
             console.error('Failed to delete document');
           }
         },
         error: (error) => {
-          console.error('Error deleting document:', error);
-
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(

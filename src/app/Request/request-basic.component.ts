@@ -90,7 +90,6 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     decisionMakerId: number | null;
   }>();
   @Output() formValidityChange = new EventEmitter<boolean>();
-  private _logger = inject(LoggingService);
 
   filteredCategoriesSubject = new BehaviorSubject<FlattenedCategoryNode[]>([]);
   filteredCategories = this.filteredCategoriesSubject.asObservable();
@@ -104,7 +103,7 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
   requestTypes: RequestType[] | undefined;
   requestName = new FormControl<string | null>(null, [Validators.required]);
   basicsFormGroup!: FormGroup;
-  organizationId = this.stateService.getOrganizationId();
+  organizationId: number = this.stateService.getOrganizationId() ?? 0;
   private formStatus$ = new Subject<void>();
 
   constructor(
@@ -543,15 +542,16 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
           const errorUrl = error?.url?.toLowerCase?.() || '';
           const correlationId = error?.error?.correlationId;
 
-          let operation = 'UnknownOperation';
+          const operationMap: Record<string, string> = {
+            categoryhierarchy: 'GetCategoryHierarchy',
+            decisionmakers: 'GetDecisionMakers',
+            requesttypes: 'GetRequestTypes',
+          };
 
-          if (errorUrl.includes('categoryhierarchy')) {
-            operation = 'GetCategoryHierarchy';
-          } else if (errorUrl.includes('decisionmakers')) {
-            operation = 'GetDecisionMakers';
-          } else if (errorUrl.includes('requesttypes')) {
-            operation = 'GetRequestTypes';
-          }
+          const operation =
+            Object.entries(operationMap).find(([key]) =>
+              errorUrl.includes(key)
+            )?.[1] ?? 'UnknownOperation';
 
           this.loggingService.logException(
             new Error(`HTTP Error ${error.status}: ${error.statusText}`),
@@ -658,19 +658,19 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
         },
         error: (error: any) => {
           const correlationId = error?.error?.correlationId;
-
-          // Identify likely failing operation (based on backend message or URL)
-          let operation = 'UnknownOperation';
           const errorUrl = error?.url?.toLowerCase?.() || '';
 
-          if (errorUrl.includes('requestdetails'))
-            operation = 'GetRequestDetailsById';
-          else if (errorUrl.includes('categoryhierarchy'))
-            operation = 'GetCategoryHierarchy';
-          else if (errorUrl.includes('requesttypes'))
-            operation = 'GetRequestTypes';
-          else if (errorUrl.includes('decisionmakers'))
-            operation = 'GetDecisionMakers';
+          const operationMap: Record<string, string> = {
+            requestdetails: 'GetRequestDetailsById',
+            categoryhierarchy: 'GetCategoryHierarchy',
+            requesttypes: 'GetRequestTypes',
+            decisionmakers: 'GetDecisionMakers',
+          };
+
+          const operation =
+            Object.entries(operationMap).find(([key]) =>
+              errorUrl.includes(key)
+            )?.[1] ?? 'UnknownOperation';
 
           this.loggingService.logException(
             new Error(`HTTP Error ${error.status}: ${error.statusText}`),

@@ -270,17 +270,20 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
         },
         (error) => {
           const correlationId = error?.error?.correlationId;
-          let operation = 'UnknownOperation';
+
           const errorUrl = error?.url?.toLowerCase?.() || '';
 
-          if (errorUrl.includes('requestdetails'))
-            operation = 'GetRequestDetailsById';
-          else if (errorUrl.includes('requesttypes'))
-            operation = 'GetRequestTypes';
-          else if (errorUrl.includes('decisionmakers'))
-            operation = 'GetDecisionMakers';
-          else if (errorUrl.includes('requestrequireddocuments'))
-            operation = 'GetRequestRequiredDocumentsById';
+          const operationMap: Record<string, string> = {
+            requestdetails: 'GetRequestDetailsById',
+            requesttypes: 'GetRequestTypes',
+            decisionmakers: 'GetDecisionMakers',
+            requestrequireddocuments: 'GetRequestRequiredDocumentsById',
+          };
+
+          const operation =
+            Object.entries(operationMap).find(([key]) =>
+              errorUrl.includes(key)
+            )?.[1] ?? 'UnknownOperation';
 
           this.loggingService.logException(
             new Error(`HTTP Error ${error.status}: ${error.statusText}`),

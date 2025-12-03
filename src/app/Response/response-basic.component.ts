@@ -30,6 +30,7 @@ import { Response } from '../shared/model/response.model';
 import { StateService } from '../Request/services/state.service';
 import { TooltipDirective } from '../shared/directive/tooltip.directive';
 import { LoggingService } from '../exceptionhandling/logging.service';
+import { LoadingService } from '../shared/LoadingSpinner/loading.service';
 
 interface FlattenedCategoryNode {
   name: string;
@@ -94,6 +95,7 @@ export class ResponseBasicComponent implements OnInit {
     private stateService: StateService,
     private offerorProfileService: OfferorProfileService,
     private loggingService: LoggingService,
+    private loadingService: LoadingService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.responseForm = this.fb.group({
@@ -164,6 +166,8 @@ export class ResponseBasicComponent implements OnInit {
       onAction: () => this.goToOfferorProfilePage(),
       transformStyle: 'translate(-50%, -102%)',
     };
+
+    this.loadingService.show();
 
     if (this.sourceIdParam) {
       this.loadTemplateRequest(Number(this.sourceIdParam));
@@ -250,18 +254,23 @@ export class ResponseBasicComponent implements OnInit {
               { value: this.getDateOnly(request.contractEnd), disabled: true },
             ],
           });
+          this.loadingService.hide();
         },
         error: (error: any) => {
+          this.loadingService.hide();
           const correlationId = error?.error?.correlationId;
-          let operation = 'UnknownOperation';
           const errorUrl = error?.url?.toLowerCase?.() || '';
 
-          if (errorUrl.includes('requestdetails'))
-            operation = 'GetRequestDetailsById';
-          else if (errorUrl.includes('categoryhierarchy'))
-            operation = 'GetCategoryHierarchy';
-          else if (errorUrl.includes('requesttypes'))
-            operation = 'GetRequestTypes';
+          const operationMap: Record<string, string> = {
+            requestdetails: 'GetRequestDetailsById',
+            categoryhierarchy: 'GetCategoryHierarchy',
+            requesttypes: 'GetRequestTypes',
+          };
+
+          const operation =
+            Object.entries(operationMap).find(([key]) =>
+              errorUrl.includes(key)
+            )?.[1] ?? 'UnknownOperation';
 
           this.loggingService.logException(
             new Error(`HTTP Error ${error.status}: ${error.statusText}`),
@@ -374,18 +383,23 @@ export class ResponseBasicComponent implements OnInit {
           if (response.authorizingOfficialId) {
             this.authorizingOfficialId = response.authorizingOfficialId;
           }
+          this.loadingService.hide();
         },
         (error: any) => {
-          console.error('Error loading response request', error);
+          this.loadingService.hide();
 
           const correlationId = error?.error?.correlationId;
-          let operation = 'UnknownOperation';
           const errorUrl = error?.url?.toLowerCase?.() || '';
           // request is response in this case
-          if (errorUrl.includes('requestdetails'))
-            operation = 'GetRequestDetailsById';
-          else if (errorUrl.includes('authorizingofficials'))
-            operation = 'GetOfferorAuthorizingOfficials';
+          const operationMap: Record<string, string> = {
+            requestdetails: 'GetRequestDetailsById',
+            authorizingofficials: 'GetOfferorAuthorizingOfficials',
+          };
+
+          const operation =
+            Object.entries(operationMap).find(([key]) =>
+              errorUrl.includes(key)
+            )?.[1] ?? 'UnknownOperation';
 
           this.loggingService.logException(
             new Error(`HTTP Error ${error.status}: ${error.statusText}`),

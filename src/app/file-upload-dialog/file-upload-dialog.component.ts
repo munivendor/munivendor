@@ -15,8 +15,7 @@ import {
 import { LoggingService } from '../exceptionhandling/logging.service';
 import { StateService } from '../Request/services/state.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { AuthService } from '../authorization/auth.service';
-import { SnackbarNotificationService } from '../shared/service/snackbar-notification.service';
+import { LoadingService } from '../shared/LoadingSpinner/loading.service';
 
 export type FileUploadDialogData =
   | { organizationId: number; municipalityDocuments: Document[] }
@@ -47,7 +46,9 @@ export class FileUploadDialogComponent {
     private loggingService: LoggingService,
     private stateService: StateService,
     private _snackBar: MatSnackBar,
+    private loadingService: LoadingService,
     public dialogRef: MatDialogRef<FileUploadDialogComponent>,
+
     @Inject(MAT_DIALOG_DATA) public data: FileUploadDialogData
   ) {}
 
@@ -96,6 +97,8 @@ export class FileUploadDialogComponent {
       return;
     }
 
+    this.loadingService.show('Uploading...');
+
     if ('organizationId' in this.data) {
       const municipalityDocument = {
         organizationId: this.data.organizationId,
@@ -111,6 +114,7 @@ export class FileUploadDialogComponent {
         )
         .subscribe({
           next: (response) => {
+            this.loadingService.hide();
             this.dialogRef.close({
               documentId: response.documentId,
               documentName: municipalityDocument.documentName,
@@ -119,8 +123,14 @@ export class FileUploadDialogComponent {
               selected: true,
               notarization: 'Not Required',
             });
+
+            this._snackBar.open('Document successfully uploaded.', 'Close', {
+              duration: 5000,
+              verticalPosition: 'top',
+            });
           },
           error: (error) => {
+            this.loadingService.hide();
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(
@@ -156,13 +166,20 @@ export class FileUploadDialogComponent {
         )
         .subscribe({
           next: (response) => {
+            this.loadingService.hide();
             this.dialogRef.close({
               documentId: response.documentId,
               documentName: this.documentName,
               requestDocumentId: response.requestDocumentId,
             });
+
+            this._snackBar.open('Document successfully uploaded.', 'Close', {
+              duration: 5000,
+              verticalPosition: 'top',
+            });
           },
           error: (error) => {
+            this.loadingService.hide();
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(
