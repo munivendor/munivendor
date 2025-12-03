@@ -4,31 +4,23 @@ import { Inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule } from '@angular/material/dialog';
 import { Router } from '@angular/router';
-import { FlowProgressService } from '../../shared/service/flow-progress.service';
+
 @Component({
   selector: 'app-confirmation-dialog',
   templateUrl: './confirmation-dialog.component.html',
   standalone: true,
-  imports: [MatDialogModule, MatButtonModule]
+  imports: [MatDialogModule, MatButtonModule],
 })
 export class ConfirmationDialogComponent {
   constructor(
     public dialogRef: MatDialogRef<ConfirmationDialogComponent>,
     public router: Router,
-    private flowProgressService: FlowProgressService,
-    @Inject(MAT_DIALOG_DATA) public data: { title: string; message: string, userId: number }
-  ) { }
+    @Inject(MAT_DIALOG_DATA)
+    public data: { title: string; message: string; userId: number }
+  ) {}
 
   onConfirm(): void {
-    this.flowProgressService.saveFlowProgress(this.data.userId, 2, 6).subscribe({
-      next: () => {
-        this.dialogRef.close(true);
-        this.router.navigate(['/dashboard-component']);
-      },
-      error: (err) => {
-        console.error('Error saving flow progress:', err);
-      }
-    });
+    this.dialogRef.close(true);
   }
 
   onCancel(): void {

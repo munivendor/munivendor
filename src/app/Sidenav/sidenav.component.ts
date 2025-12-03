@@ -91,6 +91,18 @@ export class Sidenav implements OnInit, AfterViewInit {
       label: 'User Guide',
       route: '/user-guide',
     },
+    {
+      id: 'purchasing-history',
+      icon: 'shopping_cart',
+      label: 'Purchasing/History',
+      route: '/purchasing-history',
+    },
+    {
+      id: 'billing-information',
+      icon: 'credit_card',
+      label: 'Billing Information',
+      route: '/billing-information',
+    },
   ];
 
   constructor(
