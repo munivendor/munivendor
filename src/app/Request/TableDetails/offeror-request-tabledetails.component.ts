@@ -33,6 +33,7 @@ import { ChangeDetectorRef } from '@angular/core';
 import { LoadingService } from '../../shared/LoadingSpinner/loading.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { HttpClient } from '@angular/common/http';
 
 interface FlattenedCategoryNode {
   categoryId: string;
@@ -210,6 +211,94 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
       });
   }
 
+  downloadPDFv2(request: any): void {
+    const filename = this.generateFilename(request);
+    this.loadingService.show('Downloading...');
+
+    this.http
+      .post(
+        '/api/generate-pdf/' + request.requestId,
+        { html: '' },
+        { responseType: 'blob' }
+      )
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          const blob = new Blob([response], { type: 'application/pdf' });
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          a.click();
+          window.URL.revokeObjectURL(url);
+          this.loadingService.hide();
+          this._snackBar.open(
+            'Solicitation successfully downloaded.',
+            'Close',
+            {
+              verticalPosition: 'top',
+              duration: 3000,
+            }
+          );
+        },
+        error: (error) => {
+          this.loadingService.hide();
+
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              requestId: request.requestId,
+              organizationId: this.organizationId,
+              correlationId: correlationId,
+              methodName: 'downloadPDFv2',
+              className: 'OfferorTableDetailsComponent',
+              operation: 'GeneratePDF',
+              userId: this.stateService.getUserId(),
+            }
+          );
+        },
+      });
+  }
+
+  private generateFilename(request: any): string {
+    const sanitize = (str: string): string => {
+      return str
+        .replace(/[^a-zA-Z0-9\s-_]/g, '')
+        .replace(/\s+/g, '_')
+        .trim();
+    };
+
+    const formatDate = (date: Date | string): string => {
+      let utcDate: Date;
+
+      if (typeof date === 'string') {
+        utcDate = new Date(date + 'Z');
+      } else {
+        utcDate = date;
+      }
+
+      const month = String(utcDate.getMonth() + 1).padStart(2, '0');
+      const day = String(utcDate.getDate()).padStart(2, '0');
+      const year = utcDate.getFullYear();
+
+      return `${month}-${day}-${year}`;
+    };
+
+    if (request) {
+      const solicitationName = request.requestName || 'Unknown';
+
+      const closeDate = request.closeDate
+        ? formatDate(request.closeDate)
+        : 'NoDate';
+      return `Solicitation_${sanitize(solicitationName)}_${closeDate}.pdf`;
+    }
+
+    return 'Solicitation.pdf';
+  }
+
   filterForm = this.fb.group({
     requestName: [''],
     category: new FormControl<string | number | null>(null),
@@ -242,6 +331,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
     'offerorRequestStatus',
     'agencyRequestStatus',
     'actions',
+    'downloadPDF',
   ];
 
   joinedRequestData: Request[] = [];
@@ -259,7 +349,8 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
     private stateService: StateService,
     private cdr: ChangeDetectorRef,
     private loadingService: LoadingService,
-    private loggingService: LoggingService
+    private loggingService: LoggingService,
+    private http: HttpClient
   ) {
     this.organizationId = this.stateService.getOrganizationId();
   }
