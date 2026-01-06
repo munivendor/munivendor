@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import { ApplicationInsights } from '@microsoft/applicationinsights-web';
 import { environment } from '../../environments/environment';
+import { StateService } from '../Request/services/state.service';
 
 @Injectable({ providedIn: 'root' })
 export class LoggingService {
   private appInsights: ApplicationInsights;
 
-  constructor() {
+  constructor(private stateService: StateService) {
     this.appInsights = new ApplicationInsights({
       config: {
         connectionString: environment.appInsights.connectionString,
@@ -14,6 +15,15 @@ export class LoggingService {
         enableUnhandledPromiseRejectionTracking: true,
       },
     });
+
+    this.stateService.currentUserId$.subscribe((userId) => {
+      if (userId != null) {
+        this.appInsights.setAuthenticatedUserContext(String(userId));
+      } else {
+        this.appInsights.clearAuthenticatedUserContext();
+      }
+    });
+
     this.appInsights.loadAppInsights();
   }
 
