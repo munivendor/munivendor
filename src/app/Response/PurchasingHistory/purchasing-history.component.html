@@ -2,33 +2,34 @@
   <div class="header-banner">
     <h1>Purchasing/History</h1>
   </div>
-  <p>Purchase submission credits and view your transaction history</p>
-  <!-- Purchasing Options Section -->
   <div class="purchasing-section">
     <h3 class="section-title">Purchase Submission Credits</h3>
 
-    <div class="credit-packages">
-      <mat-card class="credit-package" *ngFor="let package of creditPackages">
-        <mat-checkbox
-          [(ngModel)]="package.selected"
-          (change)="onPackageSelectionChange(package)"
-        >
-        </mat-checkbox>
-
+    <div *ngIf="!isLoadingPackages" class="credit-package-container">
+      <mat-card
+        class="credit-package"
+        *ngFor="let package of creditPackages"
+        [class.selected]="package.selected"
+        (click)="
+          package.selected = !package.selected;
+          onPackageSelectionChange(package)
+        "
+        style="cursor: pointer"
+      >
         <div class="package-details">
           <h4 class="package-name">{{ package.name }}</h4>
         </div>
 
         <div class="package-pricing">
           <span class="price">${{ package.price }}</span>
-          <span class="discount-badge" *ngIf="package.discount">{{
-            package.discount
-          }}</span>
+          <span class="discount-badge" *ngIf="package.discount">
+            {{ package.discount }}
+          </span>
         </div>
       </mat-card>
     </div>
 
-    <div class="purchase-summary">
+    <div *ngIf="!isLoadingPackages" class="purchase-summary">
       <div class="total-section">
         <span class="total-label">Total =</span>
         <span class="total-amount">${{ calculateTotal() }}</span>
@@ -41,165 +42,88 @@
         [disabled]="calculateTotal() === 0"
       >
         <mat-icon>shopping_cart</mat-icon>
-        Purchase
+        Checkout
       </button>
     </div>
   </div>
 
-  <!-- Billing History Section -->
   <div class="history-section">
     <h3 class="section-title">Billing History</h3>
 
-    <mat-tab-group animationDuration="300ms">
-      <!-- Order History Tab -->
-      <mat-tab label="Order History">
-        <ng-template mat-tab-label>
-          <mat-icon class="tab-icon">receipt_long</mat-icon>
-          <span>Order History</span>
-        </ng-template>
+    <div
+      *ngIf="!orderHistory || orderHistory.data.length === 0"
+      class="empty-state"
+    >
+      <mat-icon class="empty-state-icon">receipt_long</mat-icon>
+      <p class="empty-state-message">
+        No billing history available at this time. Your transaction history will
+        appear here once you make a purchase.
+      </p>
+    </div>
 
-        <div class="tab-content">
-          <div class="table-container">
-            <table mat-table [dataSource]="orderHistory" class="history-table">
-              <!-- Date Column -->
-              <ng-container matColumnDef="date">
-                <th mat-header-cell *matHeaderCellDef>Date</th>
-                <td mat-cell *matCellDef="let order">{{ order.date }}</td>
+    <ng-container *ngIf="orderHistory && orderHistory.data.length > 0">
+      <div class="table-container">
+        <table mat-table [dataSource]="orderHistory" class="history-table">
+          <ng-container matColumnDef="date">
+            <th mat-header-cell *matHeaderCellDef>Date</th>
+            <td mat-cell *matCellDef="let order">{{ order.date }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="time">
+            <th mat-header-cell *matHeaderCellDef>Time</th>
+            <td mat-cell *matCellDef="let order">{{ order.time }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="description">
+            <th mat-header-cell *matHeaderCellDef>Description</th>
+            <td mat-cell *matCellDef="let order">
+              {{ order.description }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="lastFourDigits">
+            <th mat-header-cell *matHeaderCellDef>Last 4 Digits</th>
+            <td mat-cell *matCellDef="let order">
+              <ng-container *ngIf="order.lastFourDigits; else noDigits">
+                <span class="account-digits">
+                  {{ order.showAccount ? order.lastFourDigits : "****" }}
+                </span>
+
+                <button
+                  mat-icon-button
+                  (click)="toggleAccountVisibility(order)"
+                >
+                  <mat-icon>
+                    {{ order.showAccount ? "visibility" : "visibility_off" }}
+                  </mat-icon>
+                </button>
               </ng-container>
 
-              <!-- Time Column -->
-              <ng-container matColumnDef="time">
-                <th mat-header-cell *matHeaderCellDef>Time</th>
-                <td mat-cell *matCellDef="let order">{{ order.time }}</td>
-              </ng-container>
+              <ng-template #noDigits>
+                <span>N/A</span>
+              </ng-template>
+            </td>
+          </ng-container>
 
-              <!-- Quantity Column -->
-              <ng-container matColumnDef="quantity">
-                <th mat-header-cell *matHeaderCellDef>Quantity</th>
-                <td mat-cell *matCellDef="let order">
-                  <div class="quantity-items">
-                    <div *ngFor="let item of order.items">{{ item }}</div>
-                  </div>
-                </td>
-              </ng-container>
+          <ng-container matColumnDef="total">
+            <th mat-header-cell *matHeaderCellDef>Total</th>
+            <td mat-cell *matCellDef="let order" class="total-cell">
+              ${{ order.total }}
+            </td>
+          </ng-container>
 
-              <!-- Last 4 Digits Column -->
-              <ng-container matColumnDef="lastFourDigits">
-                <th mat-header-cell *matHeaderCellDef>
-                  Last 4 Digits of Account
-                </th>
-                <td mat-cell *matCellDef="let order">
-                  <span class="account-digits">
-                    {{ order.showAccount ? order.lastFourDigits : "****" }}
-                  </span>
+          <tr mat-header-row *matHeaderRowDef="orderDisplayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: orderDisplayedColumns"></tr>
+        </table>
+      </div>
 
-                  <button
-                    mat-icon-button
-                    (click)="toggleAccountVisibility(order)"
-                  >
-                    <mat-icon>
-                      {{ order.showAccount ? "visibility" : "visibility_off" }}
-                    </mat-icon>
-                  </button>
-                </td>
-              </ng-container>
-
-              <!-- Total Column -->
-              <ng-container matColumnDef="total">
-                <th mat-header-cell *matHeaderCellDef>Total</th>
-                <td mat-cell *matCellDef="let order" class="total-cell">
-                  ${{ order.total }}
-                </td>
-              </ng-container>
-
-              <tr mat-header-row *matHeaderRowDef="orderDisplayedColumns"></tr>
-              <tr
-                mat-row
-                *matRowDef="let row; columns: orderDisplayedColumns"
-              ></tr>
-            </table>
-          </div>
-
-          <!-- Pagination -->
-          <mat-paginator
-            [length]="orderHistory.data.length"
-            [pageSize]="10"
-            [pageSizeOptions]="[5, 10, 25, 50]"
-            showFirstLastButtons
-          >
-          </mat-paginator>
-        </div>
-      </mat-tab>
-
-      <!-- Credit Usage Tab -->
-      <mat-tab label="Credit Usage">
-        <ng-template mat-tab-label>
-          <mat-icon class="tab-icon">history</mat-icon>
-          <span>Credit Usage</span>
-        </ng-template>
-
-        <div class="tab-content">
-          <div class="table-container">
-            <table mat-table [dataSource]="creditUsage" class="history-table">
-              <!-- Date Column -->
-              <ng-container matColumnDef="date">
-                <th mat-header-cell *matHeaderCellDef>Date</th>
-                <td mat-cell *matCellDef="let usage">{{ usage.date }}</td>
-              </ng-container>
-
-              <!-- Time Column -->
-              <ng-container matColumnDef="time">
-                <th mat-header-cell *matHeaderCellDef>Time</th>
-                <td mat-cell *matCellDef="let usage">{{ usage.time }}</td>
-              </ng-container>
-
-              <!-- Submission ID Column -->
-              <ng-container matColumnDef="submissionId">
-                <th mat-header-cell *matHeaderCellDef>Submission ID</th>
-                <td mat-cell *matCellDef="let usage">
-                  <a
-                    [routerLink]="['/submission', usage.submissionId]"
-                    class="submission-link"
-                  >
-                    {{ usage.submissionId }}
-                  </a>
-                </td>
-              </ng-container>
-
-              <!-- Credits Used Column -->
-              <ng-container matColumnDef="creditsUsed">
-                <th mat-header-cell *matHeaderCellDef>Credits Used</th>
-                <td mat-cell *matCellDef="let usage">
-                  <span class="credits-badge">{{ usage.creditsUsed }}</span>
-                </td>
-              </ng-container>
-
-              <!-- Remaining Balance Column -->
-              <ng-container matColumnDef="remainingBalance">
-                <th mat-header-cell *matHeaderCellDef>Remaining Balance</th>
-                <td mat-cell *matCellDef="let usage">
-                  <span class="balance-cell">{{ usage.remainingBalance }}</span>
-                </td>
-              </ng-container>
-
-              <tr mat-header-row *matHeaderRowDef="usageDisplayedColumns"></tr>
-              <tr
-                mat-row
-                *matRowDef="let row; columns: usageDisplayedColumns"
-              ></tr>
-            </table>
-          </div>
-
-          <!-- Pagination -->
-          <mat-paginator
-            [length]="creditUsage.data.length"
-            [pageSize]="10"
-            [pageSizeOptions]="[5, 10, 25, 50]"
-            showFirstLastButtons
-          >
-          </mat-paginator>
-        </div>
-      </mat-tab>
-    </mat-tab-group>
+      <mat-paginator
+        [length]="orderHistory.data.length"
+        [pageSize]="10"
+        [pageSizeOptions]="[5, 10, 25, 50]"
+        showFirstLastButtons
+      >
+      </mat-paginator>
+    </ng-container>
   </div>
 </div>

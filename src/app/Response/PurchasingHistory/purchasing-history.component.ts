@@ -1,42 +1,44 @@
-import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ViewChild,
+  inject,
+  Inject,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatButtonModule } from '@angular/material/button';
-
-interface CreditPackage {
-  id: number;
-  name: string;
-  credits: number;
-  price: number;
-  discount?: string;
-  selected: boolean;
-  quantity: number;
-}
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import {
+  MatDialog,
+  MatDialogModule,
+  MAT_DIALOG_DATA,
+} from '@angular/material/dialog';
+import { StateService } from '../../Request/services/state.service';
+import { CreditPurchaseDialogComponent } from '../CreditPurchaseDialog/credit-purchase-dialog.component';
+import {
+  CreditPackageService,
+  CreditPackage,
+} from '../services/credit-package.service';
+import { PaymentInfoService } from '../BillingInformation/services/payment-info.service';
 
 interface OrderHistory {
   date: string;
   time: string;
-  items: string[];
   lastFourDigits: string;
   total: number;
   showAccount: boolean;
-}
-
-interface CreditUsage {
-  date: string;
-  time: string;
-  submissionId: string;
-  creditsUsed: number;
-  remainingBalance: number;
 }
 
 @Component({
@@ -54,168 +56,109 @@ interface CreditUsage {
     MatTableModule,
     MatPaginatorModule,
     MatButtonModule,
+    MatProgressSpinnerModule,
+    MatDialogModule,
   ],
 })
 export class PurchasingHistoryComponent implements OnInit, OnDestroy {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   private destroy$ = new Subject<void>();
+  private dialog = inject(MatDialog);
 
-  creditPackages: CreditPackage[] = [
-    {
-      id: 1,
-      name: '1 Submission Credit',
-      credits: 1,
-      price: 49,
-      selected: false,
-      quantity: 0,
-    },
-    {
-      id: 2,
-      name: '5 Submission Credits',
-      credits: 5,
-      price: 232,
-      discount: 'Over 5% Off!',
-      selected: false,
-      quantity: 0,
-    },
-    {
-      id: 3,
-      name: '10 Submission Credits',
-      credits: 10,
-      price: 440,
-      discount: 'Over 10% Off!',
-      selected: false,
-      quantity: 0,
-    },
-    {
-      id: 4,
-      name: '15 Submission Credits',
-      credits: 15,
-      price: 624,
-      discount: 'Over 15% Off!',
-      selected: false,
-      quantity: 0,
-    },
-  ];
+  organizationId = this.stateService.getOrganizationId();
+  creditPackages: CreditPackage[] = [];
+  isLoadingPackages = true;
 
-  orderHistory = new MatTableDataSource<OrderHistory>([
-    {
-      date: '10/1/2025',
-      time: '10:10 AM',
-      items: ['1 Submission Credit'],
-      lastFourDigits: '1234',
-      total: 49,
-      showAccount: false,
-    },
-    {
-      date: '10/15/2025',
-      time: '11:00 AM',
-      items: ['5 Submission Credits'],
-      lastFourDigits: '5678',
-      total: 232,
-      showAccount: false,
-    },
-    {
-      date: '11/20/2025',
-      time: '11:05 AM',
-      items: ['1 Submission Credit'],
-      lastFourDigits: '9012',
-      total: 49,
-      showAccount: false,
-    },
-    {
-      date: '11/29/2025',
-      time: '10:30 AM',
-      items: ['15 Submission Credits'],
-      lastFourDigits: '3456',
-      total: 624,
-      showAccount: false,
-    },
-    {
-      date: '12/10/2025',
-      time: '12:15 PM',
-      items: ['10 Submission Credits'],
-      lastFourDigits: '7890',
-      total: 440,
-      showAccount: false,
-    },
-  ]);
-
-  creditUsage = new MatTableDataSource<CreditUsage>([
-    {
-      date: '10/2/2025',
-      time: '2:30 PM',
-      submissionId: 'SUB-2025-001',
-      creditsUsed: 1,
-      remainingBalance: 14,
-    },
-    {
-      date: '10/16/2025',
-      time: '9:45 AM',
-      submissionId: 'SUB-2025-002',
-      creditsUsed: 1,
-      remainingBalance: 28,
-    },
-    {
-      date: '10/18/2025',
-      time: '3:15 PM',
-      submissionId: 'SUB-2025-003',
-      creditsUsed: 1,
-      remainingBalance: 27,
-    },
-    {
-      date: '11/21/2025',
-      time: '11:30 AM',
-      submissionId: 'SUB-2025-004',
-      creditsUsed: 1,
-      remainingBalance: 27,
-    },
-    {
-      date: '11/30/2025',
-      time: '4:20 PM',
-      submissionId: 'SUB-2025-005',
-      creditsUsed: 1,
-      remainingBalance: 41,
-    },
-    {
-      date: '12/11/2025',
-      time: '1:10 PM',
-      submissionId: 'SUB-2025-006',
-      creditsUsed: 1,
-      remainingBalance: 35,
-    },
-  ]);
-
+  orderHistory = new MatTableDataSource<OrderHistory>([]);
   orderDisplayedColumns: string[] = [
     'date',
     'time',
-    'quantity',
+    'description',
     'lastFourDigits',
     'total',
   ];
-  usageDisplayedColumns: string[] = [
-    'date',
-    'time',
-    'submissionId',
-    'creditsUsed',
-    'remainingBalance',
-  ];
 
-  constructor() {}
+  constructor(
+    private stateService: StateService,
+    private creditPackageService: CreditPackageService,
+    private paymentInfoService: PaymentInfoService
+  ) {}
 
   ngOnInit(): void {
-    setTimeout(() => {
-      this.orderHistory.paginator = this.paginator;
-      this.creditUsage.paginator = this.paginator;
-    });
+    this.loadCreditPackages();
+    this.loadOrderHistory();
+  }
+
+  loadOrderHistory(): void {
+    if (this.organizationId !== null) {
+      this.paymentInfoService
+        .getBillingHistory(this.organizationId)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (history) => {
+            if (!history || history.length === 0) {
+              this.orderHistory.data = [];
+              return;
+            }
+
+            this.orderHistory.data = history.map((item: any) => {
+              const paymentDate = new Date(item.paymentDate);
+
+              return {
+                date: paymentDate.toLocaleDateString(),
+                time: paymentDate.toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                }),
+                description: item.paymentPlanDescription,
+                lastFourDigits: item.lastFourNumbers,
+                total: item.paymentAmount,
+                showAccount: false,
+              };
+            });
+
+            this.orderHistory.paginator = this.paginator;
+          },
+          error: (err) => {
+            console.error('Error loading billing history:', err);
+            this.orderHistory.data = [];
+          },
+        });
+    } else {
+      console.error('Organization ID is null. Cannot load billing history.');
+      this.orderHistory.data = [];
+    }
+  }
+
+  loadCreditPackages(): void {
+    this.isLoadingPackages = true;
+
+    this.creditPackageService
+      .getPaymentPlans()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (packages) => {
+          this.creditPackages = packages;
+          this.isLoadingPackages = false;
+        },
+        error: (error) => {
+          this.isLoadingPackages = false;
+        },
+      });
   }
 
   onPackageSelectionChange(selectedPackage: CreditPackage): void {
-    console.log('Package selection changed:', selectedPackage);
-    if (selectedPackage.selected && selectedPackage.quantity === 0) {
+    this.creditPackages.forEach((pkg) => {
+      if (pkg.id !== selectedPackage.id) {
+        pkg.selected = false;
+        pkg.quantity = 0;
+      }
+    });
+
+    if (selectedPackage.selected) {
       selectedPackage.quantity = 1;
-    } else if (!selectedPackage.selected) {
+    } else {
       selectedPackage.quantity = 0;
     }
   }
@@ -236,13 +179,50 @@ export class PurchasingHistoryComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // TODO: Implement actual purchase logic with API call
-    // this.purchasingService.purchaseCredits(selectedPackages).subscribe(...)
+    const selectedPackage = selectedPackages[0];
+    const total = this.calculateTotal();
 
-    // Reset selections after purchase
-    this.creditPackages.forEach((pkg) => {
-      pkg.selected = false;
-      pkg.quantity = 0;
+    const confirmDialogRef = this.dialog.open(PurchaseConfirmationDialog, {
+      width: '400px',
+      data: {
+        packageName: selectedPackage.name,
+        credits: selectedPackage.credits,
+        total: total,
+      },
+    });
+
+    confirmDialogRef.afterClosed().subscribe((confirmed) => {
+      if (confirmed === true) {
+        const paymentDialogRef = this.dialog.open(
+          CreditPurchaseDialogComponent,
+          {
+            width: '600px',
+            maxHeight: '90vh',
+            disableClose: true,
+            data: {
+              organizationId: this.organizationId,
+              selectedPackage: selectedPackage,
+              showCreditSelection: false,
+            },
+          }
+        );
+
+        paymentDialogRef.afterClosed().subscribe((result) => {
+          if (result?.success) {
+            this.creditPackages.forEach((pkg) => {
+              pkg.selected = false;
+              pkg.quantity = 0;
+            });
+
+            this.loadOrderHistory();
+
+            // TODO: Show success message to user
+          } else if (result?.error) {
+            console.error('Purchase failed:', result.error);
+            // TODO: Show error toast/snackbar to user
+          }
+        });
+      }
     });
   }
 
@@ -254,4 +234,40 @@ export class PurchasingHistoryComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
   }
+}
+
+@Component({
+  selector: 'purchase-confirmation-dialog',
+  template: `
+    <h2 mat-dialog-title>Confirm Purchase</h2>
+    <mat-dialog-content>
+      <p>Are you sure you want to purchase:</p>
+      <div class="confirmation-details">
+        <p>
+          <strong>{{ data.packageName }}</strong>
+        </p>
+        <p>Credits: {{ data.credits }}</p>
+        <p>Total: &#36;{{ data.total }}.00</p>
+      </div>
+    </mat-dialog-content>
+    <mat-dialog-actions style="justify-content: flex-end">
+      <button mat-button color="warn" [mat-dialog-close]="false">Cancel</button>
+      <button
+        mat-raised-button
+        color="primary"
+        [mat-dialog-close]="true"
+        cdkFocusInitial
+      >
+        Confirm
+      </button>
+    </mat-dialog-actions>
+  `,
+  standalone: true,
+  imports: [CommonModule, MatDialogModule, MatButtonModule],
+})
+export class PurchaseConfirmationDialog {
+  constructor(
+    @Inject(MAT_DIALOG_DATA)
+    public data: { packageName: string; credits: number; total: number }
+  ) {}
 }

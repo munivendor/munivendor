@@ -7,7 +7,6 @@
   margin: 0 auto;
 }
 
-/* Header Banner */
 .header-banner {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -24,17 +23,14 @@
 }
 
 .purchasing-container p {
-  font-size: 14px;
   color: #666666;
   line-height: 1.6;
-  margin: 0 0 24px 0;
   padding: 12px 16px;
   background-color: #f5f5f5;
   border-left: 4px solid #667eea;
   border-radius: 4px;
 }
 
-/* Section Titles */
 .section-title {
   font-size: 20px;
   font-weight: 600;
@@ -44,30 +40,39 @@
   border-bottom: 2px solid #e0e0e0;
 }
 
-/* Purchasing Section */
 .purchasing-section {
   margin-bottom: 48px;
 }
 
-.credit-packages {
-  display: flex;
-  justify-content: space-between;
+.credit-package-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 30px;
   margin-bottom: 24px;
 }
 
-.credit-package {
-  display: flex;
-  align-items: center;
-  padding: 20px 24px;
-  border-radius: 8px;
-  border: 2px solid #e0e0e0;
-  transition: all 0.3s ease;
-  background-color: #fafafa;
+.credit-package.selected {
+  border: 2px solid #3f51b5;
+  background-color: #e8eaf6;
 }
 
 .credit-package:hover {
   border-color: #667eea;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.credit-package {
+  padding: 20px;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background-color: #ffffff;
+  position: relative;
+  overflow: hidden;
 }
 
 .credit-package mat-checkbox {
@@ -78,6 +83,7 @@
   flex: 1;
   display: flex;
   align-items: center;
+  justify-content: center;
 }
 
 .package-name {
@@ -90,8 +96,7 @@
 .package-pricing {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-left: auto;
+  justify-content: space-between;
 }
 
 .price {
@@ -99,7 +104,6 @@
   font-weight: 700;
   color: #1a1a1a;
   min-width: 80px;
-  text-align: right;
 }
 
 .discount-badge {
@@ -112,7 +116,6 @@
   white-space: nowrap;
 }
 
-/* Purchase Summary */
 .purchase-summary {
   display: flex;
   justify-content: flex-end;
@@ -156,12 +159,10 @@
   margin-right: 8px;
 }
 
-/* History Section */
 .history-section {
   margin-top: 48px;
 }
 
-/* Tab Styling */
 .purchasing-container ::ng-deep .mat-mdc-tab-group {
   margin-top: 20px;
 }
@@ -189,7 +190,6 @@
   padding: 24px 0;
 }
 
-/* Table Styling */
 .table-container {
   background-color: white;
   border-radius: 8px;
@@ -223,18 +223,6 @@
   background-color: #fafafa;
 }
 
-.quantity-items {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.account-display {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .account-digits {
   font-family: monospace;
   font-size: 16px;
@@ -250,33 +238,40 @@
   color: #1a1a1a;
 }
 
-.submission-link {
-  color: #667eea;
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s ease;
-}
-
-.submission-link:hover {
-  color: #764ba2;
-  text-decoration: underline;
-}
-
-.credits-badge {
-  font-size: 13px;
-  font-weight: 600;
-}
-
-/* Paginator */
 .purchasing-container ::ng-deep .mat-mdc-paginator {
   background-color: #fafafa;
   border-top: 1px solid #e0e0e0;
   border-radius: 0 0 8px 8px;
 }
 
-/* Responsive Design */
+.empty-state {
+  text-align: center;
+  padding: 38px 20px;
+  color: #666;
+}
+
+.empty-state-icon {
+  font-size: 64px;
+  width: 64px;
+  height: 64px;
+  color: #ccc;
+  margin-bottom: 16px;
+}
+
+.empty-state-message {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0 0 8px 0;
+}
+
+.empty-state-submessage {
+  font-size: 14px;
+  color: #999;
+  margin: 0;
+}
+
 @media (max-width: 968px) {
-  .credit-package {
+  .credit-package-card {
     flex-wrap: wrap;
     gap: 12px;
   }
