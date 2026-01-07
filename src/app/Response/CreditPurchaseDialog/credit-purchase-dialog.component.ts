@@ -38,6 +38,7 @@ import { SnackbarNotificationService } from '../../shared/service/snackbar-notif
 
 interface DialogData {
   organizationId: number;
+  requestId?: number;
   total?: number;
   selectedPackage?: CreditPackage;
   showCreditSelection: boolean;
@@ -373,7 +374,10 @@ export class CreditPurchaseDialogComponent implements OnInit {
         )
         .subscribe({
           next: (paymentProfileId) => {
-            this.loadPaymentMethodsAndShowSelection(paymentProfileId);
+            this.loadPaymentMethodsAndComplete(
+              paymentProfileId,
+              selectedPackage.id
+            );
           },
           error: () => {
             this.isSavingPaymentMethod = false;
@@ -405,7 +409,10 @@ export class CreditPurchaseDialogComponent implements OnInit {
         )
         .subscribe({
           next: (paymentProfileId) => {
-            this.loadPaymentMethodsAndShowSelection(paymentProfileId);
+            this.loadPaymentMethodsAndComplete(
+              paymentProfileId,
+              selectedPackage.id
+            );
           },
           error: () => {
             this.isSavingPaymentMethod = false;
@@ -414,8 +421,9 @@ export class CreditPurchaseDialogComponent implements OnInit {
     }
   }
 
-  private loadPaymentMethodsAndShowSelection(
-    newPaymentProfileId: string
+  private loadPaymentMethodsAndComplete(
+    newPaymentProfileId: string,
+    paymentPlanId: number
   ): void {
     this.isSavingPaymentMethod = true;
 
@@ -432,6 +440,17 @@ export class CreditPurchaseDialogComponent implements OnInit {
           this.addressForm.reset();
           this.ccForm.reset();
           this.achForm.reset();
+
+          const profileId =
+            typeof newPaymentProfileId === 'string'
+              ? parseInt(newPaymentProfileId, 10)
+              : newPaymentProfileId;
+
+          this.dialogRef.close({
+            success: true,
+            paymentPlanId: paymentPlanId,
+            paymentProfileId: profileId,
+          });
         },
         error: () => {
           this.isSavingPaymentMethod = false;
@@ -445,44 +464,16 @@ export class CreditPurchaseDialogComponent implements OnInit {
       return;
     }
 
-    this.isProcessingPayment = true;
-    this.chargeCustomer(selectedPackage.id, this.selectedPaymentMethodId);
-  }
-
-  private chargeCustomer(
-    paymentPlanId: number,
-    paymentProfileId: string | number
-  ): void {
     const profileId =
-      typeof paymentProfileId === 'string'
-        ? parseInt(paymentProfileId, 10)
-        : paymentProfileId;
+      typeof this.selectedPaymentMethodId === 'string'
+        ? parseInt(this.selectedPaymentMethodId, 10)
+        : this.selectedPaymentMethodId;
 
-    this.creditPackageService
-      .chargeCustomer(this.data.organizationId, paymentPlanId, profileId)
-      .subscribe({
-        next: (response) => {
-          this.snackbarNotificationService.showSnackbarSuccess(
-            'Payment processing successfully completed.'
-          );
-          this.isProcessingPayment = false;
-
-          this.dialogRef.close({
-            success: true,
-            correlationId: response.correlationId,
-            package: this.getSelectedPackage(),
-            paymentProfileId: profileId,
-          });
-        },
-        error: (error) => {
-          this.isProcessingPayment = false;
-
-          this.dialogRef.close({
-            success: false,
-            error: 'Payment processing failed',
-          });
-        },
-      });
+    this.dialogRef.close({
+      success: true,
+      paymentPlanId: selectedPackage.id,
+      paymentProfileId: profileId,
+    });
   }
 
   onCancel(): void {

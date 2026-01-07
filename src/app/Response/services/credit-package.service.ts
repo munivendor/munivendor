@@ -57,24 +57,6 @@ export class CreditPackageService {
     );
   }
 
-  chargeCustomer(
-    organizationId: number,
-    paymentPlanId: number,
-    paymentProfileId: number
-  ): Observable<{ correlationId: string }> {
-    return this.http
-      .post<{ correlationId: string }>(
-        `/api/Payment/Charge/${organizationId}/${paymentPlanId}/${paymentProfileId}`,
-        {}
-      )
-      .pipe(
-        catchError((error) => {
-          console.error('Error charging customer:', error);
-          return throwError(() => error);
-        })
-      );
-  }
-
   getSubmissionBalance(
     organizationId: number
   ): Observable<{ submissionBalance: number; correlationId: string }> {
