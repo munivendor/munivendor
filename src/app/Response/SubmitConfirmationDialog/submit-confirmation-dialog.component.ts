@@ -1,16 +1,18 @@
 import { Component, inject, Inject, OnDestroy } from '@angular/core';
 import {
   MatDialogRef,
+  MatDialog,
   MatDialogModule,
   MAT_DIALOG_DATA,
 } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { Subject, takeUntil } from 'rxjs';
-import { RequestService } from '../../Request/services/request.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { LoggingService } from '../../exceptionhandling/logging.service';
 import { StateService } from '../../Request/services/state.service';
+import { CreditPurchaseDialogComponent } from '../CreditPurchaseDialog/credit-purchase-dialog.component';
+import { PaymentInfoService } from '../BillingInformation/services/payment-info.service';
 
 @Component({
   selector: 'submit-confirmation-dialog',
@@ -20,9 +22,11 @@ import { StateService } from '../../Request/services/state.service';
 })
 export class SubmitConfirmationDialogComponent implements OnDestroy {
   private destroy$ = new Subject<void>();
+  private dialog = inject(MatDialog);
+  organizationId = this.stateService.getOrganizationId();
 
   constructor(
-    private requestService: RequestService,
+    private paymentInfoService: PaymentInfoService,
     private router: Router,
     private stateService: StateService,
     private _snackBar: MatSnackBar,
@@ -42,55 +46,129 @@ export class SubmitConfirmationDialogComponent implements OnDestroy {
 
   confirm(): void {
     const requestId = +this.data.responseId;
+    this.attemptSubmitOffer(requestId);
+  }
 
-    this.requestService
-      .UpdateRequestStatus(requestId, 9)
+  private attemptSubmitOffer(requestId: number): void {
+    this.paymentInfoService
+      .submitOffer(this.organizationId ?? 0, requestId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response: any) => {
-          const correlationId = response?.correlationId;
-          sessionStorage.removeItem('currentResponseId');
-          sessionStorage.removeItem('response_in_creation_mode');
-
-          this.loggingService.logEvent('RequestStatusUpdated', {
-            responseId: requestId,
-            correlationId: correlationId,
-            newRequestStatusId: 9,
-            methodName: 'confirm',
-            className: 'SubmitConfirmationDialogComponent',
-            operation: 'UpdateRequestStatus',
-            userId: this.stateService.getUserId(),
-            organizationId: this.stateService.getOrganizationId(),
-          });
-
-          this._snackBar.open('Offer successfully submitted!', 'Close', {
-            verticalPosition: 'top',
-          });
-
-          this.router.navigate(['/offeror-requests-view']);
-          this.dialogRef.close(true);
+        next: (response) => {
+          this.handleSuccessfulSubmission(requestId, response.correlationId);
         },
-        error: (error: any) => {
-          const correlationId = error?.error?.correlationId;
+        error: (error) => {
+          this.handleSubmissionError(requestId, error);
+        },
+      });
+  }
 
-          this.loggingService.logException(
-            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
-            3,
-            {
-              responseId: requestId,
-              correlationId: correlationId,
-              newRequestStatusId: 9,
-              organizationId: this.stateService.getOrganizationId(),
-              methodName: 'confirm',
-              className: 'SubmitConfirmationDialogComponent',
-              operation: 'UpdateRequestStatus',
-              userId: this.stateService.getUserId(),
-            }
-          );
+  private handleSuccessfulSubmission(
+    requestId: number,
+    correlationId: string
+  ): void {
+    sessionStorage.removeItem('currentResponseId');
+    sessionStorage.removeItem('response_in_creation_mode');
 
-          if (error.status === 422) {
-            return;
-          }
+    this.loggingService.logEvent('OfferSubmitted', {
+      responseId: requestId,
+      correlationId: correlationId,
+      methodName: 'attemptSubmitOffer',
+      className: 'SubmitConfirmationDialogComponent',
+      operation: 'SubmitOffer',
+      userId: this.stateService.getUserId(),
+      organizationId: this.organizationId,
+    });
+
+    this._snackBar.open('Offer successfully submitted!', 'Close', {
+      verticalPosition: 'top',
+    });
+
+    this.router.navigate(['/offeror-requests-view']);
+    this.dialogRef.close(true);
+  }
+
+  private handleSubmissionError(requestId: number, error: any): void {
+    // no submission credits (conflicts)
+    if (error.status === 409) {
+      this.dialogRef.close(false);
+      this.showCreditPurchaseFlow(requestId);
+      return;
+    }
+
+    // payment declined
+    if (error.status === 402) {
+      this._snackBar.open(
+        'Payment was declined. Please try a different payment method.',
+        'Close',
+        {
+          verticalPosition: 'top',
+          duration: 5000,
+        }
+      );
+
+      this.dialogRef.close(false);
+      return;
+    }
+
+    this.dialogRef.close(false);
+  }
+
+  private showCreditPurchaseFlow(requestId: number): void {
+    this.dialogRef.close(false);
+
+    const creditDialogRef = this.dialog.open(CreditPurchaseDialogComponent, {
+      width: '600px',
+      maxHeight: '90vh',
+      disableClose: true,
+      data: {
+        organizationId: this.organizationId,
+        requestId: requestId,
+        showCreditSelection: true,
+        contextMessage:
+          'You need to purchase submission credits to submit this offer.',
+      },
+    });
+
+    creditDialogRef.afterClosed().subscribe((result) => {
+      if (
+        result?.success &&
+        result?.paymentPlanId &&
+        result?.paymentProfileId
+      ) {
+        this.submitOfferWithPurchase(
+          requestId,
+          result.paymentProfileId,
+          result.paymentPlanId
+        );
+      } else {
+        this.dialog.open(SubmitConfirmationDialogComponent, {
+          width: '500px',
+          data: { responseId: requestId.toString() },
+        });
+      }
+    });
+  }
+
+  private submitOfferWithPurchase(
+    requestId: number,
+    paymentProfileId: number,
+    paymentPlanId: number
+  ): void {
+    this.paymentInfoService
+      .submitOffer(
+        this.organizationId ?? 0,
+        requestId,
+        paymentProfileId,
+        paymentPlanId
+      )
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.handleSuccessfulSubmission(requestId, response.correlationId);
+        },
+        error: (error) => {
+          this.handleSubmissionError(requestId, error);
         },
       });
   }

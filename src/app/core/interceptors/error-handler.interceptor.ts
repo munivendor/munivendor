@@ -108,6 +108,12 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
           return throwError(() => error);
         }
 
+        // Skip centralized error handling for 409 (no credits) and 402 (payment declined)
+        if (error.status === 409 || error.status === 402) {
+          return throwError(() => error);
+        }
+
+        // Handle all other errors for authenticated users
         if (
           !isPublicPath &&
           !isSilentPath &&

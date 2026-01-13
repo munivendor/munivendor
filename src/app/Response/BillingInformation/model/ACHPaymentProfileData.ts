@@ -1,10 +1,13 @@
 export class ACHPaymentProfileData {
-    CustomerProfileId!: string;
-    RoutingNumber!: string;
-    AccountNumber!: string; 
-    FirstName!: string;
-    LastName!: string;
-    BillingAddress!: string;
-    BillingZip!: string;
-    BillingCountry!: string;
+  CustomerProfileId!: string;
+  BankRoutingNumber!: string;
+  BankAccountNumber!: string;
+  BankAccountType!: number;
+  FirstName!: string;
+  LastName!: string;
+  BillingAddress!: string;
+  BillingCity!: string;
+  BillingState!: string;
+  BillingZipCode!: string;
+  BillingCountry!: string;
 }

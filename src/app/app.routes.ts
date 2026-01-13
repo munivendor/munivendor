@@ -30,6 +30,7 @@ import { OfferorProfilePageComponent } from './Response/OfferorProfilePage/offer
 
 import { ResponseStepper } from './Response/ResponseStepper/response-stepper.component';
 import { FlowCompletionGuard } from './authorization/auth.guard';
+import { SubmissionCreditsComponent } from './Response/SubmissionCredits/submission-credits.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -159,10 +160,18 @@ export const routes: Routes = [
     path: 'purchasing-history',
     component: PurchasingHistoryComponent,
     canActivate: [AuthGuard],
+    data: { showSidenav: true },
   },
   {
-    path: 'billing-information',
+    path: 'billing-profile',
     component: BillingInformationComponent,
     canActivate: [AuthGuard],
+    data: { showSidenav: true },
+  },
+  {
+    path: 'submission-credits',
+    component: SubmissionCreditsComponent,
+    canActivate: [AuthGuard],
+    data: { showSidenav: true },
   },
 ];

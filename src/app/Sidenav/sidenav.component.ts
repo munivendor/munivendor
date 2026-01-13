@@ -100,8 +100,14 @@ export class Sidenav implements OnInit, AfterViewInit {
     {
       id: 'billing-information',
       icon: 'credit_card',
-      label: 'Billing Information',
-      route: '/billing-information',
+      label: 'Billing Profile',
+      route: '/billing-profile',
+    },
+    {
+      id: 'submission-credits',
+      icon: 'history',
+      label: 'Submission Credits',
+      route: '/submission-credits',
     },
   ];
 
