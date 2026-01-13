@@ -18,6 +18,13 @@ export interface SubmissionBalanceResponse {
   correlationId: string;
 }
 
+export interface SubmissionCreditUsageItem {
+  createDate: string;
+  paymentMethod: string;
+  creditChargeDesc: string;
+  solicitationId?: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -72,6 +79,21 @@ export class CreditPackageService {
         })),
         catchError((error) => {
           console.error('Error fetching submission balance:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  getSubmissionCreditUsage(
+    organizationId: number
+  ): Observable<SubmissionCreditUsageItem[]> {
+    return this.http
+      .get<SubmissionCreditUsageItem[]>(
+        `/api/SubmissionCredits/Usage/${organizationId}`
+      )
+      .pipe(
+        catchError((error) => {
+          console.error('Error fetching submission credit usage:', error);
           return throwError(() => error);
         })
       );

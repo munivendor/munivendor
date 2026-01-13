@@ -2,23 +2,49 @@
   <div class="header-banner">
     <h1 style="margin: 0px">Submission Credits</h1>
   </div>
-  <h2>Remaining Credits: {{ submissionBalance }}</h2>
+
+  <h2>
+    Remaining Credits:
+
+    <span>{{ submissionBalance }}</span>
+  </h2>
 
   <br />
-  <div class="table-container">
+
+  <div
+    *ngIf="!creditUsage || creditUsage.data.length === 0"
+    class="empty-state"
+  >
+    <p class="empty-state-message">
+      No credit usage history available at this time. Your credit usage history
+      will appear here once you submit a response.
+    </p>
+  </div>
+
+  <div
+    *ngIf="creditUsage && creditUsage.data.length > 0"
+    class="table-container"
+  >
     <table mat-table [dataSource]="creditUsage" class="history-table">
-      <ng-container matColumnDef="date">
-        <th mat-header-cell *matHeaderCellDef>Date</th>
-        <td mat-cell *matCellDef="let usage">{{ usage.date }}</td>
+      <ng-container matColumnDef="dateTime">
+        <th mat-header-cell *matHeaderCellDef>Date and Time</th>
+        <td mat-cell *matCellDef="let usage" style="white-space: pre-line">
+          {{ usage.dateTime }}
+        </td>
       </ng-container>
 
-      <ng-container matColumnDef="time">
-        <th mat-header-cell *matHeaderCellDef>Time</th>
-        <td mat-cell *matCellDef="let usage">{{ usage.time }}</td>
+      <ng-container matColumnDef="type">
+        <th mat-header-cell *matHeaderCellDef>Type</th>
+        <td mat-cell *matCellDef="let usage">{{ usage.type }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="paymentMethod">
+        <th mat-header-cell *matHeaderCellDef>Payment Method Used</th>
+        <td mat-cell *matCellDef="let usage">{{ usage.paymentMethod }}</td>
       </ng-container>
 
       <ng-container matColumnDef="submissionId">
-        <th mat-header-cell *matHeaderCellDef>Submission ID</th>
+        <th mat-header-cell *matHeaderCellDef>Solicitation ID</th>
         <td mat-cell *matCellDef="let usage">
           <a
             [routerLink]="['/submission', usage.submissionId]"
@@ -32,13 +58,13 @@
       <tr mat-header-row *matHeaderRowDef="usageDisplayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: usageDisplayedColumns"></tr>
     </table>
-  </div>
 
-  <mat-paginator
-    [length]="creditUsage.data.length"
-    [pageSize]="10"
-    [pageSizeOptions]="[5, 10, 25, 50]"
-    showFirstLastButtons
-  >
-  </mat-paginator>
+    <mat-paginator
+      [length]="creditUsage.data.length"
+      [pageSize]="10"
+      [pageSizeOptions]="[5, 10, 25, 50]"
+      showFirstLastButtons
+    >
+    </mat-paginator>
+  </div>
 </div>
