@@ -197,6 +197,16 @@
                 "
                 >Routing number must be exactly 9 digits.</mat-error
               >
+              <mat-error
+                *ngIf="
+                  achForm
+                    .get('bankRoutingNumber')
+                    ?.hasError('invalidRoutingNumber') &&
+                  achForm.get('bankRoutingNumber')?.touched
+                "
+              >
+                Invalid routing number. Please verify with your bank.
+              </mat-error>
             </mat-form-field>
             <mat-form-field>
               <mat-label>Confirm Routing Number</mat-label>
@@ -223,6 +233,16 @@
                 "
                 >Confirm routing number must be exactly 9 digits.</mat-error
               >
+              <mat-error
+                *ngIf="
+                  achForm
+                    .get('confirmBankRoutingNumber')
+                    ?.hasError('mismatch') &&
+                  achForm.get('confirmBankRoutingNumber')?.touched
+                "
+              >
+                Routing numbers do not match.
+              </mat-error>
             </mat-form-field>
           </div>
 
@@ -248,6 +268,16 @@
                 "
                 >Account number must be between 6-17 digits.</mat-error
               >
+              <mat-error
+                *ngIf="
+                  achForm
+                    .get('bankAccountNumber')
+                    ?.hasError('suspiciousAccountNumber') &&
+                  achForm.get('bankAccountNumber')?.touched
+                "
+              >
+                Invalid account number pattern detected.
+              </mat-error>
             </mat-form-field>
             <mat-form-field>
               <mat-label>Confirm Account Number</mat-label>
@@ -274,6 +304,16 @@
                 "
                 >Confirm account number must be between 6-17 digits.</mat-error
               >
+              <mat-error
+                *ngIf="
+                  achForm
+                    .get('confirmBankAccountNumber')
+                    ?.hasError('mismatch') &&
+                  achForm.get('confirmBankAccountNumber')?.touched
+                "
+              >
+                Account numbers do not match.
+              </mat-error>
             </mat-form-field>
           </div>
 

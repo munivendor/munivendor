@@ -192,7 +192,9 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
     req: HttpRequest<any>
   ): void {
     const correlationId = error.error?.correlationId || 'N/A';
-    this.snackbarNotificationService.showSnackbarError(correlationId);
+    this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
+      correlationId
+    );
   }
 
   // backup error handler for APIs that do not have personalized logException

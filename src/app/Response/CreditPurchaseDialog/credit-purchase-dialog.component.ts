@@ -34,7 +34,8 @@ import { CustomerProfileData } from '../BillingInformation/model/CustomerProfile
 import { User } from '../../shared/model/user.model';
 import { UserService } from '../../shared/service/user.service';
 import { AuthService } from '../../authorization/auth.service';
-import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
+import { LoggingService } from '../../exceptionhandling/logging.service';
+import { StateService } from '../../Request/services/state.service';
 
 interface DialogData {
   organizationId: number;
@@ -88,6 +89,7 @@ export class CreditPurchaseDialogComponent implements OnInit {
   private destroy$ = new Subject<void>();
   userId!: number;
   workEmail!: string;
+  calculatedTotal: number = 0;
 
   readonly MAX_PAYMENT_METHODS = 3;
 
@@ -100,7 +102,8 @@ export class CreditPurchaseDialogComponent implements OnInit {
     private fb: FormBuilder,
     private userService: UserService,
     private authService: AuthService,
-    private snackbarNotificationService: SnackbarNotificationService
+    private loggingService: LoggingService,
+    private stateService: StateService
   ) {}
 
   ngOnInit(): void {
@@ -165,8 +168,22 @@ export class CreditPurchaseDialogComponent implements OnInit {
         this.isLoadingPackages = false;
       },
       error: (error) => {
-        console.error('Error loading credit packages:', error);
         this.isLoadingPackages = false;
+        const correlationId = error?.error?.correlationId;
+
+        this.loggingService.logException(
+          new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+          3,
+          {
+            requestId: this.stateService.getRequestId(),
+            organizationId: this.stateService.getOrganizationId(),
+            correlationId: correlationId,
+            methodName: 'loadCreditPackages',
+            className: 'CreditPurchaseDialogComponent',
+            operation: 'getPaymentPlans',
+            userId: this.stateService.getUserId(),
+          }
+        );
       },
     });
   }
@@ -239,9 +256,35 @@ export class CreditPurchaseDialogComponent implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error loading payment data:', error);
         this.paymentMethods = [];
         this.isLoading = false;
+
+        const correlationId = error?.error?.correlationId;
+        const errorUrl = error?.url?.toLowerCase?.() || '';
+
+        const operationMap: Record<string, string> = {
+          bankAccountTypes: 'getBankAccountTypes',
+          savedPaymentMethods: 'getSavedPaymentMethods',
+        };
+
+        const operation =
+          Object.entries(operationMap).find(([key]) =>
+            errorUrl.includes(key)
+          )?.[1] ?? 'UnknownOperation';
+
+        this.loggingService.logException(
+          new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+          3,
+          {
+            requestId: this.stateService.getRequestId(),
+            organizationId: this.stateService.getOrganizationId(),
+            correlationId: correlationId,
+            methodName: 'loadPaymentData',
+            className: 'CreditPurchaseDialogComponent',
+            operation: operation,
+            userId: this.stateService.getUserId(),
+          }
+        );
       },
     });
   }
@@ -254,17 +297,11 @@ export class CreditPurchaseDialogComponent implements OnInit {
       }
     });
 
-    if (selectedPackage.selected) {
-      selectedPackage.quantity = 1;
-    } else {
-      selectedPackage.quantity = 0;
-    }
+    this.calculatedTotal = this.calculateTotal(selectedPackage);
   }
 
-  calculateTotal(): number {
-    return this.creditPackages.reduce((total, pkg) => {
-      return total + (pkg.selected ? pkg.price * pkg.quantity : 0);
-    }, 0);
+  private calculateTotal(selectedPackage: CreditPackage): number {
+    return selectedPackage.price;
   }
 
   getSelectedPackage(): CreditPackage | null {
@@ -379,8 +416,23 @@ export class CreditPurchaseDialogComponent implements OnInit {
               selectedPackage.id
             );
           },
-          error: () => {
+          error: (error) => {
             this.isSavingPaymentMethod = false;
+            const correlationId = error?.error?.correlationId;
+
+            this.loggingService.logException(
+              new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+              3,
+              {
+                requestId: this.stateService.getRequestId(),
+                organizationId: this.stateService.getOrganizationId(),
+                correlationId: correlationId,
+                methodName: 'processNewPaymentMethod',
+                className: 'CreditPurchaseDialogComponent',
+                operation: 'saveCreditCardPaymentInfo',
+                userId: this.stateService.getUserId(),
+              }
+            );
           },
         });
     } else {
@@ -414,8 +466,23 @@ export class CreditPurchaseDialogComponent implements OnInit {
               selectedPackage.id
             );
           },
-          error: () => {
+          error: (error) => {
             this.isSavingPaymentMethod = false;
+            const correlationId = error?.error?.correlationId;
+
+            this.loggingService.logException(
+              new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+              3,
+              {
+                requestId: this.stateService.getRequestId(),
+                organizationId: this.stateService.getOrganizationId(),
+                correlationId: correlationId,
+                methodName: 'processNewPaymentMethod',
+                className: 'CreditPurchaseDialogComponent',
+                operation: 'saveACHPaymentInfo',
+                userId: this.stateService.getUserId(),
+              }
+            );
           },
         });
     }
@@ -452,9 +519,24 @@ export class CreditPurchaseDialogComponent implements OnInit {
             paymentProfileId: profileId,
           });
         },
-        error: () => {
+        error: (error) => {
           this.isSavingPaymentMethod = false;
           this.showAddNew = false;
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              requestId: this.stateService.getRequestId(),
+              organizationId: this.stateService.getOrganizationId(),
+              correlationId: correlationId,
+              methodName: 'loadPaymentMethodsAndComplete',
+              className: 'CreditPurchaseDialogComponent',
+              operation: 'getSavedPaymentMethods',
+              userId: this.stateService.getUserId(),
+            }
+          );
         },
       });
   }

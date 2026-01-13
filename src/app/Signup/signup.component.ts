@@ -168,7 +168,9 @@ export class SignupComponent implements OnInit, OnDestroy {
             }
           );
 
-          this.snackbarNotificationService.showSnackbarError(correlationId);
+          this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
+            correlationId
+          );
         },
       });
 
@@ -351,7 +353,9 @@ export class SignupComponent implements OnInit, OnDestroy {
             }
           );
 
-          this.snackbarNotificationService.showSnackbarError(correlationId);
+          this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
+            correlationId
+          );
         },
       });
     } else {
@@ -451,7 +455,9 @@ export class SignupComponent implements OnInit, OnDestroy {
           }
         );
 
-        this.snackbarNotificationService.showSnackbarError(correlationId);
+        this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
+          correlationId
+        );
 
         return throwError(() => error);
       }),
@@ -481,7 +487,9 @@ export class SignupComponent implements OnInit, OnDestroy {
               }
             );
 
-            this.snackbarNotificationService.showSnackbarError(correlationId);
+            this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
+              correlationId
+            );
             return throwError(() => loginError);
           })
         );
@@ -517,7 +525,9 @@ export class SignupComponent implements OnInit, OnDestroy {
                 }
               );
 
-              this.snackbarNotificationService.showSnackbarError(correlationId);
+              this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
+                correlationId
+              );
 
               return throwError(() => error);
             })
@@ -539,7 +549,9 @@ export class SignupComponent implements OnInit, OnDestroy {
             }
           );
 
-          this.snackbarNotificationService.showSnackbarError(correlationId);
+          this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
+            correlationId
+          );
         },
       });
   }

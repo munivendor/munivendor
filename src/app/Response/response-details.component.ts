@@ -217,9 +217,9 @@ export class ResponseDetailsComponent implements OnInit {
     return cleanedHtml;
   }
 
-  downloadPDFv2() {
+  downloadSolicitation() {
     const content = document.querySelector('.content')?.innerHTML ?? '';
-    const filename = this.generateFilename();
+    const filename = this.generateSolicitationFilename();
     this.loadingService.show('Downloading...');
 
     this.http
@@ -252,7 +252,7 @@ export class ResponseDetailsComponent implements OnInit {
               requestId: this.sourceIdParam,
               organizationId: this.stateService.getOrganizationId(),
               correlationId: correlationId,
-              methodName: 'downloadPDFv2',
+              methodName: 'downloadSolicitation',
               className: 'ResponseDetailsComponent',
               operation: 'GeneratePDF',
               userId: this.stateService.getUserId(),
@@ -262,7 +262,7 @@ export class ResponseDetailsComponent implements OnInit {
       });
   }
 
-  private generateFilename(): string {
+  private generateSolicitationFilename(): string {
     const sanitize = (str: string): string => {
       return str
         .replace(/[^a-zA-Z0-9\s-_]/g, '')

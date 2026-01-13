@@ -52,7 +52,7 @@
           <div class="total-section">
             <span class="total-label">Total:</span>
             <span></span>
-            <span class="total-amount">${{ calculateTotal() }}</span>
+            <span class="total-amount">${{ calculatedTotal }}</span>
           </div>
         </div>
       </div>
@@ -64,7 +64,7 @@
         mat-raised-button
         color="primary"
         (click)="proceedToPayment()"
-        [disabled]="calculateTotal() === 0 || isLoadingPackages"
+        [disabled]="calculatedTotal === 0 || isLoadingPackages"
       >
         <mat-icon>arrow_forward</mat-icon>
         Continue to Payment
@@ -102,7 +102,7 @@
         "
       >
         <p>Select a payment method to complete your purchase:</p>
-        <p class="total-display">Total: ${{ calculateTotal() }}.00</p>
+        <p class="total-display">Total: ${{ calculatedTotal }}.00</p>
 
         <mat-radio-group
           [(ngModel)]="selectedPaymentMethodId"
@@ -181,7 +181,7 @@
           your purchase.
         </p>
         <p *ngIf="paymentMethods.length > 0">Add a new payment method:</p>
-        <p class="total-display">Total: ${{ calculateTotal() }}.00</p>
+        <p class="total-display">Total: ${{ calculatedTotal }}.00</p>
 
         <mat-tab-group [(selectedIndex)]="selectedTabIndex">
           <!-- Credit Card Tab -->

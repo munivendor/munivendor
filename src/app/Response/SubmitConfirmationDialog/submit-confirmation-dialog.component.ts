@@ -55,7 +55,7 @@ export class SubmitConfirmationDialogComponent implements OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          this.handleSuccessfulSubmission(requestId, response.correlationId);
+          this.cleanupSessionAndNavigate();
         },
         error: (error) => {
           this.handleSubmissionError(requestId, error);
@@ -63,22 +63,9 @@ export class SubmitConfirmationDialogComponent implements OnDestroy {
       });
   }
 
-  private handleSuccessfulSubmission(
-    requestId: number,
-    correlationId: string
-  ): void {
+  private cleanupSessionAndNavigate(): void {
     sessionStorage.removeItem('currentResponseId');
     sessionStorage.removeItem('response_in_creation_mode');
-
-    this.loggingService.logEvent('OfferSubmitted', {
-      responseId: requestId,
-      correlationId: correlationId,
-      methodName: 'attemptSubmitOffer',
-      className: 'SubmitConfirmationDialogComponent',
-      operation: 'SubmitOffer',
-      userId: this.stateService.getUserId(),
-      organizationId: this.organizationId,
-    });
 
     this._snackBar.open('Offer successfully submitted!', 'Close', {
       verticalPosition: 'top',
@@ -165,7 +152,7 @@ export class SubmitConfirmationDialogComponent implements OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          this.handleSuccessfulSubmission(requestId, response.correlationId);
+          this.cleanupSessionAndNavigate();
         },
         error: (error) => {
           this.handleSubmissionError(requestId, error);

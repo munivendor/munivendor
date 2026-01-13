@@ -4,6 +4,7 @@ import {
   FormGroup,
   Validators,
   AbstractControl,
+  ValidationErrors,
 } from '@angular/forms';
 import { MaterialModule } from '../../Organization/shared/material.module';
 import { MatDialog } from '@angular/material/dialog';
@@ -26,6 +27,7 @@ import { StateService } from '../../Request/services/state.service';
 import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
+import { LoggingService } from '../../exceptionhandling/logging.service';
 
 @Component({
   selector: 'your-dialog',
@@ -117,7 +119,8 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private loadingService: LoadingService,
     private stateService: StateService,
-    private snackbarNotificationService: SnackbarNotificationService
+    private snackbarNotificationService: SnackbarNotificationService,
+    private loggingService: LoggingService
   ) {}
 
   resetForm(): void {
@@ -127,13 +130,6 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
   }
 
   showAddNewPaymentForm(): void {
-    if (this.savedPaymentMethods.length >= this.MAX_PAYMENT_METHODS) {
-      this.snackbarNotificationService.showSnackbarError(
-        'You have reached the maximum of 3 payment methods. Please delete an existing payment method to add a new one.'
-      );
-      return;
-    }
-
     this.showAddNewForm = true;
     this.isEditMode = false;
     this.editingPaymentId = null;
@@ -183,8 +179,19 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
               );
             },
             error: (error) => {
-              this.snackbarNotificationService.showSnackbarError(
-                'Failed to delete payment method. Please try again.'
+              const correlationId = error?.error?.correlationId;
+              this.loggingService.logException(
+                new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+                3,
+                {
+                  requestId: this.stateService.getRequestId(),
+                  organizationId: this.stateService.getOrganizationId(),
+                  correlationId: correlationId,
+                  methodName: 'deletePaymentMethod',
+                  className: 'BillingInformationComponent',
+                  operation: 'deletePaymentMethod',
+                  userId: this.stateService.getUserId(),
+                }
               );
             },
           });
@@ -246,105 +253,23 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
           );
         },
         error: (error) => {
-          console.error('Error setting default payment method:', error);
-          this.snackbarNotificationService.showSnackbarError(
-            'Failed to set default payment method. Please try again.'
+          const correlationId = error?.error?.correlationId;
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              requestId: this.stateService.getRequestId(),
+              organizationId: this.stateService.getOrganizationId(),
+              correlationId: correlationId,
+              methodName: 'setDefaultPaymentMethod',
+              className: 'BillingInformationComponent',
+              operation: 'setDefaultPaymentMethod',
+              userId: this.stateService.getUserId(),
+            }
           );
         },
       });
   }
-
-  // editPaymentMethod(method: SavedPaymentMethod): void {
-  //   this.isEditMode = true;
-  //   this.editingPaymentId = method.paymentProfileId;
-  //   this.showAddNewForm = true;
-  //   this.selectedPaymentType = method.accountType;
-
-  //   this.loadingService.show();
-  //   this.paymentInfoService
-  //     .getPaymentMethodDetails(this.organizationId, method.paymentProfileId)
-  //     .pipe(takeUntil(this.destroy$))
-  //     .subscribe({
-  //       next: (details) => {
-  //         const paymentDetails = details[0];
-
-  //         if (method.accountType === 'CC') {
-  //           this.ccForm.get('cardNumber')?.clearValidators();
-  //           this.ccForm.get('cardNumber')?.updateValueAndValidity();
-
-  //           this.ccForm.patchValue({
-  //             cardNumber: `${method.lastFourNumbers}`,
-  //             nameOnCard: `${paymentDetails.firstName} ${paymentDetails.lastName}`,
-  //             expirationDate: paymentDetails.expirationDate,
-  //           });
-
-  //           this.addressForm.patchValue({
-  //             streetAddress1: paymentDetails.billingAddress,
-  //             city: paymentDetails.billingCity,
-  //             state: paymentDetails.billingState,
-  //             zip: paymentDetails.billingZip,
-  //           });
-
-  //           this.ccForm
-  //             .get('nameOnCard')
-  //             ?.setValidators([
-  //               Validators.required,
-  //               this.nameOnCardOrAccountValidator,
-  //             ]);
-  //           this.ccForm
-  //             .get('expirationDate')
-  //             ?.setValidators([Validators.required]);
-  //           this.ccForm
-  //             .get('cvv')
-  //             ?.setValidators([
-  //               Validators.required,
-  //               this.cvvValidator.bind(this),
-  //             ]);
-  //         } else if (method.accountType === 'ACH') {
-  //           this.achForm.get('bankRoutingNumber')?.clearValidators();
-  //           this.achForm.get('confirmBankRoutingNumber')?.clearValidators();
-  //           this.achForm.get('bankAccountNumber')?.clearValidators();
-  //           this.achForm.get('confirmBankAccountNumber')?.clearValidators();
-
-  //           this.achForm.patchValue({
-  //             bankRoutingNumber: paymentDetails.bankRoutingNumber,
-  //             confirmBankRoutingNumber: paymentDetails.bankRoutingNumber,
-  //             bankAccountNumber: `${method.bankAccountMasked}`,
-  //             confirmBankAccountNumber: `${method.bankAccountMasked}`,
-  //             bankAccountType: paymentDetails.bankAccountType,
-  //             nameOnAccount: `${paymentDetails.firstName} ${paymentDetails.lastName}`,
-  //           });
-
-  //           this.addressForm.patchValue({
-  //             streetAddress1: paymentDetails.billingAddress,
-  //             city: paymentDetails.billingCity,
-  //             state: paymentDetails.billingState,
-  //             zip: paymentDetails.billingZip,
-  //           });
-
-  //           this.achForm
-  //             .get('nameOnAccount')
-  //             ?.setValidators([
-  //               Validators.required,
-  //               this.nameOnCardOrAccountValidator,
-  //             ]);
-
-  //           Object.keys(this.achForm.controls).forEach((key) => {
-  //             this.achForm.get(key)?.updateValueAndValidity();
-  //           });
-  //         }
-
-  //         this.loadingService.hide();
-  //       },
-  //       error: (error) => {
-  //         console.error('Error loading payment method details:', error);
-  //         this.loadingService.hide();
-  //         this.snackbarNotificationService.showSnackbarError(
-  //           'Failed to load payment method details. Please try again.'
-  //         );
-  //       },
-  //     });
-  // }
 
   loadSavedPaymentMethods(organizationId: number): void {
     this.isLoadingPaymentMethods = true;
@@ -362,8 +287,19 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
         error: (error) => {
           this.isLoadingPaymentMethods = false;
           this.loadingService.hide();
-          this.snackbarNotificationService.showSnackbarError(
-            'Failed to load payment methods. Please refresh the page.'
+          const correlationId = error?.error?.correlationId;
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              requestId: this.stateService.getRequestId(),
+              organizationId: this.stateService.getOrganizationId(),
+              correlationId: correlationId,
+              methodName: 'loadSavedPaymentMethods',
+              className: 'BillingInformationComponent',
+              operation: 'getSavedPaymentMethods',
+              userId: this.stateService.getUserId(),
+            }
           );
         },
       });
@@ -385,7 +321,31 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
           this.bankAccountTypes = bankAccountTypes;
         },
         error: (error) => {
-          console.error('Error loading initial data:', error);
+          const correlationId = error?.error?.correlationId;
+          const errorUrl = error?.url?.toLowerCase?.() || '';
+          const operationMap: Record<string, string> = {
+            states: 'getStates',
+            bankAccountTypes: 'getBankAccountTypes',
+          };
+
+          const operation =
+            Object.entries(operationMap).find(([key]) =>
+              errorUrl.includes(key)
+            )?.[1] ?? 'UnknownOperation';
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              requestId: this.stateService.getRequestId(),
+              organizationId: this.organizationId,
+              correlationId: correlationId,
+              methodName: 'ngOnInit',
+              className: 'BillingInformationComponent',
+              operation: operation,
+              userId: this.stateService.getUserId(),
+            }
+          );
         },
       });
     this.organizationTypeId = this.stateService.getOrganizationTypeId() ?? 0;
@@ -403,6 +363,8 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
       }
     });
   }
+
+  // FORM GROUP CREATORS WITH ENHANCED VALIDATION
 
   private createAddressGroup(): FormGroup {
     return this.fb.group(
@@ -424,32 +386,56 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
   }
 
   private createAchGroup(): FormGroup {
-    return this.fb.group(
+    const group = this.fb.group(
       {
         bankRoutingNumber: [
           '',
-          [Validators.required, Validators.pattern(/^\d{9}$/)],
+          [Validators.required, this.routingNumberValidator.bind(this)],
         ],
-        confirmBankRoutingNumber: [
-          '',
-          [Validators.required, Validators.pattern(/^\d{9}$/)],
-        ],
+        confirmBankRoutingNumber: ['', [Validators.required]],
         bankAccountNumber: [
           '',
-          [Validators.required, Validators.pattern(/^\d{9,12}$/)],
+          [Validators.required, this.accountNumberValidator.bind(this)],
         ],
-        confirmBankAccountNumber: [
-          '',
-          [Validators.required, Validators.pattern(/^\d{9,12}$/)],
-        ],
+        confirmBankAccountNumber: ['', [Validators.required]],
         bankAccountType: ['', Validators.required],
         nameOnAccount: [
           '',
           [Validators.required, this.nameOnCardOrAccountValidator],
         ],
       },
-      { updateOn: 'change' }
+      {
+        updateOn: 'change',
+        validators: [
+          this.matchingFieldsValidator(
+            'bankRoutingNumber',
+            'confirmBankRoutingNumber'
+          ),
+          this.matchingFieldsValidator(
+            'bankAccountNumber',
+            'confirmBankAccountNumber'
+          ),
+        ],
+      }
     );
+
+    group.get('bankRoutingNumber')?.valueChanges.subscribe(() => {
+      this.sanitizeNumericInput(group.get('bankRoutingNumber')!);
+    });
+
+    group.get('confirmBankRoutingNumber')?.valueChanges.subscribe(() => {
+      this.sanitizeNumericInput(group.get('confirmBankRoutingNumber')!);
+    });
+
+    group.get('bankAccountNumber')?.valueChanges.subscribe(() => {
+      this.sanitizeNumericInput(group.get('bankAccountNumber')!);
+    });
+
+    group.get('confirmBankAccountNumber')?.valueChanges.subscribe(() => {
+      this.sanitizeNumericInput(group.get('confirmBankAccountNumber')!);
+    });
+
+    return group;
   }
 
   private createCreditCardGroup(): FormGroup {
@@ -474,6 +460,129 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
     );
   }
 
+  // ACH VALIDATORS
+  private routingNumberValidator(
+    control: AbstractControl
+  ): ValidationErrors | null {
+    const routingNumber = control.value;
+    if (!routingNumber) return null;
+
+    // Must be exactly 9 digits
+    if (!/^\d{9}$/.test(routingNumber)) {
+      return { invalidRoutingNumber: true };
+    }
+
+    // ABA routing number checksum validation
+    const digits = routingNumber.split('').map(Number);
+    const checksum =
+      (3 * (digits[0] + digits[3] + digits[6]) +
+        7 * (digits[1] + digits[4] + digits[7]) +
+        (digits[2] + digits[5] + digits[8])) %
+      10;
+
+    return checksum === 0 ? null : { invalidRoutingNumber: true };
+  }
+
+  private accountNumberValidator(
+    control: AbstractControl
+  ): ValidationErrors | null {
+    const accountNumber = control.value;
+    if (!accountNumber) return null;
+
+    // Most banks use 6-17 digits
+    if (!/^\d{6,17}$/.test(accountNumber)) {
+      return { invalidAccountNumber: true };
+    }
+
+    // Block obviously invalid patterns (all zeros or all ones)
+    if (/^0+$/.test(accountNumber) || /^1+$/.test(accountNumber)) {
+      return { suspiciousAccountNumber: true };
+    }
+
+    return null;
+  }
+
+  private matchingFieldsValidator(field1: string, field2: string) {
+    return (group: FormGroup): ValidationErrors | null => {
+      const control1 = group.get(field1);
+      const control2 = group.get(field2);
+
+      if (!control1 || !control2) return null;
+
+      if (control2.value && control1.value !== control2.value) {
+        control2.setErrors({ mismatch: true });
+        return { mismatch: true };
+      } else {
+        const errors = control2.errors;
+        if (errors) {
+          delete errors['mismatch'];
+          control2.setErrors(Object.keys(errors).length ? errors : null);
+        }
+      }
+
+      return null;
+    };
+  }
+
+  private sanitizeNumericInput(control: AbstractControl): void {
+    if (control.value) {
+      const sanitized = control.value.replace(/\D/g, '');
+      if (sanitized !== control.value) {
+        control.setValue(sanitized, { emitEvent: false });
+      }
+    }
+  }
+
+  // CREDIT CARD VALIDATORS
+  private cvvValidator(control: AbstractControl): ValidationErrors | null {
+    const cvv = control.value;
+    if (!cvv) return null;
+    const cardType = this.detectCardType(
+      this.ccForm?.get('cardNumber')?.value || ''
+    );
+    const pattern = cardType === 'amex' ? /^\d{4}$/ : /^\d{3}$/;
+    return pattern.test(cvv) ? null : { invalidCvv: true };
+  }
+
+  private nameOnCardOrAccountValidator(
+    control: AbstractControl
+  ): ValidationErrors | null {
+    if (!control.value) return null;
+    const pattern = /^[A-Za-z\s'-]{2,50}$/;
+    return pattern.test(control.value) ? null : { invalidName: true };
+  }
+
+  private luhnValidator(control: AbstractControl): ValidationErrors | null {
+    const cardNumber = control.value;
+    if (!cardNumber) return null;
+
+    const sanitized = cardNumber.replace(/\D/g, '');
+
+    if (sanitized.length < 13) {
+      return { invalidCard: true };
+    }
+
+    let sum = 0;
+    let isEven = false;
+
+    for (let i = sanitized.length - 1; i >= 0; i--) {
+      let digit = parseInt(sanitized.charAt(i), 10);
+
+      if (isEven) {
+        digit *= 2;
+        if (digit > 9) {
+          digit -= 9;
+        }
+      }
+
+      sum += digit;
+      isEven = !isEven;
+    }
+
+    return sum % 10 === 0 ? null : { invalidCard: true };
+  }
+
+  // HELPER METHODS
   getBankAccountTypeName(enumId: number | undefined): string {
     if (enumId === undefined) return '';
     const accountType = this.bankAccountTypes.find(
@@ -482,6 +591,28 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
     return accountType ? accountType.codeName : '';
   }
 
+  detectCardType(cardNumber: string = ''): string | null {
+    cardNumber = cardNumber.replace(/\D/g, '');
+    if (/^4/.test(cardNumber)) return 'visa';
+    if (/^5[1-5]/.test(cardNumber) || /^2[2-7]/.test(cardNumber))
+      return 'mastercard';
+    if (/^3[47]/.test(cardNumber)) return 'amex';
+    if (/^6(?:011|5)/.test(cardNumber)) return 'discover';
+    return null;
+  }
+
+  cardTypeLabels: Record<string, string> = {
+    Visa: 'Visa',
+    MasterCard: 'Mastercard',
+    Discover: 'Discover',
+    AmericanExpress: 'American Express',
+  };
+
+  getCardTypeLabel(cardType?: string): string {
+    return this.cardTypeLabels[cardType ?? ''] ?? 'Credit Card';
+  }
+
+  // FORM SUBMISSION METHODS
   submitACH() {
     if (this.achForm.invalid || this.addressForm.invalid) {
       this.achForm.markAllAsTouched();
@@ -520,10 +651,21 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
               'ACH payment method updated successfully.'
             );
           },
-          error: (err) => {
-            console.error('ACH update failed', err);
-            this.snackbarNotificationService.showSnackbarError(
-              'Failed to update ACH payment method. Please try again.'
+          error: (error) => {
+            const correlationId = error?.error?.correlationId;
+
+            this.loggingService.logException(
+              new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+              3,
+              {
+                requestId: this.stateService.getRequestId(),
+                organizationId: this.stateService.getOrganizationId(),
+                correlationId: correlationId,
+                methodName: 'submitACH',
+                className: 'BillingInformationComponent',
+                operation: 'updatePaymentMethod',
+                userId: this.stateService.getUserId(),
+              }
             );
           },
         });
@@ -570,10 +712,21 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
               'Credit card payment method updated successfully.'
             );
           },
-          error: (err) => {
-            console.error('CC update failed', err);
-            this.snackbarNotificationService.showSnackbarError(
-              'Failed to update credit card payment method. Please try again.'
+          error: (error) => {
+            const correlationId = error?.error?.correlationId;
+
+            this.loggingService.logException(
+              new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+              3,
+              {
+                requestId: this.stateService.getRequestId(),
+                organizationId: this.stateService.getOrganizationId(),
+                correlationId: correlationId,
+                methodName: 'submitCC',
+                className: 'BillingInformationComponent',
+                operation: 'updatePaymentMethod',
+                userId: this.stateService.getUserId(),
+              }
             );
           },
         });
@@ -620,10 +773,32 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
             `${accountType} payment method successfully added.`
           );
         },
-        error: (err) => {
-          console.error(`Error saving ${accountType} payment info`, err);
-          this.snackbarNotificationService.showSnackbarError(
-            `Failed to add ${accountType} payment method. Please try again.`
+        error: (error) => {
+          const correlationId = error?.error?.correlationId;
+          const errorUrl = error?.url?.toLowerCase?.() || '';
+
+          const operationMap: Record<string, string> = {
+            saveACHPaymentInfo: 'saveACHPaymentInfo',
+            saveCreditCardPaymentInfo: 'saveCreditCardPaymentInfo',
+          };
+
+          const operation =
+            Object.entries(operationMap).find(([key]) =>
+              errorUrl.includes(key)
+            )?.[1] ?? 'UnknownOperation';
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              requestId: this.stateService.getRequestId(),
+              organizationId: this.stateService.getOrganizationId(),
+              correlationId: correlationId,
+              methodName: 'savePaymentInfo',
+              className: 'BillingInformationComponent',
+              operation: operation,
+              userId: this.stateService.getUserId(),
+            }
           );
           this.resetForms();
         },
@@ -643,73 +818,6 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
   private splitFullName(fullName: string) {
     const parts = fullName.trim().split(' ');
     return { firstName: parts[0], lastName: parts.slice(1).join(' ') || '' };
-  }
-
-  detectCardType(cardNumber: string = ''): string | null {
-    cardNumber = cardNumber.replace(/\D/g, '');
-    if (/^4/.test(cardNumber)) return 'visa';
-    if (/^5[1-5]/.test(cardNumber) || /^2[2-7]/.test(cardNumber))
-      return 'mastercard';
-    if (/^3[47]/.test(cardNumber)) return 'amex';
-    if (/^6(?:011|5)/.test(cardNumber)) return 'discover';
-    return null;
-  }
-
-  cardTypeLabels: Record<string, string> = {
-    Visa: 'Visa',
-    MasterCard: 'Mastercard',
-    Discover: 'Discover',
-    AmericanExpress: 'American Express',
-  };
-
-  getCardTypeLabel(cardType?: string): string {
-    return this.cardTypeLabels[cardType ?? ''] ?? 'Credit Card';
-  }
-
-  private cvvValidator(control: AbstractControl) {
-    const cvv = control.value;
-    if (!cvv) return null;
-    const cardType = this.detectCardType(
-      this.ccForm?.get('cardNumber')?.value || ''
-    );
-    const pattern = cardType === 'amex' ? /^\d{4}$/ : /^\d{3}$/;
-    return pattern.test(cvv) ? null : { invalidCvv: true };
-  }
-
-  private nameOnCardOrAccountValidator(control: AbstractControl) {
-    if (!control.value) return null;
-    const pattern = /^[A-Za-z\s'-]{2,50}$/;
-    return pattern.test(control.value) ? null : { invalidName: true };
-  }
-
-  private luhnValidator(control: AbstractControl) {
-    const cardNumber = control.value;
-    if (!cardNumber) return null;
-
-    const sanitized = cardNumber.replace(/\D/g, '');
-
-    if (sanitized.length < 13) {
-      return { invalidCard: true };
-    }
-
-    let sum = 0;
-    let isEven = false;
-
-    for (let i = sanitized.length - 1; i >= 0; i--) {
-      let digit = parseInt(sanitized.charAt(i), 10);
-
-      if (isEven) {
-        digit *= 2;
-        if (digit > 9) {
-          digit -= 9;
-        }
-      }
-
-      sum += digit;
-      isEven = !isEven;
-    }
-
-    return sum % 10 === 0 ? null : { invalidCard: true };
   }
 
   ngOnDestroy(): void {

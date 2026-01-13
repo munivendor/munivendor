@@ -70,6 +70,24 @@ export class Sidenav implements OnInit, AfterViewInit {
       label: 'Definitions',
       route: '/definitions',
     },
+    {
+      id: 'faq',
+      icon: 'question_answer',
+      label: 'FAQ',
+      route: '/faq',
+    },
+    {
+      id: 'privacy-policy',
+      icon: 'privacy_tip',
+      label: 'Privacy Policy',
+      route: '/privacy-policy',
+    },
+    {
+      id: 'terms-of-service',
+      icon: 'description',
+      label: 'Terms of Service',
+      route: '/terms-of-service',
+    },
   ];
 
   offerorMenuItems = [
@@ -108,6 +126,24 @@ export class Sidenav implements OnInit, AfterViewInit {
       icon: 'history',
       label: 'Submission Credits',
       route: '/submission-credits',
+    },
+    {
+      id: 'faq',
+      icon: 'question_answer',
+      label: 'FAQ',
+      route: '/faq',
+    },
+    {
+      id: 'privacy-policy',
+      icon: 'privacy_tip',
+      label: 'Privacy Policy',
+      route: '/privacy-policy',
+    },
+    {
+      id: 'terms-of-service',
+      icon: 'description',
+      label: 'Terms of Service',
+      route: '/terms-of-service',
     },
   ];
 
