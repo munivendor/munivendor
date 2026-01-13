@@ -389,7 +389,9 @@ export class AuthService {
 
           this.setAuthenticated(false, undefined);
 
-          this.snackbarNotificationService.showSnackbarError(correlationId);
+          this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
+            correlationId
+          );
         },
       });
   }

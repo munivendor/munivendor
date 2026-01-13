@@ -89,7 +89,9 @@ export class ResendPasswordResetDialog {
           }
         );
 
-        this.snackbarNotificationService.showSnackbarError(correlationId);
+        this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
+          correlationId
+        );
       },
     });
   }
@@ -159,7 +161,9 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
             }
           );
 
-          this.snackbarNotificationService.showSnackbarError(correlationId);
+          this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
+            correlationId
+          );
         },
       });
     }
@@ -193,7 +197,9 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
           }
         );
 
-        this.snackbarNotificationService.showSnackbarError(correlationId);
+        this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
+          correlationId
+        );
       },
     });
   }

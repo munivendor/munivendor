@@ -81,7 +81,9 @@ export class FlowNavigationService {
             }
           );
 
-          this.snackbarNotificationService.showSnackbarError(correlationId);
+          this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
+            correlationId
+          );
         },
       });
     });
@@ -121,7 +123,9 @@ export class FlowNavigationService {
             }
           );
 
-          this.snackbarNotificationService.showSnackbarError(correlationId);
+          this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
+            correlationId
+          );
         },
       });
   }
