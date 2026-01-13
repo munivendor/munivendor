@@ -264,12 +264,6 @@
   margin: 0 0 8px 0;
 }
 
-.empty-state-submessage {
-  font-size: 14px;
-  color: #999;
-  margin: 0;
-}
-
 @media (max-width: 968px) {
   .credit-package-card {
     flex-wrap: wrap;

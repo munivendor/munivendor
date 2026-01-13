@@ -32,7 +32,7 @@ import {
   CreditPackage,
 } from '../services/credit-package.service';
 import { PaymentInfoService } from '../BillingInformation/services/payment-info.service';
-
+import { LoggingService } from '../../exceptionhandling/logging.service';
 interface OrderHistory {
   date: string;
   time: string;
@@ -82,7 +82,8 @@ export class PurchasingHistoryComponent implements OnInit, OnDestroy {
   constructor(
     private stateService: StateService,
     private creditPackageService: CreditPackageService,
-    private paymentInfoService: PaymentInfoService
+    private paymentInfoService: PaymentInfoService,
+    private loggingService: LoggingService
   ) {}
 
   ngOnInit(): void {
@@ -120,9 +121,21 @@ export class PurchasingHistoryComponent implements OnInit, OnDestroy {
 
             this.orderHistory.paginator = this.paginator;
           },
-          error: (err) => {
-            console.error('Error loading billing history:', err);
+          error: (error) => {
             this.orderHistory.data = [];
+            const correlationId = error?.error?.correlationId;
+            this.loggingService.logException(
+              new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+              3,
+              {
+                organizationId: this.organizationId,
+                correlationId: correlationId,
+                methodName: 'loadOrderHistory',
+                className: 'PurchasingHistoryComponent',
+                operation: 'getBillingHistory',
+                userId: this.stateService.getUserId(),
+              }
+            );
           },
         });
     } else {
@@ -144,6 +157,19 @@ export class PurchasingHistoryComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           this.isLoadingPackages = false;
+          const correlationId = error?.error?.correlationId;
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              organizationId: this.organizationId,
+              correlationId: correlationId,
+              methodName: 'loadCreditPackages',
+              className: 'PurchasingHistoryComponent',
+              operation: 'getPaymentPlans',
+              userId: this.stateService.getUserId(),
+            }
+          );
         },
       });
   }
