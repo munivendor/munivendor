@@ -219,7 +219,7 @@ export class ResponseDetailsComponent implements OnInit {
 
   downloadPDFv2() {
     const content = document.querySelector('.content')?.innerHTML ?? '';
-    const filename = this.generateFilename();
+    const filename = this.generateSolicitationFilename();
     this.loadingService.show('Downloading...');
 
     this.http
@@ -262,7 +262,7 @@ export class ResponseDetailsComponent implements OnInit {
       });
   }
 
-  private generateFilename(): string {
+  private generateSolicitationFilename(): string {
     const sanitize = (str: string): string => {
       return str
         .replace(/[^a-zA-Z0-9\s-_]/g, '')

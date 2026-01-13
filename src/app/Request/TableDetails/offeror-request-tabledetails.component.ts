@@ -212,7 +212,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
   }
 
   downloadPDFv2(request: any): void {
-    const filename = this.generateFilename(request);
+    const filename = this.generateSolicitationFilename(request);
     this.loadingService.show('Downloading...');
 
     this.http
@@ -263,7 +263,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
       });
   }
 
-  private generateFilename(request: any): string {
+  private generateSolicitationFilename(request: any): string {
     const sanitize = (str: string): string => {
       return str
         .replace(/[^a-zA-Z0-9\s-_]/g, '')
