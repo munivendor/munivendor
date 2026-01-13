@@ -211,7 +211,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
       });
   }
 
-  downloadPDFv2(request: any): void {
+  downloadSolicitation(request: any): void {
     const filename = this.generateSolicitationFilename(request);
     this.loadingService.show('Downloading...');
 
@@ -253,7 +253,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
               requestId: request.requestId,
               organizationId: this.organizationId,
               correlationId: correlationId,
-              methodName: 'downloadPDFv2',
+              methodName: 'downloadSolicitation',
               className: 'OfferorTableDetailsComponent',
               operation: 'GeneratePDF',
               userId: this.stateService.getUserId(),

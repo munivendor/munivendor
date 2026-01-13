@@ -217,7 +217,7 @@ export class ResponseDetailsComponent implements OnInit {
     return cleanedHtml;
   }
 
-  downloadPDFv2() {
+  downloadSolicitation() {
     const content = document.querySelector('.content')?.innerHTML ?? '';
     const filename = this.generateSolicitationFilename();
     this.loadingService.show('Downloading...');
@@ -252,7 +252,7 @@ export class ResponseDetailsComponent implements OnInit {
               requestId: this.sourceIdParam,
               organizationId: this.stateService.getOrganizationId(),
               correlationId: correlationId,
-              methodName: 'downloadPDFv2',
+              methodName: 'downloadSolicitation',
               className: 'ResponseDetailsComponent',
               operation: 'GeneratePDF',
               userId: this.stateService.getUserId(),
