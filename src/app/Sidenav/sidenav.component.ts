@@ -71,12 +71,6 @@ export class Sidenav implements OnInit, AfterViewInit {
       route: '/definitions',
     },
     {
-      id: 'faq',
-      icon: 'question_answer',
-      label: 'FAQ',
-      route: '/faq',
-    },
-    {
       id: 'privacy-policy',
       icon: 'privacy_tip',
       label: 'Privacy Policy',
