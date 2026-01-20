@@ -24,13 +24,17 @@ import { OfferorTableDetailsComponent } from './Request/TableDetails/offeror-req
 import { CreateRequestStepper } from './Request/CreateRequestStepper/create-request-stepper.component';
 import { CategoryTreeComponent } from './CategoryTree/category-tree.component';
 import { DefinitionsComponent } from './DefinitionsPage/definitions.component';
-import { UserGuideComponent } from './Response/ReadMePage/read-me.component';
+import { UserGuideComponent } from './Response/UserGuidePage/user-guide.component';
 
 import { OfferorProfilePageComponent } from './Response/OfferorProfilePage/offeror-profile-page.component';
 
 import { ResponseStepper } from './Response/ResponseStepper/response-stepper.component';
 import { FlowCompletionGuard } from './authorization/auth.guard';
 import { SubmissionCreditsComponent } from './Response/SubmissionCredits/submission-credits.component';
+
+import { FAQComponent } from './FAQ/faq.component';
+import { PrivacyPolicyComponent } from './PrivacyPolicy/privacy-policy.component';
+import { TermsOfServiceComponent } from './TermsOfService/terms-of-service.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -171,6 +175,24 @@ export const routes: Routes = [
   {
     path: 'submission-credits',
     component: SubmissionCreditsComponent,
+    canActivate: [AuthGuard],
+    data: { showSidenav: true },
+  },
+  {
+    path: 'faq',
+    component: FAQComponent,
+    canActivate: [AuthGuard],
+    data: { showSidenav: true },
+  },
+  {
+    path: 'privacy-policy',
+    component: PrivacyPolicyComponent,
+    canActivate: [AuthGuard],
+    data: { showSidenav: true },
+  },
+  {
+    path: 'terms-of-service',
+    component: TermsOfServiceComponent,
     canActivate: [AuthGuard],
     data: { showSidenav: true },
   },
