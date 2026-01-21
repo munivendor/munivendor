@@ -159,19 +159,16 @@ export class PaymentInfoService {
     });
   }
 
-  /**
-   * TODO: Verify a payment method (useful for ACH micro-deposit verification)
-   */
-  // verifyPaymentMethod(
-  //   paymentMethodId: string,
-  //   verificationData?: any
-  // ): Observable<any> {
-  //   return this.http.post<any>(
-  //     `${this.apiUrl}/payment-method/${paymentMethodId}/verify`,
-  //     verificationData || {},
-  //     { headers: this.getHeaders() }
-  //   );
-  // }
+  chargePayment(
+    organizationId: number,
+    paymentPlanId: number,
+    paymentProfileId: number
+  ): Observable<any> {
+    return this.http.post(
+      `api/Payment/Charge/${organizationId}/${paymentPlanId}/${paymentProfileId}`,
+      {}
+    );
+  }
 
   // charges user submission credit if available
   // updated request status to 9 - Offer Submitted

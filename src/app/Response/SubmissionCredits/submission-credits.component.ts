@@ -25,6 +25,7 @@ import {
   CreditPackageService,
   SubmissionCreditUsageItem,
 } from '../../Response/services/credit-package.service';
+import { LoggingService } from '../../exceptionhandling/logging.service';
 
 interface CreditUsage {
   dateTime: string;
@@ -59,7 +60,8 @@ export class SubmissionCreditsComponent
 
   constructor(
     private stateService: StateService,
-    private creditPackageService: CreditPackageService
+    private creditPackageService: CreditPackageService,
+    private loggingService: LoggingService
   ) {}
 
   private destroy$ = new Subject<void>();
@@ -97,8 +99,20 @@ export class SubmissionCreditsComponent
             this.isLoadingBalance = false;
           },
           error: (error) => {
-            console.error('Error loading submission balance:', error);
             this.isLoadingBalance = false;
+            const correlationId = error?.error?.correlationId;
+            this.loggingService.logException(
+              new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+              3,
+              {
+                organizationId: this.organizationId,
+                correlationId: correlationId,
+                methodName: 'loadSubmissionBalance',
+                className: 'SubmissionCreditsComponent',
+                operation: 'getSubmissionBalance',
+                userId: this.stateService.getUserId(),
+              }
+            );
           },
         });
     } else {
@@ -114,9 +128,12 @@ export class SubmissionCreditsComponent
         .subscribe({
           next: (usageItems: SubmissionCreditUsageItem[]) => {
             const mappedData: CreditUsage[] = usageItems.map((item) => {
-              const date = new Date(item.createDate);
+              const dateString = item.createDate.endsWith('Z')
+                ? item.createDate
+                : `${item.createDate}Z`;
 
-              // Combine date and time
+              const date = new Date(dateString);
+
               const dateTimeString = `${date.toLocaleDateString()}\n${date.toLocaleTimeString(
                 [],
                 {
@@ -136,9 +153,21 @@ export class SubmissionCreditsComponent
             this.isLoadingUsage = false;
           },
           error: (error) => {
-            console.error('Error loading submission credit usage:', error);
             this.creditUsage.data = [];
             this.isLoadingUsage = false;
+            const correlationId = error?.error?.correlationId;
+            this.loggingService.logException(
+              new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+              3,
+              {
+                organizationId: this.organizationId,
+                correlationId: correlationId,
+                methodName: 'loadSubmissionCreditUsage',
+                className: 'SubmissionCreditsComponent',
+                operation: 'getSubmissionCreditUsage',
+                userId: this.stateService.getUserId(),
+              }
+            );
           },
         });
     } else {

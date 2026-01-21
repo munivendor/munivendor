@@ -6,6 +6,8 @@ import {
   FormBuilder,
   FormGroup,
   Validators,
+  AbstractControl,
+  ValidationErrors,
 } from '@angular/forms';
 import {
   MatDialogRef,
@@ -203,33 +205,82 @@ export class CreditPurchaseDialogComponent implements OnInit {
     this.ccForm = this.fb.group({
       cardNumber: [
         '',
-        [Validators.required, Validators.pattern('^[0-9]{13,19}$')],
+        [Validators.required, this.cardNumberValidator.bind(this)],
       ],
       nameOnCard: [
         '',
-        [Validators.required, Validators.pattern(/^[A-Za-z\s'-]{2,50}$/)],
+        [Validators.required, this.nameOnCardOrAccountValidator.bind(this)],
       ],
       expirationDate: [
         '',
-        [Validators.required, Validators.pattern(/^(0[1-9]|1[0-2])\/\d{2}$/)],
+        [Validators.required, this.expirationDateValidator.bind(this)],
       ],
-      cvv: ['', [Validators.required, Validators.pattern(/^\d{3,4}$/)]],
+      cvv: ['', [Validators.required, this.cvvValidator.bind(this)]],
     });
 
-    this.achForm = this.fb.group({
-      nameOnAccount: [
-        '',
-        [Validators.required, Validators.pattern(/^[A-Za-z\s'-]{2,50}$/)],
-      ],
-      bankRoutingNumber: [
-        '',
-        [Validators.required, Validators.pattern(/^\d{9}$/)],
-      ],
-      bankAccountNumber: [
-        '',
-        [Validators.required, Validators.pattern(/^\d{6,17}$/)],
-      ],
-      bankAccountType: ['', Validators.required],
+    this.achForm = this.fb.group(
+      {
+        nameOnAccount: [
+          '',
+          [Validators.required, this.nameOnCardOrAccountValidator.bind(this)],
+        ],
+        bankRoutingNumber: [
+          '',
+          [Validators.required, this.routingNumberValidator.bind(this)],
+        ],
+        confirmBankRoutingNumber: ['', [Validators.required]],
+        bankAccountNumber: [
+          '',
+          [Validators.required, this.accountNumberValidator.bind(this)],
+        ],
+        confirmBankAccountNumber: ['', [Validators.required]],
+        bankAccountType: ['', Validators.required],
+      },
+      {
+        validators: [
+          this.matchingFieldsValidator(
+            'bankRoutingNumber',
+            'confirmBankRoutingNumber'
+          ),
+          this.matchingFieldsValidator(
+            'bankAccountNumber',
+            'confirmBankAccountNumber'
+          ),
+        ],
+      }
+    );
+
+    this.ccForm.get('cardNumber')?.valueChanges.subscribe(() => {
+      this.sanitizeNumericInput(this.ccForm.get('cardNumber')!);
+    });
+
+    this.ccForm.get('cvv')?.valueChanges.subscribe(() => {
+      this.sanitizeNumericInput(this.ccForm.get('cvv')!);
+    });
+
+    // Trigger CVV revalidation when card number changes (for AMEX detection)
+    this.ccForm.get('cardNumber')?.valueChanges.subscribe(() => {
+      const cvvControl = this.ccForm.get('cvv');
+      if (cvvControl?.value) {
+        cvvControl.updateValueAndValidity({ emitEvent: false });
+      }
+    });
+
+    // Sanitize numeric inputs for ACH
+    this.achForm.get('bankRoutingNumber')?.valueChanges.subscribe(() => {
+      this.sanitizeNumericInput(this.achForm.get('bankRoutingNumber')!);
+    });
+
+    this.achForm.get('confirmBankRoutingNumber')?.valueChanges.subscribe(() => {
+      this.sanitizeNumericInput(this.achForm.get('confirmBankRoutingNumber')!);
+    });
+
+    this.achForm.get('bankAccountNumber')?.valueChanges.subscribe(() => {
+      this.sanitizeNumericInput(this.achForm.get('bankAccountNumber')!);
+    });
+
+    this.achForm.get('confirmBankAccountNumber')?.valueChanges.subscribe(() => {
+      this.sanitizeNumericInput(this.achForm.get('confirmBankAccountNumber')!);
     });
   }
 
@@ -546,16 +597,58 @@ export class CreditPurchaseDialogComponent implements OnInit {
       return;
     }
 
+    this.isProcessingPayment = true;
+
     const profileId =
       typeof this.selectedPaymentMethodId === 'string'
         ? parseInt(this.selectedPaymentMethodId, 10)
         : this.selectedPaymentMethodId;
 
-    this.dialogRef.close({
-      success: true,
-      paymentPlanId: selectedPackage.id,
-      paymentProfileId: profileId,
-    });
+    this.paymentInfoService
+      .chargePayment(this.data.organizationId, selectedPackage.id, profileId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.isProcessingPayment = false;
+          this.dialogRef.close({
+            success: true,
+            paymentPlanId: selectedPackage.id,
+            paymentProfileId: profileId,
+          });
+        },
+        error: (error) => {
+          this.isProcessingPayment = false;
+
+          // Handle payment declined (402)
+          if (error.status === 402) {
+            // Show error message to user
+            alert(
+              'Payment was declined. Please try a different payment method.'
+            );
+            return;
+          }
+
+          const correlationId = error?.error?.correlationId;
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              requestId: this.stateService.getRequestId(),
+              organizationId: this.stateService.getOrganizationId(),
+              correlationId: correlationId,
+              methodName: 'processExistingPaymentMethod',
+              className: 'CreditPurchaseDialogComponent',
+              operation: 'chargePayment',
+              userId: this.stateService.getUserId(),
+            }
+          );
+
+          this.dialogRef.close({
+            success: false,
+            error: error,
+          });
+        },
+      });
   }
 
   onCancel(): void {
@@ -588,5 +681,181 @@ export class CreditPurchaseDialogComponent implements OnInit {
 
   getCardTypeLabel(cardType?: string): string {
     return this.cardTypeLabels[cardType ?? ''] ?? 'Credit Card';
+  }
+
+  // CREDIT CARD VALIDATORS
+  private cardNumberValidator(
+    control: AbstractControl
+  ): ValidationErrors | null {
+    const cardNumber = control.value;
+    if (!cardNumber) return null;
+
+    const sanitized = cardNumber.replace(/\D/g, '');
+
+    if (!/^\d+$/.test(cardNumber)) {
+      return { pattern: true };
+    }
+
+    if (sanitized.length < 13 || sanitized.length > 19) {
+      return { pattern: true };
+    }
+
+    // Luhn algorithm (checksum validation)
+    let sum = 0;
+    let isEven = false;
+
+    for (let i = sanitized.length - 1; i >= 0; i--) {
+      let digit = parseInt(sanitized.charAt(i), 10);
+
+      if (isEven) {
+        digit *= 2;
+        if (digit > 9) {
+          digit -= 9;
+        }
+      }
+
+      sum += digit;
+      isEven = !isEven;
+    }
+
+    return sum % 10 === 0 ? null : { invalidCard: true };
+  }
+
+  private cvvValidator(control: AbstractControl): ValidationErrors | null {
+    const cvv = control.value;
+    if (!cvv) return null;
+
+    if (!/^\d+$/.test(cvv)) {
+      return { invalidCvv: true };
+    }
+
+    const cardNumber = this.ccForm?.get('cardNumber')?.value || '';
+    const cardType = this.detectCardType(cardNumber);
+
+    // AMEX requires 4 digits, others require 3
+    const requiredLength = cardType === 'amex' ? 4 : 3;
+
+    return cvv.length === requiredLength ? null : { invalidCvv: true };
+  }
+
+  private expirationDateValidator(
+    control: AbstractControl
+  ): ValidationErrors | null {
+    const expDate = control.value;
+    if (!expDate) return null;
+
+    // Check format MM/YY
+    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expDate)) {
+      return { pattern: true };
+    }
+
+    // Check if date is not expired
+    const [month, year] = expDate.split('/').map(Number);
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear() % 100;
+    const currentMonth = currentDate.getMonth() + 1;
+
+    if (year < currentYear || (year === currentYear && month < currentMonth)) {
+      return { expired: true };
+    }
+
+    return null;
+  }
+
+  private nameOnCardOrAccountValidator(
+    control: AbstractControl
+  ): ValidationErrors | null {
+    if (!control.value) return null;
+
+    const pattern = /^[A-Za-z\s'-]{2,50}$/;
+    return pattern.test(control.value) ? null : { invalidName: true };
+  }
+
+  // ACH VALIDATORS
+  private routingNumberValidator(
+    control: AbstractControl
+  ): ValidationErrors | null {
+    const routingNumber = control.value;
+    if (!routingNumber) return null;
+
+    if (!/^\d+$/.test(routingNumber)) {
+      return { pattern: true };
+    }
+
+    if (routingNumber.length !== 9) {
+      return { pattern: true };
+    }
+
+    // ABA routing number checksum validation
+    const digits = routingNumber.split('').map(Number);
+    const checksum =
+      (3 * (digits[0] + digits[3] + digits[6]) +
+        7 * (digits[1] + digits[4] + digits[7]) +
+        (digits[2] + digits[5] + digits[8])) %
+      10;
+
+    return checksum === 0 ? null : { invalidRoutingNumber: true };
+  }
+
+  private accountNumberValidator(
+    control: AbstractControl
+  ): ValidationErrors | null {
+    const accountNumber = control.value;
+    if (!accountNumber) return null;
+
+    if (!/^\d+$/.test(accountNumber)) {
+      return { pattern: true };
+    }
+
+    if (accountNumber.length < 6 || accountNumber.length > 17) {
+      return { pattern: true };
+    }
+
+    if (/^0+$/.test(accountNumber) || /^1+$/.test(accountNumber)) {
+      return { suspiciousAccountNumber: true };
+    }
+
+    return null;
+  }
+
+  private sanitizeNumericInput(control: AbstractControl): void {
+    if (control.value) {
+      const sanitized = control.value.replace(/\D/g, '');
+      if (sanitized !== control.value) {
+        control.setValue(sanitized, { emitEvent: false });
+      }
+    }
+  }
+
+  private matchingFieldsValidator(field1: string, field2: string) {
+    return (group: FormGroup): ValidationErrors | null => {
+      const control1 = group.get(field1);
+      const control2 = group.get(field2);
+
+      if (!control1 || !control2) return null;
+
+      if (control2.value && control1.value !== control2.value) {
+        control2.setErrors({ mismatch: true });
+        return { mismatch: true };
+      } else {
+        const errors = control2.errors;
+        if (errors) {
+          delete errors['mismatch'];
+          control2.setErrors(Object.keys(errors).length ? errors : null);
+        }
+      }
+
+      return null;
+    };
+  }
+
+  private detectCardType(cardNumber: string = ''): string | null {
+    cardNumber = cardNumber.replace(/\D/g, '');
+    if (/^4/.test(cardNumber)) return 'visa';
+    if (/^5[1-5]/.test(cardNumber) || /^2[2-7]/.test(cardNumber))
+      return 'mastercard';
+    if (/^3[47]/.test(cardNumber)) return 'amex';
+    if (/^6(?:011|5)/.test(cardNumber)) return 'discover';
+    return null;
   }
 }
