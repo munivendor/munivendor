@@ -324,7 +324,7 @@ export class SignupComponent implements OnInit, OnDestroy {
         organizationTypeId: organizationTypeId,
       };
 
-      this.organizationService.saveOrganization(organization).subscribe({
+      this.organizationService.initializeOrganization(organization).subscribe({
         next: (response: any) => {
           const organizationUser: User = {
             firstName: this.signupFormEmail.controls['firstname'].value,
@@ -349,7 +349,7 @@ export class SignupComponent implements OnInit, OnDestroy {
               correlationId: correlationId,
               methodName: 'onSubmitByEmail',
               className: 'SignupComponent',
-              operation: 'saveOrganization',
+              operation: 'initializeOrganization',
             }
           );
 
@@ -367,9 +367,7 @@ export class SignupComponent implements OnInit, OnDestroy {
     this.socialAuthService.authState
       .pipe(
         takeUntil(this.destroy$),
-        // Filter out null/undefined users and when already processing
         filter((user) => !!user && !this.userCreationInProgress),
-        // Filter to only process when form is valid
         filter(() => this.signupFormGoogle.valid),
         switchMap((user) => {
           this.userCreationInProgress = true;
@@ -386,7 +384,7 @@ export class SignupComponent implements OnInit, OnDestroy {
           };
 
           return this.organizationService
-            .saveOrganization(organizationData)
+            .initializeOrganization(organizationData)
             .pipe(
               switchMap((orgResponse) => {
                 const userData: User = {

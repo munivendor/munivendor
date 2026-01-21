@@ -105,7 +105,7 @@ export class SubmitConfirmationDialogComponent implements OnDestroy {
     this.dialogRef.close(false);
 
     const creditDialogRef = this.dialog.open(CreditPurchaseDialogComponent, {
-      width: '600px',
+      width: '800px',
       maxHeight: '90vh',
       disableClose: true,
       data: {

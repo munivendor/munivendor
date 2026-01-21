@@ -93,7 +93,6 @@ export class CreditPackageService {
       )
       .pipe(
         catchError((error) => {
-          console.error('Error fetching submission credit usage:', error);
           return throwError(() => error);
         })
       );

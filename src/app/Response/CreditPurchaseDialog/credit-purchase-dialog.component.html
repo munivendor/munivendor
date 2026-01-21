@@ -208,6 +208,11 @@
                 >
                   Card number must be between 13 and 19 digits
                 </mat-error>
+                <mat-error
+                  *ngIf="ccForm.get('cardNumber')?.hasError('invalidCard')"
+                >
+                  Invalid card number
+                </mat-error>
               </mat-form-field>
 
               <mat-form-field appearance="outline">
@@ -223,9 +228,10 @@
                   Name on card is required
                 </mat-error>
                 <mat-error
-                  *ngIf="ccForm.get('nameOnCard')?.hasError('pattern')"
+                  *ngIf="ccForm.get('nameOnCard')?.hasError('invalidName')"
                 >
-                  Enter a valid cardholder name
+                  Enter a valid cardholder name (letters, spaces, hyphens, and
+                  apostrophes only)
                 </mat-error>
               </mat-form-field>
 
@@ -247,6 +253,11 @@
                   >
                     Format must be MM/YY
                   </mat-error>
+                  <mat-error
+                    *ngIf="ccForm.get('expirationDate')?.hasError('expired')"
+                  >
+                    Card has expired
+                  </mat-error>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
@@ -260,7 +271,7 @@
                   <mat-error *ngIf="ccForm.get('cvv')?.hasError('required')">
                     CVV is required
                   </mat-error>
-                  <mat-error *ngIf="ccForm.get('cvv')?.hasError('pattern')">
+                  <mat-error *ngIf="ccForm.get('cvv')?.hasError('invalidCvv')">
                     CVV must be 3 or 4 digits
                   </mat-error>
                 </mat-form-field>
@@ -283,59 +294,148 @@
                   placeholder="Enter your name on your account"
                 />
                 <mat-error
-                  *ngIf="
-                    achForm.get('nameOnAccount')?.hasError('required') &&
-                    achForm.get('nameOnAccount')?.touched
-                  "
-                  >Name on account is required.</mat-error
+                  *ngIf="achForm.get('nameOnAccount')?.hasError('required')"
                 >
+                  Name on account is required
+                </mat-error>
                 <mat-error
-                  *ngIf="
-                    achForm.get('nameOnAccount')?.hasError('invalidName') &&
-                    achForm.get('nameOnAccount')?.touched
-                  "
+                  *ngIf="achForm.get('nameOnAccount')?.hasError('invalidName')"
                 >
                   Enter a valid account name (letters, spaces, hyphens, and
-                  apostrophes only).
+                  apostrophes only)
                 </mat-error>
               </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Routing Number</mat-label>
-                <input
-                  matInput
-                  formControlName="bankRoutingNumber"
-                  placeholder="123456789"
-                />
-                <mat-error
-                  *ngIf="achForm.get('bankRoutingNumber')?.hasError('required')"
-                >
-                  Routing number is required
-                </mat-error>
-                <mat-error
-                  *ngIf="achForm.get('bankRoutingNumber')?.hasError('pattern')"
-                >
-                  Routing number must be exactly 9 digits
-                </mat-error>
-              </mat-form-field>
+              <div class="inline-fields">
+                <mat-form-field appearance="outline">
+                  <mat-label>Routing Number</mat-label>
+                  <input
+                    matInput
+                    formControlName="bankRoutingNumber"
+                    placeholder="123456789"
+                  />
+                  <mat-error
+                    *ngIf="
+                      achForm.get('bankRoutingNumber')?.hasError('required') &&
+                      achForm.get('bankRoutingNumber')?.touched
+                    "
+                  >
+                    Routing number is required
+                  </mat-error>
+                  <mat-error
+                    *ngIf="
+                      achForm.get('bankRoutingNumber')?.hasError('pattern') &&
+                      achForm.get('bankRoutingNumber')?.touched
+                    "
+                  >
+                    Routing number must be exactly 9 digits
+                  </mat-error>
+                  <mat-error
+                    *ngIf="
+                      achForm
+                        .get('bankRoutingNumber')
+                        ?.hasError('invalidRoutingNumber') &&
+                      achForm.get('bankRoutingNumber')?.touched
+                    "
+                  >
+                    Invalid routing number
+                  </mat-error>
+                </mat-form-field>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Account Number</mat-label>
-                <input
-                  matInput
-                  formControlName="bankAccountNumber"
-                  placeholder="1234567890"
-                />
-                <mat-error
-                  *ngIf="achForm.get('bankAccountNumber')?.hasError('required')"
-                >
-                  Account number is required
-                </mat-error>
-                <mat-error
-                  *ngIf="achForm.get('bankAccountNumber')?.hasError('pattern')"
-                >
-                  Account number must be between 6-17 digits
-                </mat-error>
-              </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Confirm Routing Number</mat-label>
+                  <input
+                    matInput
+                    formControlName="confirmBankRoutingNumber"
+                    placeholder="Confirm your routing number"
+                  />
+                  <mat-error
+                    *ngIf="
+                      achForm
+                        .get('confirmBankRoutingNumber')
+                        ?.hasError('required') &&
+                      achForm.get('confirmBankRoutingNumber')?.touched
+                    "
+                  >
+                    Confirm routing number is required
+                  </mat-error>
+                  <mat-error
+                    *ngIf="
+                      achForm
+                        .get('confirmBankRoutingNumber')
+                        ?.hasError('mismatch') &&
+                      achForm.get('confirmBankRoutingNumber')?.touched
+                    "
+                  >
+                    Routing numbers do not match
+                  </mat-error>
+                </mat-form-field>
+              </div>
+
+              <div class="inline-fields">
+                <mat-form-field appearance="outline">
+                  <mat-label>Account Number</mat-label>
+                  <input
+                    matInput
+                    formControlName="bankAccountNumber"
+                    placeholder="1234567890"
+                  />
+                  <mat-error
+                    *ngIf="
+                      achForm.get('bankAccountNumber')?.hasError('required') &&
+                      achForm.get('bankAccountNumber')?.touched
+                    "
+                  >
+                    Account number is required
+                  </mat-error>
+                  <mat-error
+                    *ngIf="
+                      achForm.get('bankAccountNumber')?.hasError('pattern') &&
+                      achForm.get('bankAccountNumber')?.touched
+                    "
+                  >
+                    Account number must be between 6-17 digits
+                  </mat-error>
+                  <mat-error
+                    *ngIf="
+                      achForm
+                        .get('bankAccountNumber')
+                        ?.hasError('suspiciousAccountNumber') &&
+                      achForm.get('bankAccountNumber')?.touched
+                    "
+                  >
+                    Invalid account number pattern detected
+                  </mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Confirm Account Number</mat-label>
+                  <input
+                    matInput
+                    formControlName="confirmBankAccountNumber"
+                    placeholder="Confirm your account number"
+                  />
+                  <mat-error
+                    *ngIf="
+                      achForm
+                        .get('confirmBankAccountNumber')
+                        ?.hasError('required') &&
+                      achForm.get('confirmBankAccountNumber')?.touched
+                    "
+                  >
+                    Confirm account number is required
+                  </mat-error>
+                  <mat-error
+                    *ngIf="
+                      achForm
+                        .get('confirmBankAccountNumber')
+                        ?.hasError('mismatch') &&
+                      achForm.get('confirmBankAccountNumber')?.touched
+                    "
+                  >
+                    Account numbers do not match
+                  </mat-error>
+                </mat-form-field>
+              </div>
 
               <mat-form-field appearance="outline">
                 <mat-label>Account Type</mat-label>
@@ -361,7 +461,7 @@
           <h3 class="section-title">Billing Address</h3>
           <form [formGroup]="addressForm">
             <mat-form-field appearance="outline">
-              <mat-label>Street Address Line 1</mat-label>
+              <mat-label>Address</mat-label>
               <input
                 matInput
                 formControlName="streetAddress1"
@@ -370,7 +470,7 @@
               <mat-error
                 *ngIf="addressForm.get('streetAddress1')?.hasError('required')"
               >
-                Street address is required
+                Address is required
               </mat-error>
               <mat-error
                 *ngIf="addressForm.get('streetAddress1')?.hasError('maxlength')"

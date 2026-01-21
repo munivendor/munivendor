@@ -14,8 +14,8 @@ export class OrganizationService {
 
   constructor(private http: HttpClient) {}
 
-  saveOrganization(organization: Organization): Observable<any> {
-    const url = `${this.organizationUrl}`;
+  initializeOrganization(organization: Organization): Observable<any> {
+    const url = `${this.organizationUrl}/initialize`;
     return this.http.post<any>(url, organization);
   }
 

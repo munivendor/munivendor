@@ -33,6 +33,8 @@ import {
 } from '../services/credit-package.service';
 import { PaymentInfoService } from '../BillingInformation/services/payment-info.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
+import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
+
 interface OrderHistory {
   date: string;
   time: string;
@@ -83,7 +85,8 @@ export class PurchasingHistoryComponent implements OnInit, OnDestroy {
     private stateService: StateService,
     private creditPackageService: CreditPackageService,
     private paymentInfoService: PaymentInfoService,
-    private loggingService: LoggingService
+    private loggingService: LoggingService,
+    private snackbarNotificationService: SnackbarNotificationService
   ) {}
 
   ngOnInit(): void {
@@ -104,7 +107,11 @@ export class PurchasingHistoryComponent implements OnInit, OnDestroy {
             }
 
             this.orderHistory.data = history.map((item: any) => {
-              const paymentDate = new Date(item.paymentDate);
+              const dateString = item.paymentDate.endsWith('Z')
+                ? item.paymentDate
+                : `${item.paymentDate}Z`;
+
+              const paymentDate = new Date(dateString);
 
               return {
                 date: paymentDate.toLocaleDateString(),
@@ -222,7 +229,7 @@ export class PurchasingHistoryComponent implements OnInit, OnDestroy {
         const paymentDialogRef = this.dialog.open(
           CreditPurchaseDialogComponent,
           {
-            width: '600px',
+            width: '800px',
             maxHeight: '90vh',
             disableClose: true,
             data: {
@@ -239,13 +246,10 @@ export class PurchasingHistoryComponent implements OnInit, OnDestroy {
               pkg.selected = false;
               pkg.quantity = 0;
             });
-
             this.loadOrderHistory();
-
-            // TODO: Show success message to user
-          } else if (result?.error) {
-            console.error('Purchase failed:', result.error);
-            // TODO: Show error toast/snackbar to user
+            this.snackbarNotificationService.showSnackbarSuccess(
+              'Purchase completed successfully.'
+            );
           }
         });
       }

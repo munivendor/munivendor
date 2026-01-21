@@ -266,3 +266,9 @@ mat-dialog-actions button {
   height: 20px;
   color: #ffc107;
 }
+
+@media (max-width: 768px) {
+  .inline-fields {
+    grid-template-columns: 1fr;
+  }
+}

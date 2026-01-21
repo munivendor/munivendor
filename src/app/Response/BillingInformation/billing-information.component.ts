@@ -365,7 +365,6 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
   }
 
   // FORM GROUP CREATORS WITH ENHANCED VALIDATION
-
   private createAddressGroup(): FormGroup {
     return this.fb.group(
       {
@@ -439,15 +438,11 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
   }
 
   private createCreditCardGroup(): FormGroup {
-    return this.fb.group(
+    const group = this.fb.group(
       {
         cardNumber: [
           '',
-          [
-            Validators.required,
-            Validators.pattern('^[0-9]{13,19}$'),
-            this.luhnValidator.bind(this),
-          ],
+          [Validators.required, this.cardNumberValidator.bind(this)],
         ],
         nameOnCard: [
           '',
@@ -458,6 +453,26 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
       },
       { updateOn: 'change' }
     );
+
+    group.get('cardNumber')?.valueChanges.subscribe(() => {
+      this.sanitizeNumericInput(group.get('cardNumber')!);
+    });
+
+    group.get('cvv')?.valueChanges.subscribe(() => {
+      this.sanitizeNumericInput(group.get('cvv')!);
+      // Revalidate CVV when card number changes (for AMEX vs others)
+      group.get('cvv')?.updateValueAndValidity({ emitEvent: false });
+    });
+
+    // Trigger CVV revalidation when card number changes
+    group.get('cardNumber')?.valueChanges.subscribe(() => {
+      const cvvControl = group.get('cvv');
+      if (cvvControl?.value) {
+        cvvControl.updateValueAndValidity({ emitEvent: false });
+      }
+    });
+
+    return group;
   }
 
   // ACH VALIDATORS
@@ -467,9 +482,12 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
     const routingNumber = control.value;
     if (!routingNumber) return null;
 
-    // Must be exactly 9 digits
-    if (!/^\d{9}$/.test(routingNumber)) {
-      return { invalidRoutingNumber: true };
+    if (!/^\d+$/.test(routingNumber)) {
+      return { pattern: true };
+    }
+
+    if (routingNumber.length !== 9) {
+      return { pattern: true };
     }
 
     // ABA routing number checksum validation
@@ -489,12 +507,14 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
     const accountNumber = control.value;
     if (!accountNumber) return null;
 
-    // Most banks use 6-17 digits
-    if (!/^\d{6,17}$/.test(accountNumber)) {
-      return { invalidAccountNumber: true };
+    if (!/^\d+$/.test(accountNumber)) {
+      return { pattern: true };
     }
 
-    // Block obviously invalid patterns (all zeros or all ones)
+    if (accountNumber.length < 6 || accountNumber.length > 17) {
+      return { pattern: true };
+    }
+
     if (/^0+$/.test(accountNumber) || /^1+$/.test(accountNumber)) {
       return { suspiciousAccountNumber: true };
     }
@@ -534,34 +554,23 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
   }
 
   // CREDIT CARD VALIDATORS
-  private cvvValidator(control: AbstractControl): ValidationErrors | null {
-    const cvv = control.value;
-    if (!cvv) return null;
-    const cardType = this.detectCardType(
-      this.ccForm?.get('cardNumber')?.value || ''
-    );
-    const pattern = cardType === 'amex' ? /^\d{4}$/ : /^\d{3}$/;
-    return pattern.test(cvv) ? null : { invalidCvv: true };
-  }
-
-  private nameOnCardOrAccountValidator(
+  private cardNumberValidator(
     control: AbstractControl
   ): ValidationErrors | null {
-    if (!control.value) return null;
-    const pattern = /^[A-Za-z\s'-]{2,50}$/;
-    return pattern.test(control.value) ? null : { invalidName: true };
-  }
-
-  private luhnValidator(control: AbstractControl): ValidationErrors | null {
     const cardNumber = control.value;
     if (!cardNumber) return null;
 
     const sanitized = cardNumber.replace(/\D/g, '');
 
-    if (sanitized.length < 13) {
-      return { invalidCard: true };
+    if (!/^\d+$/.test(cardNumber)) {
+      return { pattern: true };
     }
 
+    if (sanitized.length < 13 || sanitized.length > 19) {
+      return { pattern: true };
+    }
+
+    // Luhn algorithm (checksum validation)
     let sum = 0;
     let isEven = false;
 
@@ -580,6 +589,24 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
     }
 
     return sum % 10 === 0 ? null : { invalidCard: true };
+  }
+
+  private cvvValidator(control: AbstractControl): ValidationErrors | null {
+    const cvv = control.value;
+    if (!cvv) return null;
+    const cardType = this.detectCardType(
+      this.ccForm?.get('cardNumber')?.value || ''
+    );
+    const pattern = cardType === 'amex' ? /^\d{4}$/ : /^\d{3}$/;
+    return pattern.test(cvv) ? null : { invalidCvv: true };
+  }
+
+  private nameOnCardOrAccountValidator(
+    control: AbstractControl
+  ): ValidationErrors | null {
+    if (!control.value) return null;
+    const pattern = /^[A-Za-z\s'-]{2,50}$/;
+    return pattern.test(control.value) ? null : { invalidName: true };
   }
 
   // HELPER METHODS
