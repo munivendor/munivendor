@@ -40,6 +40,19 @@
       </mat-nav-list>
 
       <div class="sidenav-bottom">
+        <mat-list-item
+          *ngFor="let item of bottomMenuItems"
+          class="nav-item bottom-nav-item"
+          [id]="item.id"
+          [class.active]="isActiveRoute(item.route)"
+          (click)="onMenuClick(item)"
+        >
+          <mat-icon matListItemIcon style="margin-left: 20px">{{
+            item.icon
+          }}</mat-icon>
+          <span matListItemTitle *ngIf="isExpanded">{{ item.label }}</span>
+        </mat-list-item>
+
         <mat-list-item class="nav-item logout-item" (click)="onLogout()">
           <mat-icon matListItemIcon style="margin-left: 20px">logout</mat-icon>
           <span matListItemTitle *ngIf="isExpanded">Logout</span>
