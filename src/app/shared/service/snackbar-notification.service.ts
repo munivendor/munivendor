@@ -22,4 +22,11 @@ export class SnackbarNotificationService {
       verticalPosition: 'top',
     });
   }
+
+  showSnackbarError(message: string): void {
+    this.snackBar.open(message, 'Close', {
+      duration: AppConstants.SNACKBAR_DURATION,
+      verticalPosition: 'top',
+    });
+  }
 }

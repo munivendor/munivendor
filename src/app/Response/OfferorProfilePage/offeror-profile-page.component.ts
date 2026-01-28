@@ -222,7 +222,7 @@ export class OfferorProfilePageComponent implements OnInit {
       .SaveOfferorAuthorizingOfficial(official)
       .subscribe({
         next: (response) => {
-          this.showSnackBar('Authorizing Official added successfully');
+          this.showSnackBar('Authorizing official successfully added.');
           this.cancelEdit();
           this.loadAuthorizingOfficials(official.organizationId);
         },
