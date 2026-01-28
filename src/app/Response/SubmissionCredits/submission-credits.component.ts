@@ -26,12 +26,15 @@ import {
   SubmissionCreditUsageItem,
 } from '../../Response/services/credit-package.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
+import { MatSort, MatSortModule } from '@angular/material/sort';
 
 interface CreditUsage {
   dateTime: string;
   type: string;
-  paymentMethod: string;
-  submissionId: string;
+  paymentMethodUsed: string | null;
+  lastFourNumbers: string | null;
+  solicitationId: string;
+  showAccount?: boolean;
 }
 
 @Component({
@@ -51,12 +54,14 @@ interface CreditUsage {
     MatButtonModule,
     MatDialogModule,
     MatProgressSpinnerModule,
+    MatSortModule,
   ],
 })
 export class SubmissionCreditsComponent
   implements OnInit, OnDestroy, AfterViewInit
 {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
 
   constructor(
     private stateService: StateService,
@@ -75,8 +80,8 @@ export class SubmissionCreditsComponent
   usageDisplayedColumns: string[] = [
     'dateTime',
     'type',
-    'paymentMethod',
-    'submissionId',
+    'paymentMethodUsed',
+    'solicitationId',
   ];
 
   ngOnInit(): void {
@@ -120,6 +125,10 @@ export class SubmissionCreditsComponent
     }
   }
 
+  toggleAccountVisibility(usage: CreditUsage): void {
+    usage.showAccount = !usage.showAccount;
+  }
+
   private loadSubmissionCreditUsage(): void {
     if (typeof this.organizationId === 'number') {
       this.creditPackageService
@@ -144,12 +153,30 @@ export class SubmissionCreditsComponent
 
               return {
                 dateTime: dateTimeString,
-                type: item.creditChargeDesc || 'N/A',
-                paymentMethod: item.paymentMethod || 'N/A',
-                submissionId: item.solicitationId?.toString() || 'N/A',
+                type: item.creditChargeDescription || 'N/A',
+                paymentMethodUsed: item.paymentMethodDescription || null,
+                lastFourNumbers: item.lastFourNumbers || null,
+                solicitationId: item.solicitationId?.toString() || 'N/A',
+                showAccount: false,
               };
             });
+
             this.creditUsage.data = mappedData;
+
+            this.creditUsage.sortingDataAccessor = (item, property) => {
+              const value = (item as any)[property];
+              return typeof value === 'string' ? value.toLowerCase() : value;
+            };
+
+            setTimeout(() => {
+              if (this.paginator) {
+                this.creditUsage.paginator = this.paginator;
+              }
+              if (this.sort) {
+                this.creditUsage.sort = this.sort;
+              }
+            }, 0);
+
             this.isLoadingUsage = false;
           },
           error: (error) => {

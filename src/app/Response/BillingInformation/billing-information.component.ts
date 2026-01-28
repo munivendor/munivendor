@@ -104,7 +104,7 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   organizationId!: number;
   userId!: number;
-  bankAccountTypes: { enumId: number; codeName: string }[] = [];
+  bankAccountTypes: { codeId: number; codeDesc: string }[] = [];
   states: State[] = [];
   workEmail!: string;
 
@@ -249,7 +249,7 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
             m.isDefault = m.paymentProfileId === method.paymentProfileId;
           });
           this.snackbarNotificationService.showSnackbarSuccess(
-            'Default payment method updated successfully.'
+            'Default payment method successfully updated.'
           );
         },
         error: (error) => {
@@ -610,12 +610,12 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
   }
 
   // HELPER METHODS
-  getBankAccountTypeName(enumId: number | undefined): string {
-    if (enumId === undefined) return '';
+  getBankAccountTypeName(codeId: number | undefined): string {
+    if (codeId === undefined) return '';
     const accountType = this.bankAccountTypes.find(
-      (type) => type.enumId === enumId
+      (type) => type.codeId === codeId
     );
-    return accountType ? accountType.codeName : '';
+    return accountType ? accountType.codeDesc : '';
   }
 
   detectCardType(cardNumber: string = ''): string | null {
@@ -801,33 +801,38 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
           );
         },
         error: (error) => {
-          const correlationId = error?.error?.correlationId;
-          const errorUrl = error?.url?.toLowerCase?.() || '';
+          if (error.status === 409) {
+            this.snackbarNotificationService.showSnackbarError(
+              'A payment method with these details already exists.'
+            );
+          } else {
+            const correlationId = error?.error?.correlationId;
+            const errorUrl = error?.url?.toLowerCase?.() || '';
 
-          const operationMap: Record<string, string> = {
-            saveACHPaymentInfo: 'saveACHPaymentInfo',
-            saveCreditCardPaymentInfo: 'saveCreditCardPaymentInfo',
-          };
+            const operationMap: Record<string, string> = {
+              saveACHPaymentInfo: 'saveACHPaymentInfo',
+              saveCreditCardPaymentInfo: 'saveCreditCardPaymentInfo',
+            };
 
-          const operation =
-            Object.entries(operationMap).find(([key]) =>
-              errorUrl.includes(key)
-            )?.[1] ?? 'UnknownOperation';
+            const operation =
+              Object.entries(operationMap).find(([key]) =>
+                errorUrl.includes(key)
+              )?.[1] ?? 'UnknownOperation';
 
-          this.loggingService.logException(
-            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
-            3,
-            {
-              requestId: this.stateService.getRequestId(),
-              organizationId: this.stateService.getOrganizationId(),
-              correlationId: correlationId,
-              methodName: 'savePaymentInfo',
-              className: 'BillingInformationComponent',
-              operation: operation,
-              userId: this.stateService.getUserId(),
-            }
-          );
-          this.resetForms();
+            this.loggingService.logException(
+              new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+              3,
+              {
+                requestId: this.stateService.getRequestId(),
+                organizationId: this.stateService.getOrganizationId(),
+                correlationId: correlationId,
+                methodName: 'savePaymentInfo',
+                className: 'BillingInformationComponent',
+                operation: operation,
+                userId: this.stateService.getUserId(),
+              }
+            );
+          }
         },
       });
   }

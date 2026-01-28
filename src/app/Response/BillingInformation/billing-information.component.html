@@ -40,8 +40,8 @@
               <span class="payment-type">
                 {{
                   method.accountType === "CC"
-                    ? getCardTypeLabel(method.cardType)
-                    : "Bank Account (ACH)"
+                    ? method.cardType
+                    : method.bankAccountType
                 }}
               </span>
 
@@ -49,16 +49,11 @@
                 method.lastFourNumbers
               }}</span>
 
-              <span *ngIf="method.accountType === 'CC'" class="account-type">
-                Credit Card
-              </span>
-
-              <span
-                class="account-type"
-                *ngIf="method.bankAccountType !== undefined"
-              >
-                {{ getBankAccountTypeName(method.bankAccountType) }}
-              </span>
+              <span class="account-type">{{
+                method.accountType === "CC"
+                  ? "Credit Card"
+                  : "Bank Account (ACH)"
+              }}</span>
             </div>
           </div>
           <span class="default-badge" *ngIf="method.isDefault">Default</span>
@@ -322,8 +317,8 @@
             <mat-select formControlName="bankAccountType">
               <mat-option
                 *ngFor="let type of bankAccountTypes"
-                [value]="type.enumId"
-                >{{ type.codeName }}</mat-option
+                [value]="type.codeId"
+                >{{ type.codeDesc }}</mat-option
               >
             </mat-select>
             <mat-error
@@ -768,8 +763,8 @@
           <mat-select formControlName="bankAccountType">
             <mat-option
               *ngFor="let type of bankAccountTypes"
-              [value]="type.enumId"
-              >{{ type.codeName }}</mat-option
+              [value]="type.codeId"
+              >{{ type.codeDesc }}</mat-option
             >
           </mat-select>
           <mat-error
