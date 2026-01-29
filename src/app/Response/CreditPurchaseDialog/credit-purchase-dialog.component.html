@@ -24,25 +24,27 @@
         <div class="credit-package-container">
           <mat-card
             class="credit-package"
-            *ngFor="let package of creditPackages; trackBy: trackById"
-            [class.selected]="package.selected"
+            *ngFor="let creditPackage of creditPackages; trackBy: trackById"
+            [class.selected]="creditPackage.selected"
             (click)="
-              package.selected = !package.selected;
-              onPackageSelectionChange(package)
+              creditPackage.selected = !creditPackage.selected;
+              onPackageSelectionChange(creditPackage)
             "
             style="cursor: pointer"
           >
             <div class="package-details">
-              <h4 class="package-name">{{ package.name }}</h4>
+              <h4 class="package-name">{{ creditPackage.name }}</h4>
             </div>
 
             <div class="package-pricing">
-              <span class="price">${{ package.price }}</span>
+              <span class="price">${{ creditPackage.price }}</span>
               <span
                 class="discount-badge"
-                *ngIf="package.discount && package.discount !== 'None'"
+                *ngIf="
+                  creditPackage.discount && creditPackage.discount !== 'None'
+                "
               >
-                {{ package.discount }}
+                {{ creditPackage.discount }}
               </span>
             </div>
           </mat-card>
@@ -109,38 +111,60 @@
           class="payment-methods-list"
         >
           <mat-card
-            *ngFor="let method of paymentMethods"
+            *ngFor="let paymentMethod of paymentMethods"
             class="payment-option"
             [class.selected]="
-              selectedPaymentMethodId === method.paymentProfileId
+              selectedPaymentMethodId === paymentMethod.paymentProfileId
             "
-            (click)="selectedPaymentMethodId = method.paymentProfileId"
+            [class.expired]="isPaymentMethodExpired(paymentMethod)"
+            (click)="
+              !isPaymentMethodExpired(paymentMethod) &&
+                (selectedPaymentMethodId = paymentMethod.paymentProfileId)
+            "
+            [style.cursor]="
+              isPaymentMethodExpired(paymentMethod) ? 'not-allowed' : 'pointer'
+            "
           >
             <div class="payment-method-header">
               <mat-radio-button
-                [value]="method.paymentProfileId"
+                [value]="paymentMethod.paymentProfileId"
+                [disabled]="isPaymentMethodExpired(paymentMethod)"
                 color="primary"
               >
-                <div class="payment-method-info">
+                <div
+                  class="payment-method-info"
+                  [style.cursor]="
+                    isPaymentMethodExpired(paymentMethod)
+                      ? 'not-allowed'
+                      : 'pointer'
+                  "
+                >
                   <mat-icon>{{
-                    method.accountType === "CC"
+                    paymentMethod.accountType === "CC"
                       ? "credit_card"
                       : "account_balance"
                   }}</mat-icon>
                   <div class="method-details">
                     <strong>{{
-                      method.accountType === "CC"
-                        ? method.cardType
-                        : method.bankAccountType
+                      paymentMethod.accountType === "CC"
+                        ? paymentMethod.cardType
+                        : paymentMethod.bankAccountType
                     }}</strong>
-                    <span>{{ method.lastFourNumbers }}</span>
-                    <span style="font-size: 12px">
-                      {{ method.expirationDate }}
+                    <span>{{ paymentMethod.lastFourNumbers }}</span>
+                    <span
+                      style="font-size: 12px"
+                      [class.expired-text]="
+                        isPaymentMethodExpired(paymentMethod)
+                      "
+                    >
+                      <span *ngIf="paymentMethod.expirationDate">
+                        Expiration Date: {{ paymentMethod.expirationDate }}
+                      </span>
                     </span>
                   </div>
                 </div>
               </mat-radio-button>
-              <span *ngIf="method.isDefault" class="default-badge"
+              <span *ngIf="paymentMethod.isDefault" class="default-badge"
                 >Default</span
               >
             </div>
@@ -437,9 +461,9 @@
                 <mat-label>Account Type</mat-label>
                 <mat-select formControlName="bankAccountType">
                   <mat-option
-                    *ngFor="let type of bankAccountTypes"
-                    [value]="type.codeId"
-                    >{{ type.codeDesc }}</mat-option
+                    *ngFor="let bankAccountType of bankAccountTypes"
+                    [value]="bankAccountType.codeId"
+                    >{{ bankAccountType.codeDesc }}</mat-option
                   >
                 </mat-select>
                 <mat-error

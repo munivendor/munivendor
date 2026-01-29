@@ -110,10 +110,11 @@
             (selectionChange)="onAuthorizingOfficialChange($event.value)"
           >
             <mat-option
-              *ngFor="let official of authorizingOfficials"
-              [value]="official.vendorAuthorizingOfficialId"
+              *ngFor="let authorizingOfficial of authorizingOfficials"
+              [value]="authorizingOfficial.vendorAuthorizingOfficialId"
             >
-              {{ official.firstName }} {{ official.lastName }}
+              {{ authorizingOfficial.firstName }}
+              {{ authorizingOfficial.lastName }}
             </mat-option>
           </mat-select>
           <mat-error

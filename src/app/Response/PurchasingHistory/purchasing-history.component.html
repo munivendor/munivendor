@@ -8,22 +8,22 @@
     <div *ngIf="!isLoadingPackages" class="credit-package-container">
       <mat-card
         class="credit-package"
-        *ngFor="let package of creditPackages"
-        [class.selected]="package.selected"
+        *ngFor="let creditPackage of creditPackages"
+        [class.selected]="creditPackage.selected"
         (click)="
-          package.selected = !package.selected;
-          onPackageSelectionChange(package)
+          creditPackage.selected = !creditPackage.selected;
+          onPackageSelectionChange(creditPackage)
         "
         style="cursor: pointer"
       >
         <div class="package-details">
-          <h4 class="package-name">{{ package.name }}</h4>
+          <h4 class="package-name">{{ creditPackage.name }}</h4>
         </div>
 
         <div class="package-pricing">
-          <span class="price">${{ package.price }}</span>
-          <span class="discount-badge" *ngIf="package.discount">
-            {{ package.discount }}
+          <span class="price">${{ creditPackage.price }}</span>
+          <span class="discount-badge" *ngIf="creditPackage.discount">
+            {{ creditPackage.discount }}
           </span>
         </div>
       </mat-card>
@@ -92,7 +92,6 @@
               Payment Method Used
             </th>
             <td mat-cell *matCellDef="let usage">
-              <!-- Show N/A only if both are null -->
               <ng-container
                 *ngIf="
                   usage.paymentMethodUsed || usage.lastFourNumbers;

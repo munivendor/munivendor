@@ -464,6 +464,7 @@ export class ResponseDocumentsComponent implements OnInit {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(blobUrl);
+            this.loadingService.hide();
           },
           error: (error) => {
             console.error('Failed to fetch document:', error);

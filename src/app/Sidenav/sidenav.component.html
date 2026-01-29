@@ -26,31 +26,33 @@
 
       <mat-nav-list class="nav-list">
         <mat-list-item
-          *ngFor="let item of menuItems"
+          *ngFor="let menuItem of menuItems"
           class="nav-item"
-          [id]="item.id"
-          [class.active]="isActiveRoute(item.route)"
-          (click)="onMenuClick(item)"
+          [id]="menuItem.id"
+          [class.active]="isActiveRoute(menuItem.route)"
+          (click)="onMenuClick(menuItem)"
         >
           <mat-icon matListItemIcon style="margin-left: 20px">{{
-            item.icon
+            menuItem.icon
           }}</mat-icon>
-          <span matListItemTitle *ngIf="isExpanded">{{ item.label }}</span>
+          <span matListItemTitle *ngIf="isExpanded">{{ menuItem.label }}</span>
         </mat-list-item>
       </mat-nav-list>
 
       <div class="sidenav-bottom">
         <mat-list-item
-          *ngFor="let item of bottomMenuItems"
+          *ngFor="let bottomMenuItem of bottomMenuItems"
           class="nav-item bottom-nav-item"
-          [id]="item.id"
-          [class.active]="isActiveRoute(item.route)"
-          (click)="onMenuClick(item)"
+          [id]="bottomMenuItem.id"
+          [class.active]="isActiveRoute(bottomMenuItem.route)"
+          (click)="onMenuClick(bottomMenuItem)"
         >
           <mat-icon matListItemIcon style="margin-left: 20px">{{
-            item.icon
+            bottomMenuItem.icon
           }}</mat-icon>
-          <span matListItemTitle *ngIf="isExpanded">{{ item.label }}</span>
+          <span matListItemTitle *ngIf="isExpanded">{{
+            bottomMenuItem.label
+          }}</span>
         </mat-list-item>
 
         <mat-list-item class="nav-item logout-item" (click)="onLogout()">
