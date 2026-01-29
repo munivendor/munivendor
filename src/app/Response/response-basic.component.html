@@ -80,12 +80,12 @@
           <input
             matInput
             formControlName="responseName"
-            placeholder="Enter Response Name"
+            placeholder="Enter Response Title"
           />
           <mat-error
             *ngIf="responseForm.get('responseName')?.hasError('required')"
           >
-            This field is required.
+            Offeror response title is required.
           </mat-error>
         </mat-form-field>
       </div>
@@ -121,7 +121,7 @@
               responseForm.get('authorizingOfficial')?.hasError('required')
             "
           >
-            This field is required.
+            Authorizing official is required.
           </mat-error>
         </mat-form-field>
       </div>

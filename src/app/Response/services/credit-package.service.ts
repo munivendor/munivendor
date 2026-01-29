@@ -20,9 +20,10 @@ export interface SubmissionBalanceResponse {
 
 export interface SubmissionCreditUsageItem {
   createDate: string;
-  paymentMethod: string;
-  creditChargeDesc: string;
+  paymentMethodDescription: string;
+  creditChargeDescription: string;
   solicitationId?: number;
+  lastFourNumbers: string;
 }
 
 @Injectable({
