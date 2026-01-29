@@ -659,12 +659,12 @@ export class CreditPurchaseDialogComponent implements OnInit {
     return pkg.id;
   }
 
-  getBankAccountTypeName(enumId: number | undefined): string {
-    if (enumId === undefined) return '';
+  getBankAccountTypeName(codeId: number | undefined): string {
+    if (codeId === undefined) return '';
     const accountType = this.bankAccountTypes.find(
-      (type) => type.enumId === enumId
+      (type) => type.codeId === codeId
     );
-    return accountType ? accountType.codeName : '';
+    return accountType ? accountType.codeDesc : '';
   }
 
   private splitFullName(fullName: string) {

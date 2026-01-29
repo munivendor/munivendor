@@ -130,16 +130,12 @@
                   <div class="method-details">
                     <strong>{{
                       method.accountType === "CC"
-                        ? getCardTypeLabel(method.cardType)
-                        : "Bank Account (ACH)"
+                        ? method.cardType
+                        : method.bankAccountType
                     }}</strong>
                     <span>{{ method.lastFourNumbers }}</span>
                     <span style="font-size: 12px">
-                      {{
-                        method.expirationDate
-                          ? "Expires: " + method.expirationDate
-                          : getBankAccountTypeName(method.bankAccountType)
-                      }}
+                      {{ method.expirationDate }}
                     </span>
                   </div>
                 </div>
@@ -442,8 +438,8 @@
                 <mat-select formControlName="bankAccountType">
                   <mat-option
                     *ngFor="let type of bankAccountTypes"
-                    [value]="type.enumId"
-                    >{{ type.codeName }}</mat-option
+                    [value]="type.codeId"
+                    >{{ type.codeDesc }}</mat-option
                   >
                 </mat-select>
                 <mat-error

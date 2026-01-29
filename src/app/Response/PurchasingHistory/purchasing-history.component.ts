@@ -34,11 +34,11 @@ import {
 import { PaymentInfoService } from '../BillingInformation/services/payment-info.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
 import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
+import { MatSort, MatSortModule } from '@angular/material/sort';
 
 interface OrderHistory {
-  date: string;
-  time: string;
-  lastFourDigits: string;
+  dateTime: string;
+  paymentMethodUsed: string;
   total: number;
   showAccount: boolean;
 }
@@ -60,10 +60,12 @@ interface OrderHistory {
     MatButtonModule,
     MatProgressSpinnerModule,
     MatDialogModule,
+    MatSortModule,
   ],
 })
 export class PurchasingHistoryComponent implements OnInit, OnDestroy {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
 
   private destroy$ = new Subject<void>();
   private dialog = inject(MatDialog);
@@ -73,11 +75,11 @@ export class PurchasingHistoryComponent implements OnInit, OnDestroy {
   isLoadingPackages = true;
 
   orderHistory = new MatTableDataSource<OrderHistory>([]);
+
   orderDisplayedColumns: string[] = [
-    'date',
-    'time',
+    'dateTime',
     'description',
-    'lastFourDigits',
+    'paymentMethodUsed',
     'total',
   ];
 
@@ -113,20 +115,37 @@ export class PurchasingHistoryComponent implements OnInit, OnDestroy {
 
               const paymentDate = new Date(dateString);
 
-              return {
-                date: paymentDate.toLocaleDateString(),
-                time: paymentDate.toLocaleTimeString([], {
+              const dateTimeString = `${paymentDate.toLocaleDateString()}\n${paymentDate.toLocaleTimeString(
+                [],
+                {
                   hour: '2-digit',
                   minute: '2-digit',
-                }),
+                }
+              )}`;
+
+              return {
+                dateTime: dateTimeString,
                 description: item.paymentPlanDescription,
-                lastFourDigits: item.lastFourNumbers,
+                paymentMethodUsed: item.paymentMethodDescription || null,
+                lastFourNumbers: item.lastFourNumbers || null,
                 total: item.paymentAmount,
                 showAccount: false,
               };
             });
 
-            this.orderHistory.paginator = this.paginator;
+            this.orderHistory.sortingDataAccessor = (item, property) => {
+              const value = (item as any)[property];
+              return typeof value === 'string' ? value.toLowerCase() : value;
+            };
+
+            setTimeout(() => {
+              if (this.paginator) {
+                this.orderHistory.paginator = this.paginator;
+              }
+              if (this.sort) {
+                this.orderHistory.sort = this.sort;
+              }
+            }, 0);
           },
           error: (error) => {
             this.orderHistory.data = [];

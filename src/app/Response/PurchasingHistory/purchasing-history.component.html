@@ -63,50 +63,70 @@
 
     <ng-container *ngIf="orderHistory && orderHistory.data.length > 0">
       <div class="table-container">
-        <table mat-table [dataSource]="orderHistory" class="history-table">
-          <ng-container matColumnDef="date">
-            <th mat-header-cell *matHeaderCellDef>Date</th>
-            <td mat-cell *matCellDef="let order">{{ order.date }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="time">
-            <th mat-header-cell *matHeaderCellDef>Time</th>
-            <td mat-cell *matCellDef="let order">{{ order.time }}</td>
+        <table
+          mat-table
+          [dataSource]="orderHistory"
+          class="history-table"
+          matSort
+        >
+          <ng-container matColumnDef="dateTime">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+              Date and Time
+            </th>
+            <td mat-cell *matCellDef="let order" style="white-space: pre-line">
+              {{ order.dateTime }}
+            </td>
           </ng-container>
 
           <ng-container matColumnDef="description">
-            <th mat-header-cell *matHeaderCellDef>Description</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+              Description
+            </th>
             <td mat-cell *matCellDef="let order">
               {{ order.description }}
             </td>
           </ng-container>
 
-          <ng-container matColumnDef="lastFourDigits">
-            <th mat-header-cell *matHeaderCellDef>Last 4 Digits</th>
-            <td mat-cell *matCellDef="let order">
-              <ng-container *ngIf="order.lastFourDigits; else noDigits">
-                <span class="account-digits">
-                  {{ order.showAccount ? order.lastFourDigits : "****" }}
-                </span>
+          <ng-container matColumnDef="paymentMethodUsed">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+              Payment Method Used
+            </th>
+            <td mat-cell *matCellDef="let usage">
+              <!-- Show N/A only if both are null -->
+              <ng-container
+                *ngIf="
+                  usage.paymentMethodUsed || usage.lastFourNumbers;
+                  else showNA
+                "
+              >
+                <span *ngIf="usage.paymentMethodUsed">{{
+                  usage.paymentMethodUsed
+                }}</span>
 
-                <button
-                  mat-icon-button
-                  (click)="toggleAccountVisibility(order)"
-                >
-                  <mat-icon>
-                    {{ order.showAccount ? "visibility" : "visibility_off" }}
-                  </mat-icon>
-                </button>
+                <ng-container *ngIf="usage.lastFourNumbers">
+                  <span class="account-digits">
+                    {{ usage.showAccount ? usage.lastFourNumbers : "****" }}
+                  </span>
+
+                  <button
+                    mat-icon-button
+                    (click)="toggleAccountVisibility(usage)"
+                  >
+                    <mat-icon>
+                      {{ usage.showAccount ? "visibility" : "visibility_off" }}
+                    </mat-icon>
+                  </button>
+                </ng-container>
               </ng-container>
 
-              <ng-template #noDigits>
+              <ng-template #showNA>
                 <span>N/A</span>
               </ng-template>
             </td>
           </ng-container>
 
           <ng-container matColumnDef="total">
-            <th mat-header-cell *matHeaderCellDef>Total</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Total</th>
             <td mat-cell *matCellDef="let order" class="total-cell">
               ${{ order.total }}
             </td>

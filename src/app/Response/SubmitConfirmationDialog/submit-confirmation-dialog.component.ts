@@ -77,14 +77,17 @@ export class SubmitConfirmationDialogComponent implements OnDestroy {
 
   private handleSubmissionError(requestId: number, error: any): void {
     // no submission credits (conflicts)
-    if (error.status === 409) {
+    if (
+      error.status === 402 &&
+      error.error?.detail === 'NO_SUBMISSION_CREDITS_LEFT'
+    ) {
       this.dialogRef.close(false);
       this.showCreditPurchaseFlow(requestId);
       return;
     }
 
     // payment declined
-    if (error.status === 402) {
+    if (error.status === 402 && error.error?.detail === 'PAYMENT_DECLINED') {
       this._snackBar.open(
         'Payment was declined. Please try a different payment method.',
         'Close',

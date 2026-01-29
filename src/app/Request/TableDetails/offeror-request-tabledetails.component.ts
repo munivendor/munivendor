@@ -520,6 +520,11 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
 
             this.dataSource = new MatTableDataSource(combinedData);
 
+            this.dataSource.sortingDataAccessor = (item, property) => {
+              const value = item[property];
+              return typeof value === 'string' ? value.toLowerCase() : value;
+            };
+
             this.cdr.detectChanges();
 
             setTimeout(() => {
