@@ -8,7 +8,6 @@
 
 <div style="display: inline">
   <div class="booking-wrapper">
-    <!-- Calendar Column -->
     <div class="calendar-section">
       <div>
         <b>Available Dates for Notary</b>
@@ -26,8 +25,6 @@
       </mat-card>
     </div>
 
-    <!-- Time Slot Column -->
-
     <div class="time-section">
       <b>Date Selected: {{ selectedDate | date : "fullDate" }}</b>
       <br />
@@ -35,12 +32,12 @@
       <div class="slot-scroll" *ngIf="selectedDate">
         <button
           mat-button
-          *ngFor="let time of availableTimeSlots"
-          [color]="selectedTime === time.display ? 'primary' : ''"
+          *ngFor="let availableTimeSlot of availableTimeSlots"
+          [color]="selectedTime === availableTimeSlot.display ? 'primary' : ''"
           class="time-slot-btn"
-          (click)="selectTime(time.display)"
+          (click)="selectTime(availableTimeSlot.display)"
         >
-          {{ time.display }}
+          {{ availableTimeSlot.display }}
         </button>
       </div>
 
