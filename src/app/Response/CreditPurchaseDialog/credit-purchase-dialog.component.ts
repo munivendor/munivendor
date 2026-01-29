@@ -146,6 +146,33 @@ export class CreditPurchaseDialogComponent implements OnInit {
     });
   }
 
+  isPaymentMethodExpired(method: SavedPaymentMethod): boolean {
+    if (method.accountType !== 'CC' || !method.expirationDate) {
+      return false;
+    }
+
+    // Parse expiration date (assumes format MM/YY or similar)
+    const expDateStr = method.expirationDate.trim();
+    let month: number, year: number;
+
+    if (expDateStr.includes('/')) {
+      const [monthStr, yearStr] = expDateStr.split('/');
+      month = parseInt(monthStr, 10);
+      year = parseInt(yearStr, 10);
+    } else {
+      return false;
+    }
+
+    // Convert 2-digit year to 4-digit year
+    const fullYear = year < 100 ? 2000 + year : year;
+
+    // Create date for last day of expiration month
+    const expirationDate = new Date(fullYear, month, 0);
+    const currentDate = new Date();
+
+    return expirationDate < currentDate;
+  }
+
   canAddNewPaymentMethod(): boolean {
     return this.paymentMethods.length < this.MAX_PAYMENT_METHODS;
   }
@@ -392,7 +419,18 @@ export class CreditPurchaseDialogComponent implements OnInit {
         return this.achForm.valid;
       }
     }
-    return this.selectedPaymentMethodId !== null;
+
+    // Check if selected payment method exists and is not expired
+    if (this.selectedPaymentMethodId) {
+      const selectedMethod = this.paymentMethods.find(
+        (m) => m.paymentProfileId === this.selectedPaymentMethodId
+      );
+      return selectedMethod
+        ? !this.isPaymentMethodExpired(selectedMethod)
+        : false;
+    }
+
+    return false;
   }
 
   confirmPayment(): void {
@@ -659,28 +697,9 @@ export class CreditPurchaseDialogComponent implements OnInit {
     return pkg.id;
   }
 
-  getBankAccountTypeName(codeId: number | undefined): string {
-    if (codeId === undefined) return '';
-    const accountType = this.bankAccountTypes.find(
-      (type) => type.codeId === codeId
-    );
-    return accountType ? accountType.codeDesc : '';
-  }
-
   private splitFullName(fullName: string) {
     const parts = fullName.trim().split(' ');
     return { firstName: parts[0], lastName: parts.slice(1).join(' ') || '' };
-  }
-
-  cardTypeLabels: Record<string, string> = {
-    Visa: 'Visa',
-    MasterCard: 'Mastercard',
-    Discover: 'Discover',
-    AmericanExpress: 'American Express',
-  };
-
-  getCardTypeLabel(cardType?: string): string {
-    return this.cardTypeLabels[cardType ?? ''] ?? 'Credit Card';
   }
 
   // CREDIT CARD VALIDATORS
