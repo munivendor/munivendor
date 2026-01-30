@@ -97,6 +97,7 @@ export class ResponseDocumentsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    console.log('adding a word');
     this.initializeFormGroup();
     this.loadingService.show();
     this.initializeDocuments();
@@ -437,35 +438,44 @@ export class ResponseDocumentsComponent implements OnInit {
         // Handle HttpResponse<Blob> with headers - force download with correct filename
         this.documentService.GetStateDocumentContent(documentId).subscribe({
           next: (response) => {
-            const blob = response.body;
-            if (!blob) {
-              this.loadingService.hide();
-              return;
-            }
-
-            // Extract filename from Content-Disposition
-            const contentDisposition = response.headers.get(
-              'Content-Disposition'
-            );
-            let fileName = 'download';
-            if (contentDisposition) {
-              const match = contentDisposition.match(/filename="?([^"]+)"?/);
-              if (match && match[1]) {
-                fileName = match[1];
+            try {
+              const blob = response.body;
+              if (!blob) {
+                this.loadingService.hide();
+                return;
               }
+
+              // Extract filename from Content-Disposition
+              const contentDisposition = response.headers.get(
+                'Content-Disposition'
+              );
+              let fileName = 'download';
+              if (contentDisposition) {
+                const match = contentDisposition.match(/filename="?([^"]+)"?/);
+                if (match && match[1]) {
+                  fileName = match[1];
+                }
+              }
+
+              // Force download with correct filename
+              const a = document.createElement('a');
+              const blobUrl = URL.createObjectURL(blob);
+              a.href = blobUrl;
+              a.download = fileName;
+              document.body.appendChild(a);
+              a.click();
+              console.log('download has been triggered, removing child link');
+              document.body.removeChild(a);
+              console.log('removed blob url anchor');
+              URL.revokeObjectURL(blobUrl);
+              console.log('revoking blob url');
+              this.loadingService.hide('successful download');
+            } catch (error) {
+              console.error(
+                'Error occurred while downloading document:',
+                error
+              );
             }
-
-            // Force download with correct filename
-            const a = document.createElement('a');
-            const blobUrl = URL.createObjectURL(blob);
-            a.href = blobUrl;
-            a.download = fileName;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(blobUrl);
-
-            this.loadingService.hide('successful download');
           },
           error: (error) => {
             console.error('Failed to fetch document:', error);
