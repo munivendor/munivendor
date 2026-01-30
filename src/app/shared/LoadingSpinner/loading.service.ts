@@ -20,12 +20,19 @@ export class LoadingService {
     }
   }
 
-  hide(): void {
-    this.activeRequests--;
-    if (this.activeRequests <= 0) {
-      this.activeRequests = 0;
-      this.loadingSubject.next(false);
-      this.messageSubject.next('Loading...');
+  hide(message?: string): void {
+    try {
+      if (message) {
+        console.log('message', message);
+      }
+      this.activeRequests--;
+      if (this.activeRequests <= 0) {
+        this.activeRequests = 0;
+        this.loadingSubject.next(false);
+        this.messageSubject.next('Loading...');
+      }
+    } catch (err) {
+      console.error('Error in LoadingService.hide:', err);
     }
   }
 
