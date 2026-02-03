@@ -28,42 +28,46 @@
 
     <div class="payment-methods-grid">
       <div
-        *ngFor="let method of savedPaymentMethods"
+        *ngFor="let paymentMethod of savedPaymentMethods"
         class="payment-method-card"
       >
         <div class="payment-method-header">
           <div class="payment-type-info">
             <mat-icon>{{
-              method.accountType === "CC" ? "credit_card" : "account_balance"
+              paymentMethod.accountType === "CC"
+                ? "credit_card"
+                : "account_balance"
             }}</mat-icon>
             <div class="payment-details">
               <span class="payment-type">
                 {{
-                  method.accountType === "CC"
-                    ? method.cardType
-                    : method.bankAccountType
+                  paymentMethod.accountType === "CC"
+                    ? paymentMethod.cardType
+                    : paymentMethod.bankAccountType
                 }}
               </span>
 
               <span class="payment-last-four">{{
-                method.lastFourNumbers
+                paymentMethod.lastFourNumbers
               }}</span>
 
               <span class="account-type">{{
-                method.accountType === "CC"
+                paymentMethod.accountType === "CC"
                   ? "Credit Card"
                   : "Bank Account (ACH)"
               }}</span>
             </div>
           </div>
-          <span class="default-badge" *ngIf="method.isDefault">Default</span>
+          <span class="default-badge" *ngIf="paymentMethod.isDefault"
+            >Default</span
+          >
         </div>
 
         <div class="payment-method-actions">
           <!-- <button
             mat-button
             color="primary"
-            (click)="editPaymentMethod(method)"
+            (click)="editPaymentMethod(paymentMethod)"
           >
             <mat-icon>edit</mat-icon>
             Edit
@@ -71,8 +75,8 @@
           <button
             mat-button
             color="accent"
-            (click)="setDefaultPaymentMethod(method)"
-            *ngIf="!method.isDefault"
+            (click)="setDefaultPaymentMethod(paymentMethod)"
+            *ngIf="!paymentMethod.isDefault"
           >
             <mat-icon>star_border</mat-icon>
             Set as Default
@@ -80,8 +84,8 @@
           <button
             mat-button
             color="warn"
-            (click)="deletePaymentMethod(method)"
-            [disabled]="method.isDefault"
+            (click)="deletePaymentMethod(paymentMethod)"
+            [disabled]="paymentMethod.isDefault"
           >
             <mat-icon>delete</mat-icon>
             Delete
@@ -316,9 +320,9 @@
             <mat-label>Account Type</mat-label>
             <mat-select formControlName="bankAccountType">
               <mat-option
-                *ngFor="let type of bankAccountTypes"
-                [value]="type.codeId"
-                >{{ type.codeDesc }}</mat-option
+                *ngFor="let bankAccountType of bankAccountTypes"
+                [value]="bankAccountType.codeId"
+                >{{ bankAccountType.codeDesc }}</mat-option
               >
             </mat-select>
             <mat-error
@@ -762,9 +766,9 @@
           <mat-label>Account Type</mat-label>
           <mat-select formControlName="bankAccountType">
             <mat-option
-              *ngFor="let type of bankAccountTypes"
-              [value]="type.codeId"
-              >{{ type.codeDesc }}</mat-option
+              *ngFor="let bankAccountType of bankAccountTypes"
+              [value]="bankAccountType.codeId"
+              >{{ bankAccountType.codeDesc }}</mat-option
             >
           </mat-select>
           <mat-error

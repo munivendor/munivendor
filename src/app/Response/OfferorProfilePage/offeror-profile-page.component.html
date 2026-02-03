@@ -80,39 +80,45 @@
         >
           <ng-container matColumnDef="firstName">
             <th mat-header-cell *matHeaderCellDef>First Name</th>
-            <td mat-cell *matCellDef="let official">
-              {{ official.firstName }}
+            <td mat-cell *matCellDef="let authorizingOfficial">
+              {{ authorizingOfficial.firstName }}
             </td>
           </ng-container>
 
           <ng-container matColumnDef="lastName">
             <th mat-header-cell *matHeaderCellDef>Last Name</th>
-            <td mat-cell *matCellDef="let official">{{ official.lastName }}</td>
+            <td mat-cell *matCellDef="let authorizingOfficial">
+              {{ authorizingOfficial.lastName }}
+            </td>
           </ng-container>
 
           <ng-container matColumnDef="title">
             <th mat-header-cell *matHeaderCellDef>Title</th>
-            <td mat-cell *matCellDef="let official">{{ official.title }}</td>
+            <td mat-cell *matCellDef="let authorizingOfficial">
+              {{ authorizingOfficial.title }}
+            </td>
           </ng-container>
 
           <ng-container matColumnDef="email">
             <th mat-header-cell *matHeaderCellDef>Email</th>
-            <td mat-cell *matCellDef="let official">{{ official.email }}</td>
+            <td mat-cell *matCellDef="let authorizingOfficial">
+              {{ authorizingOfficial.email }}
+            </td>
           </ng-container>
 
           <ng-container matColumnDef="phone">
             <th mat-header-cell *matHeaderCellDef>Phone Number</th>
-            <td mat-cell *matCellDef="let official">
-              {{ official.phone || "-" }}
+            <td mat-cell *matCellDef="let authorizingOfficial">
+              {{ authorizingOfficial.phone || "-" }}
             </td>
           </ng-container>
 
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let official">
+            <td mat-cell *matCellDef="let authorizingOfficial">
               <button
                 mat-icon-button
-                (click)="editOfficial(official)"
+                (click)="editOfficial(authorizingOfficial)"
                 [disabled]="isFormVisible"
                 matTooltip="Edit Official"
                 type="button"

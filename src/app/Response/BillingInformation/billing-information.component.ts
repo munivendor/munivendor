@@ -610,14 +610,6 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
   }
 
   // HELPER METHODS
-  getBankAccountTypeName(codeId: number | undefined): string {
-    if (codeId === undefined) return '';
-    const accountType = this.bankAccountTypes.find(
-      (type) => type.codeId === codeId
-    );
-    return accountType ? accountType.codeDesc : '';
-  }
-
   detectCardType(cardNumber: string = ''): string | null {
     cardNumber = cardNumber.replace(/\D/g, '');
     if (/^4/.test(cardNumber)) return 'visa';
@@ -626,17 +618,6 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
     if (/^3[47]/.test(cardNumber)) return 'amex';
     if (/^6(?:011|5)/.test(cardNumber)) return 'discover';
     return null;
-  }
-
-  cardTypeLabels: Record<string, string> = {
-    Visa: 'Visa',
-    MasterCard: 'Mastercard',
-    Discover: 'Discover',
-    AmericanExpress: 'American Express',
-  };
-
-  getCardTypeLabel(cardType?: string): string {
-    return this.cardTypeLabels[cardType ?? ''] ?? 'Credit Card';
   }
 
   // FORM SUBMISSION METHODS

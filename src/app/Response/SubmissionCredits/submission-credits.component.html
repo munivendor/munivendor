@@ -45,7 +45,6 @@
           Payment Method Used
         </th>
         <td mat-cell *matCellDef="let usage">
-          <!-- Show N/A only if both are null -->
           <ng-container
             *ngIf="
               usage.paymentMethodUsed || usage.lastFourNumbers;

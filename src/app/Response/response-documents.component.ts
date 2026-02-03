@@ -454,7 +454,6 @@ export class ResponseDocumentsComponent implements OnInit {
                 fileName = match[1];
               }
             }
-
             // Force download with correct filename
             const a = document.createElement('a');
             const blobUrl = URL.createObjectURL(blob);
@@ -462,12 +461,12 @@ export class ResponseDocumentsComponent implements OnInit {
             a.download = fileName;
             document.body.appendChild(a);
             a.click();
+
             document.body.removeChild(a);
             URL.revokeObjectURL(blobUrl);
+            this.loadingService.hide();
           },
           error: (error) => {
-            console.error('Failed to fetch document:', error);
-
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(

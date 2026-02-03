@@ -3,16 +3,16 @@
     Download as PDF
   </button>
   <div class="content">
-    <div *ngFor="let section of requestSections">
-      <h2>{{ section.requestSectionTitle }}</h2>
+    <div *ngFor="let requestSection of requestSections">
+      <h2>{{ requestSection.requestSectionTitle }}</h2>
       <div
-        [innerHTML]="formattedHtml(section.requestSectionContent)"
+        [innerHTML]="formattedHtml(requestSection.requestSectionContent)"
         class="content-display"
       ></div>
 
       <ul
         *ngIf="
-          section.requestSectionTitle ===
+          requestSection.requestSectionTitle ===
           'Technical Proposal Standard Requirements'
         "
       >
