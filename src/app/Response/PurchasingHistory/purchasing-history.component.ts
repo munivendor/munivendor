@@ -227,7 +227,6 @@ export class PurchasingHistoryComponent implements OnInit, OnDestroy {
     );
 
     if (selectedPackages.length === 0) {
-      console.log('No packages selected');
       return;
     }
 

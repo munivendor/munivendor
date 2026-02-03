@@ -15,9 +15,14 @@ import { Router } from '@angular/router';
   templateUrl: './paymentplanconfirmation.component.html',
   styleUrls: ['./paymentplanconfirmation.component.css'],
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatCardModule, MatToolbarModule, RouterModule]
+  imports: [
+    CommonModule,
+    MatButtonModule,
+    MatCardModule,
+    MatToolbarModule,
+    RouterModule,
+  ],
 })
-
 export class PaymentPlanConfirmationComponent implements OnInit {
   private destroy$ = new Subject<void>();
   organizationTypeId: number | undefined;
@@ -32,15 +37,15 @@ export class PaymentPlanConfirmationComponent implements OnInit {
     'Automatic Data to Government Form Insertion',
     'Unlimited Vendor Data Storage',
     'Digital Notarization',
-    'Guaranteed Submission Delivery'
+    'Guaranteed Submission Delivery',
   ];
 
   offerorPricingPlans = [
     {
       name: 'Pay As You Go',
       price: '$39/each',
-      includedFeatures: [0, 1, 2, 3, 4, 5, 6]
-    }
+      includedFeatures: [0, 1, 2, 3, 4, 5, 6],
+    },
   ];
 
   constructor(
@@ -48,16 +53,14 @@ export class PaymentPlanConfirmationComponent implements OnInit {
     private authService: AuthService,
     private flowProgressService: FlowProgressService,
     private router: Router
-  ) { }
+  ) {}
 
   ngOnInit(): void {
-    this.authService.user$.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(user => {
+    this.authService.user$.pipe(takeUntil(this.destroy$)).subscribe((user) => {
       if (user) {
-        const userId = user
+        const userId = user;
         if (userId) {
-         this.getUserDetails(userId);
+          this.getUserDetails(userId);
           this.userId = userId;
         } else {
           console.error('No user ID available in authentication state');
@@ -69,15 +72,16 @@ export class PaymentPlanConfirmationComponent implements OnInit {
   onClick(): void {
     const flowId = this.organizationTypeId === 1 ? 1 : 2;
 
-    this.flowProgressService.saveFlowProgress(this.userId, flowId, this.framePageNumber).subscribe({
-      next: () => {
-        console.log('Flow progress saved successfully');
-        this.router.navigate(['/billing-profile']);
-      },
-      error: (err) => {
-        console.error('Error saving flow progress:', err);
-      }
-    });
+    this.flowProgressService
+      .saveFlowProgress(this.userId, flowId, this.framePageNumber)
+      .subscribe({
+        next: () => {
+          this.router.navigate(['/billing-profile']);
+        },
+        error: (err) => {
+          console.error('Error saving flow progress:', err);
+        },
+      });
   }
 
   getUserDetails(userId: number): void {
@@ -105,7 +109,9 @@ export class PaymentPlanConfirmationComponent implements OnInit {
   }
 
   isFeatureIncluded(planIndex: number, featureIndex: number): boolean {
-    return this.offerorPricingPlans[planIndex].includedFeatures.includes(featureIndex);
+    return this.offerorPricingPlans[planIndex].includedFeatures.includes(
+      featureIndex
+    );
   }
 
   ngOnDestroy(): void {

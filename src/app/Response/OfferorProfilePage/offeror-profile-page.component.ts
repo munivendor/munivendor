@@ -253,7 +253,7 @@ export class OfferorProfilePageComponent implements OnInit {
       )
       .subscribe({
         next: (response) => {
-          this.showSnackBar('Authorizing Official updated successfully');
+          this.showSnackBar('Authorizing Official successfully updated.');
           this.cancelEdit();
           this.loadAuthorizingOfficials(official.organizationId);
         },
