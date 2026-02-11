@@ -9,7 +9,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { Subject, takeUntil } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
-import { LoggingService } from '../../exceptionhandling/logging.service';
 import { StateService } from '../../Request/services/state.service';
 import { CreditPurchaseDialogComponent } from '../CreditPurchaseDialog/credit-purchase-dialog.component';
 import { PaymentInfoService } from '../BillingInformation/services/payment-info.service';
@@ -30,9 +29,8 @@ export class SubmitConfirmationDialogComponent implements OnDestroy {
     private router: Router,
     private stateService: StateService,
     private _snackBar: MatSnackBar,
-    private loggingService: LoggingService,
     private dialogRef: MatDialogRef<SubmitConfirmationDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { responseId: string }
+    @Inject(MAT_DIALOG_DATA) public data: { responseId: string },
   ) {}
 
   cancel(): void {
@@ -86,21 +84,6 @@ export class SubmitConfirmationDialogComponent implements OnDestroy {
       return;
     }
 
-    // payment declined
-    if (error.status === 402 && error.error?.detail === 'PAYMENT_DECLINED') {
-      this._snackBar.open(
-        'Payment was declined. Please try a different payment method.',
-        'Close',
-        {
-          verticalPosition: 'top',
-          duration: 5000,
-        }
-      );
-
-      this.dialogRef.close(false);
-      return;
-    }
-
     this.dialogRef.close(false);
   }
 
@@ -115,51 +98,16 @@ export class SubmitConfirmationDialogComponent implements OnDestroy {
         organizationId: this.organizationId,
         requestId: requestId,
         showCreditSelection: true,
+        isForSubmission: true,
         contextMessage:
           'You need to purchase submission credits to submit this offer.',
       },
     });
 
     creditDialogRef.afterClosed().subscribe((result) => {
-      if (
-        result?.success &&
-        result?.paymentPlanId &&
-        result?.paymentProfileId
-      ) {
-        this.submitOfferWithPurchase(
-          requestId,
-          result.paymentProfileId,
-          result.paymentPlanId
-        );
-      } else {
-        this.dialog.open(SubmitConfirmationDialogComponent, {
-          width: '500px',
-          data: { responseId: requestId.toString() },
-        });
+      if (result?.success && result?.submitted) {
+        this.cleanupSessionAndNavigate();
       }
     });
-  }
-
-  private submitOfferWithPurchase(
-    requestId: number,
-    paymentProfileId: number,
-    paymentPlanId: number
-  ): void {
-    this.paymentInfoService
-      .submitOffer(
-        this.organizationId ?? 0,
-        requestId,
-        paymentProfileId,
-        paymentPlanId
-      )
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response) => {
-          this.cleanupSessionAndNavigate();
-        },
-        error: (error) => {
-          this.handleSubmissionError(requestId, error);
-        },
-      });
   }
 }
