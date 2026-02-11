@@ -376,15 +376,23 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
   };
 
   ngOnInit(): void {
+    this.filterForm.patchValue({
+      live: true,
+    });
+
     if (!this.organizationId) {
       setTimeout(() => {
         this.organizationId = this.stateService.getOrganizationId() ?? 0;
         if (this.organizationId) {
-          this.loadAndJoinRequestData();
+          this.loadAndJoinRequestData({
+            agencyRequestStatusIds: [this.agencyRequestStatusMap['live']],
+          });
         }
       }, 100);
     } else {
-      this.loadAndJoinRequestData();
+      this.loadAndJoinRequestData({
+        agencyRequestStatusIds: [this.agencyRequestStatusMap['live']],
+      });
     }
   }
 
