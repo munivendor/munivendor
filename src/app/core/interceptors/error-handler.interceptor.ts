@@ -81,21 +81,21 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
     private router: Router,
     private stateService: StateService,
     private authService: AuthService,
-    private snackbarNotificationService: SnackbarNotificationService
+    private snackbarNotificationService: SnackbarNotificationService,
   ) {}
 
   intercept(
     req: HttpRequest<any>,
-    next: HttpHandler
+    next: HttpHandler,
   ): Observable<HttpEvent<any>> {
     return next.handle(req).pipe(
       catchError((error: HttpErrorResponse) => {
         const isPublicPath = this.publicPaths.some((path) =>
-          req.url.includes(path)
+          req.url.includes(path),
         );
 
         const isSilentPath = this.silentPaths.some((path) =>
-          req.url.includes(path)
+          req.url.includes(path),
         );
 
         if (error.status === 401 && !isPublicPath) {
@@ -129,7 +129,7 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
         }
 
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -154,7 +154,7 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
         {
           verticalPosition: 'top',
           panelClass: ['error-snackbar'],
-        }
+        },
       );
 
       this.router.navigate(['/login']);
@@ -189,11 +189,11 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
   // Generic error message for non-401 errors when user is authenticated
   private handleSnackbarNon401AuthenticatedError(
     error: HttpErrorResponse,
-    req: HttpRequest<any>
+    req: HttpRequest<any>,
   ): void {
     const correlationId = error.error?.correlationId || 'N/A';
     this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
-      correlationId
+      correlationId,
     );
   }
 
@@ -216,7 +216,7 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
         methodName: 'ErrorHandlerInterceptor.handleError',
         className: 'ErrorHandlerInterceptor',
         operation: `${req.method} ${req.url}`,
-      }
+      },
     );
 
     const message = this.getErrorMessage(error.status);
