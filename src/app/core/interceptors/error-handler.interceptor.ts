@@ -52,18 +52,14 @@ export class RequestClosedDialogComponent {
 
 @Injectable()
 export class ErrorHandlerInterceptor implements HttpInterceptor {
-  // Define public endpoints that should skip centralized error handling
-  // (they handle their own errors in components)
   private readonly publicPaths: string[] = [
     '/auth/send-reset',
     '/auth/reset-password',
     '/users/validate',
   ];
 
-  // Session/auth check endpoints that fail silently
   private readonly silentPaths: string[] = ['/me', '/auth/check'];
 
-  // URLs where users are EXPECTED to be unauthenticated
   private readonly guestUrls = new Set([
     '/',
     '/login',
@@ -85,17 +81,17 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
   ) {}
 
   intercept(
-    req: HttpRequest<any>,
+    httpRequest: HttpRequest<any>,
     next: HttpHandler,
   ): Observable<HttpEvent<any>> {
-    return next.handle(req).pipe(
+    return next.handle(httpRequest).pipe(
       catchError((error: HttpErrorResponse) => {
-        const isPublicPath = this.publicPaths.some((path) =>
-          req.url.includes(path),
+        const isPublicPath = this.publicPaths.some((APIEndpoint) =>
+          httpRequest.url.includes(APIEndpoint),
         );
 
-        const isSilentPath = this.silentPaths.some((path) =>
-          req.url.includes(path),
+        const isSilentPath = this.silentPaths.some((APIEndpoint) =>
+          httpRequest.url.includes(APIEndpoint),
         );
 
         if (error.status === 401 && !isPublicPath) {
@@ -119,13 +115,13 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
           !isSilentPath &&
           this.authService.isAuthenticated
         ) {
-          this.handleSnackbarNon401AuthenticatedError(error, req);
+          this.handleSnackbarNon401AuthenticatedError(error, httpRequest);
           return throwError(() => error);
         }
 
         // Only handle errors for non-public, non-silent endpoints
         if (!isPublicPath && !isSilentPath) {
-          this.handleError(error, req);
+          this.handleError(error, httpRequest);
         }
 
         return throwError(() => error);
@@ -189,7 +185,7 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
   // Generic error message for non-401 errors when user is authenticated
   private handleSnackbarNon401AuthenticatedError(
     error: HttpErrorResponse,
-    req: HttpRequest<any>,
+    httpRequest: HttpRequest<any>,
   ): void {
     const correlationId = error.error?.correlationId || 'N/A';
     this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
@@ -198,12 +194,15 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
   }
 
   // backup error handler for APIs that do not have personalized logException
-  private handleError(error: HttpErrorResponse, req: HttpRequest<any>): void {
+  private handleError(
+    error: HttpErrorResponse,
+    httpRequest: HttpRequest<any>,
+  ): void {
     const errorDetails = {
       statusCode: error.status,
       statusText: error.statusText,
-      url: req.url,
-      method: req.method,
+      url: httpRequest.url,
+      method: httpRequest.method,
       message: error.message,
       timestamp: new Date().toISOString(),
     };
@@ -215,7 +214,7 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
         ...errorDetails,
         methodName: 'ErrorHandlerInterceptor.handleError',
         className: 'ErrorHandlerInterceptor',
-        operation: `${req.method} ${req.url}`,
+        operation: `${httpRequest.method} ${httpRequest.url}`,
       },
     );
 
