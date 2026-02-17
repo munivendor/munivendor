@@ -573,9 +573,13 @@
         [disabled]="
           !canProceed() || isProcessingPayment || isSavingPaymentMethod
         "
-        (click)="confirmPayment()"
+        (click)="
+          showAddNew || paymentMethods.length === 0
+            ? savePaymentMethod()
+            : confirmPayment()
+        "
       >
-        <mat-icon *ngIf="!isProcessingPayment">
+        <mat-icon *ngIf="!isProcessingPayment && !isSavingPaymentMethod">
           {{
             showAddNew || paymentMethods.length === 0 ? "save" : "shopping_cart"
           }}

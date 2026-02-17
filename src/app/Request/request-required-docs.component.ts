@@ -132,7 +132,6 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          console.log('Documents fetched and form initialized for creation.');
           this.loadingService.hide();
         },
         error: (error) => {
