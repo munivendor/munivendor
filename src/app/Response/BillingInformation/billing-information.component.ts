@@ -592,20 +592,16 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
     let formatted: string;
 
     if (cardType === 'amex') {
-      if (digitsOnly.length <= 4) {
+      const len = digitsOnly.length;
+      if (len <= 4) {
         formatted = digitsOnly;
-      } else if (digitsOnly.length <= 10) {
-        formatted = digitsOnly.slice(0, 4) + ' ' + digitsOnly.slice(4);
+      } else if (len <= 10) {
+        formatted = `${digitsOnly.slice(0, 4)} ${digitsOnly.slice(4)}`;
       } else {
-        formatted =
-          digitsOnly.slice(0, 4) +
-          ' ' +
-          digitsOnly.slice(4, 10) +
-          ' ' +
-          digitsOnly.slice(10, 15);
+        formatted = `${digitsOnly.slice(0, 4)} ${digitsOnly.slice(4, 10)} ${digitsOnly.slice(10, 15)}`;
       }
     } else {
-      formatted = digitsOnly.match(/.{1,4}/g)?.join(' ') || digitsOnly;
+      formatted = digitsOnly.match(/.{1,4}/g)?.join(' ') ?? digitsOnly;
     }
 
     if (formatted !== value) {
