@@ -27,6 +27,7 @@ import { DefinitionsComponent } from './DefinitionsPage/definitions.component';
 import { UserGuideComponent } from './Response/UserGuidePage/user-guide.component';
 
 import { OfferorProfilePageComponent } from './Response/OfferorProfilePage/offeror-profile-page.component';
+import { AgencyProfilePageComponent } from './Request/AgencyProfilePage/agency-profile-page.component';
 
 import { ResponseStepper } from './Response/ResponseStepper/response-stepper.component';
 import { FlowCompletionGuard } from './authorization/auth.guard';
@@ -151,6 +152,12 @@ export const routes: Routes = [
   {
     path: 'offeror-profile-page',
     component: OfferorProfilePageComponent,
+    canActivate: [AuthGuard],
+    data: { showSidenav: true },
+  },
+  {
+    path: 'agency-profile-page',
+    component: AgencyProfilePageComponent,
     canActivate: [AuthGuard],
     data: { showSidenav: true },
   },

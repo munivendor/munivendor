@@ -1,6 +1,16 @@
 <mat-stepper [linear]="true" #stepper (selectionChange)="onStepChange($event)">
   <mat-step label="Basics">
     <ng-template matStepContent>
+      <button
+        mat-raised-button
+        matStepperNext
+        (click)="saveResponse()"
+        [disabled]="!isStepValid"
+        color="primary"
+        style="float: right"
+      >
+        Next
+      </button>
       <response-basic
         #step1
         [sourceIdParam]="sourceIdParam"
@@ -131,7 +141,7 @@
               width: '350px',
               transformStyle: 'translate(-103%, -25%)',
               showCloseButton: false,
-              showActionButton: false
+              showActionButton: false,
             }"
           >
             info_outline
@@ -171,7 +181,7 @@
               width: '350px',
               transformStyle: 'translate(-103%, -75%)',
               showCloseButton: false,
-              showActionButton: false
+              showActionButton: false,
             }"
           >
             info_outline

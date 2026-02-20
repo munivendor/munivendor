@@ -1,0 +1,107 @@
+<div class="decision-makers-container">
+  <!-- Header -->
+  <div class="section-header">
+    <div class="header-left">
+      <h2 class="section-title">Decision Makers</h2>
+      <span class="record-count" *ngIf="!isLoading">
+        {{ decisionMakers.length }}
+        {{ decisionMakers.length === 1 ? "record" : "records" }}
+      </span>
+    </div>
+    <button class="btn btn-primary" type="button" (click)="openAddModal()">
+      + Add Decision Maker
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div class="state-container" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading decision makers...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="alert alert-error" *ngIf="errorMessage && !isLoading">
+    <span class="alert-icon">&#9888;</span>
+    {{ errorMessage }}
+  </div>
+
+  <!-- Empty State -->
+  <div
+    class="state-container empty-state"
+    *ngIf="!isLoading && !errorMessage && decisionMakers.length === 0"
+  >
+    <div class="empty-icon">&#128101;</div>
+    <p class="empty-title">No Decision Makers Found</p>
+    <p class="empty-subtitle">Add a decision maker to get started.</p>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrapper" *ngIf="!isLoading && decisionMakers.length > 0">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Title</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th class="actions-col">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let dm of decisionMakers">
+          <td>
+            <div class="name-cell">
+              <div class="avatar">
+                {{ getInitials(dm.firstName ?? "", dm.lastName ?? "") }}
+              </div>
+              <span class="full-name"
+                >{{ dm.firstName }} {{ dm.lastName }}</span
+              >
+            </div>
+          </td>
+
+          <td>
+            <span *ngIf="dm.title; else noTitle">{{ dm.title }}</span>
+            <ng-template #noTitle
+              ><span class="empty-value">—</span></ng-template
+            >
+          </td>
+
+          <td>
+            <a class="email-link" href="mailto:{{ dm.email }}">{{
+              dm.email
+            }}</a>
+          </td>
+
+          <td>
+            <span *ngIf="dm.phoneNumber; else noPhone">{{
+              dm.phoneNumber
+            }}</span>
+            <ng-template #noPhone
+              ><span class="empty-value">—</span></ng-template
+            >
+          </td>
+
+          <td class="actions-col">
+            <div class="action-buttons">
+              <button
+                class="btn btn-sm btn-outline"
+                type="button"
+                (click)="openEditModal(dm)"
+              >
+                Edit
+              </button>
+              <button
+                class="btn btn-sm btn-danger"
+                type="button"
+                (click)="onDelete(requestId, dm.decisionMakerId!)"
+              >
+                Remove
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
