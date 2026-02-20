@@ -19,6 +19,7 @@ import { Organization } from '../../Organization/Details/model/organization.mode
 import { StateService } from '../../Request/services/state.service';
 import { OfferorProfileService } from '../../shared/service/offeror-profile.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
+import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
 
 interface AuthorizingOfficial {
   vendorAuthorizingOfficialId?: number;
@@ -74,7 +75,8 @@ export class OfferorProfilePageComponent implements OnInit {
     private stateService: StateService,
     private offerorProfileService: OfferorProfileService,
     private snackBar: MatSnackBar,
-    private loggingService: LoggingService
+    private loggingService: LoggingService,
+    private snackbarNotificationService: SnackbarNotificationService,
   ) {}
 
   ngOnInit(): void {
@@ -137,7 +139,7 @@ export class OfferorProfilePageComponent implements OnInit {
             className: 'OfferorProfilePageComponent',
             operation: 'getOrganization',
             userId: this.stateService.getUserId(),
-          }
+          },
         );
       },
     });
@@ -163,7 +165,7 @@ export class OfferorProfilePageComponent implements OnInit {
               className: 'OfferorProfilePageComponent',
               operation: 'GetOfferorAuthorizingOfficials',
               userId: this.stateService.getUserId(),
-            }
+            },
           );
         },
       });
@@ -222,7 +224,9 @@ export class OfferorProfilePageComponent implements OnInit {
       .SaveOfferorAuthorizingOfficial(official)
       .subscribe({
         next: (response) => {
-          this.showSnackBar('Authorizing official successfully added.');
+          this.snackbarNotificationService.showSnackbarSuccess(
+            'Authorizing Official successfully added.',
+          );
           this.cancelEdit();
           this.loadAuthorizingOfficials(official.organizationId);
         },
@@ -239,7 +243,7 @@ export class OfferorProfilePageComponent implements OnInit {
               className: 'OfferorProfilePageComponent',
               operation: 'SaveOfferorAuthorizingOfficial',
               userId: this.stateService.getUserId(),
-            }
+            },
           );
         },
       });
@@ -249,11 +253,13 @@ export class OfferorProfilePageComponent implements OnInit {
     this.offerorProfileService
       .UpdateOfferorAuthorizingOfficial(
         official.vendorAuthorizingOfficialId!,
-        official
+        official,
       )
       .subscribe({
         next: (response) => {
-          this.showSnackBar('Authorizing Official successfully updated.');
+          this.snackbarNotificationService.showSnackbarSuccess(
+            'Authorizing Official successfully updated.',
+          );
           this.cancelEdit();
           this.loadAuthorizingOfficials(official.organizationId);
         },
@@ -270,7 +276,7 @@ export class OfferorProfilePageComponent implements OnInit {
               className: 'OfferorProfilePageComponent',
               operation: 'UpdateOfferorAuthorizingOfficial',
               userId: this.stateService.getUserId(),
-            }
+            },
           );
         },
       });
@@ -293,13 +299,6 @@ export class OfferorProfilePageComponent implements OnInit {
       phone: 20,
     };
     return maxLengths[fieldName] || 0;
-  }
-
-  private showSnackBar(message: string): void {
-    this.snackBar.open(message, 'Close', {
-      verticalPosition: 'top',
-      duration: 15000,
-    });
   }
 
   get isFormVisible(): boolean {

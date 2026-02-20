@@ -20,6 +20,7 @@ export class SnackbarNotificationService {
     this.snackBar.open(message, 'Close', {
       duration: AppConstants.SNACKBAR_DURATION,
       verticalPosition: 'top',
+      panelClass: ['snackbar-success'],
     });
   }
 
