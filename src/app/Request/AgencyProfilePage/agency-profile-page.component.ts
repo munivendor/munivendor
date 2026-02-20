@@ -10,12 +10,9 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import {
-  AgencyProfileService,
-  DecisionMaker,
-  DecisionMakerForm,
-} from '../services/agency-profile.service';
+import { AgencyProfileService } from '../services/agency-profile.service';
 import { StateService } from '../../Request/services/state.service';
+import { DecisionMaker } from '../model/decisionmaker.model';
 
 // ── Dialog Component ──────────────────────────────────────────────────────────
 
@@ -99,7 +96,7 @@ import { StateService } from '../../Request/services/state.service';
       <button
         mat-raised-button
         color="primary"
-        (click)="onSubmit()"
+        (click)="onSubmitDecisionMaker()"
         [disabled]="isSaving"
       >
         {{
@@ -141,7 +138,7 @@ import { StateService } from '../../Request/services/state.service';
   ],
 })
 export class DecisionMakerDialogComponent {
-  formData: DecisionMakerForm;
+  formData: DecisionMaker;
   modalError = '';
   isSaving = false;
   requestId = 1;
@@ -149,12 +146,12 @@ export class DecisionMakerDialogComponent {
   constructor(
     public dialogRef: MatDialogRef<DecisionMakerDialogComponent>,
     @Inject(MAT_DIALOG_DATA)
-    public data: { isEditMode: boolean; formData: DecisionMakerForm },
+    public data: { isEditMode: boolean; formData: DecisionMaker },
   ) {
     this.formData = { ...data.formData };
   }
 
-  onSubmit(): void {
+  onSubmitDecisionMaker(): void {
     if (
       !this.formData.firstName?.trim() ||
       !this.formData.lastName?.trim() ||
@@ -238,20 +235,20 @@ export class AgencyProfilePageComponent implements OnInit {
       });
   }
 
-  openAddModal(): void {
+  openAddDecisionMakerDialog(): void {
     const dialogRef = this.dialog.open(DecisionMakerDialogComponent, {
-      data: { isEditMode: false, formData: this.emptyForm() },
+      data: { isEditMode: false, formData: this.emptyDecisionMakerForm() },
       disableClose: true,
     });
 
-    dialogRef.afterClosed().subscribe((result: DecisionMakerForm | null) => {
+    dialogRef.afterClosed().subscribe((result: DecisionMaker | null) => {
       if (!result) return;
       this.saveDecisionMaker(result, false);
     });
   }
 
-  openEditModal(dm: DecisionMaker): void {
-    const formData: DecisionMakerForm = {
+  openEditDecisionMakerDialog(dm: DecisionMaker): void {
+    const formData: DecisionMaker = {
       decisionMakerId: dm.decisionMakerId,
       firstName: dm.firstName ?? '',
       lastName: dm.lastName ?? '',
@@ -265,14 +262,14 @@ export class AgencyProfilePageComponent implements OnInit {
       disableClose: true,
     });
 
-    dialogRef.afterClosed().subscribe((result: DecisionMakerForm | null) => {
+    dialogRef.afterClosed().subscribe((result: DecisionMaker | null) => {
       if (!result) return;
       this.saveDecisionMaker(result, true);
     });
   }
 
   private saveDecisionMaker(
-    formData: DecisionMakerForm,
+    formData: DecisionMaker,
     isEditMode: boolean,
   ): void {
     const call$ = isEditMode
@@ -294,7 +291,7 @@ export class AgencyProfilePageComponent implements OnInit {
     });
   }
 
-  onDelete(requestId: number, decisionMakerId: number): void {
+  onDeleteDecisionMaker(requestId: number, decisionMakerId: number): void {
     if (!confirm('Are you sure you want to remove this decision maker?'))
       return;
 
@@ -319,14 +316,14 @@ export class AgencyProfilePageComponent implements OnInit {
       });
   }
 
-  getInitials(firstName: string, lastName: string): string {
+  getDecisionMakerInitials(firstName: string, lastName: string): string {
     const parts = firstName.trim().split(' ');
     const first = parts[0]?.charAt(0) ?? '';
     const last = lastName.trim().charAt(0) ?? '';
     return (parts.length > 1 ? first + last : first).toUpperCase();
   }
 
-  private emptyForm(): DecisionMakerForm {
+  private emptyDecisionMakerForm(): Omit<DecisionMaker, 'decisionMakerId'> {
     return {
       firstName: '',
       lastName: '',

@@ -2,26 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-
-// What the GET endpoint returns
-export interface DecisionMaker {
-  decisionMakerId?: number;
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  title?: string | null;
-  phoneNumber?: string | null;
-}
-
-// What the POST/PUT endpoints expect
-export interface DecisionMakerForm {
-  decisionMakerId?: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phoneNumber?: string | null;
-  title?: string | null;
-}
+import { DecisionMaker } from '../model/decisionmaker.model';
 
 export interface DecisionMakerResponse {
   correlationId: string;
@@ -44,12 +25,12 @@ export class AgencyProfileService {
 
   CreateDecisionMaker(
     organizationId: number,
-    decisionMaker: DecisionMakerForm,
+    decisionMaker: DecisionMaker,
   ): Observable<DecisionMakerResponse> {
     let params = new HttpParams()
-      .set('firstName', decisionMaker.firstName)
-      .set('lastName', decisionMaker.lastName)
-      .set('email', decisionMaker.email);
+      .set('firstName', decisionMaker.firstName || '')
+      .set('lastName', decisionMaker.lastName || '')
+      .set('email', decisionMaker.email || '');
 
     if (decisionMaker.decisionMakerId != null)
       params = params.set('decisionMakerId', decisionMaker.decisionMakerId);
@@ -67,7 +48,7 @@ export class AgencyProfileService {
 
   UpdateDecisionMaker(
     organizationId: number,
-    decisionMaker: DecisionMakerForm,
+    decisionMaker: DecisionMaker,
   ): Observable<DecisionMakerResponse> {
     let params = new HttpParams().set(
       'decisionMakerId',

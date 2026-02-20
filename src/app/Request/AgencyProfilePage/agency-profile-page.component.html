@@ -8,7 +8,11 @@
         {{ decisionMakers.length === 1 ? "record" : "records" }}
       </span>
     </div>
-    <button class="btn btn-primary" type="button" (click)="openAddModal()">
+    <button
+      class="btn btn-primary"
+      type="button"
+      (click)="openAddDecisionMakerDialog()"
+    >
       + Add Decision Maker
     </button>
   </div>
@@ -52,7 +56,12 @@
           <td>
             <div class="name-cell">
               <div class="avatar">
-                {{ getInitials(dm.firstName ?? "", dm.lastName ?? "") }}
+                {{
+                  getDecisionMakerInitials(
+                    dm.firstName ?? "",
+                    dm.lastName ?? ""
+                  )
+                }}
               </div>
               <span class="full-name"
                 >{{ dm.firstName }} {{ dm.lastName }}</span
@@ -87,14 +96,14 @@
               <button
                 class="btn btn-sm btn-outline"
                 type="button"
-                (click)="openEditModal(dm)"
+                (click)="openEditDecisionMakerDialog(dm)"
               >
                 Edit
               </button>
               <button
                 class="btn btn-sm btn-danger"
                 type="button"
-                (click)="onDelete(requestId, dm.decisionMakerId!)"
+                (click)="onDeleteDecisionMaker(requestId, dm.decisionMakerId!)"
               >
                 Remove
               </button>

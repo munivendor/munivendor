@@ -22,40 +22,40 @@
             [displayWith]="displayCategoryName"
           >
             @for (option of filteredCategories | async; track option) {
-            <mat-option
-              [value]="option.categoryId"
-              (onSelectionChange)="
-                $event.isUserInput &&
-                  selectCategory(option.categoryId, option.name)
-              "
-            >
-              <div
-                class="tree-node"
-                [ngStyle]="{ 'padding-left.px': getNodeIndent(option.level) }"
+              <mat-option
+                [value]="option.categoryId"
+                (onSelectionChange)="
+                  $event.isUserInput &&
+                    selectCategory(option.categoryId, option.name)
+                "
               >
-                <button
-                  *ngIf="option.expandable"
-                  mat-icon-button
-                  (click)="toggleExpand(+option.categoryId, $event)"
-                  class="toggle-button"
+                <div
+                  class="tree-node"
+                  [ngStyle]="{ 'padding-left.px': getNodeIndent(option.level) }"
                 >
-                  <mat-icon>
-                    {{
-                      isExpanded(option.categoryId)
-                        ? "expand_more"
-                        : "chevron_right"
-                    }}
-                  </mat-icon>
-                </button>
-                <span
-                  *ngIf="!option.expandable"
-                  class="toggle-spacer"
-                  [ngStyle]="{ 'width.px': 40 }"
-                >
-                </span>
-                <span class="category-name">{{ option.name }}</span>
-              </div>
-            </mat-option>
+                  <button
+                    *ngIf="option.expandable"
+                    mat-icon-button
+                    (click)="toggleExpand(+option.categoryId, $event)"
+                    class="toggle-button"
+                  >
+                    <mat-icon>
+                      {{
+                        isExpanded(option.categoryId)
+                          ? "expand_more"
+                          : "chevron_right"
+                      }}
+                    </mat-icon>
+                  </button>
+                  <span
+                    *ngIf="!option.expandable"
+                    class="toggle-spacer"
+                    [ngStyle]="{ 'width.px': 40 }"
+                  >
+                  </span>
+                  <span class="category-name">{{ option.name }}</span>
+                </div>
+              </mat-option>
             }
           </mat-autocomplete>
           <mat-error
@@ -283,7 +283,7 @@
                     *ngFor="let decisionMaker of getFilteredDecisionMakers(i)"
                     [value]="decisionMaker.decisionMakerId"
                   >
-                    {{ decisionMaker.decisionMakerName }}
+                    {{ decisionMaker.firstName }} {{ decisionMaker.lastName }}
                   </mat-option>
                 </mat-select>
                 <mat-error
