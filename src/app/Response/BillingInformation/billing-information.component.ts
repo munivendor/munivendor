@@ -28,6 +28,7 @@ import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
+import { SafeHtmlPipe } from '../../shared/safe-html.pipe';
 
 @Component({
   selector: 'your-dialog',
@@ -52,7 +53,7 @@ export class YourDialog {
       message?: string;
       confirmText?: string;
       cancelText?: string;
-    }
+    },
   ) {}
 }
 
@@ -79,6 +80,7 @@ export interface SavedPaymentMethod {
     MatIconModule,
     MatTabsModule,
     RouterModule,
+    SafeHtmlPipe,
   ],
   providers: [PaymentInfoService],
 })
@@ -120,7 +122,7 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
     private loadingService: LoadingService,
     private stateService: StateService,
     private snackbarNotificationService: SnackbarNotificationService,
-    private loggingService: LoggingService
+    private loggingService: LoggingService,
   ) {}
 
   resetForm(): void {
@@ -172,10 +174,10 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
           .subscribe({
             next: () => {
               this.savedPaymentMethods = this.savedPaymentMethods.filter(
-                (m) => m.paymentProfileId !== method.paymentProfileId
+                (m) => m.paymentProfileId !== method.paymentProfileId,
               );
               this.snackbarNotificationService.showSnackbarSuccess(
-                'Payment method successfully deleted.'
+                'Payment method successfully deleted.',
               );
             },
             error: (error) => {
@@ -191,7 +193,7 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
                   className: 'BillingInformationComponent',
                   operation: 'deletePaymentMethod',
                   userId: this.stateService.getUserId(),
-                }
+                },
               );
             },
           });
@@ -249,7 +251,7 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
             m.isDefault = m.paymentProfileId === method.paymentProfileId;
           });
           this.snackbarNotificationService.showSnackbarSuccess(
-            'Default payment method successfully updated.'
+            'Default payment method successfully updated.',
           );
         },
         error: (error) => {
@@ -265,7 +267,7 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
               className: 'BillingInformationComponent',
               operation: 'setDefaultPaymentMethod',
               userId: this.stateService.getUserId(),
-            }
+            },
           );
         },
       });
@@ -299,7 +301,7 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
               className: 'BillingInformationComponent',
               operation: 'getSavedPaymentMethods',
               userId: this.stateService.getUserId(),
-            }
+            },
           );
         },
       });
@@ -330,7 +332,7 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
 
           const operation =
             Object.entries(operationMap).find(([key]) =>
-              errorUrl.includes(key)
+              errorUrl.includes(key),
             )?.[1] ?? 'UnknownOperation';
 
           this.loggingService.logException(
@@ -344,7 +346,7 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
               className: 'BillingInformationComponent',
               operation: operation,
               userId: this.stateService.getUserId(),
-            }
+            },
           );
         },
       });
@@ -366,118 +368,406 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
 
   // FORM GROUP CREATORS WITH ENHANCED VALIDATION
   private createAddressGroup(): FormGroup {
-    return this.fb.group(
-      {
-        streetAddress1: ['', [Validators.required, Validators.maxLength(60)]],
-        streetAddress2: ['', Validators.maxLength(60)],
-        city: [
-          '',
-          [Validators.required, Validators.pattern(/^[a-zA-Z\s\-]{1,40}$/)],
-        ],
-        state: ['', Validators.required],
-        zip: [
-          '',
-          [Validators.required, Validators.pattern(/^\d{5}(-\d{4})?$/)],
-        ],
-      },
-      { updateOn: 'change' }
-    );
+    return this.fb.group({
+      streetAddress1: [
+        '',
+        {
+          validators: [Validators.required, Validators.maxLength(60)],
+          updateOn: 'blur',
+        },
+      ],
+      city: [
+        '',
+        {
+          validators: [
+            Validators.required,
+            Validators.pattern(/^[a-zA-Z\s\-]{1,40}$/),
+          ],
+          updateOn: 'blur',
+        },
+      ],
+      state: [
+        '',
+        {
+          validators: [Validators.required],
+          updateOn: 'change',
+        },
+      ],
+      zip: [
+        '',
+        {
+          validators: [
+            Validators.required,
+            Validators.pattern(/^\d{5}(-\d{4})?$/),
+          ],
+          updateOn: 'change',
+        },
+      ],
+    });
   }
 
   private createAchGroup(): FormGroup {
     const group = this.fb.group(
       {
-        bankRoutingNumber: [
-          '',
-          [Validators.required, this.routingNumberValidator.bind(this)],
-        ],
-        confirmBankRoutingNumber: ['', [Validators.required]],
-        bankAccountNumber: [
-          '',
-          [Validators.required, this.accountNumberValidator.bind(this)],
-        ],
-        confirmBankAccountNumber: ['', [Validators.required]],
-        bankAccountType: ['', Validators.required],
         nameOnAccount: [
           '',
-          [Validators.required, this.nameOnCardOrAccountValidator],
+          {
+            validators: [
+              Validators.required,
+              this.nameOnCardOrAccountValidator,
+            ],
+            updateOn: 'blur',
+          },
+        ],
+        bankRoutingNumber: [
+          '',
+          {
+            validators: [
+              Validators.required,
+              this.routingNumberValidator.bind(this),
+            ],
+            updateOn: 'change',
+          },
+        ],
+        confirmBankRoutingNumber: [
+          '',
+          {
+            validators: [Validators.required],
+            updateOn: 'change',
+          },
+        ],
+        bankAccountNumber: [
+          '',
+          {
+            validators: [
+              Validators.required,
+              this.accountNumberValidator.bind(this),
+            ],
+            updateOn: 'change',
+          },
+        ],
+        confirmBankAccountNumber: [
+          '',
+          {
+            validators: [Validators.required],
+            updateOn: 'change',
+          },
+        ],
+        bankAccountType: [
+          '',
+          {
+            validators: [Validators.required],
+            updateOn: 'change',
+          },
         ],
       },
       {
-        updateOn: 'change',
+        updateOn: 'blur',
         validators: [
           this.matchingFieldsValidator(
             'bankRoutingNumber',
-            'confirmBankRoutingNumber'
+            'confirmBankRoutingNumber',
           ),
           this.matchingFieldsValidator(
             'bankAccountNumber',
-            'confirmBankAccountNumber'
+            'confirmBankAccountNumber',
           ),
         ],
-      }
+      },
     );
 
+    // Use the helper method for all numeric fields
     group.get('bankRoutingNumber')?.valueChanges.subscribe(() => {
-      this.sanitizeNumericInput(group.get('bankRoutingNumber')!);
+      this.removeNonDigits(group.get('bankRoutingNumber')!);
     });
 
     group.get('confirmBankRoutingNumber')?.valueChanges.subscribe(() => {
-      this.sanitizeNumericInput(group.get('confirmBankRoutingNumber')!);
+      this.removeNonDigits(group.get('confirmBankRoutingNumber')!);
     });
 
     group.get('bankAccountNumber')?.valueChanges.subscribe(() => {
-      this.sanitizeNumericInput(group.get('bankAccountNumber')!);
+      this.removeNonDigits(group.get('bankAccountNumber')!);
     });
 
     group.get('confirmBankAccountNumber')?.valueChanges.subscribe(() => {
-      this.sanitizeNumericInput(group.get('confirmBankAccountNumber')!);
+      this.removeNonDigits(group.get('confirmBankAccountNumber')!);
     });
 
     return group;
   }
 
   private createCreditCardGroup(): FormGroup {
-    const group = this.fb.group(
-      {
-        cardNumber: [
-          '',
-          [Validators.required, this.cardNumberValidator.bind(this)],
-        ],
-        nameOnCard: [
-          '',
-          [Validators.required, this.nameOnCardOrAccountValidator],
-        ],
-        expirationDate: ['', Validators.required],
-        cvv: ['', [Validators.required, this.cvvValidator.bind(this)]],
-      },
-      { updateOn: 'change' }
-    );
-
-    group.get('cardNumber')?.valueChanges.subscribe(() => {
-      this.sanitizeNumericInput(group.get('cardNumber')!);
+    const group = this.fb.group({
+      cardNumber: [
+        '',
+        {
+          validators: [
+            Validators.required,
+            this.cardNumberValidator.bind(this),
+          ],
+          updateOn: 'change',
+        },
+      ],
+      nameOnCard: [
+        '',
+        {
+          validators: [Validators.required, this.nameOnCardOrAccountValidator],
+          updateOn: 'blur',
+        },
+      ],
+      expirationDate: [
+        '',
+        {
+          validators: [
+            Validators.required,
+            this.expirationDateValidator.bind(this),
+          ],
+          updateOn: 'change',
+        },
+      ],
+      cvv: [
+        '',
+        {
+          validators: [Validators.required, this.cvvValidator.bind(this)],
+          updateOn: 'blur',
+        },
+      ],
     });
 
-    group.get('cvv')?.valueChanges.subscribe(() => {
-      this.sanitizeNumericInput(group.get('cvv')!);
-      // Revalidate CVV when card number changes (for AMEX vs others)
-      group.get('cvv')?.updateValueAndValidity({ emitEvent: false });
-    });
-
-    // Trigger CVV revalidation when card number changes
     group.get('cardNumber')?.valueChanges.subscribe(() => {
+      this.formatCardNumber(group.get('cardNumber')!);
+      this.onCardNumberInput();
+
       const cvvControl = group.get('cvv');
       if (cvvControl?.value) {
         cvvControl.updateValueAndValidity({ emitEvent: false });
       }
     });
 
+    group.get('cvv')?.valueChanges.subscribe(() => {
+      this.removeNonDigits(group.get('cvv')!);
+    });
+
+    group.get('expirationDate')?.valueChanges.subscribe(() => {
+      this.formatExpirationDate(group.get('expirationDate')!);
+    });
+
     return group;
   }
 
+  private removeNonDigits(control: AbstractControl): void {
+    const value = control.value;
+    if (!value) return;
+
+    const sanitized = value.replace(/\D/g, '');
+    if (sanitized !== value) {
+      control.setValue(sanitized, { emitEvent: false });
+    }
+  }
+
+  private sanitizeNumericInput(control: AbstractControl): void {
+    if (control.value) {
+      const sanitized = control.value.replace(/\D/g, '');
+      if (sanitized !== control.value) {
+        control.setValue(sanitized, { emitEvent: false });
+      }
+    }
+  }
+
+  private formatCardNumber(control: AbstractControl): void {
+    const value = control.value;
+    if (!value) {
+      control.setValue('', { emitEvent: false });
+      return;
+    }
+
+    const digitsOnly = value.replace(/\D/g, '');
+
+    if (!digitsOnly) {
+      control.setValue('', { emitEvent: false });
+      return;
+    }
+
+    const cardType = this.detectCardType(digitsOnly);
+    let formatted: string;
+
+    if (cardType === 'amex') {
+      if (digitsOnly.length <= 4) {
+        formatted = digitsOnly;
+      } else if (digitsOnly.length <= 10) {
+        formatted = digitsOnly.slice(0, 4) + ' ' + digitsOnly.slice(4);
+      } else {
+        formatted =
+          digitsOnly.slice(0, 4) +
+          ' ' +
+          digitsOnly.slice(4, 10) +
+          ' ' +
+          digitsOnly.slice(10, 15);
+      }
+    } else {
+      formatted = digitsOnly.match(/.{1,4}/g)?.join(' ') || digitsOnly;
+    }
+
+    if (formatted !== value) {
+      control.setValue(formatted, { emitEvent: false });
+    }
+  }
+
+  private formatExpirationDate(control: AbstractControl): void {
+    const value = control.value;
+    if (!value) return;
+
+    const digitsOnly = value.replace(/\D/g, '');
+
+    let formatted: string;
+
+    if (digitsOnly.length === 0) {
+      formatted = '';
+    } else if (digitsOnly.length <= 2) {
+      formatted =
+        digitsOnly.length === 2 && !value.endsWith('/')
+          ? digitsOnly + '/'
+          : digitsOnly;
+    } else {
+      formatted = digitsOnly.slice(0, 2) + '/' + digitsOnly.slice(2, 4);
+    }
+
+    if (formatted !== value) {
+      control.setValue(formatted, { emitEvent: false });
+    }
+  }
+
+  private expirationDateValidator(
+    control: AbstractControl,
+  ): ValidationErrors | null {
+    const value = control.value;
+    if (!value) return null;
+
+    const match = value.match(/^(\d{2})\/(\d{2})$/);
+    if (!match) return { pattern: true };
+
+    const month = parseInt(match[1], 10);
+    const year = parseInt('20' + match[2], 10);
+
+    if (month < 1 || month > 12) {
+      return { invalidMonth: true };
+    }
+
+    const now = new Date();
+    const expiry = new Date(year, month - 1);
+
+    if (expiry < now) {
+      return { expired: true };
+    }
+
+    return null;
+  }
+
+  onExpirationDateKeydown(event: KeyboardEvent): void {
+    const input = event.target as HTMLInputElement;
+    const value = input.value;
+    const cursorPosition = input.selectionStart ?? 0;
+
+    if (event.key === 'Backspace') {
+      if (cursorPosition === 3 && value[2] === '/') {
+        event.preventDefault();
+        const newValue = value.slice(0, 1);
+        this.ccForm
+          .get('expirationDate')
+          ?.setValue(newValue, { emitEvent: true });
+
+        setTimeout(() => {
+          input.setSelectionRange(1, 1);
+        }, 0);
+      }
+    }
+
+    if (event.key === 'Delete') {
+      if (cursorPosition === 2 && value[2] === '/') {
+        event.preventDefault();
+        setTimeout(() => {
+          input.setSelectionRange(3, 3);
+        }, 0);
+      }
+    }
+  }
+
+  detectedCardBrand: string | null = null;
+
+  cardBrandSvgs: { [key: string]: string } = {
+    visa: `
+    <svg width="38" height="24" viewBox="0 0 38 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="38" height="24" rx="4" fill="#1434CB"/>
+      <path d="M15.36 16.53L16.86 7.47H19.35L17.85 16.53H15.36ZM26.76 7.74C26.25 7.53 25.44 7.29 26.45 7.29C21.99 7.29 20.25 8.49 20.25 10.26C20.25 11.55 21.45 12.21 22.35 12.63C23.28 13.05 23.61 13.32 23.61 13.71C23.61 14.28 22.92 14.55 22.26 14.55C21.3 14.55 20.79 14.4 20.04 14.07L19.71 13.92L19.32 16.17C19.92 16.44 21.03 16.68 22.17 16.68C24.81 16.68 26.52 15.51 26.55 13.59C26.55 12.54 25.86 11.73 24.39 11.07C23.52 10.68 23.01 10.41 23.01 9.99C23.01 9.63 23.43 9.24 24.33 9.24C25.11 9.24 25.65 9.39 26.07 9.57L26.28 9.66L26.67 7.5L26.76 7.74ZM30.81 7.47H28.98C28.41 7.47 28.02 7.62 27.75 8.19L24.15 16.53H26.79L27.27 15.18H30.42L30.72 16.53H33.06L30.81 7.47ZM28.26 13.23L29.43 9.87L30.09 13.23H28.26ZM13.65 7.47L11.28 14.19L11.04 13.02C10.62 11.58 9.33 10.02 7.86 9.24L10.05 16.5H12.72L16.35 7.47H13.65Z" fill="white"/>
+      <path d="M9.51 7.47H5.7L5.67 7.68C8.55 8.4 10.47 10.02 11.22 12.06L10.32 8.22C10.17 7.65 9.78 7.5 9.24 7.47H9.51Z" fill="#F7B600"/>
+    </svg>
+  `,
+    mastercard: `
+    <svg width="38" height="24" viewBox="0 0 38 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="38" height="24" rx="4" fill="#000"/>
+      <circle cx="14.5" cy="12" r="7" fill="#EB001B"/>
+      <circle cx="23.5" cy="12" r="7" fill="#F79E1B"/>
+      <path d="M19 6.47C17.85 7.47 17.13 8.97 17.13 10.62C17.13 12.27 17.85 13.77 19 14.77C20.15 13.77 20.87 12.27 20.87 10.62C20.87 8.97 20.15 7.47 19 6.47Z" fill="#FF5F00"/>
+    </svg>
+  `,
+    amex: `
+    <svg width="38" height="24" viewBox="0 0 38 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="38" height="24" rx="4" fill="#006FCF"/>
+      <text x="19" y="15" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="white" text-anchor="middle">AMEX</text>
+    </svg>
+  `,
+    discover: `
+  <svg width="50" height="26" viewBox="0 0 50 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="50" height="26" rx="4" fill="#FF6000"/>
+    <text x="5" y="16" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#000" text-anchor="start">DISC</text>
+    <circle cx="26.2" cy="13.2" r="2.8" fill="#FFA500"/>
+    <text x="29.9" y="16" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#000" text-anchor="start">VER</text>
+  </svg>
+`,
+  };
+
+  getCardBrandSvg(): string | null {
+    return this.detectedCardBrand
+      ? this.cardBrandSvgs[this.detectedCardBrand]
+      : null;
+  }
+
+  onCardNumberInput(): void {
+    const cardNumber = this.ccForm.get('cardNumber')?.value || '';
+    // Remove spaces before detecting card type
+    const sanitized = cardNumber.replace(/\s/g, '');
+    this.detectedCardBrand = this.detectCardType(sanitized);
+  }
+
   // ACH VALIDATORS
+  // private routingNumberValidator(
+  //   control: AbstractControl,
+  // ): ValidationErrors | null {
+  //   const routingNumber = control.value;
+  //   if (!routingNumber) return null;
+
+  //   if (!/^\d+$/.test(routingNumber)) {
+  //     return { pattern: true };
+  //   }
+
+  //   if (routingNumber.length !== 9) {
+  //     return { pattern: true };
+  //   }
+
+  //   // ABA routing number checksum validation
+  //   const digits = routingNumber.split('').map(Number);
+  //   const checksum =
+  //     (3 * (digits[0] + digits[3] + digits[6]) +
+  //       7 * (digits[1] + digits[4] + digits[7]) +
+  //       (digits[2] + digits[5] + digits[8])) %
+  //     10;
+
+  //   return checksum === 0 ? null : { invalidRoutingNumber: true };
+  // }
+
+  // OPTION 2: Keep it in one method (simpler, less code)
   private routingNumberValidator(
-    control: AbstractControl
+    control: AbstractControl,
   ): ValidationErrors | null {
     const routingNumber = control.value;
     if (!routingNumber) return null;
@@ -498,11 +788,19 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
         (digits[2] + digits[5] + digits[8])) %
       10;
 
-    return checksum === 0 ? null : { invalidRoutingNumber: true };
+    if (checksum !== 0) {
+      return {
+        invalidRoutingNumber: true,
+        helpText:
+          'Check the bottom left of your check for the 9-digit routing number',
+      };
+    }
+
+    return null;
   }
 
   private accountNumberValidator(
-    control: AbstractControl
+    control: AbstractControl,
   ): ValidationErrors | null {
     const accountNumber = control.value;
     if (!accountNumber) return null;
@@ -544,26 +842,17 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
     };
   }
 
-  private sanitizeNumericInput(control: AbstractControl): void {
-    if (control.value) {
-      const sanitized = control.value.replace(/\D/g, '');
-      if (sanitized !== control.value) {
-        control.setValue(sanitized, { emitEvent: false });
-      }
-    }
-  }
-
   // CREDIT CARD VALIDATORS
   private cardNumberValidator(
-    control: AbstractControl
+    control: AbstractControl,
   ): ValidationErrors | null {
     const cardNumber = control.value;
     if (!cardNumber) return null;
 
-    const sanitized = cardNumber.replace(/\D/g, '');
+    const sanitized = cardNumber.replace(/\s/g, '').replace(/\D/g, '');
 
-    if (!/^\d+$/.test(cardNumber)) {
-      return { pattern: true };
+    if (sanitized.length === 0) {
+      return null;
     }
 
     if (sanitized.length < 13 || sanitized.length > 19) {
@@ -595,14 +884,14 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
     const cvv = control.value;
     if (!cvv) return null;
     const cardType = this.detectCardType(
-      this.ccForm?.get('cardNumber')?.value || ''
+      this.ccForm?.get('cardNumber')?.value || '',
     );
     const pattern = cardType === 'amex' ? /^\d{4}$/ : /^\d{3}$/;
     return pattern.test(cvv) ? null : { invalidCvv: true };
   }
 
   private nameOnCardOrAccountValidator(
-    control: AbstractControl
+    control: AbstractControl,
   ): ValidationErrors | null {
     if (!control.value) return null;
     const pattern = /^[A-Za-z\s'-]{2,50}$/;
@@ -611,12 +900,16 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
 
   // HELPER METHODS
   detectCardType(cardNumber: string = ''): string | null {
-    cardNumber = cardNumber.replace(/\D/g, '');
-    if (/^4/.test(cardNumber)) return 'visa';
-    if (/^5[1-5]/.test(cardNumber) || /^2[2-7]/.test(cardNumber))
+    const sanitized = cardNumber.replace(/\D/g, '');
+
+    if (sanitized.length < 4) return null;
+
+    if (/^4/.test(sanitized)) return 'visa';
+    if (/^5[1-5]/.test(sanitized) || /^2[2-7]/.test(sanitized))
       return 'mastercard';
-    if (/^3[47]/.test(cardNumber)) return 'amex';
-    if (/^6(?:011|5)/.test(cardNumber)) return 'discover';
+    if (/^3[47]/.test(sanitized)) return 'amex';
+    if (/^6(?:011|5)/.test(sanitized)) return 'discover';
+
     return null;
   }
 
@@ -629,7 +922,7 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
     }
 
     const { firstName, lastName } = this.splitFullName(
-      this.achForm.value.nameOnAccount
+      this.achForm.value.nameOnAccount,
     );
 
     const paymentProfileRequest = {
@@ -649,14 +942,14 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
         .updatePaymentMethod(
           this.organizationId,
           this.editingPaymentId,
-          paymentProfileRequest
+          paymentProfileRequest,
         )
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: () => {
             this.afterSaveSuccess();
             this.snackbarNotificationService.showSnackbarSuccess(
-              'ACH payment method updated successfully.'
+              'ACH payment method updated successfully.',
             );
           },
           error: (error) => {
@@ -673,7 +966,7 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
                 className: 'BillingInformationComponent',
                 operation: 'updatePaymentMethod',
                 userId: this.stateService.getUserId(),
-              }
+              },
             );
           },
         });
@@ -690,11 +983,11 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
     }
 
     const { firstName, lastName } = this.splitFullName(
-      this.ccForm.value.nameOnCard
+      this.ccForm.value.nameOnCard,
     );
 
     const paymentProfileRequest = {
-      CardNumber: this.ccForm.value.cardNumber,
+      CardNumber: this.ccForm.value.cardNumber.replace(/\s/g, ''),
       CVV: this.ccForm.value.cvv,
       FirstName: firstName,
       LastName: lastName,
@@ -710,14 +1003,14 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
         .updatePaymentMethod(
           this.organizationId,
           this.editingPaymentId,
-          paymentProfileRequest
+          paymentProfileRequest,
         )
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: () => {
             this.afterSaveSuccess();
             this.snackbarNotificationService.showSnackbarSuccess(
-              'Credit card payment method updated successfully.'
+              'Credit card payment method updated successfully.',
             );
           },
           error: (error) => {
@@ -734,7 +1027,7 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
                 className: 'BillingInformationComponent',
                 operation: 'updatePaymentMethod',
                 userId: this.stateService.getUserId(),
-              }
+              },
             );
           },
         });
@@ -742,7 +1035,6 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
       this.savePaymentInfo('CC', paymentProfileRequest);
     }
   }
-
   private afterSaveSuccess(): void {
     this.loadSavedPaymentMethods(this.organizationId);
     this.resetForms();
@@ -760,14 +1052,14 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
           this.organizationId,
           customerProfileData,
           paymentData,
-          'ACH'
+          'ACH',
         ),
       CC: () =>
         this.paymentInfoService.saveCreditCardPaymentInfo(
           this.organizationId,
           customerProfileData,
           paymentData,
-          'CC'
+          'CC',
         ),
     };
 
@@ -778,13 +1070,13 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
           this.loadSavedPaymentMethods(this.organizationId);
           this.resetForms();
           this.snackbarNotificationService.showSnackbarSuccess(
-            `${accountType} payment method successfully added.`
+            `${accountType} payment method successfully added.`,
           );
         },
         error: (error) => {
           if (error.status === 409) {
             this.snackbarNotificationService.showSnackbarError(
-              'A payment method with these details already exists.'
+              'A payment method with these details already exists.',
             );
           } else {
             const correlationId = error?.error?.correlationId;
@@ -797,7 +1089,7 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
 
             const operation =
               Object.entries(operationMap).find(([key]) =>
-                errorUrl.includes(key)
+                errorUrl.includes(key),
               )?.[1] ?? 'UnknownOperation';
 
             this.loggingService.logException(
@@ -811,7 +1103,7 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
                 className: 'BillingInformationComponent',
                 operation: operation,
                 userId: this.stateService.getUserId(),
-              }
+              },
             );
           }
         },
