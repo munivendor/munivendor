@@ -66,7 +66,7 @@
         mat-raised-button
         color="primary"
         (click)="proceedToPayment()"
-        [disabled]="calculatedTotal === 0 || isLoadingPackages"
+        [disabled]="totalCost === 0 || isLoadingPackages"
       >
         <mat-icon>arrow_forward</mat-icon>
         Continue to Payment
@@ -104,7 +104,12 @@
         "
       >
         <p>Select a payment method to complete your purchase:</p>
-        <p class="total-display">Total: ${{ calculatedTotal }}.00</p>
+        <div style="display: flex; justify-content: space-between">
+          <p class="total-display">
+            Credits: {{ totalCredits }} Submission Credit(s)
+          </p>
+          <p class="total-display">Total: ${{ totalCost }}.00</p>
+        </div>
 
         <mat-radio-group
           [(ngModel)]="selectedPaymentMethodId"
