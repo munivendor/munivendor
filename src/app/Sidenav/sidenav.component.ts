@@ -49,9 +49,13 @@ export class Sidenav implements OnInit, AfterViewInit {
   user$: Observable<number | null>;
   private subscription = new Subscription();
 
-  // profiles are commented out for MVP
   agencyMenuItems = [
-    // { icon: 'person', label: 'Agency Profile', route: '/profile' },
+    {
+      id: 'agency-profile',
+      icon: 'person',
+      label: 'Agency Profile',
+      route: '/agency-profile-page',
+    },
     {
       id: 'create-solicitations',
       icon: 'add_box',
@@ -137,7 +141,7 @@ export class Sidenav implements OnInit, AfterViewInit {
     private authService: AuthService,
     private userService: UserService,
     @Inject(PLATFORM_ID) private platformId: Object,
-    private stateService: StateService
+    private stateService: StateService,
   ) {
     this.user$ = this.authService.user$;
     this.organizationTypeId = this.stateService.getOrganizationTypeId();
@@ -149,13 +153,13 @@ export class Sidenav implements OnInit, AfterViewInit {
         .pipe(
           filter(
             (event: Event): event is NavigationEnd =>
-              event instanceof NavigationEnd
-          )
+              event instanceof NavigationEnd,
+          ),
         )
         .subscribe((event: NavigationEnd) => {
           this.activeRoute = event.urlAfterRedirects;
           this.forceLayoutRecalculation();
-        })
+        }),
     );
 
     this.subscription.add(
@@ -163,7 +167,7 @@ export class Sidenav implements OnInit, AfterViewInit {
         if (user && this.organizationTypeId === null) {
           try {
             const userData = await firstValueFrom(
-              this.userService.getUser(user)
+              this.userService.getUser(user),
             );
             this.organizationTypeId = userData.organizationTypeId ?? null;
             this.forceLayoutRecalculation();
@@ -173,7 +177,7 @@ export class Sidenav implements OnInit, AfterViewInit {
         } else if (!user) {
           this.organizationTypeId = null;
         }
-      })
+      }),
     );
 
     if (isPlatformBrowser(this.platformId)) {

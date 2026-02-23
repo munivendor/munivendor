@@ -1,8 +1,68 @@
 <div>
   <ng-template matStepLabel>Basics</ng-template>
   <h1>Offeror Response to Agency Solicitation</h1>
-  <h2>Agency Section</h2>
+  <form [formGroup]="responseForm">
+    <h2>Offeror Section</h2>
+    <div class="field-container">
+      <div class="inline-field">
+        <p>Offeror Response Title (the name of your response)</p>
+        <mat-form-field appearance="fill" class="input-width">
+          <mat-label>Offeror Response Title</mat-label>
+          <input
+            matInput
+            formControlName="responseName"
+            placeholder="Enter Response Title"
+          />
+          <mat-error
+            *ngIf="responseForm.get('responseName')?.hasError('required')"
+          >
+            Offeror response title is required.
+          </mat-error>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <div class="field-container">
+      <div class="inline-field">
+        <div style="display: flex; align-items: center; gap: 4px">
+          <span>Authorizing official for this offer.</span>
+
+          <mat-icon
+            style="font-size: medium; color: #0b74fd; cursor: pointer"
+            [appTooltip]="authorizingOfficialTooltip"
+          >
+            info_outline
+          </mat-icon>
+        </div>
+        <mat-form-field appearance="fill" class="input-width">
+          <mat-label>Authorizing Official</mat-label>
+          <mat-select
+            formControlName="authorizingOfficial"
+            (selectionChange)="onAuthorizingOfficialChange($event.value)"
+          >
+            <mat-option
+              *ngFor="let authorizingOfficial of authorizingOfficials"
+              [value]="authorizingOfficial.vendorAuthorizingOfficialId"
+            >
+              {{ authorizingOfficial.firstName }}
+              {{ authorizingOfficial.lastName }}
+            </mat-option>
+          </mat-select>
+          <mat-error
+            *ngIf="
+              responseForm.get('authorizingOfficial')?.hasError('required')
+            "
+          >
+            Authorizing official is required.
+          </mat-error>
+        </mat-form-field>
+      </div>
+      <div class="inline-field"></div>
+    </div>
+  </form>
+
   <form [formGroup]="requestForm" *ngIf="requestForm">
+    <h2>Agency Section</h2>
     <div class="field-container">
       <div class="inline-field">
         <p>Agency Solicitation Title</p>
@@ -67,66 +127,6 @@
           </mat-form-field>
         </div>
       </div>
-    </div>
-  </form>
-
-  <form [formGroup]="responseForm">
-    <h2>Offeror Section</h2>
-    <div class="field-container">
-      <div class="inline-field">
-        <p>Offeror Response Title (the name of your response)</p>
-        <mat-form-field appearance="fill" class="input-width">
-          <mat-label>Offeror Response Title</mat-label>
-          <input
-            matInput
-            formControlName="responseName"
-            placeholder="Enter Response Title"
-          />
-          <mat-error
-            *ngIf="responseForm.get('responseName')?.hasError('required')"
-          >
-            Offeror response title is required.
-          </mat-error>
-        </mat-form-field>
-      </div>
-    </div>
-
-    <div class="field-container">
-      <div class="inline-field">
-        <div style="display: flex; align-items: center; gap: 4px">
-          <span>Authorizing official for this offer.</span>
-
-          <mat-icon
-            style="font-size: medium; color: #0b74fd; cursor: pointer"
-            [appTooltip]="authorizingOfficialTooltip"
-          >
-            info_outline
-          </mat-icon>
-        </div>
-        <mat-form-field appearance="fill" class="input-width">
-          <mat-label>Authorizing Official</mat-label>
-          <mat-select
-            formControlName="authorizingOfficial"
-            (selectionChange)="onAuthorizingOfficialChange($event.value)"
-          >
-            <mat-option
-              *ngFor="let authorizingOfficial of authorizingOfficials"
-              [value]="authorizingOfficial.vendorAuthorizingOfficialId"
-            >
-              {{ authorizingOfficial.firstName }}
-              {{ authorizingOfficial.lastName }}
-            </mat-option>
-          </mat-select>
-          <mat-error
-            *ngIf="
-              responseForm.get('authorizingOfficial')?.hasError('required')
-            "
-          >
-            Authorizing official is required.
-          </mat-error>
-        </mat-form-field>
-      </div>
-      <div class="inline-field"></div>
     </div>
   </form>
 </div>

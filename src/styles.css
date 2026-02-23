@@ -18,3 +18,9 @@ body {
   pointer-events: none;
   cursor: default;
 }
+
+.snackbar-success {
+  .mat-mdc-button.mat-mdc-snack-bar-action {
+    color: green !important;
+  }
+}

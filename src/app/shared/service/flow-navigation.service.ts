@@ -46,7 +46,7 @@ export class FlowNavigationService {
     private flowProgressService: FlowProgressService,
     private userService: UserService,
     private loggingService: LoggingService,
-    private snackbarNotificationService: SnackbarNotificationService
+    private snackbarNotificationService: SnackbarNotificationService,
   ) {}
 
   navigateAfterLogin(userId: number, email: string): Observable<void> {
@@ -78,11 +78,11 @@ export class FlowNavigationService {
               methodName: 'navigateAfterLogin',
               className: 'FlowNavigationService',
               operation: 'getUser',
-            }
+            },
           );
 
           this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
-            correlationId
+            correlationId,
           );
         },
       });
@@ -92,7 +92,7 @@ export class FlowNavigationService {
   private handleNavigation(
     userId: number,
     flowType: 'government' | 'agency' | 'offeror',
-    observer: any
+    observer: any,
   ): void {
     const flowConfig = this.FLOW_ROUTES[flowType];
     this.flowProgressService
@@ -104,7 +104,6 @@ export class FlowNavigationService {
           observer.complete();
         },
         error: (error) => {
-          console.error('Error fetching flow progress:', error);
           observer.error(error);
 
           const correlationId = error?.error?.correlationId;
@@ -120,11 +119,11 @@ export class FlowNavigationService {
               methodName: 'handleNavigation',
               className: 'FlowNavigationService',
               operation: 'getFlowProgress',
-            }
+            },
           );
 
           this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
-            correlationId
+            correlationId,
           );
         },
       });
@@ -132,7 +131,7 @@ export class FlowNavigationService {
 
   private getFlowType(
     isGovEmail: boolean,
-    organizationTypeId?: number
+    organizationTypeId?: number,
   ): 'government' | 'agency' | 'offeror' {
     if (isGovEmail) {
       return 'government';
@@ -144,7 +143,7 @@ export class FlowNavigationService {
 
   private navigateBasedOnProgress(
     progress: any,
-    routes: Record<number, string>
+    routes: Record<number, string>,
   ): void {
     const pageId = progress?.lastCompletedPageId ?? 1;
     const route = routes[pageId];
