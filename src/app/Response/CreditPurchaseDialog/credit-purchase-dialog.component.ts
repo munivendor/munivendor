@@ -99,6 +99,14 @@ export class CreditPurchaseDialogComponent implements OnInit {
 
   readonly MAX_PAYMENT_METHODS = 3;
 
+  get totalCredits(): number {
+    return this.data.selectedPackage?.credits ?? 0;
+  }
+
+  get totalCost(): number {
+    return this.data.total ?? this.calculatedTotal;
+  }
+
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: DialogData,
     private dialogRef: MatDialogRef<CreditPurchaseDialogComponent>,
