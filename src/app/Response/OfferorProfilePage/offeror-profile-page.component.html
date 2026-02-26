@@ -1,6 +1,5 @@
 <div class="offeror-profile-container">
-  <h1>Offeror Profile Page</h1>
-
+  <!-- Organization Information Card -->
   <mat-card class="organization-section">
     <mat-card-header>
       <mat-card-title>Organization Information</mat-card-title>
@@ -59,212 +58,127 @@
     </mat-card-content>
   </mat-card>
 
-  <mat-card class="authorizing-officials-section">
-    <mat-card-header>
-      <mat-card-title>Authorizing Officials</mat-card-title>
-      <mat-card-subtitle>
-        Manage your organization's authorized representatives.
-      </mat-card-subtitle>
-    </mat-card-header>
-
-    <mat-card-content>
-      <div
-        class="officials-list"
-        *ngIf="authorizingOfficials.length > 0; else noOfficials"
+  <!-- Authorizing Officials Section -->
+  <div class="authorizing-officials-container">
+    <!-- Header -->
+    <div class="section-header">
+      <div class="header-left">
+        <h2 class="section-title">Authorizing Officials</h2>
+        <span class="record-count" *ngIf="!isLoading">
+          {{ totalRecords }} {{ totalRecords === 1 ? "record" : "records" }}
+        </span>
+      </div>
+      <button
+        mat-raised-button
+        color="primary"
+        type="button"
+        (click)="openAddDialog()"
       >
-        <h3>Current Authorizing Officials</h3>
-        <table
-          mat-table
-          [dataSource]="authorizingOfficials"
-          class="officials-table"
-        >
-          <ng-container matColumnDef="firstName">
-            <th mat-header-cell *matHeaderCellDef>First Name</th>
-            <td mat-cell *matCellDef="let authorizingOfficial">
-              {{ authorizingOfficial.firstName }}
-            </td>
-          </ng-container>
+        + Add Authorizing Official
+      </button>
+    </div>
 
-          <ng-container matColumnDef="lastName">
-            <th mat-header-cell *matHeaderCellDef>Last Name</th>
-            <td mat-cell *matCellDef="let authorizingOfficial">
-              {{ authorizingOfficial.lastName }}
-            </td>
-          </ng-container>
+    <p>
+      Authorizing Officials are the organization's authorized representatives.
+      Please enter the names, titles, and contact information for each official.
+    </p>
 
-          <ng-container matColumnDef="title">
-            <th mat-header-cell *matHeaderCellDef>Title</th>
-            <td mat-cell *matCellDef="let authorizingOfficial">
-              {{ authorizingOfficial.title }}
-            </td>
-          </ng-container>
+    <!-- Loading State -->
+    <div class="state-container" *ngIf="isLoading">
+      <div class="spinner"></div>
+      <p>Loading authorizing officials...</p>
+    </div>
 
-          <ng-container matColumnDef="email">
-            <th mat-header-cell *matHeaderCellDef>Email</th>
-            <td mat-cell *matCellDef="let authorizingOfficial">
-              {{ authorizingOfficial.email }}
-            </td>
-          </ng-container>
+    <!-- Empty State -->
+    <div
+      class="state-container empty-state"
+      *ngIf="!isLoading && totalRecords === 0"
+    >
+      <div class="empty-icon">&#128101;</div>
+      <p class="empty-title">No Authorizing Officials Found</p>
+      <p class="empty-subtitle">Add an authorizing official to get started.</p>
+    </div>
 
-          <ng-container matColumnDef="phone">
-            <th mat-header-cell *matHeaderCellDef>Phone Number</th>
-            <td mat-cell *matCellDef="let authorizingOfficial">
-              {{ authorizingOfficial.phone || "-" }}
-            </td>
-          </ng-container>
+    <!-- Table -->
+    <div class="table-wrapper" *ngIf="!isLoading && totalRecords > 0">
+      <table mat-table [dataSource]="dataSource" matSort class="data-table">
+        <!-- Name Column -->
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+          <td mat-cell *matCellDef="let official">
+            <div class="name-cell">
+              <span class="full-name"
+                >{{ official.firstName }} {{ official.lastName }}</span
+              >
+            </div>
+          </td>
+        </ng-container>
 
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let authorizingOfficial">
+        <!-- Title Column -->
+        <ng-container matColumnDef="title">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Title</th>
+          <td mat-cell *matCellDef="let official">
+            <span *ngIf="official.title; else noTitle">{{
+              official.title
+            }}</span>
+            <ng-template #noTitle
+              ><span class="empty-value">—</span></ng-template
+            >
+          </td>
+        </ng-container>
+
+        <!-- Email Column -->
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef>Email</th>
+          <td mat-cell *matCellDef="let official">
+            <p>{{ official.email }}</p>
+          </td>
+        </ng-container>
+
+        <!-- Phone Column -->
+        <ng-container matColumnDef="phone">
+          <th mat-header-cell *matHeaderCellDef>Phone</th>
+
+          <td mat-cell *matCellDef="let official">
+            {{ official.phone | phone }}
+          </td>
+        </ng-container>
+
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef class="actions-col">Actions</th>
+          <td mat-cell *matCellDef="let official" class="actions-col">
+            <div class="action-buttons">
               <button
+                class="btn btn-sm btn-edit"
                 mat-icon-button
-                (click)="editOfficial(authorizingOfficial)"
-                [disabled]="isFormVisible"
-                matTooltip="Edit Official"
                 type="button"
+                (click)="openEditDialog(official)"
+                matTooltip="Edit Official"
               >
                 <mat-icon>edit</mat-icon>
               </button>
-            </td>
-          </ng-container>
+              <!-- <button
+                class="btn btn-sm btn-delete"
+                mat-icon-button
+                type="button"
+                (click)="onDeleteOfficial(official)"
+                matTooltip="Remove Official"
+              >
+                <mat-icon>delete</mat-icon>
+              </button> -->
+            </div>
+          </td>
+        </ng-container>
 
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-        </table>
-      </div>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
 
-      <ng-template #noOfficials>
-        <div class="no-officials">
-          <p>No authorizing officials have been added yet.</p>
-        </div>
-      </ng-template>
-
-      <div class="add-button-container" *ngIf="!isFormVisible">
-        <button mat-raised-button color="primary" (click)="startAddingNew()">
-          <mat-icon>add</mat-icon>
-          Add Authorizing Official
-        </button>
-      </div>
-
-      <div class="official-form" *ngIf="isFormVisible">
-        <h3>
-          {{ editingOfficialId ? "Edit" : "Add New" }} Authorizing Official
-        </h3>
-
-        <form [formGroup]="authorizingOfficialForm" (ngSubmit)="onSubmit()">
-          <div class="form-row">
-            <mat-form-field class="half-width">
-              <mat-label>First Name</mat-label>
-              <input
-                matInput
-                formControlName="firstName"
-                required
-                maxlength="50"
-              />
-              <mat-error *ngIf="hasError('firstName', 'required')">
-                First Name is required
-              </mat-error>
-              <mat-error *ngIf="hasError('firstName', 'maxlength')">
-                First Name cannot exceed 50 characters
-              </mat-error>
-            </mat-form-field>
-
-            <mat-form-field class="half-width">
-              <mat-label>Last Name</mat-label>
-              <input
-                matInput
-                formControlName="lastName"
-                required
-                maxlength="50"
-              />
-              <mat-error *ngIf="hasError('lastName', 'required')">
-                Last Name is required
-              </mat-error>
-              <mat-error *ngIf="hasError('lastName', 'maxlength')">
-                Last Name cannot exceed 50 characters
-              </mat-error>
-            </mat-form-field>
-          </div>
-
-          <div class="form-row">
-            <mat-form-field class="full-width">
-              <mat-label>Title</mat-label>
-              <input
-                matInput
-                formControlName="title"
-                required
-                maxlength="100"
-              />
-              <mat-error *ngIf="hasError('title', 'required')">
-                Title is required
-              </mat-error>
-              <mat-error *ngIf="hasError('title', 'maxlength')">
-                Title cannot exceed 100 characters
-              </mat-error>
-            </mat-form-field>
-          </div>
-
-          <div class="form-row">
-            <mat-form-field class="full-width">
-              <mat-label>Email</mat-label>
-              <input
-                matInput
-                formControlName="email"
-                type="email"
-                required
-                maxlength="255"
-              />
-              <mat-error *ngIf="hasError('email', 'required')">
-                Email is required
-              </mat-error>
-              <mat-error *ngIf="hasError('email', 'email')">
-                Please enter a valid email address
-              </mat-error>
-              <mat-error *ngIf="hasError('email', 'maxlength')">
-                Email cannot exceed 255 characters
-              </mat-error>
-            </mat-form-field>
-          </div>
-
-          <div class="form-row">
-            <mat-form-field class="full-width">
-              <mat-label>Phone Number (Optional)</mat-label>
-              <input
-                matInput
-                formControlName="phone"
-                type="tel"
-                maxlength="20"
-              />
-              <mat-error *ngIf="hasError('phone', 'maxlength')">
-                Phone Number cannot exceed 20 characters
-              </mat-error>
-              <mat-error *ngIf="hasError('phone', 'pattern')">
-                Please enter a valid phone number
-              </mat-error>
-            </mat-form-field>
-          </div>
-
-          <div class="form-actions">
-            <button
-              type="submit"
-              [disabled]="authorizingOfficialForm.invalid"
-              mat-raised-button
-              color="primary"
-            >
-              {{ submitButtonText }}
-            </button>
-
-            <button
-              type="button"
-              mat-button
-              (click)="cancelEdit()"
-              class="cancel-button"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      </div>
-    </mat-card-content>
-  </mat-card>
+      <mat-paginator
+        [pageSizeOptions]="[5, 10, 25]"
+        showFirstLastButtons
+      ></mat-paginator>
+    </div>
+  </div>
 </div>
