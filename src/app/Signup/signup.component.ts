@@ -44,7 +44,6 @@ import {
   MatDialogContent,
   MatDialogTitle,
 } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { StateService } from '../Request/services/state.service';
 import { MatIconModule } from '@angular/material/icon';
 import { LoggingService } from '../exceptionhandling/logging.service';
@@ -120,8 +119,7 @@ export class SignupComponent implements OnInit, OnDestroy {
     public dialog: MatDialog,
     private stateService: StateService,
     private loggingService: LoggingService,
-    private _snackBar: MatSnackBar,
-    private snackbarNotificationService: SnackbarNotificationService
+    private snackbarNotificationService: SnackbarNotificationService,
   ) {}
 
   togglePasswordVisibility(): void {
@@ -165,11 +163,11 @@ export class SignupComponent implements OnInit, OnDestroy {
               methodName: 'ngOnInit',
               className: 'SignupComponent',
               operation: 'getOrganizationTypes',
-            }
+            },
           );
 
           this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
-            correlationId
+            correlationId,
           );
         },
       });
@@ -244,7 +242,7 @@ export class SignupComponent implements OnInit, OnDestroy {
             Validators.required,
             Validators.email,
             Validators.pattern(
-              /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+              /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
             ),
           ],
         ],
@@ -256,7 +254,7 @@ export class SignupComponent implements OnInit, OnDestroy {
             Validators.minLength(8),
             Validators.maxLength(64),
             Validators.pattern(
-              /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,64}$/
+              /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,64}$/,
             ),
           ],
         ],
@@ -267,7 +265,7 @@ export class SignupComponent implements OnInit, OnDestroy {
       },
       {
         validators: this.passwordMatchValidator,
-      }
+      },
     );
   }
 
@@ -350,11 +348,11 @@ export class SignupComponent implements OnInit, OnDestroy {
               methodName: 'onSubmitByEmail',
               className: 'SignupComponent',
               operation: 'initializeOrganization',
-            }
+            },
           );
 
           this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
-            correlationId
+            correlationId,
           );
         },
       });
@@ -397,7 +395,7 @@ export class SignupComponent implements OnInit, OnDestroy {
                   organizationId: orgResponse.organizationId,
                 };
                 this.stateService.setOrganizationTypeId(
-                  selectedOrganizationTypeId
+                  selectedOrganizationTypeId,
                 );
                 this.stateService.setOrganizationId(orgResponse.organizationId);
                 return this.createOrLoginGoogleUser(userData);
@@ -408,10 +406,8 @@ export class SignupComponent implements OnInit, OnDestroy {
                 this.authService.setSignupInProgress(false);
                 this.authService.setSkipNextAuthState(false);
 
-                this._snackBar.open(
-                  `Sign up failed. This email may already exist or an error occurred.`,
-                  'Close',
-                  { verticalPosition: 'top', duration: 15000 }
+                this.snackbarNotificationService.showSnackbarError(
+                  'Sign up failed. This email may already exist or an error occurred.',
                 );
 
                 return of(null);
@@ -419,9 +415,9 @@ export class SignupComponent implements OnInit, OnDestroy {
               finalize(() => {
                 this.userCreationInProgress = false;
                 this.authService.setSignupInProgress(false);
-              })
+              }),
             );
-        })
+        }),
       )
       .subscribe((result) => {
         if (result) {
@@ -450,11 +446,11 @@ export class SignupComponent implements OnInit, OnDestroy {
             methodName: 'createOrLoginGoogleUser',
             className: 'SignupComponent',
             operation: 'createUser',
-          }
+          },
         );
 
         this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
-          correlationId
+          correlationId,
         );
 
         return throwError(() => error);
@@ -474,7 +470,7 @@ export class SignupComponent implements OnInit, OnDestroy {
 
             this.loggingService.logException(
               new Error(
-                `HTTP Error ${loginError.status}: ${loginError.statusText}`
+                `HTTP Error ${loginError.status}: ${loginError.statusText}`,
               ),
               3,
               {
@@ -482,16 +478,16 @@ export class SignupComponent implements OnInit, OnDestroy {
                 methodName: 'createOrLoginGoogleUser',
                 className: 'SignupComponent',
                 operation: 'login',
-              }
+              },
             );
 
             this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
-              correlationId
+              correlationId,
             );
             return throwError(() => loginError);
-          })
+          }),
         );
-      })
+      }),
     );
   }
 
@@ -520,17 +516,17 @@ export class SignupComponent implements OnInit, OnDestroy {
                   methodName: 'createUserByEmail',
                   className: 'SignupComponent',
                   operation: 'SendUserVerificationEmail',
-                }
+                },
               );
 
               this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
-                correlationId
+                correlationId,
               );
 
               return throwError(() => error);
-            })
-          )
-        )
+            }),
+          ),
+        ),
       )
       .subscribe({
         error: (error) => {
@@ -544,11 +540,11 @@ export class SignupComponent implements OnInit, OnDestroy {
               methodName: 'createUserByEmail',
               className: 'SignupComponent',
               operation: 'createUser',
-            }
+            },
           );
 
           this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
-            correlationId
+            correlationId,
           );
         },
       });

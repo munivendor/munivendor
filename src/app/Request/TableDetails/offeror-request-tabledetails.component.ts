@@ -32,8 +32,8 @@ import { CategoryNode } from '../../shared/model/category-tree.model';
 import { ChangeDetectorRef } from '@angular/core';
 import { LoadingService } from '../../shared/LoadingSpinner/loading.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { HttpClient } from '@angular/common/http';
+import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
 
 interface FlattenedCategoryNode {
   categoryId: string;
@@ -72,7 +72,6 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   @Input() categoryControl!: FormControl<number | null>;
   organizationId!: number | null;
-  private _snackBar = inject(MatSnackBar);
   hierarchicalCategories: CategoryNode[] = [];
   flattenedCategories: FlattenedCategoryNode[] = [];
 
@@ -80,7 +79,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
 
   displayCategoryName = (
     categoryId: string | number | null,
-    categoryFullPath?: string
+    categoryFullPath?: string,
   ): string => {
     // If categoryFullPath is provided, use it directly
     if (categoryFullPath) {
@@ -94,7 +93,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
 
     const searchValue = categoryId.toString();
     const match = this.flattenedCategories.find(
-      (cat) => cat.categoryId === searchValue
+      (cat) => cat.categoryId === searchValue,
     );
     if (match) {
       return this.buildBreadcrumbPath(match);
@@ -109,7 +108,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
 
     while (currentParentId) {
       const parentNode = this.flattenedCategories.find(
-        (cat) => cat.categoryId === currentParentId
+        (cat) => cat.categoryId === currentParentId,
       );
       if (parentNode) {
         path.unshift(parentNode.name);
@@ -124,7 +123,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
 
   prepareCategoriesForTreeRendering(
     categories: CategoryNode[],
-    level: number = 0
+    level: number = 0,
   ): CategoryNode[] {
     return categories
       .filter((cat) => !cat.deleted)
@@ -185,9 +184,10 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this._snackBar.open(`Offer successfully deleted.`, 'Close', {
-            verticalPosition: 'top',
-          });
+          this.snackbarNotificationService.showSnackbarSuccess(
+            'Offer deleted successfully .',
+          );
+
           this.loadAndJoinRequestData();
         },
         error: (error) => {
@@ -205,7 +205,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
               className: 'OfferorTableDetailsComponent',
               operation: 'DeleteRequest',
               userId: this.stateService.getUserId(),
-            }
+            },
           );
         },
       });
@@ -219,7 +219,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
       .post(
         '/api/generate-pdf/' + request.requestId,
         { html: '' },
-        { responseType: 'blob' }
+        { responseType: 'blob' },
       )
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -232,13 +232,8 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
           a.click();
           window.URL.revokeObjectURL(url);
           this.loadingService.hide();
-          this._snackBar.open(
-            'Solicitation successfully downloaded.',
-            'Close',
-            {
-              verticalPosition: 'top',
-              duration: 3000,
-            }
+          this.snackbarNotificationService.showSnackbarSuccess(
+            'Solicitation downloaded successfully.',
           );
         },
         error: (error) => {
@@ -257,7 +252,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
               className: 'OfferorTableDetailsComponent',
               operation: 'GeneratePDF',
               userId: this.stateService.getUserId(),
-            }
+            },
           );
         },
       });
@@ -350,7 +345,8 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private loadingService: LoadingService,
     private loggingService: LoggingService,
-    private http: HttpClient
+    private http: HttpClient,
+    private snackbarNotificationService: SnackbarNotificationService,
   ) {
     this.organizationId = this.stateService.getOrganizationId();
   }
@@ -404,13 +400,13 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
       .map(([, value]) => value);
 
     const selectedAgencyRequestStatusIds = Object.entries(
-      this.agencyRequestStatusMap
+      this.agencyRequestStatusMap,
     )
       .filter(([key]) => this.filterForm.get(key)?.value)
       .map(([, value]) => value);
 
     const selectedOfferorRequestStatusIds = Object.entries(
-      this.offerorRequestStatusMap
+      this.offerorRequestStatusMap,
     )
       .filter(([key]) => this.filterForm.get(key)?.value)
       .map(([, value]) => value);
@@ -431,7 +427,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
 
     if (formValues.publishDateFrom) {
       params.startPublishDate = new Date(
-        formValues.publishDateFrom
+        formValues.publishDateFrom,
       ).toISOString();
     }
 
@@ -484,7 +480,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
         .GetRequestsOfferorView(requestParams || {})
         .pipe(
           takeUntil(this.destroy$),
-          finalize(() => this.loadingService.hide())
+          finalize(() => this.loadingService.hide()),
         )
         .subscribe({
           next: (requests) => {
@@ -558,7 +554,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
                 className: 'OfferorRequestTableDetailsComponent',
                 operation: 'GetRequestsOfferorView',
                 userId: this.stateService.getUserId(),
-              }
+              },
             );
 
             this.dataSource = new MatTableDataSource<any>([]);

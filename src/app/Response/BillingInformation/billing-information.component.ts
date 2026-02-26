@@ -730,38 +730,11 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
 
   onCardNumberInput(): void {
     const cardNumber = this.ccForm.get('cardNumber')?.value || '';
-    // Remove spaces before detecting card type
     const sanitized = cardNumber.replace(/\s/g, '');
     this.detectedCardBrand = this.detectCardType(sanitized);
   }
 
   // ACH VALIDATORS
-  // private routingNumberValidator(
-  //   control: AbstractControl,
-  // ): ValidationErrors | null {
-  //   const routingNumber = control.value;
-  //   if (!routingNumber) return null;
-
-  //   if (!/^\d+$/.test(routingNumber)) {
-  //     return { pattern: true };
-  //   }
-
-  //   if (routingNumber.length !== 9) {
-  //     return { pattern: true };
-  //   }
-
-  //   // ABA routing number checksum validation
-  //   const digits = routingNumber.split('').map(Number);
-  //   const checksum =
-  //     (3 * (digits[0] + digits[3] + digits[6]) +
-  //       7 * (digits[1] + digits[4] + digits[7]) +
-  //       (digits[2] + digits[5] + digits[8])) %
-  //     10;
-
-  //   return checksum === 0 ? null : { invalidRoutingNumber: true };
-  // }
-
-  // OPTION 2: Keep it in one method (simpler, less code)
   private routingNumberValidator(
     control: AbstractControl,
   ): ValidationErrors | null {
@@ -787,8 +760,6 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
     if (checksum !== 0) {
       return {
         invalidRoutingNumber: true,
-        helpText:
-          'Check the bottom left of your check for the 9-digit routing number',
       };
     }
 
