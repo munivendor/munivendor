@@ -7,11 +7,11 @@ import {
 } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { Subject, takeUntil } from 'rxjs';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { StateService } from '../../Request/services/state.service';
 import { CreditPurchaseDialogComponent } from '../CreditPurchaseDialog/credit-purchase-dialog.component';
 import { PaymentInfoService } from '../BillingInformation/services/payment-info.service';
+import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
 
 @Component({
   selector: 'submit-confirmation-dialog',
@@ -28,8 +28,8 @@ export class SubmitConfirmationDialogComponent implements OnDestroy {
     private paymentInfoService: PaymentInfoService,
     private router: Router,
     private stateService: StateService,
-    private _snackBar: MatSnackBar,
     private dialogRef: MatDialogRef<SubmitConfirmationDialogComponent>,
+    private snackbarNotificationService: SnackbarNotificationService,
     @Inject(MAT_DIALOG_DATA) public data: { responseId: string },
   ) {}
 
@@ -65,9 +65,9 @@ export class SubmitConfirmationDialogComponent implements OnDestroy {
     sessionStorage.removeItem('currentResponseId');
     sessionStorage.removeItem('response_in_creation_mode');
 
-    this._snackBar.open('Offer successfully submitted!', 'Close', {
-      verticalPosition: 'top',
-    });
+    this.snackbarNotificationService.showSnackbarSuccess(
+      'Offer submitted successfully.',
+    );
 
     this.router.navigate(['/offeror-requests-view']);
     this.dialogRef.close(true);

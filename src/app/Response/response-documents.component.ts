@@ -26,13 +26,13 @@ import {
 } from '@angular/forms';
 import { StateService } from '../Request/services/state.service';
 import { DocumentService } from '../shared/service/document.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { TooltipDirective } from '../shared/directive/tooltip.directive';
 import { Router } from '@angular/router';
 // import { DocumentInstance } from '../Request/model/documentinstance.model';
 // import { BidProposalFormDialogComponent } from '../BidProposalForm/bid-proposal-form.component';
 import { LoggingService } from '../exceptionhandling/logging.service';
 import { LoadingService } from '../shared/LoadingSpinner/loading.service';
+import { SnackbarNotificationService } from '../shared/service/snackbar-notification.service';
 
 @Component({
   selector: 'response-documents',
@@ -90,10 +90,10 @@ export class ResponseDocumentsComponent implements OnInit {
     private fb: FormBuilder,
     private stateService: StateService,
     private documentService: DocumentService,
-    private _snackBar: MatSnackBar,
     private router: Router,
     private loggingService: LoggingService,
-    private loadingService: LoadingService
+    private loadingService: LoadingService,
+    private snackbarNotificationService: SnackbarNotificationService,
   ) {}
 
   ngOnInit(): void {
@@ -124,18 +124,18 @@ export class ResponseDocumentsComponent implements OnInit {
 
           // Split documents by presence of sourceRequestDocumentId
           const requiredDocs = documents.filter(
-            (doc: any) => doc.sourceRequestDocumentId !== null
+            (doc: any) => doc.sourceRequestDocumentId !== null,
           );
           const offerorDocs = documents.filter(
-            (doc: any) => doc.sourceRequestDocumentId === null
+            (doc: any) => doc.sourceRequestDocumentId === null,
           );
 
           // Populate requiredDocumentsDatasource (notarized & non-notarized)
           const requiresNotarizationDocs = requiredDocs.filter(
-            (doc: any) => doc.requiresNotarization
+            (doc: any) => doc.requiresNotarization,
           );
           const notRequiredNotarizationDocs = requiredDocs.filter(
-            (doc: any) => !doc.requiresNotarization
+            (doc: any) => !doc.requiresNotarization,
           );
 
           this.requiredDocumentsDatasource = notRequiredNotarizationDocs.map(
@@ -144,7 +144,7 @@ export class ResponseDocumentsComponent implements OnInit {
               formName: doc.documentName,
               documentInstanceStatus:
                 doc.documentInstanceStatus ?? 'Incomplete',
-            })
+            }),
           );
 
           this.notarizationRequiredDocumentsDatasource =
@@ -177,7 +177,7 @@ export class ResponseDocumentsComponent implements OnInit {
               className: 'ResponseDocumentsComponent',
               operation: 'GetRequestRequiredDocumentsById',
               userId: this.stateService.getUserId(),
-            }
+            },
           );
 
           if (error.status === 422) {
@@ -218,7 +218,7 @@ export class ResponseDocumentsComponent implements OnInit {
 
   onUploadClick(
     row: any,
-    source: 'notarizationNotRequired' | 'notarizationRequired'
+    source: 'notarizationNotRequired' | 'notarizationRequired',
   ): void {
     this.currentRow = row;
     this.currentSource = source;
@@ -244,14 +244,10 @@ export class ResponseDocumentsComponent implements OnInit {
         !allowedTypes.includes(file.type) &&
         !allowedExtensions.includes(fileExtension)
       ) {
-        this._snackBar.open(
+        this.snackbarNotificationService.showSnackbarError(
           'Invalid file type. Only PDF and JPG/JPEG files are allowed.',
-          'Close',
-          {
-            duration: 5000,
-            verticalPosition: 'top',
-          }
         );
+
         input.value = '';
         return;
       }
@@ -262,7 +258,7 @@ export class ResponseDocumentsComponent implements OnInit {
         .UploadDocumentInstance(
           Number(requestId),
           this.currentRow.requestDocumentId,
-          file
+          file,
         )
         .subscribe({
           next: (response) => {
@@ -275,16 +271,15 @@ export class ResponseDocumentsComponent implements OnInit {
 
               const rowToUpdate = dataSourceToUpdate.find(
                 (doc: any) =>
-                  doc.requestDocumentId === this.currentRow.requestDocumentId
+                  doc.requestDocumentId === this.currentRow.requestDocumentId,
               );
               if (rowToUpdate) {
                 rowToUpdate.documentInstanceStatus = 'Complete';
               }
 
-              this._snackBar.open('Document successfully uploaded.', 'Close', {
-                duration: 5000,
-                verticalPosition: 'top',
-              });
+              this.snackbarNotificationService.showSnackbarSuccess(
+                'Document uploaded successfully.',
+              );
             }
 
             // Clear the input value to allow same file selection again
@@ -307,7 +302,7 @@ export class ResponseDocumentsComponent implements OnInit {
                 operation: 'UploadDocumentInstance',
                 userId: this.stateService.getUserId(),
                 fileSize: file.size,
-              }
+              },
             );
 
             // Clear the input value even on error to allow retry with same file
@@ -333,7 +328,7 @@ export class ResponseDocumentsComponent implements OnInit {
 
   get optionalOfferorDocuments(): FormArray {
     return this.responseDocumentsFormGroup.get(
-      'optionalOfferorDocuments'
+      'optionalOfferorDocuments',
     ) as FormArray;
   }
 
@@ -381,7 +376,7 @@ export class ResponseDocumentsComponent implements OnInit {
         this.requestService
           .GetAgencySpecificDocumentContent(
             organizationDocumentId,
-            agencyOrganizationId
+            agencyOrganizationId,
           )
           .subscribe({
             next: (response) => {
@@ -392,7 +387,7 @@ export class ResponseDocumentsComponent implements OnInit {
               }
               // Extract filename from Content-Disposition
               const contentDisposition = response.headers.get(
-                'Content-Disposition'
+                'Content-Disposition',
               );
               let fileName = 'document';
               if (contentDisposition) {
@@ -429,7 +424,7 @@ export class ResponseDocumentsComponent implements OnInit {
                   className: 'ResponseDocumentsComponent',
                   operation: 'GetAgencySpecificDocumentContent',
                   userId: this.stateService.getUserId(),
-                }
+                },
               );
             },
           });
@@ -445,7 +440,7 @@ export class ResponseDocumentsComponent implements OnInit {
 
             // Extract filename from Content-Disposition
             const contentDisposition = response.headers.get(
-              'Content-Disposition'
+              'Content-Disposition',
             );
             let fileName = 'download';
             if (contentDisposition) {
@@ -481,7 +476,7 @@ export class ResponseDocumentsComponent implements OnInit {
                 className: 'ResponseDocumentsComponent',
                 operation: 'GetStateDocumentContent',
                 userId: this.stateService.getUserId(),
-              }
+              },
             );
           },
         });
@@ -494,7 +489,7 @@ export class ResponseDocumentsComponent implements OnInit {
 
           // Extract filename from Content-Disposition
           const contentDisposition = response.headers.get(
-            'Content-Disposition'
+            'Content-Disposition',
           );
           let fileName = 'document';
 
@@ -539,7 +534,7 @@ export class ResponseDocumentsComponent implements OnInit {
               className: 'ResponseDocumentsComponent',
               operation: 'GetDocumentInstance',
               userId: this.stateService.getUserId(),
-            }
+            },
           );
         },
       });
@@ -563,7 +558,7 @@ export class ResponseDocumentsComponent implements OnInit {
         if (newDocument) {
           const existingDoc = this.optionalOfferorDocuments.controls.find(
             (control) =>
-              control.get('documentId')?.value === newDocument.documentId
+              control.get('documentId')?.value === newDocument.documentId,
           );
 
           if (existingDoc) {
@@ -604,7 +599,7 @@ export class ResponseDocumentsComponent implements OnInit {
 
         if (contentDisposition) {
           const fileNameMatch = contentDisposition.match(
-            /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+            /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/,
           );
           if (fileNameMatch && fileNameMatch[1]) {
             fileName = fileNameMatch[1].replace(/['"]/g, '');
@@ -643,7 +638,7 @@ export class ResponseDocumentsComponent implements OnInit {
             className: 'ResponseDocumentsComponent',
             operation: 'GetOfferorDocumentContent',
             userId: this.stateService.getUserId(),
-          }
+          },
         );
       },
     });
@@ -665,19 +660,16 @@ export class ResponseDocumentsComponent implements OnInit {
           if (response.isSuccess) {
             const optionalIndex =
               this.optionalOfferorDocuments.controls.findIndex(
-                (control) => control.get('documentId')?.value === documentId
+                (control) => control.get('documentId')?.value === documentId,
               );
 
             if (optionalIndex > -1) {
               this.optionalOfferorDocuments.removeAt(optionalIndex);
               this.updateCombinedDatasource();
             }
-            this._snackBar.open('Document successfully deleted.', 'Close', {
-              duration: 5000,
-              verticalPosition: 'top',
-            });
-          } else {
-            console.error('Failed to delete document');
+            this.snackbarNotificationService.showSnackbarSuccess(
+              'Document deleted successfully.',
+            );
           }
         },
         error: (error) => {
@@ -695,7 +687,7 @@ export class ResponseDocumentsComponent implements OnInit {
               className: 'ResponseDocumentsComponent',
               operation: 'deleteRequestDocument',
               userId: this.stateService.getUserId(),
-            }
+            },
           );
         },
       });

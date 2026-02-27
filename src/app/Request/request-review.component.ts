@@ -14,10 +14,10 @@ import { forkJoin, Subject, takeUntil } from 'rxjs';
 import { RequestService } from './services/request.service';
 import { StateService } from './services/state.service';
 import { Router } from '@angular/router';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { CategoryNode } from '../shared/model/category-tree.model';
 import { CategoryHierarchyService } from './services/category-hierarchy.service';
 import { LoggingService } from '../exceptionhandling/logging.service';
+import { SnackbarNotificationService } from '../shared/service/snackbar-notification.service';
 
 interface FlattenedCategoryNode {
   categoryId: string;
@@ -56,9 +56,9 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
     private requestService: RequestService,
     private stateService: StateService,
     private router: Router,
-    private snackBar: MatSnackBar,
     private categoryHierarchyService: CategoryHierarchyService,
-    private loggingService: LoggingService
+    private loggingService: LoggingService,
+    private snackbarNotificationService: SnackbarNotificationService,
   ) {}
 
   private getCategoryHierarchy() {
@@ -70,7 +70,7 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
           this.hierarchicalCategories =
             this.prepareCategoriesForTreeRendering(categories);
           this.flattenedCategories = this.flattenCategories(
-            this.hierarchicalCategories
+            this.hierarchicalCategories,
           );
         },
         error: (error) => {
@@ -85,7 +85,7 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
               methodName: 'getCategoryHierarchy',
               className: 'RequestReviewComponent',
               operation: 'GetCategoryHierarchy',
-            }
+            },
           );
         },
       });
@@ -93,7 +93,7 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
 
   private flattenCategories(
     categories: CategoryNode[],
-    parentId: string | null = null
+    parentId: string | null = null,
   ): FlattenedCategoryNode[] {
     const flattened: FlattenedCategoryNode[] = [];
 
@@ -108,8 +108,8 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
         flattened.push(
           ...this.flattenCategories(
             category.children,
-            category.categoryId || category.id?.toString() || ''
-          )
+            category.categoryId || category.id?.toString() || '',
+          ),
         );
       }
     }
@@ -124,7 +124,7 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
 
     const searchValue = value.toString();
     const match = this.flattenedCategories.find(
-      (cat) => cat.categoryId === searchValue
+      (cat) => cat.categoryId === searchValue,
     );
     if (match) {
       return this.buildBreadcrumbPath(match);
@@ -139,7 +139,7 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
 
     while (currentParentId) {
       const parentNode = this.flattenedCategories.find(
-        (cat) => cat.categoryId === currentParentId
+        (cat) => cat.categoryId === currentParentId,
       );
       if (parentNode) {
         path.unshift(parentNode.name);
@@ -190,7 +190,7 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
     const request$ = this.requestService.GetRequestDetailsById(requestId);
     const requestTypes$ = this.requestService.GetRequestTypes();
     const decisionMakers$ = this.requestService.GetDecisionMakers(
-      this.organizationId ?? 0
+      this.organizationId ?? 0,
     );
     const requiredRequestDocuments$ =
       this.requestService.GetRequestRequiredDocumentsById(requestId);
@@ -207,28 +207,28 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
           const category = this.findCategoryById(request.categoryId);
           const requestType = requestTypes.find(
             (r: { requestTypeId: number }) =>
-              r.requestTypeId === request.requestTypeId
+              r.requestTypeId === request.requestTypeId,
           );
 
           const decisionMakersMapped = request.decisionMakerSelections
             .map((selection: { decisionMakerId: number }) =>
               decisionMakers.find(
                 (dm: { decisionMakerId: number }) =>
-                  dm.decisionMakerId === selection.decisionMakerId
-              )
+                  dm.decisionMakerId === selection.decisionMakerId,
+              ),
             )
             .filter((dm: any) => dm);
 
           const requestDocuments = requiredRequestDocuments.documents;
 
           const { date: publishDate, time: publishTime } = this.splitDateTime(
-            request.publishDate
+            request.publishDate,
           );
           const { date: closeDate, time: closeTime } = this.splitDateTime(
-            request.closeDate
+            request.closeDate,
           );
           const { date: contractStart } = this.splitDateTime(
-            request.contractStart
+            request.contractStart,
           );
           const { date: contractEnd } = this.splitDateTime(request.contractEnd);
 
@@ -261,11 +261,11 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
 
           this.populateArrayFormControls(
             'decisionMakers',
-            decisionMakersMapped
+            decisionMakersMapped,
           );
           this.populateArrayFormControls(
             'requestDocuments',
-            requiredRequestDocuments
+            requiredRequestDocuments,
           );
         },
         (error) => {
@@ -282,7 +282,7 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
 
           const operation =
             Object.entries(operationMap).find(([key]) =>
-              errorUrl.includes(key)
+              errorUrl.includes(key),
             )?.[1] ?? 'UnknownOperation';
 
           this.loggingService.logException(
@@ -296,9 +296,9 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
               className: 'RequestReviewComponent',
               operation: operation,
               userId: this.stateService.getUserId(),
-            }
+            },
           );
-        }
+        },
       );
   }
 
@@ -327,7 +327,7 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
 
   prepareCategoriesForTreeRendering(
     categories: CategoryNode[],
-    level: number = 0
+    level: number = 0,
   ): CategoryNode[] {
     return categories
       .filter((cat) => !cat.deleted)
@@ -362,7 +362,7 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
 
   populateArrayFormControls(controlName: string, items: any[]) {
     const controlArray = this.requestFinalReviewDetailsForm.get(
-      controlName
+      controlName,
     ) as FormArray;
     controlArray.clear();
     items?.forEach((item) => {
@@ -383,10 +383,10 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          this.snackBar.open('Solicitation successfully submitted!', '', {
-            duration: 15000,
-            verticalPosition: 'top',
-          });
+          this.snackbarNotificationService.showSnackbarSuccess(
+            'Solicitation submitted successfully.',
+          );
+
           sessionStorage.removeItem('currentRequestId');
           sessionStorage.removeItem('request_in_creation_mode');
           this.router.navigate(['/requests-view']);
@@ -405,7 +405,7 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
               operation: 'UpdateRequestStatus',
               requestId: requestIdToUse,
               userId: this.stateService.getUserId(),
-            }
+            },
           );
         },
       });

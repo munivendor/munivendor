@@ -1,0 +1,119 @@
+<h2 mat-dialog-title>
+  {{
+    data.isEditMode ? "Edit Authorizing Official" : "Add Authorizing Official"
+  }}
+</h2>
+
+<mat-dialog-content>
+  <form #dialogForm="ngForm" style="margin-top: 16px">
+    <div class="form-row">
+      <mat-form-field appearance="outline">
+        <mat-label>First Name</mat-label>
+        <input
+          matInput
+          #firstNameField="ngModel"
+          [(ngModel)]="formData.firstName"
+          name="firstName"
+          placeholder="John"
+          required
+          maxlength="50"
+          (blur)="titleCaseField('firstName')"
+        />
+        <mat-error>First name is required.</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Last Name</mat-label>
+        <input
+          matInput
+          #lastNameField="ngModel"
+          [(ngModel)]="formData.lastName"
+          name="lastName"
+          placeholder="Doe"
+          required
+          maxlength="50"
+          (blur)="titleCaseField('lastName')"
+        />
+        <mat-error>Last name is required.</mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Title</mat-label>
+        <input
+          matInput
+          #titleField="ngModel"
+          [(ngModel)]="formData.title"
+          name="title"
+          placeholder="Purchasing Agent"
+          required
+          maxlength="100"
+        />
+        <mat-error *ngIf="titleField.hasError('required')">
+          Title is required.
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Email</mat-label>
+        <input
+          matInput
+          #emailField="ngModel"
+          [(ngModel)]="formData.email"
+          name="email"
+          placeholder="j.doe@agency.gov"
+          required
+          maxlength="255"
+          [pattern]="emailPattern"
+          (blur)="normalizeEmail()"
+        />
+        <mat-error *ngIf="emailField.hasError('required')">
+          Email is required.
+        </mat-error>
+        <mat-error *ngIf="emailField.hasError('pattern')">
+          Please enter a valid email address.
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Phone Number (Optional)</mat-label>
+        <input
+          matInput
+          #phoneField="ngModel"
+          [ngModel]="displayPhone"
+          (ngModelChange)="onPhoneInput($event)"
+          name="phone"
+          placeholder="(202) 555-0142"
+          maxlength="14"
+          [pattern]="phonePattern"
+        />
+        <mat-error *ngIf="phoneField.hasError('pattern')">
+          Please enter a complete 10-digit phone number.
+        </mat-error>
+      </mat-form-field>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button [mat-dialog-close]="null">Cancel</button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="onSubmit()"
+    [disabled]="isSaving"
+  >
+    {{
+      isSaving
+        ? "Saving..."
+        : data.isEditMode
+          ? "Save Changes"
+          : "Add Authorizing Official"
+    }}
+  </button>
+</mat-dialog-actions>

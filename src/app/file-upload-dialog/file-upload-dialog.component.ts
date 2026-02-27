@@ -14,8 +14,8 @@ import {
 } from '@angular/material/dialog';
 import { LoggingService } from '../exceptionhandling/logging.service';
 import { StateService } from '../Request/services/state.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { LoadingService } from '../shared/LoadingSpinner/loading.service';
+import { SnackbarNotificationService } from '../shared/service/snackbar-notification.service';
 
 export type FileUploadDialogData =
   | { organizationId: number; municipalityDocuments: Document[] }
@@ -45,11 +45,10 @@ export class FileUploadDialogComponent {
     private requestService: RequestService,
     private loggingService: LoggingService,
     private stateService: StateService,
-    private _snackBar: MatSnackBar,
     private loadingService: LoadingService,
+    private snackbarNotificationService: SnackbarNotificationService,
     public dialogRef: MatDialogRef<FileUploadDialogComponent>,
-
-    @Inject(MAT_DIALOG_DATA) public data: FileUploadDialogData
+    @Inject(MAT_DIALOG_DATA) public data: FileUploadDialogData,
   ) {}
 
   ngOnInit(): void {
@@ -74,13 +73,8 @@ export class FileUploadDialogComponent {
         !allowedTypes.includes(file.type) &&
         !allowedExtensions.includes(fileExtension)
       ) {
-        this._snackBar.open(
+        this.snackbarNotificationService.showSnackbarError(
           'Invalid file type. Only PDF and JPG/JPEG files are allowed.',
-          'Close',
-          {
-            duration: 5000,
-            verticalPosition: 'top',
-          }
         );
 
         event.target.value = '';
@@ -110,7 +104,7 @@ export class FileUploadDialogComponent {
         .SaveOrganizationDocument(
           this.data.organizationId,
           municipalityDocument,
-          this.selectedFile
+          this.selectedFile,
         )
         .subscribe({
           next: (response) => {
@@ -124,10 +118,9 @@ export class FileUploadDialogComponent {
               notarization: 'Not Required',
             });
 
-            this._snackBar.open('Document successfully uploaded.', 'Close', {
-              duration: 5000,
-              verticalPosition: 'top',
-            });
+            this.snackbarNotificationService.showSnackbarSuccess(
+              'Document uploaded successfully.',
+            );
           },
           error: (error) => {
             this.loadingService.hide();
@@ -146,7 +139,7 @@ export class FileUploadDialogComponent {
                 operation: 'SaveOrganizationDocument',
                 userId: this.stateService.getUserId(),
                 fileSize: this.selectedFile.size,
-              }
+              },
             );
           },
         });
@@ -162,7 +155,7 @@ export class FileUploadDialogComponent {
         .SaveOfferorDocument(
           Number(this.data.requestId),
           offerorDocument,
-          this.selectedFile
+          this.selectedFile,
         )
         .subscribe({
           next: (response) => {
@@ -173,10 +166,9 @@ export class FileUploadDialogComponent {
               requestDocumentId: response.requestDocumentId,
             });
 
-            this._snackBar.open('Document successfully uploaded.', 'Close', {
-              duration: 5000,
-              verticalPosition: 'top',
-            });
+            this.snackbarNotificationService.showSnackbarSuccess(
+              'Document uploaded successfully.',
+            );
           },
           error: (error) => {
             this.loadingService.hide();
@@ -195,7 +187,7 @@ export class FileUploadDialogComponent {
                 operation: 'SaveOfferorDocument',
                 userId: this.stateService.getUserId(),
                 fileSize: this.selectedFile.size,
-              }
+              },
             );
           },
         });

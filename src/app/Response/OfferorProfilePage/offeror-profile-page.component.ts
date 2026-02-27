@@ -1,17 +1,20 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import {
-  FormBuilder,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+  Component,
+  OnInit,
+  ViewChild,
+  AfterViewInit,
+  ChangeDetectorRef,
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { MatTableModule } from '@angular/material/table';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { MatSortModule, MatSort } from '@angular/material/sort';
+import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatCardModule } from '@angular/material/card';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { OrganizationService } from '../../Organization/Details/services/organization.service';
@@ -20,15 +23,21 @@ import { StateService } from '../../Request/services/state.service';
 import { OfferorProfileService } from '../../shared/service/offeror-profile.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
 import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
+import { AuthorizingOfficialDialogComponent } from './AuthorizingOfficialDialog/authorizing-official-dialog.component';
+import {
+  ConfirmDialogComponent,
+  ConfirmDialogData,
+} from '../../shared/ConfirmDialog/confirm-dialog.component';
+import { PhonePipe } from '../../shared/pipes/phone.pipe';
 
-interface AuthorizingOfficial {
+export interface AuthorizingOfficial {
   vendorAuthorizingOfficialId?: number;
   organizationId: number;
   firstName: string;
   lastName: string;
   title: string;
   email: string;
-  phone?: string;
+  phone?: string | null;
 }
 
 @Component({
@@ -39,57 +48,42 @@ interface AuthorizingOfficial {
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
     MatTableModule,
+    MatSortModule,
+    MatPaginatorModule,
     MatIconModule,
-    MatSnackBarModule,
     MatCardModule,
     MatTooltipModule,
+    PhonePipe,
   ],
 })
-export class OfferorProfilePageComponent implements OnInit {
+export class OfferorProfilePageComponent implements OnInit, AfterViewInit {
   organizationForm!: FormGroup;
-  authorizingOfficialForm!: FormGroup;
 
-  authorizingOfficials: AuthorizingOfficial[] = [];
-  displayedColumns: string[] = [
-    'firstName',
-    'lastName',
-    'title',
-    'email',
-    'phone',
-    'actions',
-  ];
+  dataSource = new MatTableDataSource<AuthorizingOfficial>([]);
+  displayedColumns: string[] = ['name', 'title', 'email', 'phone', 'actions'];
 
-  isAddingNew = false;
-  editingOfficialId: number | null = null;
+  isLoading = false;
 
-  private phonePattern =
-    /^(\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})$/;
+  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor(
     private fb: FormBuilder,
     private organizationService: OrganizationService,
     private stateService: StateService,
     private offerorProfileService: OfferorProfileService,
-    private snackBar: MatSnackBar,
+    private dialog: MatDialog,
+    private cdr: ChangeDetectorRef,
     private loggingService: LoggingService,
     private snackbarNotificationService: SnackbarNotificationService,
   ) {}
 
   ngOnInit(): void {
-    this.initializeForms();
-
-    const organizationId = this.stateService.getOrganizationId();
-    if (organizationId) {
-      this.loadOrganization(organizationId);
-      this.loadAuthorizingOfficials(organizationId);
-    }
-  }
-
-  private initializeForms(): void {
     this.organizationForm = this.fb.group({
       organizationName: [''],
       address: [''],
@@ -99,19 +93,27 @@ export class OfferorProfilePageComponent implements OnInit {
       zipCode: [''],
     });
 
-    this.authorizingOfficialForm = this.fb.group({
-      firstName: ['', [Validators.required, Validators.maxLength(50)]],
-      lastName: ['', [Validators.required, Validators.maxLength(50)]],
-      title: ['', [Validators.required, Validators.maxLength(100)]],
-      email: [
-        '',
-        [Validators.required, Validators.email, Validators.maxLength(255)],
-      ],
-      phone: [
-        '',
-        [Validators.maxLength(20), Validators.pattern(this.phonePattern)],
-      ],
-    });
+    const organizationId = this.stateService.getOrganizationId();
+    if (organizationId) {
+      this.loadOrganization(organizationId);
+      this.loadAuthorizingOfficials(organizationId);
+    }
+  }
+
+  ngAfterViewInit(): void {
+    this.dataSource.sortingDataAccessor = (
+      item: AuthorizingOfficial,
+      property: string,
+    ) => {
+      switch (property) {
+        case 'name':
+          return `${item.firstName} ${item.lastName}`.toLowerCase();
+        case 'title':
+          return item.title?.toLowerCase() ?? '';
+        default:
+          return '';
+      }
+    };
   }
 
   private loadOrganization(organizationId: number): void {
@@ -128,13 +130,12 @@ export class OfferorProfilePageComponent implements OnInit {
       },
       error: (error) => {
         const correlationId = error?.error?.correlationId;
-
         this.loggingService.logException(
           new Error(`HTTP Error ${error.status}: ${error.statusText}`),
           3,
           {
             organizationId: this.stateService.getOrganizationId(),
-            correlationId: correlationId,
+            correlationId,
             methodName: 'loadOrganization',
             className: 'OfferorProfilePageComponent',
             operation: 'getOrganization',
@@ -145,22 +146,27 @@ export class OfferorProfilePageComponent implements OnInit {
     });
   }
 
-  private loadAuthorizingOfficials(organizationId: number): void {
+  loadAuthorizingOfficials(organizationId: number): void {
+    this.isLoading = true;
     this.offerorProfileService
       .GetOfferorAuthorizingOfficials(organizationId)
       .subscribe({
         next: (officials: AuthorizingOfficial[]) => {
-          this.authorizingOfficials = officials;
+          this.dataSource.data = officials;
+          this.isLoading = false;
+          this.cdr.detectChanges();
+          this.dataSource.paginator = this.paginator;
+          this.dataSource.sort = this.sort;
         },
         error: (error) => {
+          this.isLoading = false;
           const correlationId = error?.error?.correlationId;
-
           this.loggingService.logException(
             new Error(`HTTP Error ${error.status}: ${error.statusText}`),
             3,
             {
               organizationId: this.stateService.getOrganizationId(),
-              correlationId: correlationId,
+              correlationId,
               methodName: 'loadAuthorizingOfficials',
               className: 'OfferorProfilePageComponent',
               operation: 'GetOfferorAuthorizingOfficials',
@@ -171,143 +177,99 @@ export class OfferorProfilePageComponent implements OnInit {
       });
   }
 
-  startAddingNew(): void {
-    this.isAddingNew = true;
-    this.editingOfficialId = null;
-    this.authorizingOfficialForm.reset();
+  get totalRecords(): number {
+    return this.dataSource.data.length;
   }
 
-  editOfficial(official: AuthorizingOfficial): void {
-    this.isAddingNew = false;
-    this.editingOfficialId = official.vendorAuthorizingOfficialId || null;
-    this.authorizingOfficialForm.patchValue({
-      firstName: official.firstName,
-      lastName: official.lastName,
-      title: official.title,
-      email: official.email,
-      phone: official.phone || '',
+  openAddDialog(): void {
+    const organizationId = this.stateService.getOrganizationId();
+    if (!organizationId) return;
+
+    const dialogRef = this.dialog.open(AuthorizingOfficialDialogComponent, {
+      data: {
+        isEditMode: false,
+        formData: this.emptyOfficialForm(organizationId),
+        organizationId,
+      },
+      disableClose: true,
+    });
+
+    dialogRef.afterClosed().subscribe((success: boolean | null) => {
+      if (success) this.loadAuthorizingOfficials(organizationId);
     });
   }
 
-  cancelEdit(): void {
-    this.isAddingNew = false;
-    this.editingOfficialId = null;
-    this.authorizingOfficialForm.reset();
+  openEditDialog(official: AuthorizingOfficial): void {
+    const organizationId = this.stateService.getOrganizationId();
+    if (!organizationId) return;
+
+    const dialogRef = this.dialog.open(AuthorizingOfficialDialogComponent, {
+      data: {
+        isEditMode: true,
+        formData: { ...official },
+        organizationId,
+      },
+      disableClose: true,
+    });
+
+    dialogRef.afterClosed().subscribe((success: boolean | null) => {
+      if (success) this.loadAuthorizingOfficials(organizationId);
+    });
   }
 
-  onSubmit(): void {
-    if (this.authorizingOfficialForm.valid) {
-      const organizationId = this.stateService.getOrganizationId();
-      if (!organizationId) return;
+  // onDeleteOfficial(official: AuthorizingOfficial): void {
+  //   const dialogData: ConfirmDialogData = {
+  //     title: 'Remove Authorizing Official',
+  //     message:
+  //       'Are you sure you want to remove this authorizing official? This action cannot be undone.',
+  //     confirmLabel: 'Remove',
+  //     cancelLabel: 'Cancel',
+  //     confirmColor: 'warn',
+  //   };
 
-      const authorizingOfficial: AuthorizingOfficial = {
-        organizationId: organizationId,
-        firstName: this.authorizingOfficialForm.value.firstName,
-        lastName: this.authorizingOfficialForm.value.lastName,
-        title: this.authorizingOfficialForm.value.title,
-        email: this.authorizingOfficialForm.value.email,
-        phone: this.authorizingOfficialForm.value.phone,
-      };
+  //   const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+  //     data: dialogData,
+  //     width: '400px',
+  //     disableClose: true,
+  //   });
 
-      if (this.editingOfficialId) {
-        authorizingOfficial.vendorAuthorizingOfficialId =
-          this.editingOfficialId;
-        this.updateAuthorizingOfficial(authorizingOfficial);
-      } else {
-        this.addAuthorizingOfficial(authorizingOfficial);
-      }
-    }
-  }
+  //   dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+  //     if (!confirmed) return;
 
-  private addAuthorizingOfficial(official: AuthorizingOfficial): void {
-    this.offerorProfileService
-      .SaveOfferorAuthorizingOfficial(official)
-      .subscribe({
-        next: (response) => {
-          this.snackbarNotificationService.showSnackbarSuccess(
-            'Authorizing Official successfully added.',
-          );
-          this.cancelEdit();
-          this.loadAuthorizingOfficials(official.organizationId);
-        },
-        error: (error) => {
-          const correlationId = error?.error?.correlationId;
+  //     this.offerorProfileService
+  //       .DeleteOfferorAuthorizingOfficial(
+  //         official.vendorAuthorizingOfficialId!,
+  //       )
+  //       .subscribe({
+  //         next: () => {
+  //           this.dataSource.data = this.dataSource.data.filter(
+  //             (o) =>
+  //               o.vendorAuthorizingOfficialId !==
+  //               official.vendorAuthorizingOfficialId,
+  //           );
+  //           this.snackbarNotificationService.showSnackbarSuccess(
+  //             'Authorizing official removed successfully.',
+  //           );
+  //         },
+  //         error: () => {
+  //           this.snackbarNotificationService.showSnackbarError(
+  //             'Failed to remove authorizing official.',
+  //           );
+  //         },
+  //       });
+  //   });
+  // }
 
-          this.loggingService.logException(
-            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
-            3,
-            {
-              organizationId: this.stateService.getOrganizationId(),
-              correlationId: correlationId,
-              methodName: 'addAuthorizingOfficial',
-              className: 'OfferorProfilePageComponent',
-              operation: 'SaveOfferorAuthorizingOfficial',
-              userId: this.stateService.getUserId(),
-            },
-          );
-        },
-      });
-  }
-
-  private updateAuthorizingOfficial(official: AuthorizingOfficial): void {
-    this.offerorProfileService
-      .UpdateOfferorAuthorizingOfficial(
-        official.vendorAuthorizingOfficialId!,
-        official,
-      )
-      .subscribe({
-        next: (response) => {
-          this.snackbarNotificationService.showSnackbarSuccess(
-            'Authorizing Official successfully updated.',
-          );
-          this.cancelEdit();
-          this.loadAuthorizingOfficials(official.organizationId);
-        },
-        error: (error) => {
-          const correlationId = error?.error?.correlationId;
-
-          this.loggingService.logException(
-            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
-            3,
-            {
-              organizationId: this.stateService.getOrganizationId(),
-              correlationId: correlationId,
-              methodName: 'updateAuthorizingOfficial',
-              className: 'OfferorProfilePageComponent',
-              operation: 'UpdateOfferorAuthorizingOfficial',
-              userId: this.stateService.getUserId(),
-            },
-          );
-        },
-      });
-  }
-
-  hasError(fieldName: string, errorType: string): boolean {
-    return (
-      (this.authorizingOfficialForm.get(fieldName)?.hasError(errorType) &&
-        this.authorizingOfficialForm.get(fieldName)?.touched) ||
-      false
-    );
-  }
-
-  getMaxLength(fieldName: string): number {
-    const maxLengths: { [key: string]: number } = {
-      firstName: 50,
-      lastName: 50,
-      title: 100,
-      email: 255,
-      phone: 20,
+  private emptyOfficialForm(
+    organizationId: number,
+  ): Omit<AuthorizingOfficial, 'vendorAuthorizingOfficialId'> {
+    return {
+      organizationId,
+      firstName: '',
+      lastName: '',
+      title: '',
+      email: '',
+      phone: null,
     };
-    return maxLengths[fieldName] || 0;
-  }
-
-  get isFormVisible(): boolean {
-    return this.isAddingNew || this.editingOfficialId !== null;
-  }
-
-  get submitButtonText(): string {
-    return this.editingOfficialId
-      ? 'Update Authorizing Official'
-      : 'Add Authorizing Official';
   }
 }

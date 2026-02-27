@@ -1,249 +1,151 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ViewChild,
+  AfterViewInit,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import {
-  MatDialog,
-  MatDialogModule,
-  MatDialogRef,
-  MAT_DIALOG_DATA,
-} from '@angular/material/dialog';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { MatSortModule, MatSort } from '@angular/material/sort';
+import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
 import { AgencyProfileService } from '../services/agency-profile.service';
 import { StateService } from '../../Request/services/state.service';
 import { DecisionMaker } from '../model/decisionmaker.model';
-
-// ── Dialog Component ──────────────────────────────────────────────────────────
-
-@Component({
-  selector: 'app-decision-maker-dialog',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    MatDialogModule,
-    MatButtonModule,
-    MatFormFieldModule,
-    MatInputModule,
-  ],
-  template: `
-    <h2 mat-dialog-title>
-      {{ data.isEditMode ? 'Edit Decision Maker' : 'Add Decision Maker' }}
-    </h2>
-
-    <mat-dialog-content style="padding-top: 1rem;">
-      <div class="alert-error" *ngIf="modalError">⚠️ {{ modalError }}</div>
-
-      <div class="form-row">
-        <mat-form-field appearance="outline">
-          <mat-label>First Name</mat-label>
-          <input
-            matInput
-            [(ngModel)]="formData.firstName"
-            name="firstName"
-            placeholder="e.g. Patricia"
-          />
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Last Name</mat-label>
-          <input
-            matInput
-            [(ngModel)]="formData.lastName"
-            name="lastName"
-            placeholder="e.g. Henderson"
-          />
-        </mat-form-field>
-      </div>
-
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Email</mat-label>
-        <input
-          matInput
-          [(ngModel)]="formData.email"
-          name="email"
-          type="email"
-          placeholder="e.g. p.henderson@agency.gov"
-        />
-      </mat-form-field>
-
-      <div class="form-row">
-        <mat-form-field appearance="outline">
-          <mat-label>Phone (optional)</mat-label>
-          <input
-            matInput
-            [(ngModel)]="formData.phoneNumber"
-            name="phoneNumber"
-            placeholder="e.g. (202) 555-0142"
-          />
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Title (optional)</mat-label>
-          <input
-            matInput
-            [(ngModel)]="formData.title"
-            name="title"
-            placeholder="e.g. Contracting Officer"
-          />
-        </mat-form-field>
-      </div>
-    </mat-dialog-content>
-
-    <mat-dialog-actions align="end">
-      <button mat-button [mat-dialog-close]="null">Cancel</button>
-      <button
-        mat-raised-button
-        color="primary"
-        (click)="onSubmitDecisionMaker()"
-        [disabled]="isSaving"
-      >
-        {{
-          isSaving
-            ? 'Saving...'
-            : data.isEditMode
-              ? 'Save Changes'
-              : 'Add Decision Maker'
-        }}
-      </button>
-    </mat-dialog-actions>
-  `,
-  styles: [
-    `
-      mat-dialog-content {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        min-width: 480px;
-        padding-top: 0.5rem;
-      }
-      .form-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-      }
-      .full-width {
-        width: 100%;
-      }
-      .alert-error {
-        background: #fef2f2;
-        color: #991b1b;
-        border: 1px solid #fecaca;
-        padding: 0.6rem 0.9rem;
-        border-radius: 6px;
-        font-size: 0.875rem;
-      }
-    `,
-  ],
-})
-export class DecisionMakerDialogComponent {
-  formData: DecisionMaker;
-  modalError = '';
-  isSaving = false;
-  requestId = 1;
-
-  constructor(
-    public dialogRef: MatDialogRef<DecisionMakerDialogComponent>,
-    @Inject(MAT_DIALOG_DATA)
-    public data: { isEditMode: boolean; formData: DecisionMaker },
-  ) {
-    this.formData = { ...data.formData };
-  }
-
-  onSubmitDecisionMaker(): void {
-    if (
-      !this.formData.firstName?.trim() ||
-      !this.formData.lastName?.trim() ||
-      !this.formData.email?.trim()
-    ) {
-      this.modalError = 'First name, last name, and email are required.';
-      return;
-    }
-    this.dialogRef.close(this.formData);
-  }
-}
-
-// ── Main Component ────────────────────────────────────────────────────────────
+import { MatSelectModule } from '@angular/material/select';
+import { MatIconModule } from '@angular/material/icon';
+import { PhonePipe } from '../../shared/pipes/phone.pipe';
+import { DecisionMakerDialogComponent } from './DecisionMakerDialog/decision-maker-dialog.component';
+import {
+  ConfirmDialogComponent,
+  ConfirmDialogData,
+} from '../../shared/ConfirmDialog/confirm-dialog.component';
+import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
+import { LoggingService } from '../../exceptionhandling/logging.service';
 
 @Component({
   selector: 'app-agency-profile-page',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, MatButtonModule],
+  imports: [
+    CommonModule,
+    MatDialogModule,
+    MatButtonModule,
+    FormsModule,
+    MatSelectModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatTableModule,
+    MatSortModule,
+    MatPaginatorModule,
+    PhonePipe,
+  ],
   templateUrl: './agency-profile-page.component.html',
   styleUrls: ['./agency-profile-page.component.css'],
 })
-export class AgencyProfilePageComponent implements OnInit {
-  requestId = 1;
+export class AgencyProfilePageComponent implements OnInit, AfterViewInit {
+  dataSource = new MatTableDataSource<DecisionMaker>([]);
+  displayedColumns = [
+    'name',
+    'title',
+    'email',
+    'phone',
+    'emailSolicitations',
+    'actions',
+  ];
 
-  decisionMakers: DecisionMaker[] = [];
   isLoading = false;
-  errorMessage = '';
-
-  useMockData = false;
   organizationId = this.stateService.getOrganizationId();
 
-  mockDecisionMakers: DecisionMaker[] = [
-    {
-      decisionMakerId: 1,
-      firstName: 'Patricia',
-      lastName: 'Henderson',
-      email: 'p.henderson@agency.gov',
-      title: 'Contracting Officer',
-    },
-    {
-      decisionMakerId: 2,
-      firstName: 'Marcus',
-      lastName: 'Whitfield',
-      email: 'm.whitfield@agency.gov',
-      title: 'Program Manager',
-    },
-  ];
+  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor(
     private agencyProfileService: AgencyProfileService,
     private dialog: MatDialog,
     private stateService: StateService,
+    private cdr: ChangeDetectorRef,
+    private snackbar: SnackbarNotificationService,
+    private loggingService: LoggingService,
   ) {}
 
   ngOnInit(): void {
-    this.loadDecisionMakers();
+    this.loadAgencyDecisionMakers();
   }
 
-  loadDecisionMakers(): void {
-    if (this.useMockData) {
-      this.decisionMakers = [...this.mockDecisionMakers];
-      return;
-    }
+  ngAfterViewInit(): void {
+    this.dataSource.sortingDataAccessor = (
+      item: DecisionMaker,
+      property: string,
+    ) => {
+      switch (property) {
+        case 'name':
+          return `${item.firstName} ${item.lastName}`.toLowerCase();
+        case 'title':
+          return item.title?.toLowerCase() ?? '';
+        case 'emailSolicitations':
+          return item.emailSolicitations === true
+            ? 'yes'
+            : item.emailSolicitations === false
+              ? 'no'
+              : '';
+        default:
+          return '';
+      }
+    };
+  }
 
+  loadAgencyDecisionMakers(): void {
     this.isLoading = true;
-    this.errorMessage = '';
 
     this.agencyProfileService
-      .GetDecisionMakers(this.organizationId ?? 0)
+      .GetAgencyDecisionMakers(this.organizationId ?? 0)
       .subscribe({
         next: (data) => {
-          this.decisionMakers = data;
+          this.dataSource.data = data;
           this.isLoading = false;
+          this.cdr.detectChanges();
+          this.dataSource.paginator = this.paginator;
+          this.dataSource.sort = this.sort;
         },
         error: (err) => {
-          this.errorMessage =
-            'Failed to load decision makers. Please try again.';
           this.isLoading = false;
-          console.error(err);
+          const correlationId = err.error?.correlationId;
+          this.loggingService.logException(
+            new Error(`HTTP Error ${err.status}: ${err.statusText}`),
+            3,
+            {
+              organizationId: this.organizationId,
+              correlationId,
+              methodName: 'loadAgencyDecisionMakers',
+              className: 'AgencyProfilePageComponent',
+              operation: 'GetAgencyDecisionMakers',
+              userId: this.stateService.getUserId(),
+            },
+          );
         },
       });
   }
 
+  get totalRecords(): number {
+    return this.dataSource.data.length;
+  }
+
   openAddDecisionMakerDialog(): void {
     const dialogRef = this.dialog.open(DecisionMakerDialogComponent, {
-      data: { isEditMode: false, formData: this.emptyDecisionMakerForm() },
+      data: {
+        isEditMode: false,
+        formData: this.emptyDecisionMakerForm(),
+        organizationId: this.organizationId ?? 0,
+      },
       disableClose: true,
     });
 
-    dialogRef.afterClosed().subscribe((result: DecisionMaker | null) => {
-      if (!result) return;
-      this.saveDecisionMaker(result, false);
+    dialogRef.afterClosed().subscribe((success: boolean | null) => {
+      if (success) this.loadAgencyDecisionMakers();
     });
   }
 
@@ -255,65 +157,74 @@ export class AgencyProfilePageComponent implements OnInit {
       email: dm.email ?? '',
       phoneNumber: dm.phoneNumber ?? null,
       title: dm.title ?? null,
+      emailSolicitations: dm.emailSolicitations ?? null,
     };
 
     const dialogRef = this.dialog.open(DecisionMakerDialogComponent, {
-      data: { isEditMode: true, formData },
+      data: {
+        isEditMode: true,
+        formData,
+        organizationId: this.organizationId ?? 0,
+      },
       disableClose: true,
     });
 
-    dialogRef.afterClosed().subscribe((result: DecisionMaker | null) => {
-      if (!result) return;
-      this.saveDecisionMaker(result, true);
+    dialogRef.afterClosed().subscribe((success: boolean | null) => {
+      if (success) this.loadAgencyDecisionMakers();
     });
   }
 
-  private saveDecisionMaker(
-    formData: DecisionMaker,
-    isEditMode: boolean,
+  onDeleteAgencyDecisionMaker(
+    decisionMakerId: number,
+    organizationId: number,
   ): void {
-    const call$ = isEditMode
-      ? this.agencyProfileService.UpdateDecisionMaker(
-          this.organizationId ?? 0,
-          formData,
-        )
-      : this.agencyProfileService.CreateDecisionMaker(
-          this.organizationId ?? 0,
-          formData,
-        );
+    const dialogData: ConfirmDialogData = {
+      title: 'Remove Decision Maker',
+      message:
+        'Are you sure you want to remove this decision maker? This action cannot be undone.',
+      confirmLabel: 'Remove',
+      cancelLabel: 'Cancel',
+      confirmColor: 'warn',
+    };
 
-    call$.subscribe({
-      next: () => this.loadDecisionMakers(),
-      error: (err) => {
-        this.errorMessage = 'Something went wrong. Please try again.';
-        console.error(err);
-      },
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      data: dialogData,
+      width: '400px',
+      disableClose: true,
     });
-  }
 
-  onDeleteDecisionMaker(requestId: number, decisionMakerId: number): void {
-    if (!confirm('Are you sure you want to remove this decision maker?'))
-      return;
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (!confirmed) return;
 
-    if (this.useMockData) {
-      this.decisionMakers = this.decisionMakers.filter(
-        (dm) => dm.decisionMakerId !== decisionMakerId,
-      );
-      return;
-    }
-
-    this.agencyProfileService
-      .DeleteDecisionMaker(requestId, decisionMakerId)
-      .subscribe({
-        next: () =>
-          (this.decisionMakers = this.decisionMakers.filter(
-            (dm) => dm.decisionMakerId !== decisionMakerId,
-          )),
-        error: (err) => {
-          this.errorMessage = 'Failed to delete decision maker.';
-          console.error(err);
-        },
-      });
+      this.agencyProfileService
+        .DeleteAgencyDecisionMaker(decisionMakerId, organizationId)
+        .subscribe({
+          next: () => {
+            this.dataSource.data = this.dataSource.data.filter(
+              (dm) => dm.decisionMakerId !== decisionMakerId,
+            );
+            this.snackbar.showSnackbarSuccess(
+              'Decision maker removed successfully.',
+            );
+          },
+          error: (err) => {
+            this.snackbar.showSnackbarError('Failed to remove decision maker.');
+            const correlationId = err.error?.correlationId;
+            this.loggingService.logException(
+              new Error(`HTTP Error ${err.status}: ${err.statusText}`),
+              3,
+              {
+                organizationId: this.organizationId,
+                correlationId,
+                methodName: 'onDeleteAgencyDecisionMaker',
+                className: 'AgencyProfilePageComponent',
+                operation: 'DeleteAgencyDecisionMaker',
+                userId: this.stateService.getUserId(),
+              },
+            );
+          },
+        });
+    });
   }
 
   getDecisionMakerInitials(firstName: string, lastName: string): string {
@@ -330,6 +241,7 @@ export class AgencyProfilePageComponent implements OnInit {
       email: '',
       phoneNumber: null,
       title: null,
+      emailSolicitations: null,
     };
   }
 }

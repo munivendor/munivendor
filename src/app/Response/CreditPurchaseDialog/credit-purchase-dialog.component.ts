@@ -38,8 +38,8 @@ import { UserService } from '../../shared/service/user.service';
 import { AuthService } from '../../authorization/auth.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
 import { StateService } from '../../Request/services/state.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { SafeHtmlPipe } from '../../shared/safe-html.pipe';
+import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
 
 interface DialogData {
   organizationId: number;
@@ -118,7 +118,7 @@ export class CreditPurchaseDialogComponent implements OnInit {
     private authService: AuthService,
     private loggingService: LoggingService,
     private stateService: StateService,
-    private _snackBar: MatSnackBar,
+    private snackbarNotificationService: SnackbarNotificationService,
   ) {}
 
   ngOnInit(): void {
@@ -810,14 +810,9 @@ export class CreditPurchaseDialogComponent implements OnInit {
               error.status === 402 &&
               error.error?.detail === 'PAYMENT_DECLINED'
             ) {
-              this._snackBar.open(
+              this.snackbarNotificationService.showSnackbarError(
                 error.error?.declineReasonCode ||
                   'Payment was declined. Please try a different payment method.',
-                'Close',
-                {
-                  verticalPosition: 'top',
-                  duration: 5000,
-                },
               );
 
               this.selectedPaymentMethodId = null;
@@ -856,14 +851,9 @@ export class CreditPurchaseDialogComponent implements OnInit {
             error.status === 402 &&
             error.error?.detail === 'PAYMENT_DECLINED'
           ) {
-            this._snackBar.open(
+            this.snackbarNotificationService.showSnackbarError(
               error.error?.declineReasonCode ||
                 'Payment was declined. Please try a different payment method.',
-              'Close',
-              {
-                verticalPosition: 'top',
-                duration: 5000,
-              },
             );
 
             this.selectedPaymentMethodId = null;

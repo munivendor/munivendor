@@ -24,6 +24,7 @@ export interface SubmissionCreditUsageItem {
   creditChargeDescription: string;
   solicitationId?: number;
   lastFourNumbers: string;
+  solicitationName?: string;
 }
 
 @Injectable({
@@ -40,7 +41,6 @@ export class CreditPackageService {
         const plans = response?.paymentPlan || response?.PaymentPlan;
 
         if (!plans || !Array.isArray(plans)) {
-          console.error('Invalid response structure:', response);
           throw new Error('Invalid payment plans response');
         }
 
@@ -59,14 +59,13 @@ export class CreditPackageService {
         return mappedPlans;
       }),
       catchError((error) => {
-        console.error('Error fetching payment plans:', error);
         return throwError(() => error);
-      })
+      }),
     );
   }
 
   getSubmissionBalance(
-    organizationId: number
+    organizationId: number,
   ): Observable<{ submissionBalance: number; correlationId: string }> {
     return this.http
       .get<{
@@ -81,21 +80,21 @@ export class CreditPackageService {
         catchError((error) => {
           console.error('Error fetching submission balance:', error);
           return throwError(() => error);
-        })
+        }),
       );
   }
 
   getSubmissionCreditUsage(
-    organizationId: number
+    organizationId: number,
   ): Observable<SubmissionCreditUsageItem[]> {
     return this.http
-      .get<SubmissionCreditUsageItem[]>(
-        `/api/SubmissionCredits/Usage/${organizationId}`
-      )
+      .get<
+        SubmissionCreditUsageItem[]
+      >(`/api/SubmissionCredits/Usage/${organizationId}`)
       .pipe(
         catchError((error) => {
           return throwError(() => error);
-        })
+        }),
       );
   }
 }
