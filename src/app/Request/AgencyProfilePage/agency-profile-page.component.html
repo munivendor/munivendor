@@ -65,7 +65,7 @@
 
       <!-- Email Column -->
       <ng-container matColumnDef="email">
-        <th mat-header-cell *matHeaderCellDef>Email</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Email</th>
         <td mat-cell *matCellDef="let dm">
           <p>{{ dm.email }}</p>
         </td>
@@ -73,7 +73,7 @@
 
       <!-- Phone Column -->
       <ng-container matColumnDef="phone">
-        <th mat-header-cell *matHeaderCellDef>Phone</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Phone</th>
         <td mat-cell *matCellDef="let dm">{{ dm.phoneNumber | phone }}</td>
       </ng-container>
 

@@ -179,42 +179,48 @@
       </ng-container>
 
       <ng-container matColumnDef="requestType">
-        <th mat-header-cell *matHeaderCellDef>Type</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Type</th>
         <td mat-cell *matCellDef="let row">
           {{ row.requestType?.requestTypeDesc }}
         </td>
       </ng-container>
 
       <ng-container matColumnDef="category">
-        <th mat-header-cell *matHeaderCellDef>Category</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Category</th>
         <td mat-cell *matCellDef="let row">
           {{ displayCategoryName(row.categoryId, row.categoryFullPath) }}
         </td>
       </ng-container>
 
       <ng-container matColumnDef="publishDate">
-        <th mat-header-cell *matHeaderCellDef>Publish Date & Time</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>
+          Publish Date & Time
+        </th>
         <td mat-cell *matCellDef="let row">
-          {{ row.publishDate | date : "MM/dd/yyyy, h:mm a" }}
+          {{ row.publishDate | date: "MM/dd/yyyy, h:mm a" }}
         </td>
       </ng-container>
 
       <ng-container matColumnDef="closeDateAndTime">
-        <th mat-header-cell *matHeaderCellDef>Close Date & Time</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>
+          Close Date & Time
+        </th>
         <td mat-cell *matCellDef="let row">
-          {{ row.closeDate | date : "MM/dd/yyyy, h:mm a" }}
+          {{ row.closeDate | date: "MM/dd/yyyy, h:mm a" }}
         </td>
       </ng-container>
 
       <ng-container matColumnDef="offerorRequestStatus">
-        <th mat-header-cell *matHeaderCellDef>Offeror Status</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>
+          Offeror Status
+        </th>
         <td mat-cell *matCellDef="let row">
           {{ row.offerorRequestStatus?.requestStatusDesc ?? "None" }}
         </td>
       </ng-container>
 
       <ng-container matColumnDef="agencyRequestStatus">
-        <th mat-header-cell *matHeaderCellDef>Agency Status</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Agency Status</th>
         <td mat-cell *matCellDef="let row">
           {{ row.agencyRequestStatus?.requestStatusDesc ?? "Draft" }}
         </td>

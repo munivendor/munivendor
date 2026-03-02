@@ -1,12 +1,5 @@
 import { CommonModule } from '@angular/common';
-import {
-  Component,
-  inject,
-  Input,
-  OnDestroy,
-  OnInit,
-  ViewChild,
-} from '@angular/core';
+import { Component, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { finalize, Subject, takeUntil } from 'rxjs';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
@@ -24,7 +17,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
-import { ConfirmationDialog } from '../RequestConfirmationDialog/confirmation-dialog.component';
+import { RequestConfirmationDialog } from '../RequestConfirmationDialog/request-confirmation-dialog.component';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CustomCategoryDropdownComponent } from '../../shared/CustomCategoryDropdown/custom-category-dropdown.component';
 import { StateService } from '../services/state.service';
@@ -163,7 +156,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
   }
 
   openConfirmationDialog(action: string, request: any): void {
-    const dialogRef = this.dialog.open(ConfirmationDialog, {
+    const dialogRef = this.dialog.open(RequestConfirmationDialog, {
       width: '600px',
       data: { action, request },
     });
@@ -488,7 +481,6 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
             this.hasLoadedData = requestsData.length > 0;
 
             requestsData.forEach((request: any) => {
-              // Map the friendly names from the API response
               const requestType = {
                 requestTypeId: request.requestTypeId,
                 requestTypeDesc: request.agencyRequestTypeName,
@@ -524,9 +516,42 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
 
             this.dataSource = new MatTableDataSource(combinedData);
 
-            this.dataSource.sortingDataAccessor = (item, property) => {
-              const value = item[property];
-              return typeof value === 'string' ? value.toLowerCase() : value;
+            this.dataSource.sortingDataAccessor = (
+              item: any,
+              property: string,
+            ) => {
+              switch (property) {
+                case 'requestName':
+                  return item.requestName?.toLowerCase() ?? '';
+                case 'agencyOrganizationName':
+                  return item.agencyOrganizationName?.toLowerCase() ?? '';
+                case 'requestId':
+                  return item.requestId ?? 0;
+                case 'requestType':
+                  return item.requestType?.requestTypeDesc?.toLowerCase() ?? '';
+                case 'category':
+                  return item.categoryFullPath?.toLowerCase() ?? '';
+                case 'publishDate':
+                  return item.publishDate
+                    ? new Date(item.publishDate).getTime()
+                    : -1;
+                case 'closeDateAndTime':
+                  return item.closeDate
+                    ? new Date(item.closeDate).getTime()
+                    : -1;
+                case 'offerorRequestStatus':
+                  return (
+                    item.offerorRequestStatus?.requestStatusDesc?.toLowerCase() ??
+                    ''
+                  );
+                case 'agencyRequestStatus':
+                  return (
+                    item.agencyRequestStatus?.requestStatusDesc?.toLowerCase() ??
+                    ''
+                  );
+                default:
+                  return '';
+              }
             };
 
             this.cdr.detectChanges();

@@ -86,6 +86,10 @@ export class AgencyProfilePageComponent implements OnInit, AfterViewInit {
           return `${item.firstName} ${item.lastName}`.toLowerCase();
         case 'title':
           return item.title?.toLowerCase() ?? '';
+        case 'email':
+          return item.email?.toLowerCase() ?? '';
+        case 'phone':
+          return item.phoneNumber ?? '';
         case 'emailSolicitations':
           return item.emailSolicitations === true
             ? 'yes'
