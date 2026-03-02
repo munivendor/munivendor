@@ -16,6 +16,7 @@
           name="firstName"
           placeholder="John"
           required
+          (keydown)="onNameKeydown($event)"
           maxlength="50"
           (blur)="titleCaseField('firstName')"
         />
@@ -31,6 +32,7 @@
           name="lastName"
           placeholder="Doe"
           required
+          (keydown)="onNameKeydown($event)"
           maxlength="50"
           (blur)="titleCaseField('lastName')"
         />
@@ -48,6 +50,7 @@
           name="title"
           placeholder="Purchasing Agent"
           required
+          (keydown)="onNameKeydown($event)"
           maxlength="100"
         />
         <mat-error *ngIf="titleField.hasError('required')">
@@ -91,6 +94,7 @@
           placeholder="(202) 555-0142"
           maxlength="14"
           [pattern]="phonePattern"
+          (keydown)="onPhoneKeydown($event)"
         />
         <mat-error *ngIf="phoneField.hasError('pattern')">
           Please enter a complete 10-digit phone number.
@@ -106,7 +110,7 @@
     mat-raised-button
     color="primary"
     (click)="onSubmit()"
-    [disabled]="isSaving"
+    [disabled]="isSaving || dialogForm.invalid"
   >
     {{
       isSaving

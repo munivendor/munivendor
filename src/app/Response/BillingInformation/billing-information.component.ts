@@ -29,33 +29,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
 import { SafeHtmlPipe } from '../../shared/safe-html.pipe';
-
-@Component({
-  selector: 'your-dialog',
-  standalone: true,
-  imports: [MatDialogModule, MatButtonModule],
-  template: `<h2 mat-dialog-title>{{ data.title }}</h2>
-    <mat-dialog-content>{{ data.message }} </mat-dialog-content
-    ><mat-dialog-actions style="justify-content: flex-end">
-      <button mat-button color="warn" [mat-dialog-close]="true">
-        {{ data.confirmText }}
-      </button>
-      <button mat-button [mat-dialog-close]="false" cdkFocusInitial>
-        {{ data.cancelText }}
-      </button>
-    </mat-dialog-actions>`,
-})
-export class YourDialog {
-  constructor(
-    @Inject(MAT_DIALOG_DATA)
-    public data: {
-      title: string;
-      message?: string;
-      confirmText?: string;
-      cancelText?: string;
-    },
-  ) {}
-}
+import {
+  ConfirmDialogComponent,
+  ConfirmDialogData,
+} from '../../shared/ConfirmDialog/confirm-dialog.component';
 
 export interface SavedPaymentMethod {
   paymentProfileId: string;
@@ -154,16 +131,20 @@ export class BillingInformationComponent implements OnInit, OnDestroy {
   }
 
   deletePaymentMethod(method: SavedPaymentMethod): void {
-    const dialogRef = this.dialog.open(YourDialog, {
+    const dialogData: ConfirmDialogData = {
+      title: 'Delete Payment Method',
+      message: `Are you sure you want to delete this ${
+        method.accountType === 'CC' ? 'credit card' : 'bank account'
+      } ending in ${method.lastFourNumbers}?`,
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      confirmColor: 'warn',
+    };
+
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
-      data: {
-        title: 'Delete Payment Method',
-        message: `Are you sure you want to delete this ${
-          method.accountType === 'CC' ? 'credit card' : 'bank account'
-        } ending in ${method.lastFourNumbers}?`,
-        confirmText: 'Delete',
-        cancelText: 'Cancel',
-      },
+      data: dialogData,
+      disableClose: true,
     });
 
     dialogRef.afterClosed().subscribe((confirmed) => {

@@ -36,8 +36,9 @@ export class DecisionMakerDialogComponent {
   displayPhone = '';
   isSaving = false;
 
-  readonly phonePattern = /^\(\d{3}\) \d{3}-\d{4}$/;
-  readonly emailPattern = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+  readonly phonePattern = '^\\(\\d{3}\\) \\d{3}-\\d{4}$';
+  readonly emailPattern =
+    '^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$';
 
   constructor(
     public dialogRef: MatDialogRef<DecisionMakerDialogComponent>,
@@ -83,6 +84,40 @@ export class DecisionMakerDialogComponent {
     }
   }
 
+  onNameKeydown(event: KeyboardEvent): void {
+    const controlKeys = [
+      'Backspace',
+      'Delete',
+      'ArrowLeft',
+      'ArrowRight',
+      'Tab',
+      'Home',
+      'End',
+    ];
+    if (controlKeys.includes(event.key)) return;
+
+    if (!/^[a-zA-Z\s\-'.]$/.test(event.key)) {
+      event.preventDefault();
+    }
+  }
+
+  onPhoneKeydown(event: KeyboardEvent): void {
+    const controlKeys = [
+      'Backspace',
+      'Delete',
+      'ArrowLeft',
+      'ArrowRight',
+      'Tab',
+      'Home',
+      'End',
+    ];
+    if (controlKeys.includes(event.key)) return;
+
+    if (!/^\d$/.test(event.key)) {
+      event.preventDefault();
+    }
+  }
+
   // ── Email ────────────────────────────────────────────────────────────────
 
   normalizeEmail(): void {
@@ -96,6 +131,8 @@ export class DecisionMakerDialogComponent {
   onSubmitDecisionMaker(): void {
     if (!this.form) return;
     this.form.form.markAllAsTouched();
+
+    if (this.form.form.invalid) return;
 
     this.isSaving = true;
 
