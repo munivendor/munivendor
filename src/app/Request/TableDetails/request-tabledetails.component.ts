@@ -9,7 +9,7 @@ import {
 import { finalize, Subject, takeUntil } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { ConfirmationDialog } from '../RequestConfirmationDialog/confirmation-dialog.component';
+import { RequestConfirmationDialog } from '../RequestConfirmationDialog/request-confirmation-dialog.component';
 import { RequestService } from '../services/request.service';
 import { Request } from '../model/request.model';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
@@ -46,16 +46,16 @@ const ACTION_PERMISSIONS: {
     delete?: boolean;
     cancel?: boolean;
     open?: boolean;
-    noneDisabled?: boolean;
     redownload?: boolean;
+    duplicate?: boolean;
   };
 } = {
-  Draft: { edit: true, delete: true },
-  Scheduled: { edit: true, delete: true },
-  Live: { cancel: true },
-  Closed: { open: true },
-  Cancelled: { noneDisabled: true },
-  Opened: { redownload: true },
+  Draft: { edit: true, delete: true, duplicate: true },
+  Scheduled: { edit: true, delete: true, duplicate: true },
+  Live: { cancel: true, duplicate: true },
+  Closed: { open: true, duplicate: true },
+  Cancelled: { duplicate: true },
+  Opened: { redownload: true, duplicate: true },
 };
 
 @Component({
@@ -94,7 +94,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
 
   canPerformAction(
     request: any,
-    action: 'edit' | 'delete' | 'cancel' | 'open' | 'redownload'
+    action: 'edit' | 'delete' | 'cancel' | 'open' | 'redownload' | 'duplicate',
   ): boolean {
     const status = request.agencyRequestStatus?.requestStatusDesc;
     return !!ACTION_PERMISSIONS[status]?.[action];
@@ -152,7 +152,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     private stateService: StateService,
     private cdr: ChangeDetectorRef,
     private loadingService: LoadingService,
-    private loggingService: LoggingService
+    private loggingService: LoggingService,
   ) {}
 
   readonly requestTypeMap = {
@@ -177,11 +177,12 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     'cancel',
     'open',
     'redownload',
+    'duplicate',
   ] as const;
 
   displayCategoryName = (
     categoryId: string | number | null,
-    categoryFullPath?: string
+    categoryFullPath?: string,
   ): string => {
     // If categoryFullPath is provided, use it directly
     if (categoryFullPath) {
@@ -195,7 +196,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
 
     const searchValue = categoryId.toString();
     const match = this.flattenedCategories.find(
-      (cat) => cat.categoryId === searchValue
+      (cat) => cat.categoryId === searchValue,
     );
     if (match) {
       return this.buildBreadcrumbPath(match);
@@ -210,7 +211,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
 
     while (currentParentId) {
       const parentNode = this.flattenedCategories.find(
-        (cat) => cat.categoryId === currentParentId
+        (cat) => cat.categoryId === currentParentId,
       );
       if (parentNode) {
         path.unshift(parentNode.name);
@@ -225,7 +226,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
 
   prepareCategoriesForTreeRendering(
     categories: CategoryNode[],
-    level: number = 0
+    level: number = 0,
   ): CategoryNode[] {
     return categories
       .filter((cat) => !cat.deleted)
@@ -286,7 +287,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
 
     if (formValues.publishDateFrom) {
       params.startPublishDate = new Date(
-        formValues.publishDateFrom
+        formValues.publishDateFrom,
       ).toISOString();
     }
 
@@ -334,7 +335,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
         .GetRequestsAgencyView(requestParams)
         .pipe(
           takeUntil(this.destroy$),
-          finalize(() => this.loadingService.hide())
+          finalize(() => this.loadingService.hide()),
         )
         .subscribe({
           next: (requests) => {
@@ -354,7 +355,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
               };
 
               const submittedOffersCount = (request.responses || []).filter(
-                (r: any) => r.offerorRequestStatusId === 9
+                (r: any) => r.offerorRequestStatusId === 9,
               ).length;
 
               request.publishDate = request.publishDate
@@ -382,6 +383,41 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
                 this.paginator.firstPage();
               }
               if (this.sort) {
+                this.dataSource.sortingDataAccessor = (
+                  item: any,
+                  property: string,
+                ) => {
+                  switch (property) {
+                    case 'requestName':
+                      return item.requestName?.toLowerCase() ?? '';
+                    case 'requestId':
+                      return item.requestId ?? '';
+                    case 'requestType':
+                      return (
+                        item.requestType?.requestTypeDesc?.toLowerCase() ?? ''
+                      );
+                    case 'category':
+                      return item.categoryFullPath?.toLowerCase() ?? '';
+                    case 'publishDate':
+                      return item.publishDate
+                        ? new Date(item.publishDate).getTime()
+                        : 0;
+                    case 'closeDateAndTime':
+                      return item.closeDate
+                        ? new Date(item.closeDate).getTime()
+                        : 0;
+                    case 'requestStatus':
+                      return (
+                        item.agencyRequestStatus?.requestStatusDesc?.toLowerCase() ??
+                        'draft'
+                      );
+                    case 'numberOfOffers':
+                      return item.submittedOffersCount ?? 0;
+                    default:
+                      return '';
+                  }
+                };
+
                 this.dataSource.sort = this.sort;
               }
             }, 0);
@@ -399,7 +435,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
                 className: 'AgencyTableDetailsComponent',
                 operation: 'GetRequestsAgencyView',
                 userId: this.stateService.getUserId(),
-              }
+              },
             );
 
             this.dataSource = new MatTableDataSource<any>([]);
@@ -423,7 +459,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
 
   openOffersDialog(request: any): void {
     const submittedOffers = (request.responses || []).filter(
-      (r: any) => r.offerorRequestStatusId === 9
+      (r: any) => r.offerorRequestStatusId === 9,
     );
 
     const formattedOffers = submittedOffers.map((offer: any) => ({
@@ -447,7 +483,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
   }
 
   openConfirmationDialog(action: string, request: any): void {
-    const dialogRef = this.dialog.open(ConfirmationDialog, {
+    const dialogRef = this.dialog.open(RequestConfirmationDialog, {
       width: '600px',
       data: { action, request },
     });
@@ -462,7 +498,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
           this.updateRequestStatusInTable(
             updateData.requestId,
             updateData.newStatusId,
-            updateData.newStatusDesc
+            updateData.newStatusDesc,
           );
         },
       });
@@ -474,11 +510,11 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
           this.onCancelUpdateRequestCancelReason(
             cancelData.request,
             cancelData.reasonId,
-            cancelData.reasonNote
+            cancelData.reasonNote,
           );
           this.onCancelUpdateRequestStatus(
             cancelData.request,
-            cancelData.action
+            cancelData.action,
           );
         },
       });
@@ -496,7 +532,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
   private updateRequestStatusInTable(
     requestId: number,
     newStatusId: number,
-    newStatusDesc: string
+    newStatusDesc: string,
   ): void {
     const currentData = this.dataSource.data;
     const updatedData = currentData.map((item: any) => {
@@ -593,7 +629,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
                 methodName: 'onCancelUpdateRequestStatus',
                 className: 'AgencyTableDetailsComponent',
                 operation: 'UpdateRequestStatus',
-              }
+              },
             );
           },
         });
@@ -603,7 +639,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
   onCancelUpdateRequestCancelReason(
     request: any,
     reasonId: number,
-    reasonNote: string
+    reasonNote: string,
   ): void {
     this.requestService
       .UpdateRequestCancelReason(request.requestId, reasonId, reasonNote)
@@ -624,7 +660,32 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
               methodName: 'onCancelUpdateRequestCancelReason',
               className: 'AgencyTableDetailsComponent',
               operation: 'UpdateRequestCancelReason',
-            }
+            },
+          );
+        },
+      });
+  }
+
+  onDuplicateRequest(request: any): void {
+    this.requestService
+      .DuplicateRequest(request.requestId, request.organizationId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.loadAndJoinRequestData();
+        },
+        error: (error) => {
+          const correlationId = error?.error?.correlationId;
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              requestId: request.requestId,
+              correlationId: correlationId,
+              methodName: 'onDuplicateRequest',
+              className: 'AgencyTableDetailsComponent',
+              operation: 'DuplicateRequest',
+            },
           );
         },
       });
