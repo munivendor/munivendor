@@ -125,8 +125,8 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.decisionMakerTooltip = {
       header: 'Required',
-      body: 'Please designate the decision maker(s) for this proposal.',
-      actionLabel: 'Agency Profile Page',
+      body: 'Please designate a Decision Maker for this solicitation. Decision Makers are the members of your agency who are responsible for making a decision about this solicitation. If you have not yet entered any Decision Makers, please do so now in the Agency Profile section. ',
+      actionLabel: 'Agency Profile',
       width: '320px',
       onAction: () => this.goToAgencyProfilePage(),
       transformStyle: 'translate(-50%, -102%)',
