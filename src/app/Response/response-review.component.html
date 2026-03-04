@@ -143,16 +143,20 @@
     mat-table
     [dataSource]="requiredDocumentsDatasource"
     class="mat-elevation-z8"
+    matSort
+    #agencyTableSort="matSort"
   >
     <ng-container matColumnDef="formName">
-      <th mat-header-cell *matHeaderCellDef>Form Name</th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Form Name</th>
       <td mat-cell *matCellDef="let row">
         {{ row.documentName }}
       </td>
     </ng-container>
 
     <ng-container matColumnDef="notarizationRequired">
-      <th mat-header-cell *matHeaderCellDef>Notarization Required</th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>
+        Notarization Required
+      </th>
       <td mat-cell *matCellDef="let row">
         {{ row.requiresNotarization ? "Yes" : "No" }}
       </td>
@@ -172,7 +176,7 @@
     </ng-container>
 
     <ng-container matColumnDef="documentInstanceStatus">
-      <th mat-header-cell *matHeaderCellDef>Status</th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
       <td mat-cell *matCellDef="let row">
         {{ row.documentInstanceStatus }}
         <span
@@ -204,13 +208,15 @@
     </mat-icon>
   </h2>
   <table
-    *ngIf="offerorDocumentsDatasource.length > 0"
+    [hidden]="offerorDocumentsDatasource.data.length === 0"
     mat-table
     [dataSource]="offerorDocumentsDatasource"
     class="mat-elevation-z8"
+    matSort
+    #offerorTableSort="matSort"
   >
     <ng-container matColumnDef="formName">
-      <th mat-header-cell *matHeaderCellDef>Form Name</th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Form Name</th>
       <td mat-cell *matCellDef="let row">
         {{ row.documentName }}
       </td>
@@ -233,7 +239,7 @@
     <tr mat-row *matRowDef="let row; columns: offerorDocumentsColumns"></tr>
   </table>
   <p
-    *ngIf="offerorDocumentsDatasource.length === 0"
+    [hidden]="offerorDocumentsDatasource.data.length > 0"
     class="no-documents-message"
     style="color: #f44336; font-weight: 500"
   >

@@ -24,10 +24,6 @@ import { OfferorProfileService } from '../../shared/service/offeror-profile.serv
 import { LoggingService } from '../../exceptionhandling/logging.service';
 import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
 import { AuthorizingOfficialDialogComponent } from './AuthorizingOfficialDialog/authorizing-official-dialog.component';
-import {
-  ConfirmDialogComponent,
-  ConfirmDialogData,
-} from '../../shared/ConfirmDialog/confirm-dialog.component';
 import { PhonePipe } from '../../shared/pipes/phone.pipe';
 
 export interface AuthorizingOfficial {
@@ -110,6 +106,10 @@ export class OfferorProfilePageComponent implements OnInit, AfterViewInit {
           return `${item.firstName} ${item.lastName}`.toLowerCase();
         case 'title':
           return item.title?.toLowerCase() ?? '';
+        case 'email':
+          return item.email?.toLowerCase() ?? '';
+        case 'phone':
+          return item.phone ?? '';
         default:
           return '';
       }

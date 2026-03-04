@@ -6,9 +6,11 @@ import {
   ElementRef,
   Output,
   EventEmitter,
+  AfterViewInit,
+  OnDestroy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatTableModule } from '@angular/material/table';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -28,11 +30,10 @@ import { StateService } from '../Request/services/state.service';
 import { DocumentService } from '../shared/service/document.service';
 import { TooltipDirective } from '../shared/directive/tooltip.directive';
 import { Router } from '@angular/router';
-// import { DocumentInstance } from '../Request/model/documentinstance.model';
-// import { BidProposalFormDialogComponent } from '../BidProposalForm/bid-proposal-form.component';
 import { LoggingService } from '../exceptionhandling/logging.service';
 import { LoadingService } from '../shared/LoadingSpinner/loading.service';
 import { SnackbarNotificationService } from '../shared/service/snackbar-notification.service';
+import { MatSort, MatSortModule } from '@angular/material/sort';
 
 @Component({
   selector: 'response-documents',
@@ -47,14 +48,20 @@ import { SnackbarNotificationService } from '../shared/service/snackbar-notifica
     RouterModule,
     ReactiveFormsModule,
     TooltipDirective,
+    MatSortModule,
   ],
   templateUrl: './response-documents.component.html',
   styleUrls: ['./response-documents.component.css'],
 })
-export class ResponseDocumentsComponent implements OnInit {
+export class ResponseDocumentsComponent
+  implements OnInit, AfterViewInit, OnDestroy
+{
   @Output() autoFillStatusChange = new EventEmitter<boolean>();
   @Input() responseIdParam?: string | null | undefined;
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('requiredSort') requiredSort!: MatSort;
+  @ViewChild('notarizationSort') notarizationSort!: MatSort;
+  @ViewChild('offerorSort') offerorSort!: MatSort;
   authorizingOfficialTooltip: any;
 
   agencyDocumentsColumns: string[] = [
@@ -71,11 +78,12 @@ export class ResponseDocumentsComponent implements OnInit {
 
   offerorDocumentsColumns: string[] = ['formName', 'download', 'delete'];
 
-  requiredDocumentsDatasource: any[] = [];
-  notarizationRequiredDocumentsDatasource: any[] = [];
-  offerorDocumentsDatasource: any[] = [];
-  offerorDocuments: any[] = [];
+  requiredDocumentsDatasource = new MatTableDataSource<any>([]);
+  notarizationRequiredDocumentsDatasource = new MatTableDataSource<any>([]);
+  offerorDocumentsDatasource = new MatTableDataSource<any>([]);
   offerorOptionalDocuments: any[] = [];
+
+  offerorDocuments: any[] = [];
   requestId?: number;
   responseDocumentsFormGroup!: FormGroup;
   responseIdFromStateService = this.stateService.getRequestId();
@@ -111,6 +119,29 @@ export class ResponseDocumentsComponent implements OnInit {
     };
   }
 
+  ngAfterViewInit(): void {
+    this.requiredDocumentsDatasource.sort = this.requiredSort;
+    this.notarizationRequiredDocumentsDatasource.sort = this.notarizationSort;
+    this.offerorDocumentsDatasource.sort = this.offerorSort;
+
+    this.configureSortingAccessor(this.requiredDocumentsDatasource);
+    this.configureSortingAccessor(this.notarizationRequiredDocumentsDatasource);
+    this.configureSortingAccessor(this.offerorDocumentsDatasource);
+  }
+
+  private configureSortingAccessor(datasource: MatTableDataSource<any>): void {
+    datasource.sortingDataAccessor = (item: any, sortHeaderId: string) => {
+      switch (sortHeaderId) {
+        case 'formName':
+          return (item.documentName ?? item.formName ?? '').toLowerCase();
+        case 'documentInstanceStatus':
+          return (item.documentInstanceStatus ?? '').toLowerCase();
+        default:
+          return '';
+      }
+    };
+  }
+
   initializeDocuments(): void {
     const requestId = this.responseIdParam
       ? Number(this.responseIdParam)
@@ -122,7 +153,6 @@ export class ResponseDocumentsComponent implements OnInit {
         next: (response) => {
           const documents = response.documents || [];
 
-          // Split documents by presence of sourceRequestDocumentId
           const requiredDocs = documents.filter(
             (doc: any) => doc.sourceRequestDocumentId !== null,
           );
@@ -130,7 +160,6 @@ export class ResponseDocumentsComponent implements OnInit {
             (doc: any) => doc.sourceRequestDocumentId === null,
           );
 
-          // Populate requiredDocumentsDatasource (notarized & non-notarized)
           const requiresNotarizationDocs = requiredDocs.filter(
             (doc: any) => doc.requiresNotarization,
           );
@@ -138,16 +167,15 @@ export class ResponseDocumentsComponent implements OnInit {
             (doc: any) => !doc.requiresNotarization,
           );
 
-          this.requiredDocumentsDatasource = notRequiredNotarizationDocs.map(
-            (doc: any) => ({
+          this.requiredDocumentsDatasource.data =
+            notRequiredNotarizationDocs.map((doc: any) => ({
               ...doc,
               formName: doc.documentName,
               documentInstanceStatus:
                 doc.documentInstanceStatus ?? 'Incomplete',
-            }),
-          );
+            }));
 
-          this.notarizationRequiredDocumentsDatasource =
+          this.notarizationRequiredDocumentsDatasource.data =
             requiresNotarizationDocs.map((doc: any) => ({
               ...doc,
               formName: doc.documentName,
@@ -165,7 +193,6 @@ export class ResponseDocumentsComponent implements OnInit {
           this.loadingService.hide();
 
           const correlationId = error?.error?.correlationId;
-
           this.loggingService.logException(
             new Error(`HTTP Error ${error.status}: ${error.statusText}`),
             3,
@@ -188,10 +215,8 @@ export class ResponseDocumentsComponent implements OnInit {
   }
 
   initializeFormGroup(): void {
-    const optionalOfferorDocuments = this.fb.array([]);
-
     this.responseDocumentsFormGroup = this.fb.group({
-      optionalOfferorDocuments: optionalOfferorDocuments,
+      optionalOfferorDocuments: this.fb.array([]),
       responseDocuments: this.fb.array([]),
     });
   }
@@ -233,7 +258,6 @@ export class ResponseDocumentsComponent implements OnInit {
       : this.responseIdFromStateService;
 
     if (file && this.currentRow) {
-      // Validate file type
       const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg'];
       const allowedExtensions = ['.pdf', '.jpg', '.jpeg'];
       const fileExtension = file.name
@@ -247,7 +271,6 @@ export class ResponseDocumentsComponent implements OnInit {
         this.snackbarNotificationService.showSnackbarError(
           'Invalid file type. Only PDF and JPG/JPEG files are allowed.',
         );
-
         input.value = '';
         return;
       }
@@ -264,12 +287,12 @@ export class ResponseDocumentsComponent implements OnInit {
           next: (response) => {
             this.loadingService.hide();
             if (response.isSuccess && this.currentRow?.requestDocumentId) {
-              let dataSourceToUpdate =
+              const dataToUpdate =
                 this.currentSource === 'notarizationNotRequired'
-                  ? this.requiredDocumentsDatasource
-                  : this.notarizationRequiredDocumentsDatasource;
+                  ? this.requiredDocumentsDatasource.data
+                  : this.notarizationRequiredDocumentsDatasource.data;
 
-              const rowToUpdate = dataSourceToUpdate.find(
+              const rowToUpdate = dataToUpdate.find(
                 (doc: any) =>
                   doc.requestDocumentId === this.currentRow.requestDocumentId,
               );
@@ -281,8 +304,6 @@ export class ResponseDocumentsComponent implements OnInit {
                 'Document uploaded successfully.',
               );
             }
-
-            // Clear the input value to allow same file selection again
             input.value = '';
           },
           error: (error) => {
@@ -304,13 +325,10 @@ export class ResponseDocumentsComponent implements OnInit {
                 fileSize: file.size,
               },
             );
-
-            // Clear the input value even on error to allow retry with same file
             input.value = '';
           },
         });
     } else {
-      // Clear the input value if no file is selected or currentRow is null
       input.value = '';
     }
   }
@@ -385,7 +403,6 @@ export class ResponseDocumentsComponent implements OnInit {
                 this.loadingService.hide();
                 return;
               }
-              // Extract filename from Content-Disposition
               const contentDisposition = response.headers.get(
                 'Content-Disposition',
               );
@@ -429,7 +446,6 @@ export class ResponseDocumentsComponent implements OnInit {
             },
           });
       } else {
-        // Handle HttpResponse<Blob> with headers - force download with correct filename
         this.documentService.GetStateDocumentContent(documentId).subscribe({
           next: (response) => {
             const blob = response.body;
@@ -438,7 +454,6 @@ export class ResponseDocumentsComponent implements OnInit {
               return;
             }
 
-            // Extract filename from Content-Disposition
             const contentDisposition = response.headers.get(
               'Content-Disposition',
             );
@@ -449,14 +464,12 @@ export class ResponseDocumentsComponent implements OnInit {
                 fileName = match[1];
               }
             }
-            // Force download with correct filename
             const a = document.createElement('a');
             const blobUrl = URL.createObjectURL(blob);
             a.href = blobUrl;
             a.download = fileName;
             document.body.appendChild(a);
             a.click();
-
             document.body.removeChild(a);
             URL.revokeObjectURL(blobUrl);
             this.loadingService.hide();
@@ -487,14 +500,12 @@ export class ResponseDocumentsComponent implements OnInit {
           const blob = response.body;
           if (!blob) return;
 
-          // Extract filename from Content-Disposition
           const contentDisposition = response.headers.get(
             'Content-Disposition',
           );
           let fileName = 'document';
 
           if (contentDisposition) {
-            // Extract only the standard filename parameter (not filename*)
             const standardMatch =
               contentDisposition.match(/filename="([^"]+)"/);
             if (standardMatch && standardMatch[1]) {
@@ -577,9 +588,10 @@ export class ResponseDocumentsComponent implements OnInit {
   }
 
   updateCombinedDatasource(): void {
-    this.offerorDocumentsDatasource =
+    this.offerorDocumentsDatasource.data =
       this.optionalOfferorDocuments.controls.map((control) => control.value);
-    this.offerorOptionalDocuments = [...this.offerorDocumentsDatasource];
+
+    this.offerorOptionalDocuments = [...this.offerorDocumentsDatasource.data];
   }
 
   onDownloadOfferorDocument(row: { requestDocumentId: number }): void {
@@ -593,7 +605,6 @@ export class ResponseDocumentsComponent implements OnInit {
 
     this.requestService.GetOfferorDocumentContent(requestDocumentId).subscribe({
       next: (response) => {
-        // Extract filename from Content-Disposition header
         const contentDisposition = response.headers.get('content-disposition');
         let fileName = 'download';
 
@@ -606,7 +617,6 @@ export class ResponseDocumentsComponent implements OnInit {
           }
         }
 
-        // Create blob URL and trigger download
         const blob = response.body;
         if (blob) {
           const blobUrl = URL.createObjectURL(blob);
@@ -625,7 +635,6 @@ export class ResponseDocumentsComponent implements OnInit {
         this.loadingService.hide();
 
         const correlationId = error?.error?.correlationId;
-
         this.loggingService.logException(
           new Error(`HTTP Error ${error.status}: ${error.statusText}`),
           3,
@@ -701,11 +710,4 @@ export class ResponseDocumentsComponent implements OnInit {
     this.destroy$.next();
     this.destroy$.complete();
   }
-
-  // openBidProposalDialog(): void {
-  //     this.dialog.open(BidProposalFormDialogComponent, {
-  //         width: '600px',
-  //         disableClose: true,
-  //     });
-  // }
 }
