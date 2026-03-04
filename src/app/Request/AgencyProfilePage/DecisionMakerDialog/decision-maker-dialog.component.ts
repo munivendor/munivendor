@@ -55,9 +55,10 @@ export class DecisionMakerDialogComponent {
     if (this.formData.phoneNumber) {
       this.displayPhone = this.formatPhoneDisplay(this.formData.phoneNumber);
     }
+    if (this.formData.emailSolicitations === null) {
+      this.formData.emailSolicitations = undefined as any;
+    }
   }
-
-  // ── Phone ────────────────────────────────────────────────────────────────
 
   onPhoneInput(value: string): void {
     const digits = value.replace(/\D/g, '').slice(0, 10);
@@ -72,8 +73,6 @@ export class DecisionMakerDialogComponent {
     if (d.length <= 6) return `(${d.slice(0, 3)}) ${d.slice(3)}`;
     return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6, 10)}`;
   }
-
-  // ── Names ────────────────────────────────────────────────────────────────
 
   titleCaseField(field: 'firstName' | 'lastName'): void {
     const val = this.formData[field];
@@ -118,21 +117,22 @@ export class DecisionMakerDialogComponent {
     }
   }
 
-  // ── Email ────────────────────────────────────────────────────────────────
-
   normalizeEmail(): void {
     if (this.formData.email) {
       this.formData.email = this.formData.email.trim().toLowerCase();
     }
   }
 
-  // ── Submit ───────────────────────────────────────────────────────────────
-
   onSubmitDecisionMaker(): void {
-    if (!this.form) return;
     this.form.form.markAllAsTouched();
+    this.form.form.updateValueAndValidity();
 
     if (this.form.form.invalid) return;
+    if (
+      this.formData.emailSolicitations === null ||
+      this.formData.emailSolicitations === undefined
+    )
+      return;
 
     this.isSaving = true;
 

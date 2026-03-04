@@ -3,7 +3,12 @@
 </h2>
 
 <mat-dialog-content>
-  <form #dialogForm="ngForm" style="margin-top: 16px">
+  <form
+    #dialogForm="ngForm"
+    id="decisionMakerForm"
+    (ngSubmit)="onSubmitDecisionMaker()"
+    style="margin-top: 16px"
+  >
     <div class="form-row">
       <mat-form-field appearance="outline">
         <mat-label>First Name</mat-label>
@@ -103,6 +108,7 @@
       <mat-form-field appearance="outline">
         <mat-label>Email Solicitations</mat-label>
         <mat-select
+          #emailSolicitationsField="ngModel"
           [(ngModel)]="formData.emailSolicitations"
           name="emailSolicitations"
           required
@@ -111,18 +117,22 @@
           <mat-option [value]="true">Yes</mat-option>
           <mat-option [value]="false">No</mat-option>
         </mat-select>
+        <mat-error *ngIf="emailSolicitationsField.hasError('required')">
+          Email solicitations is required.
+        </mat-error>
       </mat-form-field>
     </div>
   </form>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-button [mat-dialog-close]="null">Cancel</button>
+  <button mat-button type="button" [mat-dialog-close]="null">Cancel</button>
   <button
     mat-raised-button
     color="primary"
-    (click)="onSubmitDecisionMaker()"
-    [disabled]="isSaving || dialogForm.invalid"
+    type="submit"
+    form="decisionMakerForm"
+    [disabled]="isSaving"
   >
     {{
       isSaving
