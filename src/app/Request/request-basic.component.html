@@ -265,7 +265,17 @@
 
     <div class="field-container">
       <div class="inline-field">
-        <p>Choose who will be the decision maker on this proposal.</p>
+        <div style="display: flex; align-items: center; gap: 4px">
+          <p style="margin: 0">
+            Choose who will be the Decision Maker(s) on this solicitation.
+          </p>
+          <mat-icon
+            style="font-size: medium; color: #0b74fd; cursor: pointer"
+            [appTooltip]="decisionMakerTooltip"
+          >
+            info_outline
+          </mat-icon>
+        </div>
         <div formArrayName="dropdowns">
           <div
             *ngFor="let dropdown of dropdowns.controls; let i = index"
@@ -276,7 +286,6 @@
                 <mat-label>Decision Maker</mat-label>
                 <mat-select
                   formControlName="decisionMaker"
-                  id="decisionMaker"
                   placeholder="Choose Decision Maker"
                 >
                   <mat-option

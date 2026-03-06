@@ -168,14 +168,14 @@
       </ng-container>
 
       <ng-container matColumnDef="requestType">
-        <th mat-header-cell *matHeaderCellDef>Type</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Type</th>
         <td mat-cell *matCellDef="let request">
           {{ request.requestType?.requestTypeDesc }}
         </td>
       </ng-container>
 
       <ng-container matColumnDef="category">
-        <th mat-header-cell *matHeaderCellDef>Category</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Category</th>
         <td mat-cell *matCellDef="let request">
           {{
             displayCategoryName(request.categoryId, request.categoryFullPath)
@@ -184,28 +184,40 @@
       </ng-container>
 
       <ng-container matColumnDef="publishDate">
-        <th mat-header-cell *matHeaderCellDef>Publish Date & Time</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>
+          Publish Date & Time
+        </th>
         <td mat-cell *matCellDef="let request">
-          {{ request.publishDate | date : "MM/dd/yyyy, h:mm a" }}
+          {{
+            request.publishDate
+              ? (request.publishDate | date: "MM/dd/yyyy, h:mm a")
+              : "—"
+          }}
         </td>
       </ng-container>
 
       <ng-container matColumnDef="closeDateAndTime">
-        <th mat-header-cell *matHeaderCellDef>Close Date & Time</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>
+          Close Date & Time
+        </th>
         <td mat-cell *matCellDef="let request">
-          {{ request.closeDate | date : "MM/dd/yyyy, h:mm a" }}
+          {{
+            request.closeDate
+              ? (request.closeDate | date: "MM/dd/yyyy, h:mm a")
+              : "—"
+          }}
         </td>
       </ng-container>
 
       <ng-container matColumnDef="requestStatus">
-        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
         <td mat-cell *matCellDef="let request">
           {{ request.agencyRequestStatus?.requestStatusDesc ?? "Draft" }}
         </td>
       </ng-container>
 
       <ng-container matColumnDef="numberOfOffers">
-        <th mat-header-cell *matHeaderCellDef>Offers</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Offers</th>
         <td mat-cell *matCellDef="let request">
           <span
             *ngIf="request.submittedOffersCount > 0"
@@ -233,13 +245,12 @@
               [disabled]="getAvailableActions(request).length === 0"
               aria-label="Actions menu"
             >
-              {{ getAvailableActions(request).length > 0 ? "Select" : "None" }}
+              Select
             </button>
 
             <mat-menu #menu="matMenu">
               <ng-container *ngFor="let action of getAvailableActions(request)">
                 <button
-                  *ngIf="action !== 'noneDisabled'"
                   mat-menu-item
                   (click)="openConfirmationDialog(action, request)"
                 >
@@ -291,7 +302,7 @@
           <tbody>
             <tr *ngFor="let offer of data.offers">
               <td>{{ offer.offerorName }}</td>
-              <td>{{ offer.submittedDate | date : "MM/dd/yyyy, h:mm a" }}</td>
+              <td>{{ offer.submittedDate | date: "MM/dd/yyyy, h:mm a" }}</td>
             </tr>
           </tbody>
         </table>

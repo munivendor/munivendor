@@ -81,6 +81,40 @@ export class AuthorizingOfficialDialogComponent {
     }
   }
 
+  onNameKeydown(event: KeyboardEvent): void {
+    const controlKeys = [
+      'Backspace',
+      'Delete',
+      'ArrowLeft',
+      'ArrowRight',
+      'Tab',
+      'Home',
+      'End',
+    ];
+    if (controlKeys.includes(event.key)) return;
+
+    if (!/^[a-zA-Z\s\-'.]$/.test(event.key)) {
+      event.preventDefault();
+    }
+  }
+
+  onPhoneKeydown(event: KeyboardEvent): void {
+    const controlKeys = [
+      'Backspace',
+      'Delete',
+      'ArrowLeft',
+      'ArrowRight',
+      'Tab',
+      'Home',
+      'End',
+    ];
+    if (controlKeys.includes(event.key)) return;
+
+    if (!/^\d$/.test(event.key)) {
+      event.preventDefault();
+    }
+  }
+
   // ── Email ────────────────────────────────────────────────────────────────
 
   normalizeEmail(): void {

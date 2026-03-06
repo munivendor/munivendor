@@ -59,7 +59,7 @@ export class Sidenav implements OnInit, AfterViewInit {
     {
       id: 'create-solicitations',
       icon: 'add_box',
-      label: 'Create Solicitations',
+      label: 'Create A New Solicitation',
       route: '/create-request-view',
     },
     {

@@ -1,4 +1,11 @@
-import { Component, OnInit, Input, OnDestroy } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  Input,
+  OnDestroy,
+  ViewChild,
+  AfterViewInit,
+} from '@angular/core';
 import { RouterModule } from '@angular/router';
 import {
   FormGroup,
@@ -27,6 +34,8 @@ import { DocumentService } from '../shared/service/document.service';
 import { LoggingService } from '../exceptionhandling/logging.service';
 import { LoadingService } from '../shared/LoadingSpinner/loading.service';
 import { SnackbarNotificationService } from '../shared/service/snackbar-notification.service';
+import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatTableDataSource } from '@angular/material/table';
 
 @Component({
   selector: 'request-required-documents',
@@ -45,9 +54,12 @@ import { SnackbarNotificationService } from '../shared/service/snackbar-notifica
     MatFormFieldModule,
     MatSelectModule,
     MatTooltipModule,
+    MatSortModule,
   ],
 })
-export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
+export class RequestRequiredDocumentsComponent
+  implements OnInit, OnDestroy, AfterViewInit
+{
   @Input() idParam?: string | null | undefined;
   displayedColumns: string[] = [
     'select',
@@ -56,9 +68,15 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
     'download',
     'delete',
   ];
-  requiredStateDocumentsDatasource: FormGroup[] = [];
-  optionalStateDocumentsDatasource: FormGroup[] = [];
-  optionalMunicipalityDocumentsDatasource: FormGroup[] = [];
+  requiredStateDocumentsDatasource = new MatTableDataSource<FormGroup>([]);
+  optionalStateDocumentsDatasource = new MatTableDataSource<FormGroup>([]);
+  optionalMunicipalityDocumentsDatasource = new MatTableDataSource<FormGroup>(
+    [],
+  );
+
+  @ViewChild('requiredSort') requiredSort!: MatSort;
+  @ViewChild('optionalStateSort') optionalStateSort!: MatSort;
+  @ViewChild('municipalitySort') municipalitySort!: MatSort;
   selection = new SelectionModel<Document>(true, []);
   private destroy$ = new Subject<void>();
   requestDocumentsFormGroup!: FormGroup;
@@ -91,6 +109,34 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  ngAfterViewInit(): void {
+    this.requiredStateDocumentsDatasource.sort = this.requiredSort;
+    this.optionalStateDocumentsDatasource.sort = this.optionalStateSort;
+    this.optionalMunicipalityDocumentsDatasource.sort = this.municipalitySort;
+
+    this.configureSortingAccessor(this.requiredStateDocumentsDatasource);
+    this.configureSortingAccessor(this.optionalStateDocumentsDatasource);
+    this.configureSortingAccessor(this.optionalMunicipalityDocumentsDatasource);
+  }
+
+  private configureSortingAccessor(
+    datasource: MatTableDataSource<FormGroup>,
+  ): void {
+    datasource.sortingDataAccessor = (
+      formGroup: FormGroup,
+      sortHeaderId: string,
+    ) => {
+      switch (sortHeaderId) {
+        case 'formName':
+          return formGroup.get('documentName')?.value?.toLowerCase() ?? '';
+        case 'notarization':
+          return formGroup.get('requiresNotarization')?.value ? 1 : 0;
+        default:
+          return '';
+      }
+    };
   }
 
   get requiredStateDocuments(): FormArray {
@@ -303,11 +349,11 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
               this.optionalMunicipalityDocuments,
               optionalMunicipalityDocuments,
             );
-            this.requiredStateDocumentsDatasource = this.requiredStateDocuments
-              .controls as FormGroup[];
-            this.optionalStateDocumentsDatasource = this.optionalStateDocuments
-              .controls as FormGroup[];
-            this.optionalMunicipalityDocumentsDatasource = this
+            this.requiredStateDocumentsDatasource.data = this
+              .requiredStateDocuments.controls as FormGroup[];
+            this.optionalStateDocumentsDatasource.data = this
+              .optionalStateDocuments.controls as FormGroup[];
+            this.optionalMunicipalityDocumentsDatasource.data = this
               .optionalMunicipalityDocuments.controls as FormGroup[];
           }
         },
@@ -383,11 +429,11 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
       filterOutSelected(optionalMunicipalityDocuments),
     );
 
-    this.requiredStateDocumentsDatasource = this.requiredStateDocuments
+    this.requiredStateDocumentsDatasource.data = this.requiredStateDocuments
       .controls as FormGroup[];
-    this.optionalStateDocumentsDatasource = this.optionalStateDocuments
+    this.optionalStateDocumentsDatasource.data = this.optionalStateDocuments
       .controls as FormGroup[];
-    this.optionalMunicipalityDocumentsDatasource = this
+    this.optionalMunicipalityDocumentsDatasource.data = this
       .optionalMunicipalityDocuments.controls as FormGroup[];
   }
 
@@ -470,7 +516,7 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
 
           this.optionalMunicipalityDocuments.push(formGroup);
 
-          this.optionalMunicipalityDocumentsDatasource = [
+          this.optionalMunicipalityDocumentsDatasource.data = [
             ...this.optionalMunicipalityDocuments.controls,
           ] as FormGroup[];
         }
@@ -502,7 +548,7 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
 
           if (indexToDelete > -1) {
             formArray.removeAt(indexToDelete);
-            this.optionalMunicipalityDocumentsDatasource = [
+            this.optionalMunicipalityDocumentsDatasource.data = [
               ...formArray.controls,
             ] as FormGroup[];
           }

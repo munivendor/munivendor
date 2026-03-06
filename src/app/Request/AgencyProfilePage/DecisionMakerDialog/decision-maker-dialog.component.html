@@ -3,7 +3,12 @@
 </h2>
 
 <mat-dialog-content>
-  <form #dialogForm="ngForm" style="margin-top: 16px">
+  <form
+    #dialogForm="ngForm"
+    id="decisionMakerForm"
+    (ngSubmit)="onSubmitDecisionMaker()"
+    style="margin-top: 16px"
+  >
     <div class="form-row">
       <mat-form-field appearance="outline">
         <mat-label>First Name</mat-label>
@@ -14,6 +19,8 @@
           name="firstName"
           placeholder="John"
           required
+          (keydown)="onNameKeydown($event)"
+          maxlength="50"
           (blur)="titleCaseField('firstName')"
         />
         <mat-error>First name is required.</mat-error>
@@ -28,6 +35,8 @@
           name="lastName"
           placeholder="Doe"
           required
+          (keydown)="onNameKeydown($event)"
+          maxlength="50"
           (blur)="titleCaseField('lastName')"
         />
         <mat-error>Last name is required.</mat-error>
@@ -44,6 +53,8 @@
           name="title"
           placeholder="Contracting Officer"
           required
+          (keydown)="onNameKeydown($event)"
+          maxlength="100"
         />
         <mat-error *ngIf="title.hasError('required')"
           >Title is required.</mat-error
@@ -84,6 +95,7 @@
           maxlength="14"
           required
           [pattern]="phonePattern"
+          (keydown)="onPhoneKeydown($event)"
         />
         <mat-error *ngIf="phoneNumberField.hasError('required')">
           Phone number is required.
@@ -96,6 +108,7 @@
       <mat-form-field appearance="outline">
         <mat-label>Email Solicitations</mat-label>
         <mat-select
+          #emailSolicitationsField="ngModel"
           [(ngModel)]="formData.emailSolicitations"
           name="emailSolicitations"
           required
@@ -104,17 +117,21 @@
           <mat-option [value]="true">Yes</mat-option>
           <mat-option [value]="false">No</mat-option>
         </mat-select>
+        <mat-error *ngIf="emailSolicitationsField.hasError('required')">
+          Email solicitations is required.
+        </mat-error>
       </mat-form-field>
     </div>
   </form>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-button [mat-dialog-close]="null">Cancel</button>
+  <button mat-button type="button" [mat-dialog-close]="null">Cancel</button>
   <button
     mat-raised-button
     color="primary"
-    (click)="onSubmitDecisionMaker()"
+    type="submit"
+    form="decisionMakerForm"
     [disabled]="isSaving"
   >
     {{
