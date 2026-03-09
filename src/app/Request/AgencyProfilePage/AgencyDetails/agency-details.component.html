@@ -1,0 +1,179 @@
+<div class="profile-card">
+  <!-- Card Header -->
+  <div class="card-header">
+    <div class="header-accent"></div>
+    <div class="header-content">
+      <h2 class="card-title">Government Agency Profile Details</h2>
+      <p class="card-description">
+        MuniVendor uses this information to (a) automatically email a copy of
+        submission packets from offerors after the closing date, and (b) confirm
+        authorized designee information in the event the require customer
+        service report.
+      </p>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="state-container" *ngIf="isLoading">
+    <mat-spinner diameter="36"></mat-spinner>
+    <p class="loading-text">Loading agency details...</p>
+  </div>
+
+  <!-- Form -->
+  <form
+    *ngIf="!isLoading"
+    [formGroup]="form"
+    (ngSubmit)="onSave()"
+    novalidate
+    class="card-form"
+  >
+    <!-- Agency Name -->
+    <div class="form-section">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Government Agency Name</mat-label>
+        <input
+          matInput
+          formControlName="agencyName"
+          placeholder="Enter agency name"
+        />
+        <mat-icon matSuffix class="field-icon">business</mat-icon>
+        <mat-error *ngIf="isFieldInvalid('agencyName')"
+          >Agency name is required.</mat-error
+        >
+      </mat-form-field>
+    </div>
+
+    <!-- Logo Upload -->
+    <div class="form-section">
+      <label class="subsection-label">Government Agency Logo</label>
+      <div class="upload-zone" [class.has-file]="selectedFileName">
+        <mat-icon class="upload-icon">cloud_upload</mat-icon>
+        <div class="upload-text">
+          <span class="upload-primary">{{
+            selectedFileName || "Choose a file to upload"
+          }}</span>
+          <span class="upload-secondary"
+            >Accepted: JPG, PNG only &nbsp;·&nbsp; Max size: 50 MB</span
+          >
+        </div>
+        <label class="upload-btn">
+          Browse
+          <input
+            type="file"
+            accept=".jpg,.jpeg,.png,.pdf"
+            (change)="onFileSelected($event)"
+            hidden
+          />
+        </label>
+      </div>
+
+      <!-- Existing logo preview -->
+      <div class="logo-preview" *ngIf="existingLogoUrl && !selectedFile">
+        <img [src]="existingLogoUrl" alt="Agency Logo" class="logo-img" />
+        <button
+          type="button"
+          mat-stroked-button
+          color="warn"
+          (click)="onRemoveLogo()"
+        >
+          <mat-icon>delete_outline</mat-icon> Remove Logo
+        </button>
+      </div>
+    </div>
+
+    <!-- Address -->
+    <div class="form-section">
+      <div class="subsection-label-group">
+        <span class="subsection-label">Address</span>
+        <span class="subsection-hint"
+          >Please insert the address where the Purchasing Department
+          resides.</span
+        >
+      </div>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Street Address Line 1</mat-label>
+        <input
+          matInput
+          formControlName="addressLine1"
+          placeholder="123 Main Street"
+        />
+        <mat-error *ngIf="isFieldInvalid('addressLine1')"
+          >Street address is required.</mat-error
+        >
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Street Address Line 2</mat-label>
+        <input
+          matInput
+          formControlName="addressLine2"
+          placeholder="Suite, floor, unit (optional)"
+        />
+      </mat-form-field>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>City</mat-label>
+          <input matInput formControlName="city" placeholder="City" />
+          <mat-error *ngIf="isFieldInvalid('city')"
+            >City is required.</mat-error
+          >
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>State</mat-label>
+          <input matInput formControlName="state" placeholder="State" />
+          <mat-error *ngIf="isFieldInvalid('state')"
+            >State is required.</mat-error
+          >
+        </mat-form-field>
+      </div>
+
+      <div class="form-row form-row--narrow">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Zip Code</mat-label>
+          <input matInput formControlName="zipCode" placeholder="00000" />
+          <mat-error *ngIf="isFieldInvalid('zipCode')"
+            >Zip code is required.</mat-error
+          >
+        </mat-form-field>
+        <div class="row-spacer"></div>
+      </div>
+    </div>
+
+    <!-- Main Phone -->
+    <div class="form-section">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Government Agency Main Number</mat-label>
+        <input
+          matInput
+          formControlName="mainPhoneNumber"
+          placeholder="(555) 555-5555"
+        />
+        <mat-icon matSuffix class="field-icon">phone</mat-icon>
+        <mat-error *ngIf="isFieldInvalid('mainPhoneNumber')"
+          >Main phone number is required.</mat-error
+        >
+      </mat-form-field>
+    </div>
+
+    <!-- Card Footer -->
+    <div class="card-footer">
+      <button
+        mat-flat-button
+        color="primary"
+        type="submit"
+        class="save-btn"
+        [disabled]="isSaving || form.pristine"
+      >
+        <mat-icon *ngIf="!isSaving">save</mat-icon>
+        <mat-spinner
+          *ngIf="isSaving"
+          diameter="18"
+          class="btn-spinner"
+        ></mat-spinner>
+        {{ isSaving ? "Saving..." : "Save Changes" }}
+      </button>
+    </div>
+  </form>
+</div>
