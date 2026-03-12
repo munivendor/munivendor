@@ -18,7 +18,7 @@ export class GlobalErrorHandler implements ErrorHandler {
       3,
       {
         source: 'GlobalErrorHandler',
-        url: window.location.href,
+        url: typeof window !== 'undefined' ? window.location.href : 'ssr',
       },
     );
 
