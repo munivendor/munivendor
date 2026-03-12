@@ -1,5 +1,4 @@
 <div class="profile-card">
-  <!-- Card Header -->
   <div class="card-header">
     <div class="header-accent"></div>
     <div class="header-content">
@@ -7,19 +6,17 @@
       <p class="card-description">
         MuniVendor uses this information to (a) automatically email a copy of
         submission packets from offerors after the closing date, and (b) confirm
-        authorized designee information in the event the require customer
+        authorized designee information in the event they require customer
         service report.
       </p>
     </div>
   </div>
 
-  <!-- Loading State -->
   <div class="state-container" *ngIf="isLoading">
     <mat-spinner diameter="36"></mat-spinner>
     <p class="loading-text">Loading agency details...</p>
   </div>
 
-  <!-- Form -->
   <form
     *ngIf="!isLoading"
     [formGroup]="form"
@@ -28,136 +25,147 @@
     class="card-form"
   >
     <!-- Agency Name -->
-    <div class="form-section">
+    <div>
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Government Agency Name</mat-label>
         <input
           matInput
-          formControlName="agencyName"
-          placeholder="Enter agency name"
+          formControlName="organizationName"
+          placeholder="City of Springfield"
+          (blur)="titleCaseField('organizationName')"
         />
         <mat-icon matSuffix class="field-icon">business</mat-icon>
-        <mat-error *ngIf="isFieldInvalid('agencyName')"
-          >Agency name is required.</mat-error
-        >
+        <mat-error *ngIf="isFieldInvalid('organizationName')">
+          Agency name is required.
+        </mat-error>
       </mat-form-field>
     </div>
 
-    <!-- Logo Upload -->
+    <!--     
     <div class="form-section">
       <label class="subsection-label">Government Agency Logo</label>
       <div class="upload-zone" [class.has-file]="selectedFileName">
         <mat-icon class="upload-icon">cloud_upload</mat-icon>
         <div class="upload-text">
-          <span class="upload-primary">{{
-            selectedFileName || "Choose a file to upload"
-          }}</span>
-          <span class="upload-secondary"
-            >Accepted: JPG, PNG only &nbsp;·&nbsp; Max size: 50 MB</span
-          >
+          <span class="upload-primary">{{ selectedFileName || "Choose a file to upload" }}</span>
+          <span class="upload-secondary">Accepted: JPG, PNG only &nbsp;·&nbsp; Max size: 50 MB</span>
         </div>
         <label class="upload-btn">
           Browse
-          <input
-            type="file"
-            accept=".jpg,.jpeg,.png,.pdf"
-            (change)="onFileSelected($event)"
-            hidden
-          />
+          <input type="file" accept=".jpg,.jpeg,.png" (change)="onFileSelected($event)" hidden />
         </label>
       </div>
-
-      <!-- Existing logo preview -->
       <div class="logo-preview" *ngIf="existingLogoUrl && !selectedFile">
         <img [src]="existingLogoUrl" alt="Agency Logo" class="logo-img" />
-        <button
-          type="button"
-          mat-stroked-button
-          color="warn"
-          (click)="onRemoveLogo()"
-        >
+        <button type="button" mat-stroked-button color="warn" (click)="onRemoveLogo()">
           <mat-icon>delete_outline</mat-icon> Remove Logo
         </button>
       </div>
     </div>
+    -->
 
-    <!-- Address -->
     <div class="form-section">
       <div class="subsection-label-group">
         <span class="subsection-label">Address</span>
-        <span class="subsection-hint"
-          >Please insert the address where the Purchasing Department
-          resides.</span
-        >
+        <span class="subsection-hint">
+          Please insert the address where the Purchasing Department resides.
+        </span>
       </div>
 
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Street Address Line 1</mat-label>
         <input
           matInput
-          formControlName="addressLine1"
+          formControlName="address"
           placeholder="123 Main Street"
+          (blur)="titleCaseField('address')"
         />
-        <mat-error *ngIf="isFieldInvalid('addressLine1')"
-          >Street address is required.</mat-error
-        >
+        <mat-error *ngIf="isFieldInvalid('address')">
+          Street address is required.
+        </mat-error>
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Street Address Line 2</mat-label>
         <input
           matInput
-          formControlName="addressLine2"
+          formControlName="address2"
           placeholder="Suite, floor, unit (optional)"
+          (blur)="titleCaseField('address2')"
         />
       </mat-form-field>
 
       <div class="form-row">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>City</mat-label>
-          <input matInput formControlName="city" placeholder="City" />
-          <mat-error *ngIf="isFieldInvalid('city')"
-            >City is required.</mat-error
-          >
+          <input
+            matInput
+            formControlName="city"
+            placeholder="Springfield"
+            (blur)="titleCaseField('city')"
+          />
+          <mat-error *ngIf="isFieldInvalid('city')">
+            City is required.
+          </mat-error>
         </mat-form-field>
+
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>State</mat-label>
-          <input matInput formControlName="state" placeholder="State" />
-          <mat-error *ngIf="isFieldInvalid('state')"
-            >State is required.</mat-error
-          >
+          <mat-select formControlName="stateId">
+            <mat-option *ngFor="let s of states" [value]="s.codeId">
+              {{ s.codeDesc }} ({{ s.codeName }})
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="isFieldInvalid('stateId')">
+            State is required.
+          </mat-error>
         </mat-form-field>
       </div>
 
       <div class="form-row form-row--narrow">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Zip Code</mat-label>
-          <input matInput formControlName="zipCode" placeholder="00000" />
-          <mat-error *ngIf="isFieldInvalid('zipCode')"
-            >Zip code is required.</mat-error
-          >
+          <input
+            matInput
+            formControlName="zipCode"
+            placeholder="00000"
+            maxlength="10"
+            (keydown)="onZipKeydown($event)"
+          />
+          <mat-error *ngIf="isFieldInvalid('zipCode')">
+            {{
+              form.get("zipCode")?.hasError("required")
+                ? "Zip code is required."
+                : "Enter a valid zip code (e.g. 12345 or 12345-6789)."
+            }}
+          </mat-error>
         </mat-form-field>
         <div class="row-spacer"></div>
       </div>
     </div>
 
-    <!-- Main Phone -->
-    <div class="form-section">
+    <div class="form-row">
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Government Agency Main Number</mat-label>
         <input
           matInput
-          formControlName="mainPhoneNumber"
+          formControlName="phone"
           placeholder="(555) 555-5555"
+          [value]="displayPhone"
+          (input)="onPhoneInput($any($event.target).value)"
+          (keydown)="onPhoneKeydown($event)"
         />
         <mat-icon matSuffix class="field-icon">phone</mat-icon>
-        <mat-error *ngIf="isFieldInvalid('mainPhoneNumber')"
-          >Main phone number is required.</mat-error
-        >
+        <mat-error *ngIf="isFieldInvalid('phone')">
+          {{
+            form.get("phone")?.hasError("required")
+              ? "Main phone number is required."
+              : "Enter a valid 10-digit phone number."
+          }}
+        </mat-error>
       </mat-form-field>
     </div>
 
-    <!-- Card Footer -->
     <div class="card-footer">
       <button
         mat-flat-button
@@ -167,11 +175,6 @@
         [disabled]="isSaving || form.pristine"
       >
         <mat-icon *ngIf="!isSaving">save</mat-icon>
-        <mat-spinner
-          *ngIf="isSaving"
-          diameter="18"
-          class="btn-spinner"
-        ></mat-spinner>
         {{ isSaving ? "Saving..." : "Save Changes" }}
       </button>
     </div>

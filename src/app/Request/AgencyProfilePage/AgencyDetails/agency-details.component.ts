@@ -7,44 +7,17 @@ import {
   Validators,
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { of } from 'rxjs';
-import { delay } from 'rxjs/operators';
-
-// TODO: Replace with your real model path once created
-// import { AgencyDetails } from '../model/agency-details.model';
-// TODO: Import your real service once API is ready
-// import { AgencyProfileService } from '../services/agency-profile.service';
-import { SnackbarNotificationService } from '../../../shared/service/snackbar-notification.service';
-import { LoggingService } from '../../../exceptionhandling/logging.service';
-import { StateService } from '../../../Request/services/state.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-
-// ─── Temporary mock model — move to agency-details.model.ts when ready ───────
-export interface AgencyDetails {
-  agencyName: string;
-  logoUrl: string | null;
-  addressLine1: string;
-  addressLine2: string | null;
-  city: string;
-  state: string;
-  zipCode: string;
-  mainPhoneNumber: string;
-}
-
-// ─── Temporary mock data — remove once API is ready ──────────────────────────
-const MOCK_AGENCY_DETAILS: AgencyDetails = {
-  agencyName: '',
-  logoUrl: null,
-  addressLine1: '',
-  addressLine2: null,
-  city: '',
-  state: '',
-  zipCode: '',
-  mainPhoneNumber: '',
-};
+import { AgencyDetails } from '../../model/agency-details.model';
+import { AgencyProfileService } from '../../services/agency-profile.service';
+import { SnackbarNotificationService } from '../../../shared/service/snackbar-notification.service';
+import { LoggingService } from '../../../exceptionhandling/logging.service';
+import { StateService } from '../../../Request/services/state.service';
+import { State } from '../../../shared/model/state.model';
+import { MatSelectModule } from '@angular/material/select';
 
 @Component({
   selector: 'app-agency-details',
@@ -57,21 +30,30 @@ const MOCK_AGENCY_DETAILS: AgencyDetails = {
     MatIconModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
   ],
   templateUrl: './agency-details.component.html',
   styleUrls: ['./agency-details.component.css'],
 })
 export class AgencyDetailsComponent implements OnInit {
   @Input() organizationId: number | null = null;
+  @Input() isLoading = false;
+  @Input() set agencyDetails(data: AgencyDetails | null) {
+    if (data) this.patchForm(data);
+  }
+  @Input() states: State[] = [];
+
+  readonly phonePattern = '^\\(\\d{3}\\) \\d{3}-\\d{4}$';
+  readonly zipPattern = '^\\d{5}(-\\d{4})?$';
 
   form!: FormGroup;
-  isLoading = false;
   isSaving = false;
+  displayPhone = '';
 
-  // File upload state
-  selectedFile: File | null = null;
-  selectedFileName: string | null = null;
-  existingLogoUrl: string | null = null;
+  // File upload state — kept for future logo feature
+  // selectedFile: File | null = null;
+  // selectedFileName: string | null = null;
+  // existingLogoUrl: string | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -79,98 +61,116 @@ export class AgencyDetailsComponent implements OnInit {
     private snackbar: SnackbarNotificationService,
     private loggingService: LoggingService,
     private stateService: StateService,
-    // TODO: Inject real service when ready
-    // private agencyProfileService: AgencyProfileService,
+    private agencyProfileService: AgencyProfileService,
   ) {}
 
   ngOnInit(): void {
     this.buildForm();
-    this.loadAgencyDetails();
   }
 
   private buildForm(): void {
     this.form = this.fb.group({
-      agencyName: ['', Validators.required],
-      addressLine1: ['', Validators.required],
-      addressLine2: [null],
+      organizationName: ['', Validators.required],
+      address: ['', Validators.required],
+      address2: [null],
       city: ['', Validators.required],
-      state: ['', Validators.required],
-      zipCode: ['', Validators.required],
-      mainPhoneNumber: ['', Validators.required],
+      stateId: [null, Validators.required],
+      zipCode: ['', [Validators.required, Validators.pattern(this.zipPattern)]],
+      phone: ['', [Validators.required, Validators.pattern(this.phonePattern)]],
     });
-  }
-
-  loadAgencyDetails(): void {
-    this.isLoading = true;
-
-    // ── TODO: Replace this mock with your real API call ──────────────────────
-    // this.agencyProfileService
-    //   .getAgencyDetails(this.organizationId ?? 0)
-    //   .subscribe({ next: (data) => this.patchForm(data), error: ... });
-    // ─────────────────────────────────────────────────────────────────────────
-
-    of(MOCK_AGENCY_DETAILS)
-      .pipe(delay(500)) // simulates network latency — remove with real API
-      .subscribe({
-        next: (data) => {
-          this.patchForm(data);
-          this.isLoading = false;
-          this.cdr.detectChanges();
-        },
-        error: (err) => {
-          this.isLoading = false;
-          this.loggingService.logException(
-            new Error(`HTTP Error ${err.status}: ${err.statusText}`),
-            3,
-            {
-              organizationId: this.organizationId,
-              methodName: 'loadAgencyDetails',
-              className: 'AgencyDetailsComponent',
-              operation: 'getAgencyDetails',
-              userId: this.stateService.getUserId(),
-            },
-          );
-        },
-      });
   }
 
   private patchForm(data: AgencyDetails): void {
+    if (data.phone) {
+      this.displayPhone = this.formatPhoneDisplay(data.phone);
+    }
     this.form.patchValue({
-      agencyName: data.agencyName,
-      addressLine1: data.addressLine1,
-      addressLine2: data.addressLine2 ?? null,
+      organizationName: data.organizationName,
+      address: data.address,
+      address2: data.address2 ?? null,
       city: data.city,
-      state: data.state,
+      stateId: data.stateId,
       zipCode: data.zipCode,
-      mainPhoneNumber: data.mainPhoneNumber,
+      phone: this.displayPhone,
     });
-    this.existingLogoUrl = data.logoUrl;
     this.form.markAsPristine();
   }
 
-  onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (!input.files?.length) return;
+  onPhoneInput(value: string): void {
+    const digits = value.replace(/\D/g, '').slice(0, 10);
+    this.displayPhone = this.formatPhoneDisplay(digits);
+    this.form.get('phone')?.setValue(this.displayPhone, { emitEvent: false });
+  }
 
-    const file = input.files[0];
-    const maxSize = 50 * 1024 * 1024; // 50 MB
+  formatPhoneDisplay(digits: string): string {
+    const d = digits.replace(/\D/g, '');
+    if (d.length === 0) return '';
+    if (d.length <= 3) return `(${d}`;
+    if (d.length <= 6) return `(${d.slice(0, 3)}) ${d.slice(3)}`;
+    return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6, 10)}`;
+  }
 
-    if (file.size > maxSize) {
-      this.snackbar.showSnackbarError('File size exceeds 50 MB limit.');
-      return;
+  onPhoneKeydown(event: KeyboardEvent): void {
+    const controlKeys = [
+      'Backspace',
+      'Delete',
+      'ArrowLeft',
+      'ArrowRight',
+      'Tab',
+      'Home',
+      'End',
+    ];
+    if (controlKeys.includes(event.key)) return;
+    if (!/^\d$/.test(event.key)) event.preventDefault();
+  }
+
+  titleCaseField(
+    field: 'organizationName' | 'city' | 'address' | 'address2',
+  ): void {
+    const val = this.form.get(field)?.value;
+    if (val) {
+      this.form.get(field)?.setValue(
+        val.trim().replace(/\b\w/g, (c: string) => c.toUpperCase()),
+        { emitEvent: false },
+      );
     }
-
-    this.selectedFile = file;
-    this.selectedFileName = file.name;
-    this.form.markAsDirty(); // enables Save button
   }
 
-  onRemoveLogo(): void {
-    this.existingLogoUrl = null;
-    this.selectedFile = null;
-    this.selectedFileName = null;
-    this.form.markAsDirty();
+  onZipKeydown(event: KeyboardEvent): void {
+    const controlKeys = [
+      'Backspace',
+      'Delete',
+      'ArrowLeft',
+      'ArrowRight',
+      'Tab',
+      'Home',
+      'End',
+    ];
+    if (controlKeys.includes(event.key)) return;
+    if (!/[\d\-]/.test(event.key)) event.preventDefault();
   }
+
+  // — File upload — kept for future logo feature
+  // onFileSelected(event: Event): void {
+  //   const input = event.target as HTMLInputElement;
+  //   if (!input.files?.length) return;
+  //   const file = input.files[0];
+  //   const maxSize = 50 * 1024 * 1024;
+  //   if (file.size > maxSize) {
+  //     this.snackbar.showSnackbarError('File size exceeds 50 MB limit.');
+  //     return;
+  //   }
+  //   this.selectedFile = file;
+  //   this.selectedFileName = file.name;
+  //   this.form.markAsDirty();
+  // }
+
+  // onRemoveLogo(): void {
+  //   this.existingLogoUrl = null;
+  //   this.selectedFile = null;
+  //   this.selectedFileName = null;
+  //   this.form.markAsDirty();
+  // }
 
   onSave(): void {
     if (this.form.invalid) {
@@ -179,22 +179,18 @@ export class AgencyDetailsComponent implements OnInit {
     }
 
     this.isSaving = true;
+
+    const { phone, ...formFields } = this.form.value;
+    const rawPhone = phone.replace(/\D/g, '');
+
     const payload: AgencyDetails = {
-      ...this.form.value,
-      logoUrl: this.existingLogoUrl,
+      ...formFields,
+      phone: rawPhone,
+      // logoUrl: this.existingLogoUrl,
     };
 
-    // ── TODO: Replace this mock with your real API call ──────────────────────
-    // const formData = new FormData();
-    // if (this.selectedFile) formData.append('logo', this.selectedFile);
-    // formData.append('data', JSON.stringify(payload));
-    // this.agencyProfileService
-    //   .saveAgencyDetails(this.organizationId ?? 0, formData)
-    //   .subscribe({ next: () => { ... }, error: () => { ... } });
-    // ─────────────────────────────────────────────────────────────────────────
-
-    of(null)
-      .pipe(delay(800)) // simulates network latency — remove with real API
+    this.agencyProfileService
+      .SaveAgencyDetails(this.organizationId ?? 0, payload)
       .subscribe({
         next: () => {
           this.isSaving = false;
@@ -214,10 +210,11 @@ export class AgencyDetailsComponent implements OnInit {
               organizationId: this.organizationId,
               methodName: 'onSave',
               className: 'AgencyDetailsComponent',
-              operation: 'saveAgencyDetails',
+              operation: 'SaveAgencyDetails',
               userId: this.stateService.getUserId(),
             },
           );
+          this.cdr.detectChanges();
         },
       });
   }

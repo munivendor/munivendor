@@ -1,5 +1,4 @@
 <div class="profile-card">
-  <!-- Card Header -->
   <div class="card-header">
     <div class="header-accent"></div>
     <div class="header-content">
@@ -16,13 +15,11 @@
     </div>
   </div>
 
-  <!-- Loading State -->
   <div class="state-container" *ngIf="isLoading">
     <mat-spinner diameter="36"></mat-spinner>
     <p class="loading-text">Loading purchasing designee...</p>
   </div>
 
-  <!-- Form -->
   <form
     *ngIf="!isLoading"
     [formGroup]="form"
@@ -30,25 +27,35 @@
     novalidate
     class="card-form"
   >
-    <!-- Row: Name -->
     <div class="form-row">
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>First Name</mat-label>
-        <input matInput formControlName="firstName" placeholder="First name" />
+        <input
+          matInput
+          formControlName="firstName"
+          placeholder="First name"
+          (keydown)="onNameKeydown($event)"
+          (blur)="titleCaseField('firstName')"
+        />
         <mat-error *ngIf="isFieldInvalid('firstName')"
           >First name is required.</mat-error
         >
       </mat-form-field>
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Last Name</mat-label>
-        <input matInput formControlName="lastName" placeholder="Last name" />
+        <input
+          matInput
+          formControlName="lastName"
+          placeholder="Last name"
+          (keydown)="onNameKeydown($event)"
+          (blur)="titleCaseField('lastName')"
+        />
         <mat-error *ngIf="isFieldInvalid('lastName')"
           >Last name is required.</mat-error
         >
       </mat-form-field>
     </div>
 
-    <!-- Row: Title / Phone -->
     <div class="form-row">
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Title</mat-label>
@@ -65,30 +72,37 @@
         <mat-label>Direct Phone</mat-label>
         <input
           matInput
-          formControlName="directPhone"
+          formControlName="workPhoneNumber"
           placeholder="(555) 555-5555"
+          [value]="displayPhone"
+          (input)="onPhoneInput($any($event.target).value)"
+          (keydown)="onPhoneKeydown($event)"
         />
         <mat-icon matSuffix class="field-icon">phone</mat-icon>
-        <mat-error *ngIf="isFieldInvalid('directPhone')"
-          >Direct phone is required.</mat-error
-        >
+        <mat-error *ngIf="isFieldInvalid('workPhoneNumber')">
+          {{
+            form.get("workPhoneNumber")?.hasError("required")
+              ? "Direct phone is required."
+              : "Enter a valid 10-digit phone number."
+          }}
+        </mat-error>
       </mat-form-field>
     </div>
 
-    <!-- Row: Email / Confirm Email -->
     <div class="form-row">
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Email</mat-label>
         <input
           matInput
           type="email"
-          formControlName="email"
+          formControlName="workEmail"
           placeholder="email@agency.gov"
+          (blur)="normalizeEmail()"
         />
         <mat-icon matSuffix class="field-icon">mail_outline</mat-icon>
-        <mat-error *ngIf="isFieldInvalid('email')">
+        <mat-error *ngIf="isFieldInvalid('workEmail')">
           {{
-            form.get("email")?.hasError("required")
+            form.get("workEmail")?.hasError("required")
               ? "Email is required."
               : "Enter a valid email address."
           }}
@@ -103,13 +117,29 @@
           placeholder="Re-enter email"
         />
         <mat-icon matSuffix class="field-icon">mail_outline</mat-icon>
-        <mat-error *ngIf="isFieldInvalid('confirmEmail')"
-          >Emails do not match.</mat-error
+        <mat-error *ngIf="isFieldInvalid('confirmEmail')">
+          {{
+            form.get("confirmEmail")?.hasError("required")
+              ? "Please confirm your email."
+              : "Emails do not match."
+          }}
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="solicitations-field">
+        <mat-label>Email Solicitations</mat-label>
+        <mat-select formControlName="receivesEmailSolicitations">
+          <mat-option [value]="true">Yes</mat-option>
+          <mat-option [value]="false">No</mat-option>
+        </mat-select>
+        <mat-error *ngIf="isFieldInvalid('receivesEmailSolicitations')"
+          >Email solicitations is required.</mat-error
         >
       </mat-form-field>
     </div>
 
-    <!-- Card Footer -->
     <div class="card-footer">
       <button
         mat-flat-button
@@ -119,11 +149,7 @@
         [disabled]="isSaving || form.pristine"
       >
         <mat-icon *ngIf="!isSaving">save</mat-icon>
-        <mat-spinner
-          *ngIf="isSaving"
-          diameter="18"
-          class="btn-spinner"
-        ></mat-spinner>
+
         {{ isSaving ? "Saving..." : "Save Changes" }}
       </button>
     </div>

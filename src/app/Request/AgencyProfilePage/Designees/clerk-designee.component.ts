@@ -1,4 +1,10 @@
-import { Component, Input, OnInit, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  Input,
+  OnInit,
+  ChangeDetectorRef,
+  OnChanges,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   ReactiveFormsModule,
@@ -9,13 +15,8 @@ import {
   ValidationErrors,
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { of } from 'rxjs';
-import { delay } from 'rxjs/operators';
-
-// TODO: Replace with your real model path once created
-// import { ClerkDesignee } from '../model/clerk-designee.model';
-// TODO: Import your real service once API is ready
-// import { AgencyProfileService } from '../services/agency-profile.service';
+import { switchMap } from 'rxjs/operators';
+import { AgencyProfileService } from '../../services/agency-profile.service';
 import { SnackbarNotificationService } from '../../../shared/service/snackbar-notification.service';
 import { LoggingService } from '../../../exceptionhandling/logging.service';
 import { StateService } from '../../../Request/services/state.service';
@@ -24,38 +25,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { UserDesignation } from '../../model/user-designation.model';
+import { Observable } from 'rxjs';
 
-// ─── Temporary mock model — move to clerk-designee.model.ts when ready ────────
-export interface ClerkDesignee {
-  firstName: string;
-  lastName: string | null;
-  title: string;
-  directPhone: string;
-  email: string;
-  confirmEmail: string;
-  clerkType: string;
-}
-
-// ─── TODO: Replace with real options from API or hardcoded list ───────────────
-export interface DropdownOption {
-  value: string;
-  label: string;
-}
-
-// ─── Temporary mock data — remove once API is ready ──────────────────────────
-const MOCK_CLERK_DESIGNEE: ClerkDesignee = {
-  firstName: '',
-  lastName: null,
-  title: '',
-  directPhone: '',
-  email: '',
-  confirmEmail: '',
-  clerkType: '',
-};
-
-// ─── Custom validator: confirm email must match email ─────────────────────────
 function emailMatchValidator(group: AbstractControl): ValidationErrors | null {
-  const email = group.get('email')?.value;
+  const email = group.get('workEmail')?.value;
   const confirm = group.get('confirmEmail')?.value;
   if (confirm && email !== confirm) {
     group.get('confirmEmail')?.setErrors({ emailMismatch: true });
@@ -85,12 +59,18 @@ function emailMatchValidator(group: AbstractControl): ValidationErrors | null {
   templateUrl: './clerk-designee.component.html',
   styleUrls: ['./designee-shared.component.css'],
 })
-export class ClerkDesigneeComponent implements OnInit {
+export class ClerkDesigneeComponent implements OnInit, OnChanges {
   @Input() organizationId: number | null = null;
+  @Input() existingDesignee: UserDesignation | null = null;
+  @Input() isLoadingDesignees = false;
+
+  readonly phonePattern = '^\\(\\d{3}\\) \\d{3}-\\d{4}$';
+  readonly emailPattern =
+    '^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$';
 
   form!: FormGroup;
-  isLoading = false;
   isSaving = false;
+  displayPhone = '';
 
   constructor(
     private fb: FormBuilder,
@@ -98,67 +78,117 @@ export class ClerkDesigneeComponent implements OnInit {
     private snackbar: SnackbarNotificationService,
     private loggingService: LoggingService,
     private stateService: StateService,
-    // TODO: Inject real service when ready
-    // private agencyProfileService: AgencyProfileService,
+    private agencyProfileService: AgencyProfileService,
   ) {}
+
+  get isLoading(): boolean {
+    return this.isLoadingDesignees;
+  }
 
   ngOnInit(): void {
     this.buildForm();
-    this.loadClerkDesignee();
+  }
+
+  ngOnChanges(): void {
+    if (this.existingDesignee && this.form) {
+      this.patchForm(this.existingDesignee);
+    }
   }
 
   private buildForm(): void {
     this.form = this.fb.group(
       {
-        firstName: ['', Validators.required],
-        lastName: [null],
+        firstName: ['', [Validators.required]],
+        lastName: ['', [Validators.required]],
         title: ['', Validators.required],
-        directPhone: ['', Validators.required],
-        email: ['', [Validators.required, Validators.email]],
-        confirmEmail: [''],
-        clerkType: ['', Validators.required],
+        workPhoneNumber: [
+          '',
+          [Validators.required, Validators.pattern(this.phonePattern)],
+        ],
+        workEmail: [
+          '',
+          [Validators.required, Validators.pattern(this.emailPattern)],
+        ],
+        confirmEmail: ['', [Validators.required]],
+        receivesEmailSolicitations: [null, Validators.required],
       },
       { validators: emailMatchValidator },
     );
   }
 
-  loadClerkDesignee(): void {
-    this.isLoading = true;
-
-    // ── TODO: Replace this mock with your real API call ──────────────────────
-    // this.agencyProfileService
-    //   .getClerkDesignee(this.organizationId ?? 0)
-    //   .subscribe({ next: (data) => this.patchForm(data), error: ... });
-    // ─────────────────────────────────────────────────────────────────────────
-
-    of(MOCK_CLERK_DESIGNEE)
-      .pipe(delay(500))
-      .subscribe({
-        next: (data) => {
-          this.patchForm(data);
-          this.isLoading = false;
-          this.cdr.detectChanges();
-        },
-        error: (err) => {
-          this.isLoading = false;
-          this.loggingService.logException(
-            new Error(`HTTP Error ${err.status}: ${err.statusText}`),
-            3,
-            {
-              organizationId: this.organizationId,
-              methodName: 'loadClerkDesignee',
-              className: 'ClerkDesigneeComponent',
-              operation: 'getClerkDesignee',
-              userId: this.stateService.getUserId(),
-            },
-          );
-        },
-      });
+  private patchForm(data: UserDesignation): void {
+    if (data.workPhoneNumber) {
+      this.displayPhone = this.formatPhoneDisplay(data.workPhoneNumber);
+    }
+    this.form.patchValue({
+      ...data,
+      workPhoneNumber: this.displayPhone,
+      confirmEmail: data.workEmail ?? '',
+    });
+    this.form.markAsPristine();
   }
 
-  private patchForm(data: ClerkDesignee): void {
-    this.form.patchValue(data);
-    this.form.markAsPristine();
+  onPhoneInput(value: string): void {
+    const digits = value.replace(/\D/g, '').slice(0, 10);
+    this.displayPhone = this.formatPhoneDisplay(digits);
+    this.form
+      .get('workPhoneNumber')
+      ?.setValue(this.displayPhone, { emitEvent: false });
+  }
+
+  formatPhoneDisplay(digits: string): string {
+    const d = digits.replace(/\D/g, '');
+    if (d.length === 0) return '';
+    if (d.length <= 3) return `(${d}`;
+    if (d.length <= 6) return `(${d.slice(0, 3)}) ${d.slice(3)}`;
+    return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6, 10)}`;
+  }
+
+  onPhoneKeydown(event: KeyboardEvent): void {
+    const controlKeys = [
+      'Backspace',
+      'Delete',
+      'ArrowLeft',
+      'ArrowRight',
+      'Tab',
+      'Home',
+      'End',
+    ];
+    if (controlKeys.includes(event.key)) return;
+    if (!/^\d$/.test(event.key)) event.preventDefault();
+  }
+
+  titleCaseField(field: 'firstName' | 'lastName'): void {
+    const val = this.form.get(field)?.value;
+    if (val) {
+      this.form.get(field)?.setValue(
+        val.trim().replace(/\b\w/g, (c: string) => c.toUpperCase()),
+        { emitEvent: false },
+      );
+    }
+  }
+
+  onNameKeydown(event: KeyboardEvent): void {
+    const controlKeys = [
+      'Backspace',
+      'Delete',
+      'ArrowLeft',
+      'ArrowRight',
+      'Tab',
+      'Home',
+      'End',
+    ];
+    if (controlKeys.includes(event.key)) return;
+    if (!/^[a-zA-Z\s\-'.]$/.test(event.key)) event.preventDefault();
+  }
+
+  normalizeEmail(): void {
+    const val = this.form.get('workEmail')?.value;
+    if (val) {
+      this.form
+        .get('workEmail')
+        ?.setValue(val.trim().toLowerCase(), { emitEvent: false });
+    }
   }
 
   onSave(): void {
@@ -168,41 +198,57 @@ export class ClerkDesigneeComponent implements OnInit {
     }
 
     this.isSaving = true;
-    const payload: ClerkDesignee = this.form.value;
 
-    // ── TODO: Replace this mock with your real API call ──────────────────────
-    // this.agencyProfileService
-    //   .saveClerkDesignee(this.organizationId ?? 0, payload)
-    //   .subscribe({ next: () => { ... }, error: () => { ... } });
-    // ─────────────────────────────────────────────────────────────────────────
+    const { confirmEmail, workPhoneNumber, ...formFields } = this.form.value;
 
-    of(null)
-      .pipe(delay(800))
-      .subscribe({
-        next: () => {
-          this.isSaving = false;
-          this.form.markAsPristine();
-          this.snackbar.showSnackbarSuccess(
-            'Clerk designee saved successfully.',
-          );
-          this.cdr.detectChanges();
-        },
-        error: (err) => {
-          this.isSaving = false;
-          this.snackbar.showSnackbarError('Failed to save clerk designee.');
-          this.loggingService.logException(
-            new Error(`HTTP Error ${err.status}: ${err.statusText}`),
-            3,
-            {
-              organizationId: this.organizationId,
-              methodName: 'onSave',
-              className: 'ClerkDesigneeComponent',
-              operation: 'saveClerkDesignee',
-              userId: this.stateService.getUserId(),
-            },
-          );
-        },
-      });
+    const rawPhone = workPhoneNumber.replace(/\D/g, '');
+
+    const isExistingUser =
+      this.existingDesignee != null && this.existingDesignee.userId != null;
+
+    const userPayload = {
+      ...formFields,
+      workPhoneNumber: rawPhone,
+      organizationId: this.organizationId,
+      ...(isExistingUser && { userId: this.existingDesignee!.userId }),
+    };
+
+    const save$ = (
+      isExistingUser
+        ? this.agencyProfileService.CreateUser(userPayload)
+        : this.agencyProfileService
+            .CreateUser(userPayload)
+            .pipe(
+              switchMap((newUserId: number) =>
+                this.agencyProfileService.SaveUserDesignations(newUserId, [1]),
+              ),
+            )
+    ) as Observable<unknown>;
+
+    save$.subscribe({
+      next: () => {
+        this.isSaving = false;
+        this.form.markAsPristine();
+        this.snackbar.showSnackbarSuccess('Clerk designee saved successfully.');
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.isSaving = false;
+        this.snackbar.showSnackbarError('Failed to save clerk designee.');
+        this.loggingService.logException(
+          new Error(`HTTP Error ${err.status}: ${err.statusText}`),
+          3,
+          {
+            organizationId: this.organizationId,
+            methodName: 'onSave',
+            className: 'ClerkDesigneeComponent',
+            operation: 'saveClerkDesignee',
+            userId: this.stateService.getUserId(),
+          },
+        );
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   isFieldInvalid(field: string): boolean {

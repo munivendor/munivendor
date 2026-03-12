@@ -1,6 +1,23 @@
 <h1>Government Agency Profile Page</h1>
-<app-agency-details [organizationId]="organizationId" />
-<app-purchasing-designee [organizationId]="organizationId" />
-<app-legal-designee [organizationId]="organizationId" />
-<app-clerk-designee [organizationId]="organizationId" />
+<app-agency-details
+  [organizationId]="organizationId"
+  [agencyDetails]="agencyDetails"
+  [isLoading]="isLoadingAgency"
+  [states]="states"
+/>
+<app-purchasing-designee
+  [organizationId]="organizationId"
+  [existingDesignee]="purchasingDesignee"
+  [isLoadingDesignees]="isLoadingDesignees"
+/>
+<app-legal-designee
+  [organizationId]="organizationId"
+  [existingDesignee]="legalDesignee"
+  [isLoadingDesignees]="isLoadingDesignees"
+/>
+<app-clerk-designee
+  [organizationId]="organizationId"
+  [existingDesignee]="clerkDesignee"
+  [isLoadingDesignees]="isLoadingDesignees"
+/>
 <app-decision-makers [organizationId]="organizationId" />
