@@ -31,7 +31,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { SubmitConfirmationDialogComponent } from './SubmitConfirmationDialog/submit-confirmation-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
 // import { TooltipDirective } from '../shared/directive/tooltip.directive';
-import { OfferorProfileService } from '../shared/service/offeror-profile.service';
+import { OfferorProfileService } from './services/offeror-profile.service';
 import { LoggingService } from '../exceptionhandling/logging.service';
 import { LoadingService } from '../shared/LoadingSpinner/loading.service';
 import { MatSort, MatSortModule } from '@angular/material/sort';
@@ -96,7 +96,7 @@ export class ResponseReviewComponent
 
   offerorDocumentsDatasource = new MatTableDataSource<any>([]);
   offerorDocumentsColumns: string[] = ['formName', 'download'];
-  authorizingOfficialId: number | null = null;
+  offerorAuthorizingOfficialId: number | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -604,11 +604,10 @@ export class ResponseReviewComponent
       .pipe(takeUntil(this.destroy$))
       .subscribe(
         ([response, authorizingOfficials]) => {
-          // Find the matching authorizing official by ID
           const authorizingOfficial = authorizingOfficials.find(
-            (official: { vendorAuthorizingOfficialId: number }) =>
-              official.vendorAuthorizingOfficialId ===
-              response.authorizingOfficialId,
+            (official: { offerorAuthorizingOfficialId: number }) =>
+              official.offerorAuthorizingOfficialId ===
+              response.offerorAuthorizingOfficialId,
           );
 
           this.offerorFinalReviewDetailsForm.patchValue({

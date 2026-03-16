@@ -27,7 +27,7 @@ export class Request {
   requestStatusId!: null | number;
   requestType!: null | RequestType;
   sourceRequestId?: null | number;
-  authorizingOfficialId!: null | number;
+  offerorAuthorizingOfficialId!: null | number;
   organizationId!: number;
   offerorRequestId: any;
 }
