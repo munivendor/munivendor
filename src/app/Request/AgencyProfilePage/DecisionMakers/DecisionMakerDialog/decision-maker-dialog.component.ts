@@ -10,9 +10,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { AgencyProfileService } from '../../services/agency-profile.service';
-import { DecisionMaker } from '../../model/decisionmaker.model';
-import { SnackbarNotificationService } from '../../../shared/service/snackbar-notification.service';
+import { AgencyProfileService } from '../../../services/agency-profile.service';
+import { DecisionMaker } from '../../../model/decisionmaker.model';
+import { SnackbarNotificationService } from '../../../../shared/service/snackbar-notification.service';
 
 @Component({
   selector: 'app-decision-maker-dialog',

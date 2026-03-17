@@ -33,6 +33,9 @@ import { CategoryNode } from '../../shared/model/category-tree.model';
 import { ChangeDetectorRef } from '@angular/core';
 import { LoadingService } from '../../shared/LoadingSpinner/loading.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
+import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
+import { HttpClient } from '@angular/common/http';
+import { TooltipDirective } from '../../shared/directive/tooltip.directive';
 
 interface FlattenedCategoryNode {
   categoryId: string;
@@ -82,6 +85,7 @@ const ACTION_PERMISSIONS: {
     MatMenuModule,
     MatIconModule,
     CustomCategoryDropdownComponent,
+    TooltipDirective,
   ],
 })
 export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
@@ -98,6 +102,12 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
   ): boolean {
     const status = request.agencyRequestStatus?.requestStatusDesc;
     return !!ACTION_PERMISSIONS[status]?.[action];
+  }
+
+  canDownloadPDF(request: any): boolean {
+    const nonDownloadableStatuses = new Set(['Draft']);
+    const status = request.agencyRequestStatus?.requestStatusDesc;
+    return !nonDownloadableStatuses.has(status);
   }
 
   filterForm = this.fb.group({
@@ -133,6 +143,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     'requestStatus',
     'numberOfOffers',
     'actions',
+    'downloadPDF',
   ];
 
   joinedRequestData: Request[] = [];
@@ -153,6 +164,8 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private loadingService: LoadingService,
     private loggingService: LoggingService,
+    private snackbarNotificationService: SnackbarNotificationService,
+    private http: HttpClient,
   ) {}
 
   readonly requestTypeMap = {
@@ -327,8 +340,6 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
         ...(params || {}),
       };
 
-      const combinedData: any[] = [];
-
       this.loadingService.show();
 
       this.requestService
@@ -342,39 +353,28 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
             const requestsData = requests?.requests || [];
             this.hasLoadedData = requestsData.length > 0;
 
-            requestsData.forEach((request: any) => {
-              // Map the friendly names from the API response
-              const requestType = {
+            const mappedData = requestsData.map((request: any) => ({
+              ...request,
+              publishDate: request.publishDate
+                ? new Date(request.publishDate + 'Z')
+                : null,
+              closeDate: request.closeDate
+                ? new Date(request.closeDate + 'Z')
+                : null,
+              requestType: {
                 requestTypeId: request.requestTypeId,
                 requestTypeDesc: request.requestTypeName,
-              };
-
-              const agencyRequestStatus = {
+              },
+              agencyRequestStatus: {
                 requestStatusId: request.agencyRequestStatusId,
                 requestStatusDesc: request.agencyRequestStatusName,
-              };
-
-              const submittedOffersCount = (request.responses || []).filter(
+              },
+              submittedOffersCount: (request.responses || []).filter(
                 (r: any) => r.offerorRequestStatusId === 9,
-              ).length;
+              ).length,
+            }));
 
-              request.publishDate = request.publishDate
-                ? new Date(request.publishDate + 'Z')
-                : null;
-
-              request.closeDate = request.closeDate
-                ? new Date(request.closeDate + 'Z')
-                : null;
-
-              combinedData.push({
-                ...request,
-                requestType,
-                agencyRequestStatus,
-                submittedOffersCount,
-              });
-            });
-
-            this.dataSource = new MatTableDataSource(combinedData);
+            this.dataSource = new MatTableDataSource(mappedData);
             this.cdr.detectChanges();
 
             setTimeout(() => {
@@ -574,6 +574,89 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
           });
         },
       });
+  }
+
+  downloadSolicitation(request: any): void {
+    const filename = this.generateSolicitationFilename(request);
+    this.loadingService.show('Downloading...');
+
+    this.http
+      .post(
+        '/api/generate-pdf/' + request.requestId,
+        { html: '' },
+        { responseType: 'blob' },
+      )
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          const blob = new Blob([response], { type: 'application/pdf' });
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          a.click();
+          window.URL.revokeObjectURL(url);
+          this.loadingService.hide();
+          this.snackbarNotificationService.showSnackbarSuccess(
+            'Solicitation downloaded successfully.',
+          );
+        },
+        error: (error) => {
+          this.loadingService.hide();
+
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              requestId: request.requestId,
+              organizationId: this.organizationId,
+              correlationId: correlationId,
+              methodName: 'downloadSolicitation',
+              className: 'AgencyTableDetailsComponent',
+              operation: 'GeneratePDF',
+              userId: this.stateService.getUserId(),
+            },
+          );
+        },
+      });
+  }
+
+  private generateSolicitationFilename(request: any): string {
+    const sanitize = (str: string): string => {
+      return str
+        .replace(/[^a-zA-Z0-9\s-_]/g, '')
+        .replace(/\s+/g, '_')
+        .trim();
+    };
+
+    const formatDate = (date: Date | string): string => {
+      let utcDate: Date;
+
+      if (typeof date === 'string') {
+        utcDate = new Date(date + 'Z');
+      } else {
+        utcDate = date;
+      }
+
+      const month = String(utcDate.getMonth() + 1).padStart(2, '0');
+      const day = String(utcDate.getDate()).padStart(2, '0');
+      const year = utcDate.getFullYear();
+
+      return `${month}-${day}-${year}`;
+    };
+
+    if (request) {
+      const solicitationName = request.requestName || 'Unknown';
+
+      const closeDate = request.closeDate
+        ? formatDate(request.closeDate)
+        : 'NoDate';
+      return `Solicitation_${sanitize(solicitationName)}_${closeDate}.pdf`;
+    }
+
+    return 'Solicitation.pdf';
   }
 
   onCancelUpdateRequestStatus(request: any, action: string): void {

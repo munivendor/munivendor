@@ -25,7 +25,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatMenuTrigger } from '@angular/material/menu';
 import { MatMenuModule } from '@angular/material/menu';
 import { Router } from '@angular/router';
-import { OfferorProfileService } from '../shared/service/offeror-profile.service';
+import { OfferorProfileService } from './services/offeror-profile.service';
 import { Response } from '../shared/model/response.model';
 import { StateService } from '../Request/services/state.service';
 import { TooltipDirective } from '../shared/directive/tooltip.directive';
@@ -42,7 +42,7 @@ interface FlattenedCategoryNode {
 }
 
 interface AuthorizingOfficial {
-  vendorAuthorizingOfficialId: number;
+  offerorAuthorizingOfficialId: number;
   firstName: string;
   lastName: string;
 }
@@ -79,7 +79,7 @@ export class ResponseBasicComponent implements OnInit {
   request: Response | undefined;
   responseForm: FormGroup;
   private destroy$ = new Subject<void>();
-  authorizingOfficialId: number | null = null;
+  offerorAuthorizingOfficialId: number | null = null;
   organizationId = this.stateService.getOrganizationId();
   responseIdFromStateService = this.stateService.getRequestId();
   filteredCategoriesSubject = new BehaviorSubject<FlattenedCategoryNode[]>([]);
@@ -114,14 +114,14 @@ export class ResponseBasicComponent implements OnInit {
 
           if (this.authorizingOfficials.length > 0) {
             const firstOfficial = this.authorizingOfficials[0];
-            this.authorizingOfficialId =
-              firstOfficial.vendorAuthorizingOfficialId;
+            this.offerorAuthorizingOfficialId =
+              firstOfficial.offerorAuthorizingOfficialId;
 
             this.responseForm.patchValue({
-              authorizingOfficial: firstOfficial.vendorAuthorizingOfficialId,
+              authorizingOfficial: firstOfficial.offerorAuthorizingOfficialId,
             });
           } else {
-            this.authorizingOfficialId = null;
+            this.offerorAuthorizingOfficialId = null;
             this.responseForm.patchValue({
               authorizingOfficial: null,
             });
@@ -129,7 +129,7 @@ export class ResponseBasicComponent implements OnInit {
         },
         (error) => {
           this.authorizingOfficials = [];
-          this.authorizingOfficialId = null;
+          this.offerorAuthorizingOfficialId = null;
           this.responseForm.patchValue({
             authorizingOfficial: null,
           });
@@ -154,7 +154,7 @@ export class ResponseBasicComponent implements OnInit {
   }
 
   onAuthorizingOfficialChange(officialId: number): void {
-    this.authorizingOfficialId = officialId;
+    this.offerorAuthorizingOfficialId = officialId;
   }
 
   ngOnInit(): void {
@@ -171,7 +171,11 @@ export class ResponseBasicComponent implements OnInit {
 
     if (this.sourceIdParam) {
       this.loadTemplateRequest(Number(this.sourceIdParam));
-      this.fetchAuthorizingOfficials();
+      const isEditMode =
+        !!this.responseIdParam || !!this.responseIdFromStateService;
+      if (!isEditMode) {
+        this.fetchAuthorizingOfficials();
+      }
     }
 
     if (this.responseIdParam) {
@@ -374,15 +378,19 @@ export class ResponseBasicComponent implements OnInit {
       .subscribe(
         ([response, authorizingOfficials]) => {
           this.authorizingOfficials = authorizingOfficials || [];
+          setTimeout(() => {
+            this.responseForm.patchValue({
+              responseName: response.requestName,
+              authorizingOfficial:
+                response.offerorAuthorizingOfficialId || null,
+            });
 
-          this.responseForm.patchValue({
-            responseName: response.requestName,
-            authorizingOfficial: response.authorizingOfficialId || null,
-          });
+            if (response.offerorAuthorizingOfficialId) {
+              this.offerorAuthorizingOfficialId =
+                response.offerorAuthorizingOfficialId;
+            }
+          }, 0);
 
-          if (response.authorizingOfficialId) {
-            this.authorizingOfficialId = response.authorizingOfficialId;
-          }
           this.loadingService.hide();
         },
         (error: any) => {
@@ -458,7 +466,7 @@ export class ResponseBasicComponent implements OnInit {
       requestName: responseName,
       requestTypeId: 4,
       sourceRequestId: +(sourceRequestId ?? 0),
-      authorizingOfficialId: this.authorizingOfficialId,
+      offerorAuthorizingOfficialId: this.offerorAuthorizingOfficialId,
       organizationId: this.organizationId,
     };
     const responseIdFromStateService = this.stateService.getRequestId();
@@ -466,7 +474,6 @@ export class ResponseBasicComponent implements OnInit {
       this.responseIdParam ?? responseIdFromStateService;
 
     if (effectiveResponseId) {
-      // EDIT MODE - don't set creation flag
       this.requestService
         .UpdateRequest(Number(effectiveResponseId), request)
         .pipe(takeUntil(this.destroy$))
@@ -474,7 +481,6 @@ export class ResponseBasicComponent implements OnInit {
           (responseRequestId: number) => {
             this.stateService.setRequestId(responseRequestId);
             this.stateService.setRequestHasBeenSaved(true);
-            // In edit mode, don't set the creation flag
             if (isPlatformBrowser(this.platformId)) {
               sessionStorage.setItem(
                 'currentResponseId',
@@ -501,14 +507,13 @@ export class ResponseBasicComponent implements OnInit {
           },
         );
     } else if (!responseIdFromStateService || !this.responseIdParam) {
-      // CREATION MODE - set the creation flag
       this.requestService
         .CreateRequest(request)
         .pipe(takeUntil(this.destroy$))
         .subscribe(
           (response) => {
             this.stateService.setRequestId(response);
-            // Store in sessionStorage for reload detection - only in browser
+
             if (isPlatformBrowser(this.platformId)) {
               sessionStorage.setItem('currentResponseId', response.toString());
               sessionStorage.setItem('response_in_creation_mode', 'true');
