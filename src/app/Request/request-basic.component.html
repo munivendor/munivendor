@@ -59,14 +59,12 @@
             }
           </mat-autocomplete>
           <mat-error
-            *ngIf="basicsFormGroup?.get('category')?.hasError('required')"
+            *ngIf="basicsFormGroup.get('category')?.hasError('required')"
           >
             Category is required.
           </mat-error>
           <mat-error
-            *ngIf="
-              basicsFormGroup?.get('category')?.hasError('invalidCategory')
-            "
+            *ngIf="basicsFormGroup.get('category')?.hasError('invalidCategory')"
           >
             Please select a valid category from the list.
           </mat-error>
@@ -89,7 +87,7 @@
             </mat-option>
           </mat-select>
           <mat-error
-            *ngIf="basicsFormGroup?.get('requestType')?.hasError('required')"
+            *ngIf="basicsFormGroup.get('requestType')?.hasError('required')"
           >
             Solicitation Type is required.
           </mat-error>
@@ -104,7 +102,7 @@
           <mat-label>Solicitation Name</mat-label>
           <input matInput formControlName="requestName" id="requestName" />
           <mat-error
-            *ngIf="basicsFormGroup?.get('requestName')?.hasError('required')"
+            *ngIf="basicsFormGroup.get('requestName')?.hasError('required')"
           >
             Solicitation Name is required.
           </mat-error>
@@ -133,7 +131,7 @@
           ></mat-datepicker-toggle>
           <mat-datepicker #publishDatePicker></mat-datepicker>
           <mat-error
-            *ngIf="basicsFormGroup?.get('publishDate')?.hasError('required')"
+            *ngIf="basicsFormGroup.get('publishDate')?.hasError('required')"
           >
             Publish Date is required.
           </mat-error>
@@ -151,7 +149,7 @@
             id="publishTime"
           />
           <mat-error
-            *ngIf="basicsFormGroup?.get('publishTime')?.hasError('required')"
+            *ngIf="basicsFormGroup.get('publishTime')?.hasError('required')"
           >
             Publish Time is required.
           </mat-error>
@@ -179,7 +177,7 @@
           ></mat-datepicker-toggle>
           <mat-datepicker #closeDatePicker></mat-datepicker>
           <mat-error
-            *ngIf="basicsFormGroup?.get('closeDate')?.hasError('required')"
+            *ngIf="basicsFormGroup.get('closeDate')?.hasError('required')"
           >
             Close Date is required.
           </mat-error>
@@ -197,7 +195,7 @@
             id="closeTime"
           />
           <mat-error
-            *ngIf="basicsFormGroup?.get('closeTime')?.hasError('required')"
+            *ngIf="basicsFormGroup.get('closeTime')?.hasError('required')"
           >
             Close Time is required.
           </mat-error>
@@ -226,7 +224,7 @@
           <mat-datepicker #contractStartDatePicker></mat-datepicker>
           <mat-error
             *ngIf="
-              basicsFormGroup?.get('contractStartDate')?.hasError('required')
+              basicsFormGroup.get('contractStartDate')?.hasError('required')
             "
           >
             Contract Start Date is required.
@@ -253,9 +251,7 @@
           ></mat-datepicker-toggle>
           <mat-datepicker #contractEndDatePicker></mat-datepicker>
           <mat-error
-            *ngIf="
-              basicsFormGroup?.get('contractEndDate')?.hasError('required')
-            "
+            *ngIf="basicsFormGroup.get('contractEndDate')?.hasError('required')"
           >
             Contract End Date is required.
           </mat-error>
@@ -323,6 +319,8 @@
       mat-raised-button
       style="margin-bottom: 8px; margin-top: 8px"
       color="primary"
+      type="button"
+      [disabled]="isLastDecisionMakerEmpty()"
       (click)="addDropdown()"
     >
       Add Decision Maker
