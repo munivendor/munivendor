@@ -143,22 +143,6 @@
   gap: 0.65rem;
 }
 
-.name-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--primary-light);
-  color: var(--primary);
-  font-size: 0.72rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  border: 1px solid var(--primary-mid);
-  letter-spacing: 0.03em;
-}
-
 .full-name {
   font-weight: 600;
   color: var(--text-dark);
@@ -168,26 +152,6 @@
 .email-text {
   color: var(--primary);
   font-size: 0.85rem;
-}
-
-/* ── Yes/No Badge ────────────────────────────────── */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.2rem 0.65rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.badge--yes {
-  background: #dcfce7;
-  color: var(--success);
-}
-
-.badge--no {
-  background: #fee2e2;
-  color: var(--error);
 }
 
 /* ── Empty Value ─────────────────────────────────── */
@@ -243,7 +207,7 @@ mat-paginator {
   margin: 0;
 }
 
-.empty-icon {
+/* .empty-icon {
   width: 56px;
   height: 56px;
   border-radius: 50%;
@@ -256,7 +220,7 @@ mat-paginator {
 
 .empty-mat-icon {
   color: var(--primary);
-}
+} */
 
 .empty-title {
   font-weight: 700;
