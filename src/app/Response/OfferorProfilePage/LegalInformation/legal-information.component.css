@@ -1,0 +1,20 @@
+.conditional-field {
+  animation: slide-down 180ms ease-out both;
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.spinner-inline {
+  display: inline-block;
+  margin-right: 6px;
+  vertical-align: middle;
+}

@@ -6,7 +6,6 @@ import {
   Output,
   EventEmitter,
   ChangeDetectorRef,
-  inject,
   PLATFORM_ID,
   Inject,
 } from '@angular/core';
@@ -720,6 +719,13 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     return this.fb.group({
       decisionMaker: ['', Validators.required],
     });
+  }
+
+  isLastDecisionMakerEmpty(): boolean {
+    if (!this.dropdowns || this.dropdowns.length === 0) return false;
+    const lastControl = this.dropdowns.at(this.dropdowns.length - 1);
+    const value = lastControl.get('decisionMaker')?.value;
+    return !value;
   }
 
   addDropdown(): void {

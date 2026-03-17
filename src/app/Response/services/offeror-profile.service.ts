@@ -69,14 +69,18 @@ export class OfferorProfileService {
   // ── Legal Information ─────────────────────────────
 
   /**
-   * GET /OfferorProfile/LegalInformation/{offerorLegalInformationId}
+   * GET /OfferorProfile/LegalInformation/{organizationId}/{offerorLegalInformationId?}
    */
   GetLegalInfo(
-    offerorLegalInformationId: number,
+    organizationId: number,
+    offerorLegalInformationId?: number,
   ): Observable<OfferorLegalInfo> {
-    return this.http.get<OfferorLegalInfo>(
-      `${this.url}/OfferorProfile/LegalInformation/${offerorLegalInformationId}`,
-    );
+    const base = `${this.url}OfferorProfile/LegalInformation/${organizationId}`;
+    const url =
+      offerorLegalInformationId != null
+        ? `${base}/${offerorLegalInformationId}`
+        : base;
+    return this.http.get<OfferorLegalInfo>(url);
   }
 
   /**

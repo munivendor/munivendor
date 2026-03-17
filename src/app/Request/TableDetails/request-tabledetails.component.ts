@@ -334,7 +334,6 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
         this.hasLoadedData = false;
         return;
       }
-
       const requestParams = {
         organizationId: this.organizationId,
         ...(params || {}),
@@ -374,15 +373,14 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
               ).length,
             }));
 
-            this.dataSource = new MatTableDataSource(mappedData);
+            this.dataSource.data = mappedData;
             this.cdr.detectChanges();
 
             setTimeout(() => {
-              if (this.paginator) {
+              if (this.paginator && !this.dataSource.paginator) {
                 this.dataSource.paginator = this.paginator;
-                this.paginator.firstPage();
               }
-              if (this.sort) {
+              if (this.sort && !this.dataSource.sort) {
                 this.dataSource.sortingDataAccessor = (
                   item: any,
                   property: string,
@@ -420,7 +418,11 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
 
                 this.dataSource.sort = this.sort;
               }
-            }, 0);
+
+              if (this.paginator) {
+                this.paginator.firstPage();
+              }
+            }, 500);
           },
           error: (error: any) => {
             const correlationId = error?.error?.correlationId;
@@ -438,24 +440,14 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
               },
             );
 
-            this.dataSource = new MatTableDataSource<any>([]);
+            this.dataSource.data = [];
             this.hasLoadedData = false;
           },
         });
     } catch (error: any) {
-      this.dataSource = new MatTableDataSource<any>([]);
+      this.dataSource.data = [];
     }
   }
-
-  // future for dynamic filtering of solicitation name
-  // applyFilter(event: Event) {
-  //   const filterValue = (event.target as HTMLInputElement).value;
-  //   this.dataSource.filter = filterValue.trim().toLowerCase();
-
-  //   if (this.dataSource.paginator) {
-  //     this.dataSource.paginator.firstPage();
-  //   }
-  // }
 
   openOffersDialog(request: any): void {
     const submittedOffers = (request.responses || []).filter(
@@ -525,6 +517,9 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
       .subscribe((result) => {
         if (result && action === 'delete') {
           this.deleteRequest(request);
+        }
+        if (result && action === 'duplicate') {
+          this.loadAndJoinRequestData();
         }
       });
   }
@@ -743,31 +738,6 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
               methodName: 'onCancelUpdateRequestCancelReason',
               className: 'AgencyTableDetailsComponent',
               operation: 'UpdateRequestCancelReason',
-            },
-          );
-        },
-      });
-  }
-
-  onDuplicateRequest(request: any): void {
-    this.requestService
-      .DuplicateRequest(request.requestId, request.organizationId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.loadAndJoinRequestData();
-        },
-        error: (error) => {
-          const correlationId = error?.error?.correlationId;
-          this.loggingService.logException(
-            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
-            3,
-            {
-              requestId: request.requestId,
-              correlationId: correlationId,
-              methodName: 'onDuplicateRequest',
-              className: 'AgencyTableDetailsComponent',
-              operation: 'DuplicateRequest',
             },
           );
         },
