@@ -637,7 +637,9 @@
               ? "Saving Payment Method..."
               : showAddNew || paymentMethods.length === 0
                 ? "Save Payment Method"
-                : "Complete Purchase and Submit Offer"
+                : data.isForSubmission
+                  ? "Complete Purchase and Submit Offer"
+                  : "Complete Purchase"
         }}
       </button>
     </mat-dialog-actions>
