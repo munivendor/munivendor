@@ -1,184 +1,121 @@
-<div class="offeror-profile-container">
-  <!-- Organization Information Card -->
-  <mat-card class="organization-section">
-    <mat-card-header>
-      <mat-card-title>Organization Information</mat-card-title>
-      <mat-card-subtitle style="margin-bottom: 8px">
-        The information in this section is used on many of the standard NJ State
-        and additional forms used by local government organizations in New
-        Jersey.
-      </mat-card-subtitle>
-    </mat-card-header>
+<h1 class="page-title">Offeror Profile</h1>
 
-    <mat-card-content>
-      <form [formGroup]="organizationForm">
-        <div class="form-row">
-          <mat-form-field class="full-width">
-            <mat-label>Organization Name</mat-label>
-            <input
-              matInput
-              readonly
-              formControlName="organizationName"
-              type="text"
-            />
-          </mat-form-field>
-        </div>
+<!-- Child: has its own form, save, and API call -->
+<app-offeror-details />
 
-        <div class="form-row">
-          <mat-form-field class="full-width">
-            <mat-label>Address</mat-label>
-            <input matInput readonly formControlName="address" />
-          </mat-form-field>
-        </div>
-
-        <div class="form-row">
-          <mat-form-field class="full-width">
-            <mat-label>Address 2</mat-label>
-            <input matInput readonly formControlName="address2" />
-          </mat-form-field>
-        </div>
-
-        <div class="form-row">
-          <mat-form-field class="half-width">
-            <mat-label>City</mat-label>
-            <input matInput readonly formControlName="city" />
-          </mat-form-field>
-
-          <mat-form-field class="quarter-width">
-            <mat-label>State</mat-label>
-            <input matInput readonly formControlName="state" />
-          </mat-form-field>
-
-          <mat-form-field class="quarter-width">
-            <mat-label>Zip Code</mat-label>
-            <input matInput readonly formControlName="zipCode" />
-          </mat-form-field>
-        </div>
-      </form>
-    </mat-card-content>
-  </mat-card>
-
-  <!-- Authorizing Officials Section -->
-  <div class="authorizing-officials-container">
-    <!-- Header -->
-    <div class="section-header">
-      <div class="header-left">
-        <h2 class="section-title">Authorizing Officials</h2>
-        <span class="record-count" *ngIf="!isLoading">
-          {{ totalRecords }} {{ totalRecords === 1 ? "record" : "records" }}
-        </span>
-      </div>
-      <button
-        mat-raised-button
-        color="primary"
-        type="button"
-        (click)="openAddDialog()"
-      >
-        + Add Authorizing Official
-      </button>
-    </div>
-
-    <p>
-      Authorizing Officials are the organization's authorized representatives.
-      Please enter the names, titles, and contact information for each official.
-    </p>
-
-    <!-- Loading State -->
-    <div class="state-container" *ngIf="isLoading">
-      <div class="spinner"></div>
-      <p>Loading authorizing officials...</p>
-    </div>
-
-    <!-- Empty State -->
-    <div
-      class="state-container empty-state"
-      *ngIf="!isLoading && totalRecords === 0"
-    >
-      <div class="empty-icon">&#128101;</div>
-      <p class="empty-title">No Authorizing Officials Found</p>
-      <p class="empty-subtitle">Add an authorizing official to get started.</p>
-    </div>
-
-    <!-- Table -->
-    <div class="table-wrapper" *ngIf="!isLoading && totalRecords > 0">
-      <table mat-table [dataSource]="dataSource" matSort class="data-table">
-        <!-- Name Column -->
-        <ng-container matColumnDef="name">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
-          <td mat-cell *matCellDef="let official">
-            <div class="name-cell">
-              <span class="full-name"
-                >{{ official.firstName }} {{ official.lastName }}</span
-              >
-            </div>
-          </td>
-        </ng-container>
-
-        <!-- Title Column -->
-        <ng-container matColumnDef="title">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Title</th>
-          <td mat-cell *matCellDef="let official">
-            <span *ngIf="official.title; else noTitle">{{
-              official.title
-            }}</span>
-            <ng-template #noTitle
-              ><span class="empty-value">—</span></ng-template
-            >
-          </td>
-        </ng-container>
-
-        <!-- Email Column -->
-        <ng-container matColumnDef="email">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Email</th>
-          <td mat-cell *matCellDef="let official">
-            <p>{{ official.email }}</p>
-          </td>
-        </ng-container>
-
-        <!-- Phone Column -->
-        <ng-container matColumnDef="phone">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Phone</th>
-
-          <td mat-cell *matCellDef="let official">
-            {{ official.phone | phone }}
-          </td>
-        </ng-container>
-
-        <!-- Actions Column -->
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef class="actions-col">Actions</th>
-          <td mat-cell *matCellDef="let official" class="actions-col">
-            <div class="action-buttons">
-              <button
-                class="btn btn-sm btn-edit"
-                mat-icon-button
-                type="button"
-                (click)="openEditDialog(official)"
-                matTooltip="Edit Official"
-              >
-                <mat-icon>edit</mat-icon>
-              </button>
-              <!-- <button
-                class="btn btn-sm btn-delete"
-                mat-icon-button
-                type="button"
-                (click)="onDeleteOfficial(official)"
-                matTooltip="Remove Official"
-              >
-                <mat-icon>delete</mat-icon>
-              </button> -->
-            </div>
-          </td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-      </table>
-
-      <mat-paginator
-        [pageSizeOptions]="[5, 10, 25]"
-        showFirstLastButtons
-      ></mat-paginator>
+<!-- Inline: Legal — 2 dropdowns, one save -->
+<div class="profile-card">
+  <div class="card-header">
+    <div class="header-accent"></div>
+    <div class="header-content">
+      <h2 class="card-title">Legal</h2>
     </div>
   </div>
+
+  <form [formGroup]="legalForm" (ngSubmit)="onSaveLegal()" class="card-form">
+    <!-- <div class="form-section"> -->
+    <div class="subsection-label-group">
+      <span class="subsection-label">Contract Failure</span>
+      <span class="subsection-hint">
+        Within the last five years has the business or any officer/partner
+        failed to complete a contract awarded to them?
+      </span>
+    </div>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Select One</mat-label>
+      <mat-select formControlName="contractFailure">
+        <mat-option [value]="true">Yes</mat-option>
+        <mat-option [value]="false">No</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <!-- </div> -->
+
+    <div class="form-section">
+      <div class="subsection-label-group">
+        <span class="subsection-label">Liens and/or Lawsuits</span>
+        <span class="subsection-hint">
+          Have any liens and lawsuits been filed against the company in the past
+          five years?
+        </span>
+      </div>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Select One</mat-label>
+        <mat-select formControlName="liensLawsuits">
+          <mat-option [value]="true">Yes</mat-option>
+          <mat-option [value]="false">No</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="card-footer">
+      <button
+        mat-flat-button
+        color="primary"
+        type="submit"
+        class="save-btn"
+        [disabled]="isSavingLegal || legalForm.pristine"
+      >
+        <mat-icon *ngIf="!isSavingLegal">save</mat-icon>
+        {{ isSavingLegal ? "Saving..." : "Save Changes" }}
+      </button>
+    </div>
+  </form>
 </div>
+
+<!-- Inline: Stockholder — 1 dropdown + add button (table is a child) -->
+<!-- <div class="profile-card">
+  <div class="card-header">
+    <div class="header-accent"></div>
+    <div class="header-content">
+      <h2 class="card-title">Stockholder Information</h2>
+      <p class="card-description">
+        Please enter the names and addresses of all stockholders who hold 10% or
+        more of the issued and outstanding stock of the organization...
+      </p>
+    </div>
+  </div>
+
+  <form
+    [formGroup]="stockholderForm"
+    (ngSubmit)="onSaveStockholder()"
+    class="card-form"
+  >
+    <div class="form-section">
+      <div class="subsection-label-group">
+        <span class="subsection-label"
+          >Are there stockholders who hold 10% or more?</span
+        >
+        <span class="subsection-hint">
+          Selecting "No" means that no one stockholder holds 10% or more of your
+          organization.
+        </span>
+      </div>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Select One</mat-label>
+        <mat-select formControlName="hasStockholders">
+          <mat-option [value]="true">Yes</mat-option>
+          <mat-option [value]="false">No</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="card-footer">
+      <button
+        mat-flat-button
+        color="primary"
+        type="submit"
+        class="save-btn"
+        [disabled]="isSavingStockholder || stockholderForm.pristine"
+      >
+        <mat-icon *ngIf="!isSavingStockholder">save</mat-icon>
+        {{ isSavingStockholder ? "Saving..." : "Save Changes" }}
+      </button>
+    </div>
+  </form>
+</div> -->
+
+<!-- Child: table + add/edit dialog logic warrants its own component -->
+<!-- <app-stockholder-table *ngIf="stockholderForm.get('hasStockholders')?.value === true" /> -->
+
+<!-- Child: table + add/edit dialog -->
+<app-authorizing-officials />

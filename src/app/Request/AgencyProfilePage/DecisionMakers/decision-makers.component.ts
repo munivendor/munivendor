@@ -62,7 +62,6 @@ export class DecisionMakersComponent implements OnInit, AfterViewInit {
 
   isLoading = false;
   @Input() organizationId: number | null = null;
-  //   organizationId = this.stateService.getOrganizationId();
 
   @ViewChild(MatSort) sort!: MatSort;
   @ViewChild(MatPaginator) paginator!: MatPaginator;

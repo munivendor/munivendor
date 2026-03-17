@@ -10,8 +10,6 @@ import { LegalDesigneeComponent } from './Designees/legal-designee.component';
 import { ClerkDesigneeComponent } from './Designees/clerk-designee.component';
 import { AgencyProfileService } from '../services/agency-profile.service';
 import { UserDesignation } from '../model/user-designation.model';
-import { AgencyDetails } from '../model/agency-details.model';
-import { State } from '../../shared/model/state.model';
 
 @Component({
   selector: 'app-agency-profile-page',
@@ -31,10 +29,6 @@ import { State } from '../../shared/model/state.model';
 })
 export class AgencyProfilePageComponent implements OnInit {
   organizationId = this.stateService.getOrganizationId();
-  states: State[] = [];
-
-  agencyDetails: AgencyDetails | null = null; // ← add
-  isLoadingAgency = true;
   isLoadingStates = true;
 
   purchasingDesignee: UserDesignation | null = null;
@@ -48,35 +42,7 @@ export class AgencyProfilePageComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadAgencyDetails();
     this.loadDesignees();
-    this.loadStates();
-  }
-
-  loadStates(): void {
-    this.isLoadingStates = true;
-    this.agencyProfileService.GetStates().subscribe({
-      next: (data) => {
-        this.states = data;
-        this.isLoadingStates = false;
-      },
-      error: () => {
-        this.isLoadingStates = false;
-      },
-    });
-  }
-
-  loadAgencyDetails(): void {
-    this.isLoadingAgency = true;
-    this.agencyProfileService.GetAgencyDetails(this.organizationId!).subscribe({
-      next: (data) => {
-        this.agencyDetails = data;
-        this.isLoadingAgency = false;
-      },
-      error: () => {
-        this.isLoadingAgency = false;
-      },
-    });
   }
 
   loadDesignees(): void {

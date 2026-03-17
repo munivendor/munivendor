@@ -41,7 +41,7 @@ export class AgencyDetailsComponent implements OnInit {
   @Input() set agencyDetails(data: AgencyDetails | null) {
     if (data) this.patchForm(data);
   }
-  @Input() states: State[] = [];
+  states: State[] = [];
 
   readonly phonePattern = '^\\(\\d{3}\\) \\d{3}-\\d{4}$';
   readonly zipPattern = '^\\d{5}(-\\d{4})?$';
@@ -66,6 +66,9 @@ export class AgencyDetailsComponent implements OnInit {
 
   ngOnInit(): void {
     this.buildForm();
+    const orgId = this.organizationId ?? this.stateService.getOrganizationId();
+    if (orgId) this.loadAgencyDetails(orgId);
+    this.loadStates();
   }
 
   private buildForm(): void {
@@ -77,6 +80,40 @@ export class AgencyDetailsComponent implements OnInit {
       stateId: [null, Validators.required],
       zipCode: ['', [Validators.required, Validators.pattern(this.zipPattern)]],
       phone: ['', [Validators.required, Validators.pattern(this.phonePattern)]],
+    });
+  }
+
+  private loadAgencyDetails(organizationId: number): void {
+    this.isLoading = true;
+    this.agencyProfileService.GetAgencyDetails(organizationId).subscribe({
+      next: (data) => {
+        this.patchForm(data);
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.isLoading = false;
+        // log error...
+      },
+    });
+  }
+
+  private loadStates(): void {
+    this.agencyProfileService.GetStates().subscribe({
+      next: (data) => {
+        this.states = data;
+      },
+      error: (err) => {
+        this.loggingService.logException(
+          new Error(`HTTP Error ${err.status}: ${err.statusText}`),
+          3,
+          {
+            methodName: 'loadStates',
+            className: 'AgencyDetailsComponent',
+            operation: 'GetStates',
+            userId: this.stateService.getUserId(),
+          },
+        );
+      },
     });
   }
 

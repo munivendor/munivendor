@@ -1,175 +1,120 @@
-import {
-  Component,
-  OnInit,
-  ViewChild,
-  AfterViewInit,
-  ChangeDetectorRef,
-} from '@angular/core';
+import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatTableModule, MatTableDataSource } from '@angular/material/table';
-import { MatSortModule, MatSort } from '@angular/material/sort';
-import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
-import { MatCardModule } from '@angular/material/card';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { OrganizationService } from '../../Organization/Details/services/organization.service';
-import { Organization } from '../../Organization/Details/model/organization.model';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { StateService } from '../../Request/services/state.service';
-import { OfferorProfileService } from '../../shared/service/offeror-profile.service';
+import { OfferorProfileService } from '../services/offeror-profile.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
 import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
-import { AuthorizingOfficialDialogComponent } from './AuthorizingOfficialDialog/authorizing-official-dialog.component';
-import { PhonePipe } from '../../shared/pipes/phone.pipe';
-
-export interface AuthorizingOfficial {
-  vendorAuthorizingOfficialId?: number;
-  organizationId: number;
-  firstName: string;
-  lastName: string;
-  title: string;
-  email: string;
-  phone?: string | null;
-}
+import { AuthorizingOfficialsComponent } from './AuthorizingOfficials/authorizing-officials.component';
+import { OfferorOrganizationDetailsComponent } from './OfferorDetails/offeror-details.component';
+import { OfferorLegalInfo } from '../model/offeror-legal-info.model';
 
 @Component({
   selector: 'offeror-profile-page',
   templateUrl: './offeror-profile-page.component.html',
-  styleUrls: ['./offeror-profile-page.component.css'],
+  styleUrls: [
+    '../../shared/shared-profile-card.css',
+    './offeror-profile-page.component.css',
+  ],
+  encapsulation: ViewEncapsulation.None,
   standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
     MatButtonModule,
-    MatTableModule,
-    MatSortModule,
-    MatPaginatorModule,
+    MatFormFieldModule,
+    MatSelectModule,
     MatIconModule,
-    MatCardModule,
-    MatTooltipModule,
-    PhonePipe,
+    MatProgressSpinnerModule,
+    AuthorizingOfficialsComponent,
+    OfferorOrganizationDetailsComponent,
   ],
 })
-export class OfferorProfilePageComponent implements OnInit, AfterViewInit {
-  organizationForm!: FormGroup;
+export class OfferorProfilePageComponent implements OnInit {
+  // ── Legal ─────────────────────────────────────────
+  legalForm!: FormGroup;
+  isLoadingLegal = false;
+  isSavingLegal = false;
+  // Null means no record exists yet → POST; non-null → PUT
+  private legalInformationId: number | null = null;
 
-  dataSource = new MatTableDataSource<AuthorizingOfficial>([]);
-  displayedColumns: string[] = ['name', 'title', 'email', 'phone', 'actions'];
+  // ── Stockholder ───────────────────────────────────
+  // Add stockholderForm here when you have the stockholder API endpoints
+  // stockholderForm!: FormGroup;
+  // isLoadingStockholder = false;
+  // isSavingStockholder = false;
 
-  isLoading = false;
-
-  @ViewChild(MatSort) sort!: MatSort;
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  private organizationId: number | null = null;
 
   constructor(
     private fb: FormBuilder,
-    private organizationService: OrganizationService,
     private stateService: StateService,
     private offerorProfileService: OfferorProfileService,
-    private dialog: MatDialog,
-    private cdr: ChangeDetectorRef,
     private loggingService: LoggingService,
-    private snackbarNotificationService: SnackbarNotificationService,
+    private snackbar: SnackbarNotificationService,
   ) {}
 
   ngOnInit(): void {
-    this.organizationForm = this.fb.group({
-      organizationName: [''],
-      address: [''],
-      address2: [''],
-      city: [''],
-      state: [''],
-      zipCode: [''],
-    });
+    this.organizationId = this.stateService.getOrganizationId();
+    this.buildForms();
 
-    const organizationId = this.stateService.getOrganizationId();
-    if (organizationId) {
-      this.loadOrganization(organizationId);
-      this.loadAuthorizingOfficials(organizationId);
+    if (this.organizationId) {
+      // Legal is loaded by its ID, which you may need to look up
+      // via a separate endpoint (e.g. GET by organizationId).
+      // If you have that endpoint, call loadLegalInfo(id) here.
+      // For now, the form stays empty until a record is saved for the first time.
     }
   }
 
-  ngAfterViewInit(): void {
-    this.dataSource.sortingDataAccessor = (
-      item: AuthorizingOfficial,
-      property: string,
-    ) => {
-      switch (property) {
-        case 'name':
-          return `${item.firstName} ${item.lastName}`.toLowerCase();
-        case 'title':
-          return item.title?.toLowerCase() ?? '';
-        case 'email':
-          return item.email?.toLowerCase() ?? '';
-        case 'phone':
-          return item.phone ?? '';
-        default:
-          return '';
-      }
-    };
-  }
+  // ── Form builders ─────────────────────────────────
 
-  private loadOrganization(organizationId: number): void {
-    this.organizationService.getOrganization(organizationId).subscribe({
-      next: (org: Organization) => {
-        this.organizationForm.patchValue({
-          organizationName: org.organizationName,
-          address: org.address,
-          address2: org.address2,
-          city: org.city,
-          state: org.state,
-          zipCode: org.zipCode,
-        });
-      },
-      error: (error) => {
-        const correlationId = error?.error?.correlationId;
-        this.loggingService.logException(
-          new Error(`HTTP Error ${error.status}: ${error.statusText}`),
-          3,
-          {
-            organizationId: this.stateService.getOrganizationId(),
-            correlationId,
-            methodName: 'loadOrganization',
-            className: 'OfferorProfilePageComponent',
-            operation: 'getOrganization',
-            userId: this.stateService.getUserId(),
-          },
-        );
-      },
+  private buildForms(): void {
+    this.legalForm = this.fb.group({
+      contractFailure: [null, Validators.required],
+      liensLawsuits: [null, Validators.required],
     });
   }
 
-  loadAuthorizingOfficials(organizationId: number): void {
-    this.isLoading = true;
+  // ── Legal load ────────────────────────────────────
+
+  /**
+   * Call this once you know the offerorLegalInformationId for this org,
+   * e.g. from a lookup endpoint or after first save.
+   */
+  loadLegalInfo(offerorLegalInformationId: number): void {
+    this.isLoadingLegal = true;
     this.offerorProfileService
-      .GetOfferorAuthorizingOfficials(organizationId)
+      .GetLegalInfo(offerorLegalInformationId)
       .subscribe({
-        next: (officials: AuthorizingOfficial[]) => {
-          this.dataSource.data = officials;
-          this.isLoading = false;
-          this.cdr.detectChanges();
-          this.dataSource.paginator = this.paginator;
-          this.dataSource.sort = this.sort;
+        next: (data: OfferorLegalInfo) => {
+          this.legalInformationId = data.offerorLegalInformationId ?? null;
+          this.legalForm.patchValue({
+            contractFailure: data.contractFailure,
+            liensLawsuits: data.liensLawsuits,
+          });
+          this.legalForm.markAsPristine();
+          this.isLoadingLegal = false;
         },
-        error: (error) => {
-          this.isLoading = false;
-          const correlationId = error?.error?.correlationId;
+        error: (err) => {
+          this.isLoadingLegal = false;
           this.loggingService.logException(
-            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            new Error(`HTTP Error ${err.status}: ${err.statusText}`),
             3,
             {
-              organizationId: this.stateService.getOrganizationId(),
-              correlationId,
-              methodName: 'loadAuthorizingOfficials',
+              offerorLegalInformationId,
+              methodName: 'loadLegalInfo',
               className: 'OfferorProfilePageComponent',
-              operation: 'GetOfferorAuthorizingOfficials',
+              operation: 'GetLegalInfo',
               userId: this.stateService.getUserId(),
             },
           );
@@ -177,99 +122,76 @@ export class OfferorProfilePageComponent implements OnInit, AfterViewInit {
       });
   }
 
-  get totalRecords(): number {
-    return this.dataSource.data.length;
-  }
+  // ── Legal save ────────────────────────────────────
 
-  openAddDialog(): void {
-    const organizationId = this.stateService.getOrganizationId();
-    if (!organizationId) return;
+  onSaveLegal(): void {
+    if (this.legalForm.invalid) {
+      this.legalForm.markAllAsTouched();
+      return;
+    }
 
-    const dialogRef = this.dialog.open(AuthorizingOfficialDialogComponent, {
-      data: {
-        isEditMode: false,
-        formData: this.emptyOfficialForm(organizationId),
-        organizationId,
+    this.isSavingLegal = true;
+
+    const payload: OfferorLegalInfo = {
+      offerorLegalInformationId: this.legalInformationId ?? 0, // 0 for new records
+      organizationId: this.organizationId,
+      contractFailure: this.legalForm.value.contractFailure,
+      liensLawsuits: this.legalForm.value.liensLawsuits,
+      contractFailureDetails: null,
+      liensLawsuitsDetails: null,
+    };
+
+    // POST if no record yet, PUT if one already exists
+    const request$ = this.legalInformationId
+      ? this.offerorProfileService.UpdateLegalInfo(
+          this.legalInformationId,
+          payload,
+        )
+      : this.offerorProfileService.CreateLegalInfo(payload);
+
+    request$.subscribe({
+      next: (response) => {
+        this.isSavingLegal = false;
+        this.legalForm.markAsPristine();
+        // Store the ID so subsequent saves use PUT
+        if (!this.legalInformationId) {
+          this.legalInformationId = response.OfferorLegalInformationId;
+        }
+        this.snackbar.showSnackbarSuccess(
+          'Legal information saved successfully.',
+        );
       },
-      disableClose: true,
-    });
-
-    dialogRef.afterClosed().subscribe((success: boolean | null) => {
-      if (success) this.loadAuthorizingOfficials(organizationId);
-    });
-  }
-
-  openEditDialog(official: AuthorizingOfficial): void {
-    const organizationId = this.stateService.getOrganizationId();
-    if (!organizationId) return;
-
-    const dialogRef = this.dialog.open(AuthorizingOfficialDialogComponent, {
-      data: {
-        isEditMode: true,
-        formData: { ...official },
-        organizationId,
+      error: (err) => {
+        this.isSavingLegal = false;
+        this.snackbar.showSnackbarError('Failed to save legal information.');
+        this.loggingService.logException(
+          new Error(`HTTP Error ${err.status}: ${err.statusText}`),
+          3,
+          {
+            organizationId: this.organizationId,
+            methodName: 'onSaveLegal',
+            className: 'OfferorProfilePageComponent',
+            operation: this.legalInformationId
+              ? 'UpdateLegalInfo'
+              : 'CreateLegalInfo',
+            userId: this.stateService.getUserId(),
+          },
+        );
       },
-      disableClose: true,
-    });
-
-    dialogRef.afterClosed().subscribe((success: boolean | null) => {
-      if (success) this.loadAuthorizingOfficials(organizationId);
     });
   }
 
-  // onDeleteOfficial(official: AuthorizingOfficial): void {
-  //   const dialogData: ConfirmDialogData = {
-  //     title: 'Remove Authorizing Official',
-  //     message:
-  //       'Are you sure you want to remove this authorizing official? This action cannot be undone.',
-  //     confirmLabel: 'Remove',
-  //     cancelLabel: 'Cancel',
-  //     confirmColor: 'warn',
-  //   };
+  // ── Helpers ───────────────────────────────────────
 
-  //   const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-  //     data: dialogData,
-  //     width: '400px',
-  //     disableClose: true,
-  //   });
-
-  //   dialogRef.afterClosed().subscribe((confirmed: boolean) => {
-  //     if (!confirmed) return;
-
-  //     this.offerorProfileService
-  //       .DeleteOfferorAuthorizingOfficial(
-  //         official.vendorAuthorizingOfficialId!,
-  //       )
-  //       .subscribe({
-  //         next: () => {
-  //           this.dataSource.data = this.dataSource.data.filter(
-  //             (o) =>
-  //               o.vendorAuthorizingOfficialId !==
-  //               official.vendorAuthorizingOfficialId,
-  //           );
-  //           this.snackbarNotificationService.showSnackbarSuccess(
-  //             'Authorizing official removed successfully.',
-  //           );
-  //         },
-  //         error: () => {
-  //           this.snackbarNotificationService.showSnackbarError(
-  //             'Failed to remove authorizing official.',
-  //           );
-  //         },
-  //       });
-  //   });
-  // }
-
-  private emptyOfficialForm(
-    organizationId: number,
-  ): Omit<AuthorizingOfficial, 'vendorAuthorizingOfficialId'> {
-    return {
-      organizationId,
-      firstName: '',
-      lastName: '',
-      title: '',
-      email: '',
-      phone: null,
+  // Expose for template
+  get isLegalFieldInvalid(): (field: string) => boolean {
+    return (field: string) => {
+      const control = this.legalForm.get(field);
+      return !!(
+        control &&
+        control.invalid &&
+        (control.dirty || control.touched)
+      );
     };
   }
 }

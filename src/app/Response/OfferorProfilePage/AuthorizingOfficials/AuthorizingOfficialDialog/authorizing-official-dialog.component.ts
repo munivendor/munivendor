@@ -9,9 +9,9 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { OfferorProfileService } from '../../../shared/service/offeror-profile.service';
-import { SnackbarNotificationService } from '../../../shared/service/snackbar-notification.service';
-import { AuthorizingOfficial } from '../offeror-profile-page.component';
+import { OfferorProfileService } from '../../../services/offeror-profile.service';
+import { SnackbarNotificationService } from '../../../../shared/service/snackbar-notification.service';
+import { AuthorizingOfficial } from '../authorizing-officials.component';
 
 @Component({
   selector: 'app-authorizing-official-dialog',
@@ -77,7 +77,7 @@ export class AuthorizingOfficialDialogComponent {
     if (val) {
       this.formData[field] = val
         .trim()
-        .replace(/\b\w/g, (c) => c.toUpperCase());
+        .replace(/\b\w/g, (c: string) => c.toUpperCase());
     }
   }
 
@@ -134,7 +134,7 @@ export class AuthorizingOfficialDialogComponent {
 
     const call$ = this.data.isEditMode
       ? this.offerorProfileService.UpdateOfferorAuthorizingOfficial(
-          this.formData.vendorAuthorizingOfficialId!,
+          this.formData.offerorAuthorizingOfficialId!,
           this.formData,
         )
       : this.offerorProfileService.SaveOfferorAuthorizingOfficial(
