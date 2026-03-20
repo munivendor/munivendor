@@ -805,7 +805,6 @@ export class CreditPurchaseDialogComponent implements OnInit {
           },
           error: (error) => {
             this.isProcessingPayment = false;
-
             if (
               error.status === 402 &&
               error.error?.detail === 'PAYMENT_DECLINED'
@@ -814,9 +813,7 @@ export class CreditPurchaseDialogComponent implements OnInit {
                 error.error?.declineReasonCode ||
                   'Payment was declined. Please try a different payment method.',
               );
-
               this.selectedPaymentMethodId = null;
-
               return;
             }
 
@@ -855,10 +852,17 @@ export class CreditPurchaseDialogComponent implements OnInit {
               error.error?.declineReasonCode ||
                 'Payment was declined. Please try a different payment method.',
             );
-
             this.selectedPaymentMethodId = null;
-
             return;
+          }
+
+          // Handle 500 specifically for payment flows
+          if (error.status === 500) {
+            const correlationId = error?.error?.correlationId;
+            this.snackbarNotificationService.showSnackbarError(
+              `We were unable to charge the payment method on file. This could be due to a fraud alert, insufficient funds, or a card limit, or something else. Please verify your payment information and try again. If the issue persists and your payment details are correct, then please contact us at vendorsupport@munivendor.com.`,
+            );
+            return; // Keep dialog open so user can retry
           }
 
           const correlationId = error?.error?.correlationId;

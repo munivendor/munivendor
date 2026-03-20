@@ -109,6 +109,14 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
           return throwError(() => error);
         }
 
+        // Skip centralized error handling for 500s on payment endpoints
+        const isPaymentPath = ['/payments/charge'].some((path) =>
+          httpRequest.url.includes(path),
+        );
+        if (error.status === 500 && isPaymentPath) {
+          return throwError(() => error);
+        }
+
         // Handle all other errors for authenticated users
         if (
           !isPublicPath &&
