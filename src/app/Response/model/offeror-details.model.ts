@@ -5,11 +5,12 @@ export interface OfferorDetails {
   address2?: string | null;
   city: string;
   stateId: number | null;
-  country?: string | null;
+  country?: number | null;
   zipCode: string;
-  incorporationDate?: string | null;
-  entityType?: string | null;
-  timeAtAddress?: string | null;
+  dateOfIncorporation?: string | null;
+  // entityType is actually organizationSubTypeId in the backend
+  organizationSubTypeId?: number | null;
+  timeAtCurrentAddress?: number | null;
   taxId: string;
   phone: string;
   fax?: string | null;

@@ -11,6 +11,7 @@ import {
   FormBuilder,
   FormGroup,
   Validators,
+  FormControl,
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -24,6 +25,10 @@ import { OfferorProfileService } from '../../services/offeror-profile.service';
 import { SnackbarNotificationService } from '../../../shared/service/snackbar-notification.service';
 import { LoggingService } from '../../../exceptionhandling/logging.service';
 import { OfferorDetails } from '../../model/offeror-details.model';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { map, Observable, startWith } from 'rxjs';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 
 @Component({
   selector: 'app-offeror-details',
@@ -37,6 +42,9 @@ import { OfferorDetails } from '../../model/offeror-details.model';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatAutocompleteModule,
   ],
   templateUrl: './offeror-details.component.html',
   styleUrls: ['../../../shared/shared-profile-card.css'],
@@ -44,7 +52,12 @@ import { OfferorDetails } from '../../model/offeror-details.model';
 })
 export class OfferorOrganizationDetailsComponent implements OnInit {
   @Input() organizationId: number | null = null;
-  @Input() states: State[] = [];
+  states: State[] = [];
+  countries: State[] = [];
+  stateFilter = new FormControl('');
+  countryFilter = new FormControl('');
+  filteredStates$!: Observable<State[]>;
+  filteredCountries$!: Observable<State[]>;
 
   readonly phonePattern = '^\\(\\d{3}\\) \\d{3}-\\d{4}$';
   readonly zipPattern = '^\\d{5}(-\\d{4})?$';
@@ -56,16 +69,7 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
   displayPhone = '';
   displayFax = '';
 
-  entityTypes = [
-    { value: 'sole_proprietorship', label: 'Sole Proprietorship' },
-    { value: 'partnership', label: 'Partnership' },
-    { value: 'llc', label: 'LLC' },
-    { value: 'corporation', label: 'Corporation' },
-    { value: 's_corporation', label: 'S Corporation' },
-    { value: 'nonprofit', label: 'Non-Profit Organization' },
-    { value: 'government', label: 'Government Entity' },
-    { value: 'other', label: 'Other' },
-  ];
+  entityTypes: State[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -82,6 +86,9 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
     if (orgId) {
       this.loadOrganizationInfo(orgId);
     }
+    this.loadStates();
+    this.loadOrganizationSubTypes();
+    this.loadCountries();
   }
 
   // ── Data Loading ──────────────────────────────────
@@ -114,6 +121,147 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
       });
   }
 
+  // entityType is actually organizationSubTypeId in the backend
+  private loadOrganizationSubTypes(): void {
+    this.offerorProfileService.GetOrganizationSubTypes().subscribe({
+      next: (data) => {
+        this.entityTypes = data;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.loggingService.logException(
+          new Error(`HTTP Error ${err.status}: ${err.statusText}`),
+          3,
+          {
+            methodName: 'loadOrganizationSubTypes',
+            className: 'OfferorOrganizationDetailsComponent',
+            operation: 'GetEntityTypes',
+            userId: this.stateService.getUserId(),
+          },
+        );
+      },
+    });
+  }
+
+  private loadStates(): void {
+    this.offerorProfileService.GetStates().subscribe({
+      next: (data) => {
+        this.states = data;
+        this.filteredStates$ = this.stateFilter.valueChanges.pipe(
+          startWith(''),
+          map((term) =>
+            this.filterList(this.states, term ?? '', ['codeDesc', 'codeName']),
+          ),
+        );
+
+        this.filteredStates$ = this.stateFilter.valueChanges.pipe(
+          startWith(''),
+          map((term) =>
+            this.filterList(this.states, term ?? '', ['codeDesc', 'codeName']),
+          ),
+        );
+
+        this.stateFilter.valueChanges.subscribe((val) => {
+          if (!val) {
+            this.organizationForm.get('stateId')?.setValue(null);
+            this.organizationForm.get('stateId')?.markAsDirty();
+          }
+        });
+
+        const savedStateId = this.organizationForm.get('stateId')?.value;
+        if (savedStateId) {
+          const state = this.states.find((s) => s.codeId === savedStateId);
+          if (state) {
+            this.stateFilter.setValue(`${state.codeDesc} (${state.codeName})`, {
+              emitEvent: false,
+            });
+          }
+        }
+
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.loggingService.logException(
+          new Error(`HTTP Error ${err.status}: ${err.statusText}`),
+          3,
+          {
+            methodName: 'loadStates',
+            className: 'OfferorOrganizationDetailsComponent',
+            operation: 'GetStates',
+            userId: this.stateService.getUserId(),
+          },
+        );
+      },
+    });
+  }
+
+  private loadCountries(): void {
+    this.offerorProfileService.GetCountries().subscribe({
+      next: (data) => {
+        this.countries = data;
+        this.filteredCountries$ = this.countryFilter.valueChanges.pipe(
+          startWith(''),
+          map((term) =>
+            this.filterList(this.countries, term ?? '', [
+              'codeDesc',
+              'codeName',
+            ]),
+          ),
+        );
+
+        const savedCountryId = this.organizationForm.get('country')?.value;
+        if (savedCountryId) {
+          const country = this.countries.find(
+            (c) => c.codeId === savedCountryId,
+          );
+          if (country) {
+            this.countryFilter.setValue(country.codeDesc, { emitEvent: false });
+          }
+        } else {
+          // default to USA
+          const usa = this.countries.find(
+            (c) =>
+              c.codeDesc.toLowerCase() === 'united states' ||
+              c.codeDesc.toLowerCase() === 'united states of america' ||
+              c.codeName?.toLowerCase() === 'us' ||
+              c.codeName?.toLowerCase() === 'usa',
+          );
+          if (usa) {
+            this.organizationForm.get('country')?.setValue(usa.codeId);
+            this.countryFilter.setValue(usa.codeDesc, { emitEvent: false });
+          }
+        }
+
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.loggingService.logException(
+          new Error(`HTTP Error ${err.status}: ${err.statusText}`),
+          3,
+          {
+            methodName: 'loadCountries',
+            className: 'OfferorOrganizationDetailsComponent',
+            operation: 'GetCountries',
+            userId: this.stateService.getUserId(),
+          },
+        );
+      },
+    });
+  }
+
+  private filterList(
+    list: State[],
+    term: string,
+    fields: (keyof State)[],
+  ): State[] {
+    const lower = term.toLowerCase();
+    return list.filter((item) =>
+      fields.some((f) =>
+        (item[f] ?? '').toString().toLowerCase().includes(lower),
+      ),
+    );
+  }
+
   // ── Form ──────────────────────────────────────────
 
   private buildForm(): void {
@@ -123,11 +271,11 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
       address2: [null],
       city: ['', Validators.required],
       stateId: [null, Validators.required],
-      country: [''],
+      country: [null],
       zipCode: ['', [Validators.required, Validators.pattern(this.zipPattern)]],
-      incorporationDate: [''],
-      entityType: [null],
-      timeAtAddress: [''],
+      dateOfIncorporation: [''],
+      organizationSubTypeId: [null],
+      timeAtCurrentAddress: [''],
       taxId: ['', [Validators.required, Validators.pattern(this.taxIdPattern)]],
       phone: ['', [Validators.required, Validators.pattern(this.phonePattern)]],
       fax: [''],
@@ -144,15 +292,28 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
       address2: data.address2 ?? null,
       city: data.city,
       stateId: data.stateId,
-      country: data.country ?? '',
+      country: data.country ?? null,
       zipCode: data.zipCode,
-      incorporationDate: data.incorporationDate ?? '',
-      entityType: data.entityType ?? null,
-      timeAtAddress: data.timeAtAddress ?? '',
+      dateOfIncorporation: data.dateOfIncorporation ?? '',
+      organizationSubTypeId: data.organizationSubTypeId ?? null,
+      timeAtCurrentAddress: data.timeAtCurrentAddress ?? '',
       taxId: data.taxId ? this.formatTaxId(data.taxId) : '',
       phone: this.displayPhone,
       fax: this.displayFax,
     });
+
+    const state = this.states.find((s) => s.codeId === data.stateId);
+    if (state) {
+      this.stateFilter.setValue(`${state.codeDesc} (${state.codeName})`, {
+        emitEvent: false,
+      });
+    }
+
+    const country = this.countries.find((c) => c.codeId === data.country);
+    if (country) {
+      this.countryFilter.setValue(country.codeDesc, { emitEvent: false });
+    }
+
     this.organizationForm.markAsPristine();
   }
 
@@ -252,9 +413,9 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
     else if (d.length > 4)
       formatted = `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}`;
     this.organizationForm
-      .get('incorporationDate')
+      .get('dateOfIncorporation')
       ?.setValue(formatted, { emitEvent: false });
-    this.organizationForm.get('incorporationDate')?.markAsDirty();
+    this.organizationForm.get('dateOfIncorporation')?.markAsDirty();
   }
 
   onDateKeydown(event: KeyboardEvent): void {
@@ -269,6 +430,11 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
     ];
     if (controlKeys.includes(event.key)) return;
     if (!/[\d\/]/.test(event.key)) event.preventDefault();
+  }
+
+  onDatepickerClosed(): void {
+    const activeEl = document.activeElement as HTMLElement;
+    activeEl?.blur();
   }
 
   // ── Title Case ────────────────────────────────────
@@ -295,7 +461,8 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
 
     this.isSaving = true;
 
-    const { phone, fax, taxId, ...rest } = this.organizationForm.value;
+    const { phone, fax, taxId, timeAtCurrentAddress, ...rest } =
+      this.organizationForm.value;
     const orgId = this.organizationId ?? this.stateService.getOrganizationId();
 
     const payload: OfferorDetails = {
@@ -303,6 +470,7 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
       phone: phone.replace(/\D/g, ''),
       fax: fax ? fax.replace(/\D/g, '') : null,
       taxId: taxId.replace(/\D/g, ''),
+      timeAtCurrentAddress: timeAtCurrentAddress ?? null,
     };
 
     this.offerorProfileService
@@ -314,7 +482,6 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
           this.snackbar.showSnackbarSuccess(
             'Organization details saved successfully.',
           );
-          // If this was a new record, store the returned organizationId
           if (!this.organizationId && response.organizationId) {
             this.organizationId = response.organizationId;
           }
@@ -344,5 +511,65 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
   isFieldInvalid(field: string): boolean {
     const control = this.organizationForm.get(field);
     return !!(control && control.invalid && (control.dirty || control.touched));
+  }
+
+  stateDisplayFn = (codeId: number | null): string => {
+    if (!codeId) return '';
+    const match = this.states.find((s) => s.codeId === codeId);
+    return match ? `${match.codeDesc} (${match.codeName})` : '';
+  };
+
+  countryDisplayFn = (codeId: number | null): string => {
+    if (!codeId) return '';
+    const match = this.countries.find((c) => c.codeId === codeId);
+    return match?.codeDesc ?? '';
+  };
+
+  onStateSelected(codeId: number): void {
+    this.organizationForm.get('stateId')?.setValue(codeId);
+    this.organizationForm.get('stateId')?.markAsDirty();
+    this.organizationForm.get('stateId')?.markAsTouched();
+  }
+  onCountrySelected(codeId: number): void {
+    this.organizationForm.get('country')?.setValue(codeId);
+    this.organizationForm.get('country')?.markAsDirty();
+  }
+
+  onStateBlur(): void {
+    const currentId = this.organizationForm.get('stateId')?.value;
+    if (currentId) {
+      const state = this.states.find((s) => s.codeId === currentId);
+      if (state) {
+        this.stateFilter.setValue(`${state.codeDesc} (${state.codeName})`, {
+          emitEvent: false,
+        });
+      }
+    } else {
+      this.stateFilter.setValue('', { emitEvent: false });
+    }
+
+    this.organizationForm.get('stateId')?.markAsTouched();
+  }
+
+  onTimeAtAddressInput(value: string): void {
+    const digits = value.replace(/\D/g, '');
+    this.organizationForm
+      .get('timeAtCurrentAddress')
+      ?.setValue(digits ? parseInt(digits, 10) : null, { emitEvent: false });
+    this.organizationForm.get('timeAtCurrentAddress')?.markAsDirty();
+  }
+
+  onTimeAtAddressKeydown(event: KeyboardEvent): void {
+    const controlKeys = [
+      'Backspace',
+      'Delete',
+      'ArrowLeft',
+      'ArrowRight',
+      'Tab',
+      'Home',
+      'End',
+    ];
+    if (controlKeys.includes(event.key)) return;
+    if (!/^\d$/.test(event.key)) event.preventDefault();
   }
 }

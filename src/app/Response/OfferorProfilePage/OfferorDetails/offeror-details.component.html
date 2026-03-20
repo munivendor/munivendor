@@ -86,26 +86,56 @@
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>State</mat-label>
-          <mat-select formControlName="stateId">
-            <mat-option *ngFor="let s of states" [value]="s.codeId">
+          <input
+            matInput
+            [formControl]="stateFilter"
+            [matAutocomplete]="stateAuto"
+            placeholder="Search states..."
+            (blur)="onStateBlur()"
+            required
+          />
+          <mat-autocomplete
+            #stateAuto="matAutocomplete"
+            (optionSelected)="onStateSelected($event.option.value)"
+          >
+            <mat-option
+              *ngFor="let s of filteredStates$ | async"
+              [value]="s.codeId"
+            >
               {{ s.codeDesc }} ({{ s.codeName }})
             </mat-option>
-          </mat-select>
-          <mat-error *ngIf="isFieldInvalid('stateId')">
-            State is required.
-          </mat-error>
+          </mat-autocomplete>
+          <mat-error *ngIf="isFieldInvalid('stateId')"
+            >State is required.</mat-error
+          >
         </mat-form-field>
       </div>
 
       <div class="form-row">
+        <!-- AFTER -->
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Country</mat-label>
           <input
             matInput
-            formControlName="country"
-            placeholder="Country"
-            (blur)="titleCaseField('country')"
+            [formControl]="countryFilter"
+            [matAutocomplete]="countryAuto"
+            placeholder="Search countries..."
+            required
           />
+          <mat-autocomplete
+            #countryAuto="matAutocomplete"
+            (optionSelected)="onCountrySelected($event.option.value)"
+          >
+            <mat-option
+              *ngFor="let c of filteredCountries$ | async"
+              [value]="c.codeId"
+            >
+              {{ c.codeDesc }}
+            </mat-option>
+          </mat-autocomplete>
+          <mat-error *ngIf="isFieldInvalid('countryId')"
+            >Country is required.</mat-error
+          >
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
@@ -137,20 +167,26 @@
           <mat-label>When did you incorporate?</mat-label>
           <input
             matInput
-            formControlName="incorporationDate"
+            [matDatepicker]="dateOfIncorporationPicker"
+            formControlName="dateOfIncorporation"
             placeholder="MM/DD/YYYY"
-            maxlength="10"
+            readonly
             (keydown)="onDateKeydown($event)"
             (input)="onDateInput($any($event.target).value)"
           />
-          <mat-icon matSuffix class="field-icon">calendar_today</mat-icon>
+          <mat-datepicker-toggle matSuffix [for]="dateOfIncorporationPicker">
+          </mat-datepicker-toggle>
+          <mat-datepicker
+            #dateOfIncorporationPicker
+            (closed)="onDatepickerClosed()"
+          ></mat-datepicker>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>What type of entity is this?</mat-label>
-          <mat-select formControlName="entityType">
-            <mat-option *ngFor="let t of entityTypes" [value]="t.value">
-              {{ t.label }}
+          <mat-select formControlName="organizationSubTypeId">
+            <mat-option *ngFor="let t of entityTypes" [value]="t.codeId">
+              {{ t.codeDesc }}
             </mat-option>
           </mat-select>
         </mat-form-field>
@@ -162,9 +198,14 @@
         >
         <input
           matInput
-          formControlName="timeAtAddress"
-          placeholder="e.g. 5 years"
+          formControlName="timeAtCurrentAddress"
+          placeholder="e.g. 5"
+          type="text"
+          inputmode="numeric"
+          (input)="onTimeAtAddressInput($any($event.target).value)"
+          (keydown)="onTimeAtAddressKeydown($event)"
         />
+        <mat-hint>Enter number of years</mat-hint>
       </mat-form-field>
     </div>
 
