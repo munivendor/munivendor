@@ -87,7 +87,7 @@ export class LegalInformationComponent implements OnInit {
       if (value === true) {
         detailsControl?.setValidators([
           Validators.required,
-          Validators.maxLength(1000),
+          Validators.maxLength(5000),
         ]);
       } else {
         detailsControl?.clearValidators();
@@ -131,8 +131,7 @@ export class LegalInformationComponent implements OnInit {
         },
         error: (err) => {
           this.isLoadingLegal = false;
-          // 404 = no record yet, not a real error — stay on blank form
-          if (err.status === 404) return;
+
           this.loggingService.logException(
             new Error(`HTTP Error ${err.status}: ${err.statusText}`),
             3,
