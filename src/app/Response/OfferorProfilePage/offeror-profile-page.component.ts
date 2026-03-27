@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { AuthorizingOfficialsComponent } from './AuthorizingOfficials/authorizing-officials.component';
 import { OfferorOrganizationDetailsComponent } from './OfferorDetails/offeror-details.component';
 import { LegalInformationComponent } from './LegalInformation/legal-information.component';
+import { StockholderInformationComponent } from './StockholderInformation/stockholder-information.component';
 
 @Component({
   selector: 'offeror-profile-page',
@@ -15,6 +16,7 @@ import { LegalInformationComponent } from './LegalInformation/legal-information.
     AuthorizingOfficialsComponent,
     OfferorOrganizationDetailsComponent,
     LegalInformationComponent,
+    StockholderInformationComponent,
   ],
 })
 export class OfferorProfilePageComponent implements OnInit {

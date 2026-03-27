@@ -144,13 +144,13 @@
       </div>
     </div>
 
-    <div class="form-row">
+    <div class="form-section">
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Government Agency Main Number</mat-label>
         <input
           matInput
           formControlName="phone"
-          placeholder="(555) 555-5555"
+          placeholder="(xxx) xxx-xxxx"
           [value]="displayPhone"
           (input)="onPhoneInput($any($event.target).value)"
           (keydown)="onPhoneKeydown($event)"
