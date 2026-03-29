@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { OfferorDetails } from '../model/offeror-details.model';
 import { OfferorLegalInfo } from '../model/offeror-legal-info.model';
+import { OfferorStockholderInfo } from '../model/offeror-stockholder-info.model';
 import { State } from '../../shared/model/state.model';
 
 @Injectable({
@@ -96,6 +97,71 @@ export class OfferorProfileService {
       payload,
     );
   }
+
+  // ── Stockholder Information ───────────────────────
+
+  /**
+   * GET /OfferorProfile/Stockholder/{organizationId?}/{stockholderId?}
+   *
+   * Fetches all stockholders for an organization, or a single one
+   * when stockholderId is also provided.
+   */
+  GetAllStockholderInfo(
+    organizationId: number,
+    stockholderId?: number,
+  ): Observable<OfferorStockholderInfo[]> {
+    const base = `${this.url}OfferorProfile/Stockholder/${organizationId}`;
+    const url = stockholderId != null ? `${base}/${stockholderId}` : base;
+    return this.http.get<OfferorStockholderInfo[]>(url);
+  }
+
+  /**
+   * POST /OfferorProfile/Stockholder/{organizationId}
+   *
+   * Creates a new stockholder record. Returns the new stockholder ID
+   * and a correlation ID from the backend.
+   * Note: The backend endpoint is MapPost despite the naming convention
+   * used by the other endpoints.
+   */
+  CreateStockholderInfo(
+    organizationId: number,
+    payload: OfferorStockholderInfo,
+  ): Observable<{ retStockholderId: number; CorrelationId: string }> {
+    return this.http.post<{ retStockholderId: number; CorrelationId: string }>(
+      `${this.url}OfferorProfile/Stockholder/${organizationId}`,
+      payload,
+    );
+  }
+
+  /**
+   * PUT /OfferorProfile/Stockholder/{organizationId}/{stockholderId}
+   *
+   * Updates an existing stockholder record. Returns the stockholder ID
+   * and a correlation ID from the backend.
+   */
+  UpdateStockholderInfo(
+    organizationId: number,
+    stockholderId: number,
+    payload: OfferorStockholderInfo,
+  ): Observable<{ stockholderId: number; CorrelationId: string }> {
+    return this.http.put<{ stockholderId: number; CorrelationId: string }>(
+      `${this.url}OfferorProfile/Stockholder/${organizationId}/${stockholderId}`,
+      payload,
+    );
+  }
+
+  /**
+   * DELETE /OfferorProfile/Stockholder/{stockholderId}
+   *
+   * Deletes a stockholder record by its ID.
+   */
+  DeleteStockholderInfo(stockholderId: number): Observable<void> {
+    return this.http.delete<void>(
+      `${this.url}OfferorProfile/Stockholder/${stockholderId}`,
+    );
+  }
+
+  // ── List Data ─────────────────────────────────────
 
   // entityType is actually organizationSubTypeId in the backend
   GetOrganizationSubTypes(): Observable<State[]> {

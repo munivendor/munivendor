@@ -91,7 +91,7 @@
           [ngModel]="displayPhone"
           (ngModelChange)="onPhoneInput($event)"
           name="phone"
-          placeholder="(202) 555-0142"
+          placeholder="(xxx) xxx-xxxx"
           maxlength="14"
           [pattern]="phonePattern"
           (keydown)="onPhoneKeydown($event)"
@@ -110,7 +110,7 @@
     mat-raised-button
     color="primary"
     (click)="onSubmit()"
-    [disabled]="isSaving || dialogForm.invalid"
+    [disabled]="isSaving || dialogForm.invalid || !dialogForm.dirty"
   >
     {{
       isSaving

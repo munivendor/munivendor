@@ -275,7 +275,8 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
       zipCode: ['', [Validators.required, Validators.pattern(this.zipPattern)]],
       dateOfIncorporation: [''],
       organizationSubTypeId: [null],
-      timeAtCurrentAddress: [''],
+      yearsAtCurrentAddress: [null],
+      monthsAtCurrentAddress: [null],
       taxId: ['', [Validators.required, Validators.pattern(this.taxIdPattern)]],
       phone: ['', [Validators.required, Validators.pattern(this.phonePattern)]],
       fax: [''],
@@ -296,7 +297,8 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
       zipCode: data.zipCode,
       dateOfIncorporation: data.dateOfIncorporation ?? '',
       organizationSubTypeId: data.organizationSubTypeId ?? null,
-      timeAtCurrentAddress: data.timeAtCurrentAddress ?? '',
+      yearsAtCurrentAddress: data.yearsAtCurrentAddress ?? null,
+      monthsAtCurrentAddress: data.monthsAtCurrentAddress ?? null,
       taxId: data.taxId ? this.formatTaxId(data.taxId) : '',
       phone: this.displayPhone,
       fax: this.displayFax,
@@ -461,8 +463,14 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
 
     this.isSaving = true;
 
-    const { phone, fax, taxId, timeAtCurrentAddress, ...rest } =
-      this.organizationForm.value;
+    const {
+      phone,
+      fax,
+      taxId,
+      yearsAtCurrentAddress,
+      monthsAtCurrentAddress,
+      ...rest
+    } = this.organizationForm.value;
     const orgId = this.organizationId ?? this.stateService.getOrganizationId();
 
     const payload: OfferorDetails = {
@@ -470,7 +478,8 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
       phone: phone.replace(/\D/g, ''),
       fax: fax ? fax.replace(/\D/g, '') : null,
       taxId: taxId.replace(/\D/g, ''),
-      timeAtCurrentAddress: timeAtCurrentAddress ?? null,
+      yearsAtCurrentAddress: yearsAtCurrentAddress ?? null,
+      monthsAtCurrentAddress: monthsAtCurrentAddress ?? null,
     };
 
     this.offerorProfileService
@@ -551,15 +560,37 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
     this.organizationForm.get('stateId')?.markAsTouched();
   }
 
-  onTimeAtAddressInput(value: string): void {
+  // onTimeAtAddressInput(value: string): void {
+  //   const digits = value.replace(/\D/g, '');
+  //   this.organizationForm
+  //     .get('timeAtCurrentAddress')
+  //     ?.setValue(digits ? parseInt(digits, 10) : null, { emitEvent: false });
+  //   this.organizationForm.get('timeAtCurrentAddress')?.markAsDirty();
+  // }
+
+  // onTimeAtAddressKeydown(event: KeyboardEvent): void {
+  //   const controlKeys = [
+  //     'Backspace',
+  //     'Delete',
+  //     'ArrowLeft',
+  //     'ArrowRight',
+  //     'Tab',
+  //     'Home',
+  //     'End',
+  //   ];
+  //   if (controlKeys.includes(event.key)) return;
+  //   if (!/^\d$/.test(event.key)) event.preventDefault();
+  // }
+
+  onYearsAtAddressInput(value: string): void {
     const digits = value.replace(/\D/g, '');
     this.organizationForm
-      .get('timeAtCurrentAddress')
+      .get('yearsAtCurrentAddress')
       ?.setValue(digits ? parseInt(digits, 10) : null, { emitEvent: false });
-    this.organizationForm.get('timeAtCurrentAddress')?.markAsDirty();
+    this.organizationForm.get('yearsAtCurrentAddress')?.markAsDirty();
   }
 
-  onTimeAtAddressKeydown(event: KeyboardEvent): void {
+  onYearsAtAddressKeydown(event: KeyboardEvent): void {
     const controlKeys = [
       'Backspace',
       'Delete',
@@ -571,5 +602,35 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
     ];
     if (controlKeys.includes(event.key)) return;
     if (!/^\d$/.test(event.key)) event.preventDefault();
+  }
+
+  onMonthsAtAddressInput(value: string): void {
+    const digits = value.replace(/\D/g, '');
+    let months = digits ? parseInt(digits, 10) : null;
+    if (months !== null && months > 11) months = 11; // clamp to valid month range
+    this.organizationForm
+      .get('monthsAtCurrentAddress')
+      ?.setValue(months, { emitEvent: false });
+    this.organizationForm.get('monthsAtCurrentAddress')?.markAsDirty();
+  }
+
+  onMonthsAtAddressKeydown(event: KeyboardEvent): void {
+    const controlKeys = [
+      'Backspace',
+      'Delete',
+      'ArrowLeft',
+      'ArrowRight',
+      'Tab',
+      'Home',
+      'End',
+    ];
+    if (controlKeys.includes(event.key)) return;
+    if (!/^\d$/.test(event.key)) event.preventDefault();
+  }
+
+  displayCountry(codeId: number | null): string {
+    if (!codeId) return '';
+    const country = this.countries.find((c) => c.codeId === codeId);
+    return country ? country.codeDesc : '';
   }
 }

@@ -143,6 +143,7 @@ export class DecisionMakersComponent implements OnInit, AfterViewInit {
 
   openAddDecisionMakerDialog(): void {
     const dialogRef = this.dialog.open(DecisionMakerDialogComponent, {
+      autoFocus: false,
       data: {
         isEditMode: false,
         formData: this.emptyDecisionMakerForm(),

@@ -154,6 +154,7 @@ export class AuthorizingOfficialsComponent implements OnInit, AfterViewInit {
     if (!organizationId) return;
 
     const dialogRef = this.dialog.open(AuthorizingOfficialDialogComponent, {
+      autoFocus: false,
       data: {
         isEditMode: false,
         formData: this.emptyOfficialForm(organizationId),
@@ -184,49 +185,6 @@ export class AuthorizingOfficialsComponent implements OnInit, AfterViewInit {
       if (success) this.loadAuthorizingOfficials(organizationId);
     });
   }
-
-  // onDeleteOfficial(official: AuthorizingOfficial): void {
-  //   const dialogData: ConfirmDialogData = {
-  //     title: 'Remove Authorizing Official',
-  //     message:
-  //       'Are you sure you want to remove this authorizing official? This action cannot be undone.',
-  //     confirmLabel: 'Remove',
-  //     cancelLabel: 'Cancel',
-  //     confirmColor: 'warn',
-  //   };
-
-  //   const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-  //     data: dialogData,
-  //     width: '400px',
-  //     disableClose: true,
-  //   });
-
-  //   dialogRef.afterClosed().subscribe((confirmed: boolean) => {
-  //     if (!confirmed) return;
-
-  //     this.offerorProfileService
-  //       .DeleteOfferorAuthorizingOfficial(
-  //         official.offerorAuthorizingOfficialId!,
-  //       )
-  //       .subscribe({
-  //         next: () => {
-  //           this.dataSource.data = this.dataSource.data.filter(
-  //             (o) =>
-  //               o.offerorAuthorizingOfficialId !==
-  //               official.offerorAuthorizingOfficialId,
-  //           );
-  //           this.snackbarNotificationService.showSnackbarSuccess(
-  //             'Authorizing official removed successfully.',
-  //           );
-  //         },
-  //         error: () => {
-  //           this.snackbarNotificationService.showSnackbarError(
-  //             'Failed to remove authorizing official.',
-  //           );
-  //         },
-  //       });
-  //   });
-  // }
 
   private emptyOfficialForm(
     organizationId: number,

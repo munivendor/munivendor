@@ -43,7 +43,6 @@ export class LegalInformationComponent implements OnInit {
   isLoadingLegal = false;
   isSavingLegal = false;
 
-  // Null means no record exists yet → POST; non-null → PUT
   private legalInformationId: number | null = null;
   private organizationId: number | null = null;
 
@@ -61,7 +60,7 @@ export class LegalInformationComponent implements OnInit {
     this.subscribeToConditionalFields();
 
     if (this.organizationId) {
-      this.loadLegalInfo(); // no ID needed upfront
+      this.loadLegalInfo();
     }
   }
 

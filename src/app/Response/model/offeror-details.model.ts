@@ -10,7 +10,8 @@ export interface OfferorDetails {
   dateOfIncorporation?: string | null;
   // entityType is actually organizationSubTypeId in the backend
   organizationSubTypeId?: number | null;
-  timeAtCurrentAddress?: number | null;
+  yearsAtCurrentAddress?: number | null;
+  monthsAtCurrentAddress?: number | null;
   taxId: string;
   phone: string;
   fax?: string | null;
