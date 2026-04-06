@@ -1,29 +1,80 @@
 import {
   Component,
   OnInit,
+  ViewEncapsulation,
+  ElementRef,
   ViewChild,
-  AfterViewInit,
+  Input,
   ChangeDetectorRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+  FormGroupDirective,
+  NgForm,
+  FormControl,
+  AbstractControl,
+  ValidationErrors,
+  ValidatorFn,
+} from '@angular/forms';
+import { ErrorStateMatcher } from '@angular/material/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatTableModule, MatTableDataSource } from '@angular/material/table';
-import { MatSortModule, MatSort } from '@angular/material/sort';
-import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
-import { MatCardModule } from '@angular/material/card';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { PhonePipe } from '../../../shared/pipes/phone.pipe';
 import { StateService } from '../../../Request/services/state.service';
 import { OfferorProfileService } from '../../services/offeror-profile.service';
-import { AuthorizingOfficialDialogComponent } from '../AuthorizingOfficials/AuthorizingOfficialDialog/authorizing-official-dialog.component';
-import { SnackbarNotificationService } from '../../../shared/service/snackbar-notification.service';
 import { LoggingService } from '../../../exceptionhandling/logging.service';
+import { SnackbarNotificationService } from '../../../shared/service/snackbar-notification.service';
+import { State } from '../../../shared/model/state.model';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatSortModule, MatSort } from '@angular/material/sort';
+import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
+import { AfterViewInit } from '@angular/core';
+
+// ── Custom validators ──────────────────────────────────────────────────────────
+
+export function noNumbersValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const value = control.value;
+    if (!value) return null;
+    return /\d/.test(value) ? { hasNumbers: true } : null;
+  };
+}
+
+export function emailMatchValidator(
+  group: AbstractControl,
+): ValidationErrors | null {
+  const email = group.get('email')?.value?.trim().toLowerCase();
+  const confirm = group.get('confirmEmail')?.value?.trim().toLowerCase();
+  if (!email || !confirm) return null;
+  return email === confirm ? null : { emailMismatch: true };
+}
+
+export function zipCodeValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const value = control.value;
+    if (!value) return null;
+    return /^\d{5}(-\d{4})?$/.test(value) ? null : { invalidZip: true };
+  };
+}
+
+export class TouchedErrorStateMatcher implements ErrorStateMatcher {
+  isErrorState(
+    control: FormControl | null,
+    form: FormGroupDirective | NgForm | null,
+  ): boolean {
+    return !!(control && control.invalid && control.touched);
+  }
+}
 
 export interface AuthorizingOfficial {
   offerorAuthorizingOfficialId?: number;
@@ -33,72 +84,89 @@ export interface AuthorizingOfficial {
   title: string;
   email: string;
   phone?: string | null;
+  notarizationCountyId?: number | null;
+  address?: string | null;
+  address2?: string | null;
+  city?: string | null;
+  stateId?: string | null;
+  zipCode?: string | null;
+  digitalSignatureConsented?: boolean | null;
+  bestTimeToCallId?: number | null;
 }
 
 @Component({
   selector: 'app-authorizing-officials',
   templateUrl: './authorizing-officials.component.html',
   styleUrls: ['./authorizing-officials.component.css'],
+  encapsulation: ViewEncapsulation.None,
   standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
     MatButtonModule,
+    MatCheckboxModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatIconModule,
+    MatInputModule,
+    MatProgressSpinnerModule,
     MatTableModule,
+    MatTooltipModule,
+    PhonePipe,
     MatSortModule,
     MatPaginatorModule,
-    MatIconModule,
-    MatCardModule,
-    MatTooltipModule,
-    MatProgressSpinnerModule,
-    PhonePipe,
+  ],
+  providers: [
+    { provide: ErrorStateMatcher, useClass: TouchedErrorStateMatcher },
   ],
 })
-export class AuthorizingOfficialsComponent implements OnInit, AfterViewInit {
-  organizationForm!: FormGroup;
+export class AuthorizingOfficialsComponent implements OnInit {
+  @ViewChild('cardTop') cardTop!: ElementRef;
+
+  officialForm!: FormGroup;
+  isSaving = false;
+  isLoading = false;
 
   dataSource = new MatTableDataSource<AuthorizingOfficial>([]);
-  displayedColumns: string[] = ['name', 'title', 'email', 'phone', 'actions'];
-
-  isLoading = false;
 
   @ViewChild(MatSort) sort!: MatSort;
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+
+  get savedOfficials(): AuthorizingOfficial[] {
+    return this.dataSource.data;
+  }
+
+  readonly tableColumns = ['name', 'title', 'email', 'phone', 'actions'];
+
+  private organizationId: number | null = null;
+
+  editingIndex: number | null = null;
+  private isPatchingForm = false;
+
+  // ── Display phone ─────────────────────────────────────────────────────────
+  displayPhone = '';
+
+  // ── Reference data ────────────────────────────────────────────────────────
+  @Input() states: State[] = [];
+  @Input() counties: State[] = [];
+  bestTimeOptions: State[] = [];
+
+  readonly emailPattern = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+  readonly phonePattern = /^\(\d{3}\) \d{3}-\d{4}$/;
 
   constructor(
     private fb: FormBuilder,
     private stateService: StateService,
     private offerorProfileService: OfferorProfileService,
-    private dialog: MatDialog,
-    private cdr: ChangeDetectorRef,
     private loggingService: LoggingService,
-    private snackbarNotificationService: SnackbarNotificationService,
+    private snackbar: SnackbarNotificationService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
-  ngOnInit(): void {
-    this.organizationForm = this.fb.group({
-      organizationName: [''],
-      address: [''],
-      address2: [''],
-      city: [''],
-      state: [''],
-      zipCode: [''],
-    });
-
-    const organizationId = this.stateService.getOrganizationId();
-    if (organizationId) {
-      this.loadAuthorizingOfficials(organizationId);
-    }
-  }
-
   ngAfterViewInit(): void {
-    this.dataSource.sortingDataAccessor = (
-      item: AuthorizingOfficial,
-      property: string,
-    ) => {
+    this.dataSource.sort = this.sort;
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sortingDataAccessor = (item, property) => {
       switch (property) {
         case 'name':
           return `${item.firstName} ${item.lastName}`.toLowerCase();
@@ -114,29 +182,175 @@ export class AuthorizingOfficialsComponent implements OnInit, AfterViewInit {
     };
   }
 
-  loadAuthorizingOfficials(organizationId: number): void {
+  ngOnInit(): void {
+    this.organizationId = this.stateService.getOrganizationId();
+    this.buildForm();
+    this.loadTimeOptions();
+    if (this.organizationId) {
+      this.loadOfficials();
+    }
+  }
+
+  // ── Form ──────────────────────────────────────────────────────────────────
+
+  private buildForm(): void {
+    this.officialForm = this.fb.group(
+      {
+        firstName: [
+          null,
+          [Validators.required, Validators.maxLength(50), noNumbersValidator()],
+        ],
+        lastName: [
+          null,
+          [Validators.required, Validators.maxLength(50), noNumbersValidator()],
+        ],
+        title: [null, [Validators.required, Validators.maxLength(100)]],
+        notarizationCountyId: [null, Validators.required],
+        address: [null, Validators.required],
+        address2: [null],
+        city: [null, Validators.required],
+        stateId: [null, Validators.required],
+        zipCode: [null, [Validators.required, zipCodeValidator()]],
+        email: [
+          null,
+          [
+            Validators.required,
+            Validators.maxLength(255),
+            Validators.pattern(this.emailPattern),
+          ],
+        ],
+        confirmEmail: [null, [Validators.required]],
+        phone: [null, [Validators.pattern(this.phonePattern)]],
+        bestTimeToCallId: [null, Validators.required],
+        digitalSignatureConsented: [false],
+      },
+      { validators: emailMatchValidator },
+    );
+  }
+
+  // ── Input handlers ────────────────────────────────────────────────────────
+
+  capitalizeInput(event: Event, controlName: string): void {
+    const input = event.target as HTMLInputElement;
+    let value = input.value.replace(/[0-9]/g, '');
+    if (value.length > 0) {
+      value = value.charAt(0).toUpperCase() + value.slice(1);
+    }
+    input.value = value;
+    this.officialForm.get(controlName)?.setValue(value, { emitEvent: false });
+    this.officialForm.get(controlName)?.updateValueAndValidity();
+  }
+
+  trimOnBlur(controlName: string): void {
+    const ctrl = this.officialForm.get(controlName);
+    const trimmed = ctrl?.value?.trim();
+    if (trimmed !== ctrl?.value) ctrl?.setValue(trimmed);
+  }
+
+  normalizeEmail(): void {
+    const ctrl = this.officialForm.get('email');
+    if (ctrl?.value) ctrl.setValue(ctrl.value.trim().toLowerCase());
+    this.officialForm.get('confirmEmail')?.updateValueAndValidity();
+  }
+
+  normalizeConfirmEmail(): void {
+    const ctrl = this.officialForm.get('confirmEmail');
+    if (ctrl?.value) ctrl.setValue(ctrl.value.trim().toLowerCase());
+  }
+
+  onPhoneInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const digits = input.value.replace(/\D/g, '').slice(0, 10);
+    const formatted = this.formatPhoneDisplay(digits);
+    this.displayPhone = formatted;
+    input.value = formatted;
+    this.officialForm.get('phone')?.setValue(formatted, { emitEvent: false });
+    this.officialForm.get('phone')?.updateValueAndValidity();
+    this.officialForm.get('phone')?.markAsDirty();
+  }
+
+  onPhoneKeydown(event: KeyboardEvent): void {
+    const controlKeys = [
+      'Backspace',
+      'Delete',
+      'ArrowLeft',
+      'ArrowRight',
+      'Tab',
+      'Home',
+      'End',
+    ];
+    if (controlKeys.includes(event.key)) return;
+    if (!/^\d$/.test(event.key)) event.preventDefault();
+  }
+
+  formatPhoneDisplay(digits: string): string {
+    const d = digits.replace(/\D/g, '');
+    if (d.length === 0) return '';
+    if (d.length <= 3) return `(${d}`;
+    if (d.length <= 6) return `(${d.slice(0, 3)}) ${d.slice(3)}`;
+    return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6, 10)}`;
+  }
+
+  formatZipCode(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let value = input.value.replace(/[^0-9-]/g, '');
+    if (value.length > 5 && !value.includes('-')) {
+      value = value.slice(0, 5) + '-' + value.slice(5, 9);
+    } else if (value.length > 10) {
+      value = value.slice(0, 10);
+    }
+    input.value = value;
+    this.officialForm.get('zipCode')?.setValue(value, { emitEvent: false });
+    this.officialForm.get('zipCode')?.updateValueAndValidity();
+  }
+
+  // ── Load ──────────────────────────────────────────────────────────────────
+
+  private loadTimeOptions(): void {
+    this.offerorProfileService.GetTimeOptions().subscribe({
+      next: (options) => (this.bestTimeOptions = options),
+      error: (err) => {
+        this.loggingService.logException(
+          new Error(`HTTP Error ${err.status}: ${err.statusText}`),
+          3,
+          {
+            organizationId: this.organizationId,
+            methodName: 'loadTimeOptions',
+            className: 'AuthorizingOfficialsComponent',
+            operation: 'GetTimeOptions',
+            userId: this.stateService.getUserId(),
+          },
+        );
+      },
+    });
+  }
+
+  private loadOfficials(): void {
     this.isLoading = true;
     this.offerorProfileService
-      .GetOfferorAuthorizingOfficials(organizationId)
+      .GetOfferorAuthorizingOfficials(this.organizationId!)
       .subscribe({
-        next: (officials: AuthorizingOfficial[]) => {
-          this.dataSource.data = officials;
+        next: (data: AuthorizingOfficial[]) => {
+          this.dataSource.data = data ?? [];
+
+          if (data && data.length > 0) {
+            this.patchFormFromEntry(data[0]);
+          }
+
           this.isLoading = false;
           this.cdr.detectChanges();
           this.dataSource.paginator = this.paginator;
           this.dataSource.sort = this.sort;
         },
-        error: (error) => {
+        error: (err) => {
           this.isLoading = false;
-          const correlationId = error?.error?.correlationId;
           this.loggingService.logException(
-            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            new Error(`HTTP Error ${err.status}: ${err.statusText}`),
             3,
             {
-              organizationId: this.stateService.getOrganizationId(),
-              correlationId,
-              methodName: 'loadAuthorizingOfficials',
-              className: 'OfferorProfilePageComponent',
+              organizationId: this.organizationId,
+              methodName: 'loadOfficials',
+              className: 'AuthorizingOfficialsComponent',
               operation: 'GetOfferorAuthorizingOfficials',
               userId: this.stateService.getUserId(),
             },
@@ -145,57 +359,167 @@ export class AuthorizingOfficialsComponent implements OnInit, AfterViewInit {
       });
   }
 
-  get totalRecords(): number {
-    return this.dataSource.data.length;
-  }
+  // ── Save ──────────────────────────────────────────────────────────────────
 
-  openAddDialog(): void {
-    const organizationId = this.stateService.getOrganizationId();
-    if (!organizationId) return;
+  onSave(): void {
+    this.officialForm.markAllAsTouched();
+    if (this.officialForm.invalid) return;
 
-    const dialogRef = this.dialog.open(AuthorizingOfficialDialogComponent, {
-      autoFocus: false,
-      data: {
-        isEditMode: false,
-        formData: this.emptyOfficialForm(organizationId),
-        organizationId,
+    this.isSaving = true;
+    const payload = this.buildPayload();
+    const isEdit = this.editingIndex !== null;
+    const existingId = isEdit
+      ? this.savedOfficials[this.editingIndex!].offerorAuthorizingOfficialId
+      : null;
+
+    if (isEdit && !existingId) {
+      this.isSaving = false;
+      this.snackbar.showSnackbarError('Unable to update: missing record ID.');
+      return;
+    }
+
+    const request$ = isEdit
+      ? this.offerorProfileService.UpdateOfferorAuthorizingOfficial(
+          existingId!,
+          payload,
+        )
+      : this.offerorProfileService.SaveOfferorAuthorizingOfficial(payload);
+
+    request$.subscribe({
+      next: (_response) => {
+        this.isSaving = false;
+        this.snackbar.showSnackbarSuccess(
+          isEdit
+            ? 'Authorizing official updated successfully.'
+            : 'Authorizing official added successfully.',
+        );
+        if (isEdit) this.editingIndex = null;
+        this.loadOfficials();
+        this.resetForm();
       },
-      disableClose: true,
-    });
-
-    dialogRef.afterClosed().subscribe((success: boolean | null) => {
-      if (success) this.loadAuthorizingOfficials(organizationId);
-    });
-  }
-
-  openEditDialog(official: AuthorizingOfficial): void {
-    const organizationId = this.stateService.getOrganizationId();
-    if (!organizationId) return;
-
-    const dialogRef = this.dialog.open(AuthorizingOfficialDialogComponent, {
-      data: {
-        isEditMode: true,
-        formData: { ...official },
-        organizationId,
+      error: (err) => {
+        this.isSaving = false;
+        this.snackbar.showSnackbarError('Failed to save authorizing official.');
+        this.loggingService.logException(
+          new Error(`HTTP Error ${err.status}: ${err.statusText}`),
+          3,
+          {
+            organizationId: this.organizationId,
+            methodName: 'onSave',
+            className: 'AuthorizingOfficialsComponent',
+            operation: isEdit
+              ? 'UpdateOfferorAuthorizingOfficial'
+              : 'SaveOfferorAuthorizingOfficial',
+            userId: this.stateService.getUserId(),
+          },
+        );
       },
-      disableClose: true,
-    });
-
-    dialogRef.afterClosed().subscribe((success: boolean | null) => {
-      if (success) this.loadAuthorizingOfficials(organizationId);
     });
   }
 
-  private emptyOfficialForm(
-    organizationId: number,
-  ): Omit<AuthorizingOfficial, 'offerorAuthorizingOfficialId'> {
+  editOfficial(index: number): void {
+    this.isPatchingForm = true;
+    this.patchFormFromEntry(this.dataSource.data[index]);
+    this.isPatchingForm = false;
+    this.editingIndex = index;
+    this.officialForm.markAsDirty();
+    this.cdr.detectChanges();
+    this.scrollToTop();
+  }
+
+  cancelEdit(): void {
+    this.editingIndex = null;
+    this.resetForm();
+  }
+
+  private patchFormFromEntry(entry: AuthorizingOfficial): void {
+    this.officialForm.patchValue({
+      firstName: entry.firstName,
+      lastName: entry.lastName,
+      title: entry.title,
+      notarizationCountyId: entry.notarizationCountyId,
+      address: entry.address,
+      address2: entry.address2,
+      city: entry.city,
+      stateId: entry.stateId,
+      zipCode: entry.zipCode,
+      email: entry.email,
+      confirmEmail: entry.email,
+      phone: entry.phone ?? null,
+      bestTimeToCallId: entry.bestTimeToCallId,
+      digitalSignatureConsented: entry.digitalSignatureConsented ?? false,
+    });
+
+    if (entry.phone) {
+      this.displayPhone = this.formatPhoneDisplay(
+        entry.phone.replace(/\D/g, ''),
+      );
+    } else {
+      this.displayPhone = '';
+    }
+  }
+
+  private buildPayload(): AuthorizingOfficial {
+    const v = this.officialForm.value;
     return {
-      organizationId,
-      firstName: '',
-      lastName: '',
-      title: '',
-      email: '',
-      phone: null,
+      organizationId: this.organizationId!,
+      firstName: v.firstName,
+      lastName: v.lastName,
+      title: v.title,
+      email: v.email,
+      phone: v.phone || null,
+      notarizationCountyId: v.notarizationCountyId,
+      address: v.address,
+      address2: v.address2 || null,
+      city: v.city,
+      stateId: v.stateId,
+      zipCode: v.zipCode,
+      bestTimeToCallId: v.bestTimeToCallId,
+      digitalSignatureConsented: v.digitalSignatureConsented ?? false,
     };
+  }
+
+  private resetForm(): void {
+    this.officialForm.reset({ digitalSignatureConsented: false });
+    this.displayPhone = '';
+    this.officialForm.markAsPristine();
+    this.officialForm.markAsUntouched();
+    this.scrollToTop();
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  get confirmEmailMismatch(): boolean {
+    return !!(
+      this.officialForm.errors?.['emailMismatch'] &&
+      this.officialForm.get('confirmEmail')?.touched
+    );
+  }
+
+  isFieldInvalid(field: string): boolean {
+    const control = this.officialForm.get(field);
+    return !!(control && control.invalid && (control.dirty || control.touched));
+  }
+
+  getDisplayAddress(entry: AuthorizingOfficial): string {
+    const stateLabel =
+      this.states.find(
+        (s) => s.codeId?.toString() === entry.stateId?.toString(),
+      )?.codeDesc ?? null;
+    const parts = [
+      entry.address,
+      entry.address2,
+      entry.city,
+      stateLabel,
+      entry.zipCode,
+    ].filter(Boolean);
+    return parts.join(', ') || '—';
+  }
+
+  private scrollToTop(): void {
+    this.cardTop?.nativeElement?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
   }
 }

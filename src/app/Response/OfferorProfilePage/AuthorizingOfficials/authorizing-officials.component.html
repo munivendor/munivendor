@@ -1,102 +1,401 @@
-<div class="profile-card">
-  <!-- Card Header -->
+<div class="profile-card" #cardTop>
   <div class="card-header">
     <div class="header-accent"></div>
     <div class="header-content">
       <div class="header-top">
         <div class="header-left">
           <h2 class="card-title">Authorizing Officials</h2>
-          <span class="record-count" *ngIf="!isLoading">
-            {{ totalRecords }} {{ totalRecords === 1 ? "record" : "records" }}
+          <span class="record-count" *ngIf="dataSource.data.length > 0">
+            {{ dataSource.data.length }}
+            {{ dataSource.data.length === 1 ? "record" : "records" }}
           </span>
         </div>
-        <button
-          mat-flat-button
-          color="primary"
-          type="button"
-          class="add-btn"
-          (click)="openAddDialog()"
-        >
-          <mat-icon>add</mat-icon> Add Authorizing Official
-        </button>
       </div>
       <p class="card-description">
-        Authorizing Officials are the organization's authorized representatives.
-        Please enter the names, titles, and contact information for each
-        official.
+        The Authorizing Official is the person whose name and signature will be
+        entered into the forms requested by the local government organization.
+        Please enter their contact and address information below.
       </p>
     </div>
   </div>
 
-  <!-- Loading State -->
+  <form [formGroup]="officialForm" (ngSubmit)="onSave()" class="card-form">
+    <!-- ── Name ── -->
+    <div class="subsection-label-group">
+      <span class="subsection-label">Authorizing Official Name</span>
+      <span class="subsection-hint">
+        This name will be automatically entered into forms required by the local
+        government organization publishing the opportunity.
+      </span>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="half-width">
+        <mat-label>First Name</mat-label>
+        <input
+          matInput
+          formControlName="firstName"
+          maxlength="50"
+          (input)="capitalizeInput($event, 'firstName')"
+          (blur)="trimOnBlur('firstName')"
+        />
+        <mat-hint align="end">
+          {{ officialForm.get("firstName")?.value?.length || 0 }} / 50
+        </mat-hint>
+        <mat-error *ngIf="officialForm.get('firstName')?.hasError('required')">
+          First name is required.
+        </mat-error>
+        <mat-error
+          *ngIf="officialForm.get('firstName')?.hasError('hasNumbers')"
+        >
+          First name cannot contain numbers.
+        </mat-error>
+        <mat-error *ngIf="officialForm.get('firstName')?.hasError('maxlength')">
+          First name cannot exceed 50 characters.
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="half-width">
+        <mat-label>Last Name</mat-label>
+        <input
+          matInput
+          formControlName="lastName"
+          maxlength="50"
+          (input)="capitalizeInput($event, 'lastName')"
+          (blur)="trimOnBlur('lastName')"
+        />
+        <mat-hint align="end">
+          {{ officialForm.get("lastName")?.value?.length || 0 }} / 50
+        </mat-hint>
+        <mat-error *ngIf="officialForm.get('lastName')?.hasError('required')">
+          Last name is required.
+        </mat-error>
+        <mat-error *ngIf="officialForm.get('lastName')?.hasError('hasNumbers')">
+          Last name cannot contain numbers.
+        </mat-error>
+        <mat-error *ngIf="officialForm.get('lastName')?.hasError('maxlength')">
+          Last name cannot exceed 50 characters.
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <!-- ── Title ── -->
+    <div class="subsection-label-group">
+      <span class="subsection-label">Title</span>
+    </div>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Title</mat-label>
+      <input
+        matInput
+        formControlName="title"
+        maxlength="100"
+        (blur)="trimOnBlur('title')"
+      />
+      <mat-hint align="end">
+        {{ officialForm.get("title")?.value?.length || 0 }} / 100
+      </mat-hint>
+      <mat-error *ngIf="officialForm.get('title')?.hasError('required')">
+        Title is required.
+      </mat-error>
+      <mat-error *ngIf="officialForm.get('title')?.hasError('maxlength')">
+        Title cannot exceed 100 characters.
+      </mat-error>
+    </mat-form-field>
+
+    <!-- ── Notarization County ── -->
+    <div class="subsection-label-group">
+      <span class="subsection-label">Notarization County</span>
+      <span class="subsection-hint">
+        Please indicate the county in which you will be present when completing
+        digital notarization.
+      </span>
+    </div>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Select County</mat-label>
+      <mat-select formControlName="notarizationCountyId">
+        <mat-option *ngFor="let county of counties" [value]="county.codeId">
+          {{ county.codeDesc }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="isFieldInvalid('notarizationCountyId')">
+        Notarization county is required.
+      </mat-error>
+    </mat-form-field>
+
+    <!-- ── Address ── -->
+    <div class="subsection-label-group">
+      <span class="subsection-label">Address</span>
+      <span class="subsection-hint">
+        This address enables MuniVendor to autofill several forms, including the
+        Non-Collusion Affidavit, which is required for most local government
+        organizations.
+      </span>
+    </div>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Street Address Line 1</mat-label>
+      <input
+        matInput
+        formControlName="address"
+        (blur)="trimOnBlur('address')"
+      />
+      <mat-error *ngIf="officialForm.get('address')?.hasError('required')">
+        Street address is required.
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Street Address Line 2 (optional)</mat-label>
+      <input
+        matInput
+        formControlName="address2"
+        (blur)="trimOnBlur('address2')"
+      />
+    </mat-form-field>
+
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="city-field">
+        <mat-label>City</mat-label>
+        <input matInput formControlName="city" (blur)="trimOnBlur('city')" />
+        <mat-error *ngIf="officialForm.get('city')?.hasError('required')">
+          City is required.
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="state-field">
+        <mat-label>State</mat-label>
+        <mat-select formControlName="stateId">
+          <mat-option *ngFor="let s of states" [value]="s.codeId">
+            {{ s.codeDesc }} ({{ s.codeName }})
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="officialForm.get('stateId')?.hasError('required')">
+          State is required.
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="zip-field">
+        <mat-label>ZIP Code</mat-label>
+        <input
+          matInput
+          formControlName="zipCode"
+          maxlength="10"
+          placeholder="12345 or 12345-6789"
+          (input)="formatZipCode($event)"
+        />
+        <mat-error *ngIf="officialForm.get('zipCode')?.hasError('required')">
+          ZIP code is required.
+        </mat-error>
+        <mat-error *ngIf="officialForm.get('zipCode')?.hasError('invalidZip')">
+          Enter a valid ZIP (e.g. 12345 or 12345-6789).
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <!-- ── Email ── -->
+    <div class="subsection-label-group">
+      <span class="subsection-label">Email Address</span>
+    </div>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Authorized Official's Email Address</mat-label>
+      <input
+        matInput
+        formControlName="email"
+        maxlength="255"
+        type="email"
+        (blur)="normalizeEmail()"
+      />
+      <mat-error *ngIf="officialForm.get('email')?.hasError('required')">
+        Email is required.
+      </mat-error>
+      <mat-error *ngIf="officialForm.get('email')?.hasError('pattern')">
+        Please enter a valid email address.
+      </mat-error>
+      <mat-error *ngIf="officialForm.get('email')?.hasError('maxlength')">
+        Email cannot exceed 255 characters.
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Confirm Email Address</mat-label>
+      <input
+        matInput
+        formControlName="confirmEmail"
+        maxlength="255"
+        type="email"
+        (blur)="normalizeConfirmEmail()"
+      />
+      <mat-error *ngIf="officialForm.get('confirmEmail')?.hasError('required')">
+        Please confirm your email address.
+      </mat-error>
+      <mat-error *ngIf="confirmEmailMismatch">
+        Email addresses do not match.
+      </mat-error>
+    </mat-form-field>
+
+    <!-- ── Phone & Best Time ── -->
+    <div class="subsection-label-group">
+      <span class="subsection-label">Phone & Availability</span>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="half-width">
+        <mat-label>Phone Number</mat-label>
+        <input
+          matInput
+          formControlName="phone"
+          [value]="displayPhone"
+          placeholder="(xxx) xxx-xxxx"
+          maxlength="14"
+          (input)="onPhoneInput($event)"
+          (keydown)="onPhoneKeydown($event)"
+        />
+        <mat-error *ngIf="officialForm.get('phone')?.hasError('pattern')">
+          Please enter a complete 10-digit phone number.
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="half-width">
+        <mat-label>Best Time To Call</mat-label>
+        <mat-select formControlName="bestTimeToCallId">
+          <mat-option *ngFor="let opt of bestTimeOptions" [value]="opt.codeId">
+            {{ opt.codeDesc }}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="isFieldInvalid('bestTimeToCallId')">
+          Please select the best time to call.
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <!-- ── Electronic Signature Consent ── -->
+    <div class="subsection-label-group">
+      <span class="subsection-label">Electronic Signature Consent</span>
+    </div>
+
+    <div class="consent-box">
+      <div class="consent-checkbox-row">
+        <mat-checkbox
+          formControlName="digitalSignatureConsented"
+          color="primary"
+          class="consent-checkbox"
+        >
+          <span class="consent-checkbox-label">
+            I agree to the Electronic Signature Consent
+          </span>
+        </mat-checkbox>
+      </div>
+      <p class="consent-text">
+        By signing this proposal electronically, the undersigned acknowledges
+        and agrees that their electronic signature is intended to authenticate
+        this document and shall have the same legal force and effect as a
+        handwritten signature. The parties agree that electronic signatures are
+        valid and binding in accordance with the Electronic Signatures in Global
+        and National Commerce Act (E-SIGN) and applicable state law.
+      </p>
+    </div>
+
+    <!-- ── Actions ── -->
+    <div class="form-actions">
+      <button
+        *ngIf="editingIndex !== null"
+        mat-flat-button
+        type="button"
+        class="cancel-btn"
+        (click)="cancelEdit()"
+      >
+        <mat-icon>close</mat-icon>
+        Cancel Edit
+      </button>
+
+      <button
+        mat-flat-button
+        color="primary"
+        type="submit"
+        class="save-btn"
+        [disabled]="isSaving || officialForm.pristine"
+      >
+        <mat-icon *ngIf="!isSaving">{{
+          editingIndex !== null ? "save" : "person_add"
+        }}</mat-icon>
+        {{
+          isSaving
+            ? "Saving..."
+            : editingIndex !== null
+              ? "Save Changes"
+              : "Add Authorizing Official"
+        }}
+      </button>
+    </div>
+  </form>
+
+  <!-- ── Loading ── -->
   <div class="state-container" *ngIf="isLoading">
     <mat-spinner diameter="36"></mat-spinner>
     <p class="loading-text">Loading authorizing officials...</p>
   </div>
 
-  <!-- Empty State -->
+  <!-- ── Empty state ── -->
   <div
     class="state-container empty-state"
-    *ngIf="!isLoading && totalRecords === 0"
+    *ngIf="!isLoading && dataSource.data.length === 0"
   >
     <div class="empty-icon">
       <mat-icon class="empty-mat-icon">verified_user</mat-icon>
     </div>
-    <p class="empty-title">No Authorizing Officials Found</p>
-    <p class="empty-subtitle">Add an authorizing official to get started.</p>
+    <p class="empty-title">No Authorizing Officials Added Yet</p>
+    <p class="empty-subtitle">
+      Complete the form above and click
+      <strong>Add Authorizing Official</strong> to add a record.
+    </p>
   </div>
 
-  <!-- Table -->
-  <div class="table-wrapper" *ngIf="!isLoading && totalRecords > 0">
-    <table mat-table [dataSource]="dataSource" matSort class="data-table">
-      <!-- Name Column -->
+  <!-- ── Table ── -->
+  <div class="table-wrapper" *ngIf="!isLoading && dataSource.data.length > 0">
+    <table class="data-table" mat-table [dataSource]="dataSource" matSort>
       <ng-container matColumnDef="name">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
-        <td mat-cell *matCellDef="let official">
-          <div class="name-cell">
-            <span class="full-name"
-              >{{ official.firstName }} {{ official.lastName }}</span
-            >
-          </div>
+        <th mat-header-cell *matHeaderCellDef>Name</th>
+        <td mat-cell *matCellDef="let row">
+          {{ row.firstName }} {{ row.lastName }}
         </td>
       </ng-container>
 
-      <!-- Title Column -->
       <ng-container matColumnDef="title">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Title</th>
-        <td mat-cell *matCellDef="let official">
-          <span *ngIf="official.title; else noTitle">{{ official.title }}</span>
-          <ng-template #noTitle><span class="empty-value">—</span></ng-template>
-        </td>
+        <th mat-header-cell *matHeaderCellDef>Title</th>
+        <td mat-cell *matCellDef="let row">{{ row.title || "—" }}</td>
       </ng-container>
 
-      <!-- Email Column -->
       <ng-container matColumnDef="email">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Email</th>
-        <td mat-cell *matCellDef="let official">
-          <span class="email-text">{{ official.email }}</span>
+        <th mat-header-cell *matHeaderCellDef>Email</th>
+        <td mat-cell *matCellDef="let row">
+          <span class="email-text">{{ row.email }}</span>
         </td>
       </ng-container>
 
-      <!-- Phone Column -->
       <ng-container matColumnDef="phone">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Phone</th>
-        <td mat-cell *matCellDef="let official">
-          {{ official.phone | phone }}
+        <th mat-header-cell *matHeaderCellDef>Phone</th>
+        <td mat-cell *matCellDef="let row">
+          {{ row.phone ? (row.phone | phone) : "—" }}
         </td>
       </ng-container>
 
-      <!-- Actions Column -->
       <ng-container matColumnDef="actions">
         <th mat-header-cell *matHeaderCellDef class="actions-col">Actions</th>
-        <td mat-cell *matCellDef="let official" class="actions-col">
+        <td
+          mat-cell
+          *matCellDef="let row; let i = index"
+          [class.row-editing]="editingIndex === i"
+          class="actions-col"
+        >
           <div class="action-buttons">
             <button
               mat-icon-button
               type="button"
               class="btn-edit"
-              matTooltip="Edit"
-              (click)="openEditDialog(official)"
+              (click)="editOfficial(i)"
+              matTooltip="Edit this official"
+              [disabled]="editingIndex !== null && editingIndex !== i"
             >
               <mat-icon>edit</mat-icon>
             </button>
@@ -104,10 +403,9 @@
         </td>
       </ng-container>
 
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      <tr mat-header-row *matHeaderRowDef="tableColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: tableColumns"></tr>
     </table>
-
     <mat-paginator
       [pageSizeOptions]="[5, 10, 25]"
       showFirstLastButtons
