@@ -318,13 +318,12 @@ export class RequestService {
       params: httpParams,
     });
   }
-
-  NotifyOfferorSolicitationOpened(requestId: number): Observable<any> {
-    return this.http.post(
-      `${this.url}notifications/send/SolicitationOpened/${requestId}`,
-      {},
-    );
-  }
+  // NotifyOfferorSolicitationOpened(requestId: number): Observable<any> {
+  //   return this.http.post(
+  //     `${this.url}notifications/send/SolicitationOpened/${requestId}`,
+  //     {},
+  //   );
+  // }
 
   DuplicateRequest(
     requestId: number,

@@ -188,11 +188,11 @@ export class RequestConfirmationDialog implements OnDestroy {
           this.loadingService.hide();
           return this.requestService.UpdateRequestStatus(request.requestId, 6);
         }),
-        switchMap(() =>
-          this.requestService.NotifyOfferorSolicitationOpened(
-            request.requestId,
-          ),
-        ),
+        // switchMap(() =>
+        //   this.requestService.NotifyOfferorSolicitationOpened(
+        //     request.requestId,
+        //   ),
+        // ),
         finalize(() => this.loadingService.hide()),
       )
       .subscribe({
@@ -216,7 +216,7 @@ export class RequestConfirmationDialog implements OnDestroy {
       downloadzipdocuments: 'DownloadZipDocuments',
       download: 'DownloadZipDocuments',
       updaterequeststatus: 'UpdateRequestStatus',
-      notifyofferorsolicitationopened: 'NotifyOfferorSolicitationOpened',
+      // notifyofferorsolicitationopened: 'NotifyOfferorSolicitationOpened',
     };
 
     const operation =
