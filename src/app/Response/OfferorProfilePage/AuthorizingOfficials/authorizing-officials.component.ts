@@ -333,10 +333,6 @@ export class AuthorizingOfficialsComponent implements OnInit {
         next: (data: AuthorizingOfficial[]) => {
           this.dataSource.data = data ?? [];
 
-          if (data && data.length > 0) {
-            this.patchFormFromEntry(data[0]);
-          }
-
           this.isLoading = false;
           this.cdr.detectChanges();
           this.dataSource.paginator = this.paginator;
@@ -467,7 +463,7 @@ export class AuthorizingOfficialsComponent implements OnInit {
       lastName: v.lastName,
       title: v.title,
       email: v.email,
-      phone: v.phone || null,
+      phone: v.phone ? v.phone.replace(/\D/g, '') : null,
       notarizationCountyId: v.notarizationCountyId,
       address: v.address,
       address2: v.address2 || null,
