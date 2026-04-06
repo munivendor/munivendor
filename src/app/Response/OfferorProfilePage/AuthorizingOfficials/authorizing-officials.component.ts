@@ -38,7 +38,6 @@ import { State } from '../../../shared/model/state.model';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSortModule, MatSort } from '@angular/material/sort';
 import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
-import { AfterViewInit } from '@angular/core';
 
 // ── Custom validators ──────────────────────────────────────────────────────────
 
@@ -447,9 +446,14 @@ export class AuthorizingOfficialsComponent implements OnInit {
     });
 
     if (entry.phone) {
-      this.displayPhone = this.formatPhoneDisplay(
-        entry.phone.replace(/\D/g, ''),
-      );
+      const digits = entry.phone.replace(/\D/g, '');
+      const formatted = this.formatPhoneDisplay(digits);
+
+      this.displayPhone = formatted;
+
+      this.officialForm.patchValue({
+        phone: formatted,
+      });
     } else {
       this.displayPhone = '';
     }
