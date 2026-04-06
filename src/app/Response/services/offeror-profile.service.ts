@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, shareReplay } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { OfferorDetails } from '../model/offeror-details.model';
 import { OfferorLegalInfo } from '../model/offeror-legal-info.model';
@@ -12,6 +12,11 @@ import { State } from '../../shared/model/state.model';
 })
 export class OfferorProfileService {
   url = environment.apiUrl;
+  private states$?: Observable<State[]>;
+  private countries$?: Observable<State[]>;
+  private stockholderTypes$?: Observable<State[]>;
+  private counties$?: Observable<State[]>;
+  private timeOptions$?: Observable<State[]>;
 
   constructor(private http: HttpClient) {}
 
@@ -41,7 +46,12 @@ export class OfferorProfileService {
   }
 
   GetStates(): Observable<State[]> {
-    return this.http.get<State[]>(`${this.url}ListData/States`);
+    if (!this.states$) {
+      this.states$ = this.http
+        .get<State[]>(`${this.url}ListData/States`)
+        .pipe(shareReplay(1));
+    }
+    return this.states$;
   }
 
   // ── Organization Details ──────────────────────────
@@ -169,6 +179,38 @@ export class OfferorProfileService {
   }
 
   GetCountries(): Observable<State[]> {
-    return this.http.get<State[]>(`${this.url}ListData/Countries`);
+    if (!this.countries$) {
+      this.countries$ = this.http
+        .get<State[]>(`${this.url}ListData/Countries`)
+        .pipe(shareReplay(1));
+    }
+    return this.countries$;
+  }
+
+  GetCounties(): Observable<State[]> {
+    if (!this.counties$) {
+      this.counties$ = this.http
+        .get<State[]>(`${this.url}ListData/Counties`)
+        .pipe(shareReplay(1));
+    }
+    return this.counties$;
+  }
+
+  GetTimeOptions(): Observable<State[]> {
+    if (!this.timeOptions$) {
+      this.timeOptions$ = this.http
+        .get<State[]>(`${this.url}ListData/TimeOptions`)
+        .pipe(shareReplay(1));
+    }
+    return this.timeOptions$;
+  }
+
+  GetStockholderTypes(): Observable<State[]> {
+    if (!this.stockholderTypes$) {
+      this.stockholderTypes$ = this.http
+        .get<State[]>(`${this.url}ListData/StockholderTypes`)
+        .pipe(shareReplay(1));
+    }
+    return this.stockholderTypes$;
   }
 }
