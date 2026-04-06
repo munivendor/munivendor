@@ -1,9 +1,8 @@
 <h1 class="page-title">Offeror Profile</h1>
 
-<app-offeror-details />
-
-<app-legal-information />
-
-<app-stockholder-information />
-
-<app-authorizing-officials />
+<ng-container *ngIf="referenceDataLoaded">
+  <app-offeror-details [states]="states" [countries]="countries" />
+  <app-legal-information />
+  <app-stockholder-information [states]="states" [countries]="countries" />
+  <app-authorizing-officials [states]="states" [counties]="counties" />
+</ng-container>

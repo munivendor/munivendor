@@ -1,7 +1,7 @@
 export interface OfferorStockholderInfo {
-  offerorStockholderInformationId: number;
+  stockholderId: number;
   organizationId: number | null;
-  stockholderType: 'Person' | 'Organization' | null;
+  stockholderTypeId: number | null;
 
   // Person-specific
   firstName: string | null;
@@ -15,10 +15,10 @@ export interface OfferorStockholderInfo {
   secFilingWebsite: string | null;
 
   // Address sub-fields (when not publicly traded)
-  addressLine1: string | null;
-  addressLine2: string | null;
+  address: string | null;
+  address2: string | null;
   city: string | null;
-  state: string | null;
+  stateId: string | null;
   zipCode: string | null;
-  country: string | null;
+  countryId: string | null;
 }

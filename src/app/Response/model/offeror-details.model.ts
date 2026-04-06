@@ -5,7 +5,7 @@ export interface OfferorDetails {
   address2?: string | null;
   city: string;
   stateId: number | null;
-  country?: number | null;
+  countryId?: number | null;
   zipCode: string;
   dateOfIncorporation?: string | null;
   // entityType is actually organizationSubTypeId in the backend
