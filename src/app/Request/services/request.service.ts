@@ -148,7 +148,7 @@ export class RequestService {
 
   GetMunicipalityDocuments(organizationId: number): Observable<any> {
     return this.http.get<any>(
-      `${this.url}MunicipalityDocuments/${organizationId}`,
+      `${this.url}OrganizationDocuments/${organizationId}`,
     );
   }
 
@@ -157,7 +157,7 @@ export class RequestService {
     municipalityDocument: any,
     file: File,
   ): Observable<any> {
-    const url = `${this.url}MunicipalityDocuments/${organizationId}`;
+    const url = `${this.url}OrganizationDocuments/${organizationId}`;
     const formData = new FormData();
     formData.append('documentName', municipalityDocument.documentName);
     formData.append('file', file);
@@ -187,7 +187,7 @@ export class RequestService {
 
   DeleteOrganizationDocument(documentId: number): Observable<void> {
     return this.http.delete<void>(
-      `${this.url}MunicipalityDocuments/${documentId}`,
+      `${this.url}OrganizationDocuments/${documentId}`,
     );
   }
 
@@ -318,13 +318,12 @@ export class RequestService {
       params: httpParams,
     });
   }
-
-  NotifyOfferorSolicitationOpened(requestId: number): Observable<any> {
-    return this.http.post(
-      `${this.url}notifications/send/SolicitationOpened/${requestId}`,
-      {},
-    );
-  }
+  // NotifyOfferorSolicitationOpened(requestId: number): Observable<any> {
+  //   return this.http.post(
+  //     `${this.url}notifications/send/SolicitationOpened/${requestId}`,
+  //     {},
+  //   );
+  // }
 
   DuplicateRequest(
     requestId: number,

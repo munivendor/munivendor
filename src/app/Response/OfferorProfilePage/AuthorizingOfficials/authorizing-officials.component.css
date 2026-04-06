@@ -61,14 +61,6 @@
   gap: 0.75rem;
 }
 
-.card-title {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--text-dark);
-  margin: 0;
-  letter-spacing: -0.01em;
-}
-
 .card-description {
   font-size: 0.84rem;
   color: var(--text-mid);
@@ -84,17 +76,6 @@
   padding: 0.2rem 0.65rem;
   border-radius: 999px;
   font-weight: 600;
-}
-
-/* ── Add Button ──────────────────────────────────── */
-.add-btn {
-  display: inline-flex !important;
-  align-items: center;
-  gap: 0.25rem;
-  border-radius: 8px !important;
-  font-weight: 600 !important;
-  font-size: 0.875rem;
-  height: 38px;
 }
 
 /* ── Table Wrapper ───────────────────────────────── */
@@ -207,21 +188,6 @@ mat-paginator {
   margin: 0;
 }
 
-/* .empty-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: var(--primary-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 0.25rem;
-}
-
-.empty-mat-icon {
-  color: var(--primary);
-} */
-
 .empty-title {
   font-weight: 700;
   font-size: 1rem;
@@ -233,6 +199,36 @@ mat-paginator {
   font-size: 0.875rem;
   color: var(--text-mid);
   margin: 0 0 0.5rem;
+}
+
+/* ── Electronic Signature Consent Box ───────────── */
+.consent-box {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  background: var(--bg-subtle);
+  margin-bottom: 0.25rem;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.consent-checkbox-row {
+  margin-bottom: 0.875rem;
+}
+
+.consent-checkbox-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.consent-text {
+  font-size: 0.825rem;
+  color: var(--text-mid);
+  line-height: 1.7;
+  margin: 0 0 0 1.75rem;
+  padding-left: 0.25rem;
 }
 
 /* ── Responsive ──────────────────────────────────── */

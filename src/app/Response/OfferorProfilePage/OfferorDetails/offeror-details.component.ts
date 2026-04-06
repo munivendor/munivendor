@@ -52,10 +52,10 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 })
 export class OfferorOrganizationDetailsComponent implements OnInit {
   @Input() organizationId: number | null = null;
-  states: State[] = [];
-  countries: State[] = [];
-  stateFilter = new FormControl('');
-  countryFilter = new FormControl('');
+  @Input() states: State[] = [];
+  @Input() countries: State[] = [];
+  stateFilter = new FormControl<State | null>(null);
+  countryFilter = new FormControl<State | null>(null, Validators.required);
   filteredStates$!: Observable<State[]>;
   filteredCountries$!: Observable<State[]>;
 
@@ -83,42 +83,83 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
   ngOnInit(): void {
     this.buildForm();
     const orgId = this.organizationId ?? this.stateService.getOrganizationId();
-    if (orgId) {
-      this.loadOrganizationInfo(orgId);
-    }
-    this.loadStates();
     this.loadOrganizationSubTypes();
-    this.loadCountries();
+    this.initStateFilter();
+    this.initCountryFilter();
+    this.loadOrgDetails(orgId);
   }
 
   // ── Data Loading ──────────────────────────────────
 
-  private loadOrganizationInfo(organizationId: number): void {
+  private initStateFilter(): void {
+    this.filteredStates$ = this.stateFilter.valueChanges.pipe(
+      startWith(this.stateFilter.value),
+      map((val) => {
+        const term = typeof val === 'string' ? val : (val?.codeDesc ?? '');
+        return this.filterList(this.states, term, ['codeDesc', 'codeName']);
+      }),
+    );
+
+    this.stateFilter.valueChanges.subscribe((val) => {
+      if (!val) {
+        this.organizationForm.get('stateId')?.setValue(null);
+        this.organizationForm.get('stateId')?.markAsDirty();
+      }
+    });
+  }
+
+  private initCountryFilter(): void {
+    this.filteredCountries$ = this.countryFilter.valueChanges.pipe(
+      startWith(this.countryFilter.value),
+      map((val) => {
+        const term = typeof val === 'string' ? val : (val?.codeDesc ?? '');
+
+        if (!val) {
+          this.organizationForm.get('countryId')?.setValue(null);
+          this.organizationForm.get('countryId')?.markAsDirty();
+        }
+
+        return this.filterList(this.countries, term, ['codeDesc', 'codeName']);
+      }),
+    );
+  }
+
+  private loadOrgDetails(orgId: number | null): void {
+    if (!orgId) {
+      this.applyDefaultCountry();
+      return;
+    }
+
     this.isLoading = true;
-    this.offerorProfileService
-      .GetOfferorOrganizationDetails(organizationId)
-      .subscribe({
-        next: (data: OfferorDetails) => {
-          this.patchForm(data);
-          this.isLoading = false;
-          this.cdr.detectChanges();
-        },
-        error: (err) => {
-          this.isLoading = false;
-          this.loggingService.logException(
-            new Error(`HTTP Error ${err.status}: ${err.statusText}`),
-            3,
-            {
-              organizationId,
-              methodName: 'loadOfferorOrganizationInfo',
-              className: 'OfferorOrganizationInfoComponent',
-              operation: 'GetOfferorOrganizationDetails',
-              userId: this.stateService.getUserId(),
-            },
-          );
-          this.cdr.detectChanges();
-        },
-      });
+    this.offerorProfileService.GetOfferorOrganizationDetails(orgId).subscribe({
+      next: (org) => {
+        this.patchForm(org);
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.loggingService.logException(
+          new Error(`HTTP Error ${err.status}: ${err.statusText}`),
+          3,
+          {
+            methodName: 'loadOrgDetails',
+            className: 'OfferorOrganizationDetailsComponent',
+            userId: this.stateService.getUserId(),
+          },
+        );
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private applyDefaultCountry(): void {
+    const usa = this.getDefaultUsa();
+    if (usa) {
+      this.organizationForm.get('countryId')?.setValue(usa.codeId);
+      this.countryFilter.setValue(usa, { emitEvent: false });
+      this.organizationForm.markAsPristine();
+    }
   }
 
   // entityType is actually organizationSubTypeId in the backend
@@ -136,112 +177,6 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
             methodName: 'loadOrganizationSubTypes',
             className: 'OfferorOrganizationDetailsComponent',
             operation: 'GetEntityTypes',
-            userId: this.stateService.getUserId(),
-          },
-        );
-      },
-    });
-  }
-
-  private loadStates(): void {
-    this.offerorProfileService.GetStates().subscribe({
-      next: (data) => {
-        this.states = data;
-        this.filteredStates$ = this.stateFilter.valueChanges.pipe(
-          startWith(''),
-          map((term) =>
-            this.filterList(this.states, term ?? '', ['codeDesc', 'codeName']),
-          ),
-        );
-
-        this.filteredStates$ = this.stateFilter.valueChanges.pipe(
-          startWith(''),
-          map((term) =>
-            this.filterList(this.states, term ?? '', ['codeDesc', 'codeName']),
-          ),
-        );
-
-        this.stateFilter.valueChanges.subscribe((val) => {
-          if (!val) {
-            this.organizationForm.get('stateId')?.setValue(null);
-            this.organizationForm.get('stateId')?.markAsDirty();
-          }
-        });
-
-        const savedStateId = this.organizationForm.get('stateId')?.value;
-        if (savedStateId) {
-          const state = this.states.find((s) => s.codeId === savedStateId);
-          if (state) {
-            this.stateFilter.setValue(`${state.codeDesc} (${state.codeName})`, {
-              emitEvent: false,
-            });
-          }
-        }
-
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        this.loggingService.logException(
-          new Error(`HTTP Error ${err.status}: ${err.statusText}`),
-          3,
-          {
-            methodName: 'loadStates',
-            className: 'OfferorOrganizationDetailsComponent',
-            operation: 'GetStates',
-            userId: this.stateService.getUserId(),
-          },
-        );
-      },
-    });
-  }
-
-  private loadCountries(): void {
-    this.offerorProfileService.GetCountries().subscribe({
-      next: (data) => {
-        this.countries = data;
-        this.filteredCountries$ = this.countryFilter.valueChanges.pipe(
-          startWith(''),
-          map((term) =>
-            this.filterList(this.countries, term ?? '', [
-              'codeDesc',
-              'codeName',
-            ]),
-          ),
-        );
-
-        const savedCountryId = this.organizationForm.get('country')?.value;
-        if (savedCountryId) {
-          const country = this.countries.find(
-            (c) => c.codeId === savedCountryId,
-          );
-          if (country) {
-            this.countryFilter.setValue(country.codeDesc, { emitEvent: false });
-          }
-        } else {
-          // default to USA
-          const usa = this.countries.find(
-            (c) =>
-              c.codeDesc.toLowerCase() === 'united states' ||
-              c.codeDesc.toLowerCase() === 'united states of america' ||
-              c.codeName?.toLowerCase() === 'us' ||
-              c.codeName?.toLowerCase() === 'usa',
-          );
-          if (usa) {
-            this.organizationForm.get('country')?.setValue(usa.codeId);
-            this.countryFilter.setValue(usa.codeDesc, { emitEvent: false });
-          }
-        }
-
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        this.loggingService.logException(
-          new Error(`HTTP Error ${err.status}: ${err.statusText}`),
-          3,
-          {
-            methodName: 'loadCountries',
-            className: 'OfferorOrganizationDetailsComponent',
-            operation: 'GetCountries',
             userId: this.stateService.getUserId(),
           },
         );
@@ -271,7 +206,7 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
       address2: [null],
       city: ['', Validators.required],
       stateId: [null, Validators.required],
-      country: [null],
+      countryId: [null],
       zipCode: ['', [Validators.required, Validators.pattern(this.zipPattern)]],
       dateOfIncorporation: [''],
       organizationSubTypeId: [null],
@@ -287,13 +222,18 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
     if (data.phone) this.displayPhone = this.formatPhone(data.phone);
     if (data.fax) this.displayFax = this.formatPhone(data.fax);
 
+    const resolvedCountry = data.countryId
+      ? (this.countries.find((c) => c.codeId === data.countryId) ??
+        this.getDefaultUsa())
+      : this.getDefaultUsa();
+
     this.organizationForm.patchValue({
       organizationName: data.organizationName,
       address: data.address,
       address2: data.address2 ?? null,
       city: data.city,
       stateId: data.stateId,
-      country: data.country ?? null,
+      countryId: resolvedCountry?.codeId ?? null,
       zipCode: data.zipCode,
       dateOfIncorporation: data.dateOfIncorporation ?? '',
       organizationSubTypeId: data.organizationSubTypeId ?? null,
@@ -306,17 +246,26 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
 
     const state = this.states.find((s) => s.codeId === data.stateId);
     if (state) {
-      this.stateFilter.setValue(`${state.codeDesc} (${state.codeName})`, {
-        emitEvent: false,
-      });
+      this.stateFilter.setValue(state, { emitEvent: false });
     }
 
-    const country = this.countries.find((c) => c.codeId === data.country);
-    if (country) {
-      this.countryFilter.setValue(country.codeDesc, { emitEvent: false });
+    if (resolvedCountry) {
+      this.countryFilter.setValue(resolvedCountry, { emitEvent: false });
     }
 
     this.organizationForm.markAsPristine();
+  }
+
+  private getDefaultUsa(): State | null {
+    return (
+      this.countries.find(
+        (c) =>
+          c.codeDesc.toLowerCase() === 'united states' ||
+          c.codeDesc.toLowerCase() === 'united states of america' ||
+          c.codeName?.toLowerCase() === 'us' ||
+          c.codeName?.toLowerCase() === 'usa',
+      ) ?? null
+    );
   }
 
   // ── Phone ─────────────────────────────────────────
@@ -442,7 +391,7 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
   // ── Title Case ────────────────────────────────────
 
   titleCaseField(
-    field: 'organizationName' | 'city' | 'address' | 'address2' | 'country',
+    field: 'organizationName' | 'city' | 'address' | 'address2' | 'countryId',
   ): void {
     const val = this.organizationForm.get(field)?.value;
     if (val) {
@@ -517,70 +466,50 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
       });
   }
 
+  // ── Helpers ───────────────────────────────────────
+
   isFieldInvalid(field: string): boolean {
     const control = this.organizationForm.get(field);
     return !!(control && control.invalid && (control.dirty || control.touched));
   }
 
-  stateDisplayFn = (codeId: number | null): string => {
-    if (!codeId) return '';
-    const match = this.states.find((s) => s.codeId === codeId);
-    return match ? `${match.codeDesc} (${match.codeName})` : '';
+  stateDisplayFn = (state: State | null): string => {
+    if (!state) return '';
+    return `${state.codeDesc} (${state.codeName})`;
   };
-
-  countryDisplayFn = (codeId: number | null): string => {
-    if (!codeId) return '';
-    const match = this.countries.find((c) => c.codeId === codeId);
-    return match?.codeDesc ?? '';
-  };
-
-  onStateSelected(codeId: number): void {
-    this.organizationForm.get('stateId')?.setValue(codeId);
+  onStateSelected(state: State): void {
+    this.organizationForm.get('stateId')?.setValue(state.codeId);
     this.organizationForm.get('stateId')?.markAsDirty();
     this.organizationForm.get('stateId')?.markAsTouched();
   }
-  onCountrySelected(codeId: number): void {
-    this.organizationForm.get('country')?.setValue(codeId);
-    this.organizationForm.get('country')?.markAsDirty();
-  }
-
   onStateBlur(): void {
     const currentId = this.organizationForm.get('stateId')?.value;
-    if (currentId) {
-      const state = this.states.find((s) => s.codeId === currentId);
-      if (state) {
-        this.stateFilter.setValue(`${state.codeDesc} (${state.codeName})`, {
-          emitEvent: false,
-        });
-      }
-    } else {
-      this.stateFilter.setValue('', { emitEvent: false });
-    }
-
+    const state = currentId
+      ? this.states.find((s) => s.codeId === currentId)
+      : null;
+    this.stateFilter.setValue(state ?? null, { emitEvent: false });
     this.organizationForm.get('stateId')?.markAsTouched();
   }
 
-  // onTimeAtAddressInput(value: string): void {
-  //   const digits = value.replace(/\D/g, '');
-  //   this.organizationForm
-  //     .get('timeAtCurrentAddress')
-  //     ?.setValue(digits ? parseInt(digits, 10) : null, { emitEvent: false });
-  //   this.organizationForm.get('timeAtCurrentAddress')?.markAsDirty();
-  // }
+  onCountryBlur(): void {
+    const current = this.organizationForm.get('countryId')?.value;
+    const country = current
+      ? this.countries.find((c) => c.codeId === current)
+      : null;
+    this.countryFilter.setValue(country ?? null, { emitEvent: false });
+    this.countryFilter.markAsTouched();
+  }
 
-  // onTimeAtAddressKeydown(event: KeyboardEvent): void {
-  //   const controlKeys = [
-  //     'Backspace',
-  //     'Delete',
-  //     'ArrowLeft',
-  //     'ArrowRight',
-  //     'Tab',
-  //     'Home',
-  //     'End',
-  //   ];
-  //   if (controlKeys.includes(event.key)) return;
-  //   if (!/^\d$/.test(event.key)) event.preventDefault();
-  // }
+  displayCountryFn = (countryId: State | null): string => {
+    return countryId?.codeDesc ?? '';
+  };
+
+  onCountrySelected(countryId: State): void {
+    this.organizationForm.get('countryId')?.setValue(countryId.codeId);
+    this.organizationForm.get('countryId')?.markAsDirty();
+  }
+
+  // ── Years / Months at Address ─────────────────────
 
   onYearsAtAddressInput(value: string): void {
     const digits = value.replace(/\D/g, '');
@@ -607,7 +536,7 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
   onMonthsAtAddressInput(value: string): void {
     const digits = value.replace(/\D/g, '');
     let months = digits ? parseInt(digits, 10) : null;
-    if (months !== null && months > 11) months = 11; // clamp to valid month range
+    if (months !== null && months > 11) months = 11;
     this.organizationForm
       .get('monthsAtCurrentAddress')
       ?.setValue(months, { emitEvent: false });
@@ -626,11 +555,5 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
     ];
     if (controlKeys.includes(event.key)) return;
     if (!/^\d$/.test(event.key)) event.preventDefault();
-  }
-
-  displayCountry(codeId: number | null): string {
-    if (!codeId) return '';
-    const country = this.countries.find((c) => c.codeId === codeId);
-    return country ? country.codeDesc : '';
   }
 }

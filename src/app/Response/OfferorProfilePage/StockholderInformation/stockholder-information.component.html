@@ -45,73 +45,100 @@
     <ng-container
       *ngIf="stockholderForm.get('hasStockholders')?.value === true"
     >
-      <!-- Editing banner -->
-      <div class="editing-banner" *ngIf="editingIndex !== null">
-        <mat-icon>edit</mat-icon>
-        <span>
-          Editing Stockholder {{ editingIndex + 1 }} — make your changes and
-          click <strong>Update</strong>.
-        </span>
-        <button
-          type="button"
-          mat-icon-button
-          class="cancel-edit-btn"
-          (click)="cancelEdit()"
-          matTooltip="Cancel editing"
-        >
-          <mat-icon>close</mat-icon>
-        </button>
-      </div>
-
       <div class="subsection-label-group">
         <span class="subsection-label">Stockholder Type</span>
       </div>
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Select One</mat-label>
-        <mat-select formControlName="stockholderType">
-          <mat-option value="Person">Person</mat-option>
-          <mat-option value="Organization">Organization (Company)</mat-option>
+        <mat-select formControlName="stockholderTypeId">
+          <mat-option *ngFor="let t of stockholderTypes" [value]="t.codeId">
+            {{ t.codeDesc }}
+          </mat-option>
         </mat-select>
-        <mat-error *ngIf="isFieldInvalid('stockholderType')">
+        <mat-error *ngIf="isFieldInvalid('stockholderTypeId')">
           This field is required.
         </mat-error>
       </mat-form-field>
 
-      <!-- Person: First / Last Name -->
+      <!-- ── PERSON ── -->
       <ng-container
-        *ngIf="stockholderForm.get('stockholderType')?.value === 'Person'"
+        *ngIf="
+          stockholderForm.get('stockholderTypeId')?.value ===
+          STOCKHOLDER_TYPE_PERSON
+        "
       >
         <div class="conditional-field form-section">
           <div class="subsection-label-group">
             <span class="subsection-label">Stockholder Name</span>
           </div>
-          <div class="name-fields-row">
+          <div class="form-row">
             <mat-form-field appearance="outline" class="half-width">
               <mat-label>First Name</mat-label>
-              <input matInput formControlName="firstName" maxlength="50" />
+              <input
+                matInput
+                formControlName="firstName"
+                maxlength="50"
+                (input)="capitalizeInput($event, 'firstName')"
+                (blur)="trimOnBlur('firstName')"
+              />
               <mat-hint align="end">
                 {{ stockholderForm.get("firstName")?.value?.length || 0 }} / 50
               </mat-hint>
-              <mat-error *ngIf="isFieldInvalid('firstName')">
+              <mat-error
+                *ngIf="stockholderForm.get('firstName')?.hasError('required')"
+              >
                 First name is required.
               </mat-error>
+              <mat-error
+                *ngIf="stockholderForm.get('firstName')?.hasError('hasNumbers')"
+              >
+                First name cannot contain numbers.
+              </mat-error>
+              <mat-error
+                *ngIf="stockholderForm.get('firstName')?.hasError('maxlength')"
+              >
+                First name cannot exceed 50 characters.
+              </mat-error>
             </mat-form-field>
+
             <mat-form-field appearance="outline" class="half-width">
               <mat-label>Last Name</mat-label>
-              <input matInput formControlName="lastName" maxlength="50" />
+              <input
+                matInput
+                formControlName="lastName"
+                maxlength="50"
+                (input)="capitalizeInput($event, 'lastName')"
+                (blur)="trimOnBlur('lastName')"
+              />
               <mat-hint align="end">
                 {{ stockholderForm.get("lastName")?.value?.length || 0 }} / 50
               </mat-hint>
-              <mat-error *ngIf="isFieldInvalid('lastName')">
+              <mat-error
+                *ngIf="stockholderForm.get('lastName')?.hasError('required')"
+              >
                 Last name is required.
+              </mat-error>
+              <mat-error
+                *ngIf="stockholderForm.get('lastName')?.hasError('hasNumbers')"
+              >
+                Last name cannot contain numbers.
+              </mat-error>
+              <mat-error
+                *ngIf="stockholderForm.get('lastName')?.hasError('maxlength')"
+              >
+                Last name cannot exceed 50 characters.
               </mat-error>
             </mat-form-field>
           </div>
         </div>
       </ng-container>
 
+      <!-- ── ORGANIZATION ── -->
       <ng-container
-        *ngIf="stockholderForm.get('stockholderType')?.value === 'Organization'"
+        *ngIf="
+          stockholderForm.get('stockholderTypeId')?.value ===
+          STOCKHOLDER_TYPE_ORG
+        "
       >
         <div class="conditional-field form-section">
           <div class="subsection-label-group">
@@ -128,13 +155,25 @@
               matInput
               formControlName="organizationName"
               maxlength="100"
+              (blur)="trimOnBlur('organizationName')"
             />
             <mat-hint align="end">
               {{ stockholderForm.get("organizationName")?.value?.length || 0 }}
               / 100
             </mat-hint>
-            <mat-error *ngIf="isFieldInvalid('organizationName')">
+            <mat-error
+              *ngIf="
+                stockholderForm.get('organizationName')?.hasError('required')
+              "
+            >
               Organization name is required.
+            </mat-error>
+            <mat-error
+              *ngIf="
+                stockholderForm.get('organizationName')?.hasError('maxlength')
+              "
+            >
+              Organization name cannot exceed 100 characters.
             </mat-error>
           </mat-form-field>
         </div>
@@ -158,7 +197,7 @@
           </mat-form-field>
         </div>
 
-        <!-- SEC Filing Website — Publicly Traded = Yes -->
+        <!-- SEC Filing — only when Publicly Traded = Yes -->
         <ng-container
           *ngIf="stockholderForm.get('publiclyTraded')?.value === true"
         >
@@ -188,6 +227,8 @@
                 matInput
                 formControlName="secFilingWebsite"
                 maxlength="300"
+                placeholder="https://www.sec.gov/..."
+                (blur)="trimOnBlur('secFilingWebsite')"
               />
               <mat-hint align="end">
                 {{
@@ -195,80 +236,146 @@
                 }}
                 / 300
               </mat-hint>
-              <mat-error *ngIf="isFieldInvalid('secFilingWebsite')">
+              <mat-error
+                *ngIf="
+                  stockholderForm.get('secFilingWebsite')?.hasError('required')
+                "
+              >
                 Please provide the SEC filing website URL.
               </mat-error>
-            </mat-form-field>
-          </div>
-        </ng-container>
-
-        <!-- Stockholder Address — Publicly Traded = No -->
-        <ng-container
-          *ngIf="stockholderForm.get('publiclyTraded')?.value === false"
-        >
-          <div class="conditional-field form-section">
-            <div class="subsection-label-group">
-              <span class="subsection-label">Stockholder Address</span>
-            </div>
-
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Street Address</mat-label>
-              <input matInput formControlName="addressLine1" />
-              <mat-error *ngIf="isFieldInvalid('addressLine1')">
-                Street address is required.
+              <mat-error
+                *ngIf="
+                  stockholderForm
+                    .get('secFilingWebsite')
+                    ?.hasError('invalidUrl')
+                "
+              >
+                Please enter a valid URL (e.g. https://example.com).
               </mat-error>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Street Address Line 2 (optional)</mat-label>
-              <input matInput formControlName="addressLine2" />
-            </mat-form-field>
-
-            <div class="address-row">
-              <mat-form-field appearance="outline" class="city-field">
-                <mat-label>City</mat-label>
-                <input matInput formControlName="city" />
-                <mat-error *ngIf="isFieldInvalid('city')">
-                  City is required.
-                </mat-error>
-              </mat-form-field>
-              <mat-form-field appearance="outline" class="state-field">
-                <mat-label>State</mat-label>
-                <mat-select formControlName="state">
-                  <mat-option *ngFor="let s of usStates" [value]="s.code">
-                    {{ s.name }}
-                  </mat-option>
-                </mat-select>
-                <mat-error *ngIf="isFieldInvalid('state')">
-                  State is required.
-                </mat-error>
-              </mat-form-field>
-              <mat-form-field appearance="outline" class="zip-field">
-                <mat-label>ZIP Code</mat-label>
-                <input matInput formControlName="zipCode" maxlength="10" />
-                <mat-error *ngIf="isFieldInvalid('zipCode')">
-                  ZIP code is required.
-                </mat-error>
-              </mat-form-field>
-            </div>
-
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Country</mat-label>
-              <mat-select formControlName="country">
-                <mat-option *ngFor="let c of countries" [value]="c.code">
-                  {{ c.name }}
-                </mat-option>
-              </mat-select>
-              <mat-error *ngIf="isFieldInvalid('country')">
-                Country is required.
+              <mat-error
+                *ngIf="
+                  stockholderForm.get('secFilingWebsite')?.hasError('maxlength')
+                "
+              >
+                URL cannot exceed 300 characters.
               </mat-error>
             </mat-form-field>
           </div>
         </ng-container>
       </ng-container>
 
-      <!-- ── Form Actions ──────────────────────────────────────── -->
+      <!-- ── ADDRESS (Person, Org — always shown when type is selected) ── -->
+      <ng-container
+        *ngIf="stockholderForm.get('stockholderTypeId')?.value !== null"
+      >
+        <div class="conditional-field form-section">
+          <div class="subsection-label-group">
+            <span class="subsection-label">Stockholder Address</span>
+          </div>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Street Address</mat-label>
+            <input
+              matInput
+              formControlName="address"
+              (blur)="trimOnBlur('address')"
+            />
+            <mat-error
+              *ngIf="stockholderForm.get('address')?.hasError('required')"
+            >
+              Street address is required.
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Street Address Line 2 (optional)</mat-label>
+            <input
+              matInput
+              formControlName="address2"
+              (blur)="trimOnBlur('address2')"
+            />
+          </mat-form-field>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Country</mat-label>
+              <mat-select formControlName="countryId">
+                <mat-option *ngFor="let c of countries" [value]="c.codeId">
+                  {{ c.codeDesc }}
+                </mat-option>
+              </mat-select>
+              <mat-error
+                *ngIf="stockholderForm.get('countryId')?.hasError('required')"
+              >
+                Country is required.
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="city-field">
+              <mat-label>City</mat-label>
+              <input
+                matInput
+                formControlName="city"
+                (blur)="trimOnBlur('city')"
+              />
+              <mat-error
+                *ngIf="stockholderForm.get('city')?.hasError('required')"
+              >
+                City is required.
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="state-field">
+              <mat-label>State</mat-label>
+              <mat-select formControlName="stateId">
+                <mat-option *ngFor="let s of states" [value]="s.codeId">
+                  {{ s.codeDesc }} ({{ s.codeName }})
+                </mat-option>
+              </mat-select>
+              <mat-error
+                *ngIf="stockholderForm.get('stateId')?.hasError('required')"
+              >
+                State is required.
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="zip-field">
+              <mat-label>ZIP Code</mat-label>
+              <input
+                matInput
+                formControlName="zipCode"
+                maxlength="10"
+                placeholder="12345 or 12345-6789"
+                (input)="formatZipCode($event)"
+              />
+              <mat-error
+                *ngIf="stockholderForm.get('zipCode')?.hasError('required')"
+              >
+                ZIP code is required.
+              </mat-error>
+              <mat-error
+                *ngIf="stockholderForm.get('zipCode')?.hasError('invalidZip')"
+              >
+                Enter a valid ZIP (e.g. 12345 or 12345-6789).
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- ── Form Actions ── -->
       <div class="form-actions">
+        <button
+          *ngIf="editingIndex !== null"
+          mat-flat-button
+          type="button"
+          class="cancel-btn"
+          (click)="cancelEdit()"
+        >
+          <mat-icon>close</mat-icon>
+          Cancel Edit
+        </button>
+
         <button
           mat-flat-button
           color="primary"
@@ -277,25 +384,15 @@
           [disabled]="isSavingStockholder || stockholderForm.pristine"
         >
           <mat-icon *ngIf="!isSavingStockholder">{{
-            editingIndex !== null ? "update" : "save"
+            editingIndex !== null ? "save" : "person_add"
           }}</mat-icon>
           {{
             isSavingStockholder
               ? "Saving..."
               : editingIndex !== null
-                ? "Update Stockholder"
-                : "Save Changes"
+                ? "Save Changes"
+                : "Add Stockholder"
           }}
-        </button>
-
-        <button
-          *ngIf="editingIndex !== null"
-          mat-stroked-button
-          type="button"
-          class="cancel-btn"
-          (click)="cancelEdit()"
-        >
-          Cancel
         </button>
       </div>
     </ng-container>
@@ -319,7 +416,7 @@
     </ng-container>
   </form>
 
-  <!-- ── Saved Stockholders Table ───────────────────────────── -->
+  <!-- ── Saved Stockholders Table ── -->
   <ng-container *ngIf="stockholderForm.get('hasStockholders')?.value === true">
     <!-- Empty State -->
     <div
@@ -331,27 +428,14 @@
       </div>
       <p class="empty-title">No Stockholders Added Yet</p>
       <p class="empty-subtitle">
-        Complete the form above and click <strong>Save Changes</strong> to add a
-        stockholder.
+        Complete the form above and click <strong>Add Stockholder</strong> to
+        add a stockholder.
       </p>
     </div>
 
     <!-- Table -->
     <div class="table-wrapper" *ngIf="savedStockholders.length > 0">
       <table class="data-table" mat-table [dataSource]="savedStockholders">
-        <!-- # -->
-        <ng-container matColumnDef="index">
-          <th mat-header-cell *matHeaderCellDef class="col-index">#</th>
-          <td
-            mat-cell
-            *matCellDef="let row; let i = index"
-            class="col-index"
-            [class.row-editing]="editingIndex === i"
-          >
-            {{ i + 1 }}
-          </td>
-        </ng-container>
-
         <!-- Type -->
         <ng-container matColumnDef="type">
           <th mat-header-cell *matHeaderCellDef>Type</th>
@@ -360,7 +444,11 @@
             *matCellDef="let row; let i = index"
             [class.row-editing]="editingIndex === i"
           >
-            {{ row.stockholderType }}
+            {{
+              row.stockholderTypeId === STOCKHOLDER_TYPE_PERSON
+                ? "Person"
+                : row.stockholderTypeId === STOCKHOLDER_TYPE_ORG
+            }}
           </td>
         </ng-container>
 
@@ -385,12 +473,15 @@
             [class.row-editing]="editingIndex === i"
           >
             <ng-container
-              *ngIf="row.stockholderType === 'Organization'; else notApplicable"
+              *ngIf="
+                row.stockholderTypeId === STOCKHOLDER_TYPE_ORG;
+                else notApplicable
+              "
             >
               <span
                 class="badge"
-                [class.badge-yes]="row.publiclyTraded"
-                [class.badge-no]="row.publiclyTraded === false"
+                [class.badge--yes]="row.publiclyTraded"
+                [class.badge--no]="row.publiclyTraded === false"
               >
                 {{ row.publiclyTraded ? "Yes" : "No" }}
               </span>
@@ -401,34 +492,40 @@
           </td>
         </ng-container>
 
-        <!-- SEC Filing / Address -->
-        <ng-container matColumnDef="detail">
-          <th mat-header-cell *matHeaderCellDef>SEC Filing / Address</th>
+        <!-- SEC Filing -->
+        <ng-container matColumnDef="secFiling">
+          <th mat-header-cell *matHeaderCellDef>SEC Filing</th>
           <td
             mat-cell
             *matCellDef="let row; let i = index"
             [class.row-editing]="editingIndex === i"
           >
-            <ng-container *ngIf="row.publiclyTraded === true">
+            <ng-container *ngIf="row.secFilingWebsite; else noFiling">
               <a
                 [href]="row.secFilingWebsite"
                 target="_blank"
                 rel="noopener"
                 class="sec-link"
+                [matTooltip]="row.secFilingWebsite"
               >
-                <mat-icon class="link-icon">open_in_new</mat-icon>View Filing
+                View Filing
               </a>
             </ng-container>
-            <ng-container *ngIf="row.publiclyTraded === false">
-              {{ getDisplayAddress(row) }}
-            </ng-container>
-            <ng-container
-              *ngIf="
-                row.publiclyTraded === null || row.publiclyTraded === undefined
-              "
-            >
-              <span class="na-text">—</span>
-            </ng-container>
+            <ng-template #noFiling>
+              <span class="na-text">N/A</span>
+            </ng-template>
+          </td>
+        </ng-container>
+
+        <!-- Address -->
+        <ng-container matColumnDef="address">
+          <th mat-header-cell *matHeaderCellDef>Address</th>
+          <td
+            mat-cell
+            *matCellDef="let row; let i = index"
+            [class.row-editing]="editingIndex === i"
+          >
+            {{ getDisplayAddress(row) }}
           </td>
         </ng-container>
 

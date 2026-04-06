@@ -723,6 +723,10 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
 
   isLastDecisionMakerEmpty(): boolean {
     if (!this.dropdowns || this.dropdowns.length === 0) return false;
+
+    if (this.dropdowns.length >= (this.decisionMakers?.length ?? 0))
+      return true;
+
     const lastControl = this.dropdowns.at(this.dropdowns.length - 1);
     const value = lastControl.get('decisionMaker')?.value;
     return !value;
@@ -732,7 +736,6 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     const newControl = this.createDropdownControl();
     this.dropdowns.push(newControl);
 
-    // Prevent existing controls from showing errors on add
     this.dropdowns.controls.forEach((control) => {
       control.markAsUntouched();
       control.markAsPristine();
