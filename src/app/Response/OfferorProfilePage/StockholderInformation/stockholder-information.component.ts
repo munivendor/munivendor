@@ -4,6 +4,7 @@ import {
   ViewEncapsulation,
   ElementRef,
   ViewChild,
+  Input,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -11,7 +12,14 @@ import {
   FormGroup,
   ReactiveFormsModule,
   Validators,
+  FormGroupDirective,
+  NgForm,
+  FormControl,
+  AbstractControl,
+  ValidationErrors,
+  ValidatorFn,
 } from '@angular/forms';
+import { ErrorStateMatcher } from '@angular/material/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
@@ -26,14 +34,52 @@ import { OfferorProfileService } from '../../services/offeror-profile.service';
 import { LoggingService } from '../../../exceptionhandling/logging.service';
 import { SnackbarNotificationService } from '../../../shared/service/snackbar-notification.service';
 import { OfferorStockholderInfo } from '../../model/offeror-stockholder-info.model';
+import { State } from '../../../shared/model/state.model';
+import { ChangeDetectorRef } from '@angular/core';
+
+export function noNumbersValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const value = control.value;
+    if (!value) return null;
+    return /\d/.test(value) ? { hasNumbers: true } : null;
+  };
+}
+
+export function urlValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const value = control.value;
+    if (!value) return null;
+    try {
+      new URL(value);
+      return null;
+    } catch {
+      return { invalidUrl: true };
+    }
+  };
+}
+
+export function zipCodeValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const value = control.value;
+    if (!value) return null;
+
+    return /^\d{5}(-\d{4})?$/.test(value) ? null : { invalidZip: true };
+  };
+}
+
+export class TouchedErrorStateMatcher implements ErrorStateMatcher {
+  isErrorState(
+    control: FormControl | null,
+    form: FormGroupDirective | NgForm | null,
+  ): boolean {
+    return !!(control && control.invalid && control.touched);
+  }
+}
 
 @Component({
   selector: 'app-stockholder-information',
   templateUrl: './stockholder-information.component.html',
-  styleUrls: [
-    '../../../shared/shared-profile-card.css',
-    './stockholder-information.component.css',
-  ],
+  styleUrls: ['./stockholder-information.component.css'],
   encapsulation: ViewEncapsulation.None,
   standalone: true,
   imports: [
@@ -48,6 +94,9 @@ import { OfferorStockholderInfo } from '../../model/offeror-stockholder-info.mod
     MatTableModule,
     MatTooltipModule,
   ],
+  providers: [
+    { provide: ErrorStateMatcher, useClass: TouchedErrorStateMatcher },
+  ],
 })
 export class StockholderInformationComponent implements OnInit {
   @ViewChild('cardTop') cardTop!: ElementRef;
@@ -56,13 +105,15 @@ export class StockholderInformationComponent implements OnInit {
   isSavingStockholder = false;
 
   savedStockholders: OfferorStockholderInfo[] = [];
+  readonly STOCKHOLDER_TYPE_PERSON = 396;
+  readonly STOCKHOLDER_TYPE_ORG = 395;
 
   readonly tableColumns = [
-    'index',
     'type',
     'name',
     'publiclyTraded',
-    'detail',
+    'secFiling',
+    'address',
     'actions',
   ];
 
@@ -72,72 +123,9 @@ export class StockholderInformationComponent implements OnInit {
 
   // ── Reference data ────────────────────────────────
 
-  readonly usStates: { code: string; name: string }[] = [
-    { code: 'AL', name: 'Alabama' },
-    { code: 'AK', name: 'Alaska' },
-    { code: 'AZ', name: 'Arizona' },
-    { code: 'AR', name: 'Arkansas' },
-    { code: 'CA', name: 'California' },
-    { code: 'CO', name: 'Colorado' },
-    { code: 'CT', name: 'Connecticut' },
-    { code: 'DE', name: 'Delaware' },
-    { code: 'FL', name: 'Florida' },
-    { code: 'GA', name: 'Georgia' },
-    { code: 'HI', name: 'Hawaii' },
-    { code: 'ID', name: 'Idaho' },
-    { code: 'IL', name: 'Illinois' },
-    { code: 'IN', name: 'Indiana' },
-    { code: 'IA', name: 'Iowa' },
-    { code: 'KS', name: 'Kansas' },
-    { code: 'KY', name: 'Kentucky' },
-    { code: 'LA', name: 'Louisiana' },
-    { code: 'ME', name: 'Maine' },
-    { code: 'MD', name: 'Maryland' },
-    { code: 'MA', name: 'Massachusetts' },
-    { code: 'MI', name: 'Michigan' },
-    { code: 'MN', name: 'Minnesota' },
-    { code: 'MS', name: 'Mississippi' },
-    { code: 'MO', name: 'Missouri' },
-    { code: 'MT', name: 'Montana' },
-    { code: 'NE', name: 'Nebraska' },
-    { code: 'NV', name: 'Nevada' },
-    { code: 'NH', name: 'New Hampshire' },
-    { code: 'NJ', name: 'New Jersey' },
-    { code: 'NM', name: 'New Mexico' },
-    { code: 'NY', name: 'New York' },
-    { code: 'NC', name: 'North Carolina' },
-    { code: 'ND', name: 'North Dakota' },
-    { code: 'OH', name: 'Ohio' },
-    { code: 'OK', name: 'Oklahoma' },
-    { code: 'OR', name: 'Oregon' },
-    { code: 'PA', name: 'Pennsylvania' },
-    { code: 'RI', name: 'Rhode Island' },
-    { code: 'SC', name: 'South Carolina' },
-    { code: 'SD', name: 'South Dakota' },
-    { code: 'TN', name: 'Tennessee' },
-    { code: 'TX', name: 'Texas' },
-    { code: 'UT', name: 'Utah' },
-    { code: 'VT', name: 'Vermont' },
-    { code: 'VA', name: 'Virginia' },
-    { code: 'WA', name: 'Washington' },
-    { code: 'WV', name: 'West Virginia' },
-    { code: 'WI', name: 'Wisconsin' },
-    { code: 'WY', name: 'Wyoming' },
-    { code: 'DC', name: 'District of Columbia' },
-  ];
-
-  readonly countries: { code: string; name: string }[] = [
-    { code: 'US', name: 'United States' },
-    { code: 'CA', name: 'Canada' },
-    { code: 'MX', name: 'Mexico' },
-    { code: 'GB', name: 'United Kingdom' },
-    { code: 'DE', name: 'Germany' },
-    { code: 'FR', name: 'France' },
-    { code: 'AU', name: 'Australia' },
-    { code: 'JP', name: 'Japan' },
-    { code: 'CN', name: 'China' },
-    { code: 'IN', name: 'India' },
-  ];
+  @Input() states: State[] = [];
+  @Input() countries: State[] = [];
+  stockholderTypes: State[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -145,12 +133,14 @@ export class StockholderInformationComponent implements OnInit {
     private offerorProfileService: OfferorProfileService,
     private loggingService: LoggingService,
     private snackbar: SnackbarNotificationService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
     this.organizationId = this.stateService.getOrganizationId();
     this.buildForm();
     this.subscribeToConditionalFields();
+    this.loadStockholderTypes();
 
     if (this.organizationId) {
       this.loadAllStockholders();
@@ -162,69 +152,82 @@ export class StockholderInformationComponent implements OnInit {
   private buildForm(): void {
     this.stockholderForm = this.fb.group({
       hasStockholders: [null, Validators.required],
-      stockholderType: [null],
+      stockholderTypeId: [null],
       firstName: [null],
       lastName: [null],
       organizationName: [null],
       publiclyTraded: [null],
       secFilingWebsite: [null],
-      addressLine1: [null],
-      addressLine2: [null],
+      address: [null],
+      address2: [null],
       city: [null],
-      state: [null],
+      stateId: [null],
       zipCode: [null],
-      country: ['US'],
+      countryId: ['US'],
     });
   }
 
   private subscribeToConditionalFields(): void {
-    // When hasStockholders changes, clear and re-validate downstream fields
     this.stockholderForm
       .get('hasStockholders')
       ?.valueChanges.subscribe((hasStockholders) => {
-        this.clearAllStockholderFields();
+        this.clearAllStockholderFields(false);
         this.editingIndex = null;
 
         if (hasStockholders === true) {
           this.stockholderForm
-            .get('stockholderType')
+            .get('stockholderTypeId')
             ?.setValidators([Validators.required]);
-          this.stockholderForm.get('stockholderType')?.updateValueAndValidity();
+          this.stockholderForm
+            .get('stockholderTypeId')
+            ?.updateValueAndValidity({ emitEvent: false });
         }
       });
 
     this.stockholderForm
-      .get('stockholderType')
+      .get('stockholderTypeId')
       ?.valueChanges.subscribe((type) => {
-        this.clearPersonFields();
-        this.clearOrganizationFields();
+        if (this.isPatchingForm) return;
+        this.clearPersonFields(false);
+        this.clearOrganizationFields(false);
 
-        if (type === 'Person') {
+        const isPerson = type === this.STOCKHOLDER_TYPE_PERSON;
+        const isOrg = type === this.STOCKHOLDER_TYPE_ORG;
+
+        if (isPerson) {
           this.setPersonValidators();
-        } else if (type === 'Organization') {
+        }
+
+        if (isOrg) {
           this.setOrganizationNameValidator();
-          this.stockholderForm
-            .get('publiclyTraded')
-            ?.setValidators([Validators.required]);
-          this.stockholderForm.get('publiclyTraded')?.updateValueAndValidity();
+
+          const ctrl = this.stockholderForm.get('publiclyTraded');
+          ctrl?.setValidators([Validators.required]);
+          ctrl?.updateValueAndValidity({ emitEvent: false });
+          ctrl?.markAsUntouched();
+          ctrl?.markAsPristine();
+
+          this.setAddressValidators();
         }
       });
 
     this.stockholderForm
       .get('publiclyTraded')
       ?.valueChanges.subscribe((value) => {
-        this.clearAddressFields();
-        this.clearSecFilingField();
+        if (this.isPatchingForm) return;
+        this.clearSecFilingField(false);
 
         if (value === true) {
           this.stockholderForm
             .get('secFilingWebsite')
-            ?.setValidators([Validators.required, Validators.maxLength(300)]);
+            ?.setValidators([
+              Validators.required,
+              Validators.maxLength(300),
+              urlValidator(),
+            ]);
           this.stockholderForm
             .get('secFilingWebsite')
-            ?.updateValueAndValidity();
-        } else if (value === false) {
-          this.setAddressValidators();
+            ?.updateValueAndValidity({ emitEvent: false });
         }
       });
   }
@@ -233,25 +236,41 @@ export class StockholderInformationComponent implements OnInit {
 
   private setPersonValidators(): void {
     ['firstName', 'lastName'].forEach((f) => {
-      this.stockholderForm
-        .get(f)
-        ?.setValidators([Validators.required, Validators.maxLength(50)]);
-      this.stockholderForm.get(f)?.updateValueAndValidity();
+      const ctrl = this.stockholderForm.get(f);
+      ctrl?.setValidators([
+        Validators.required,
+        Validators.maxLength(50),
+        noNumbersValidator(),
+      ]);
+      ctrl?.updateValueAndValidity({ emitEvent: false });
+      ctrl?.markAsUntouched();
+      ctrl?.markAsPristine();
     });
+    this.setAddressValidators();
   }
 
   private setOrganizationNameValidator(): void {
-    this.stockholderForm
-      .get('organizationName')
-      ?.setValidators([Validators.required, Validators.maxLength(100)]);
-    this.stockholderForm.get('organizationName')?.updateValueAndValidity();
+    const ctrl = this.stockholderForm.get('organizationName');
+    ctrl?.setValidators([Validators.required, Validators.maxLength(100)]);
+    ctrl?.updateValueAndValidity({ emitEvent: false });
+    ctrl?.markAsUntouched();
+    ctrl?.markAsPristine();
   }
 
   private setAddressValidators(): void {
-    ['addressLine1', 'city', 'state', 'zipCode', 'country'].forEach((f) => {
-      this.stockholderForm.get(f)?.setValidators([Validators.required]);
-      this.stockholderForm.get(f)?.updateValueAndValidity();
+    ['address', 'city', 'stateId', 'countryId'].forEach((f) => {
+      const ctrl = this.stockholderForm.get(f);
+      ctrl?.setValidators([Validators.required]);
+      ctrl?.updateValueAndValidity({ emitEvent: false });
+      ctrl?.markAsUntouched();
+      ctrl?.markAsPristine();
     });
+
+    const zipCtrl = this.stockholderForm.get('zipCode');
+    zipCtrl?.setValidators([Validators.required, zipCodeValidator()]);
+    zipCtrl?.updateValueAndValidity({ emitEvent: false });
+    zipCtrl?.markAsUntouched();
+    zipCtrl?.markAsPristine();
   }
 
   // ── Clear helpers ─────────────────────────────────
@@ -260,66 +279,88 @@ export class StockholderInformationComponent implements OnInit {
    * Clears all stockholder detail fields when the user switches
    * hasStockholders to No.
    */
-  private clearAllStockholderFields(): void {
+  private clearAllStockholderFields(emitEvent = true): void {
     [
-      'stockholderType',
+      'stockholderTypeId',
       'firstName',
       'lastName',
       'organizationName',
       'publiclyTraded',
       'secFilingWebsite',
-      'addressLine1',
-      'addressLine2',
+      'address',
+      'address2',
       'city',
-      'state',
+      'stateId',
       'zipCode',
-    ].forEach((f) => this.resetControl(f));
-    this.resetControl('country', 'US');
+    ].forEach((f) => this.resetControl(f, null, emitEvent));
+    this.resetControl('countryId', 'US', emitEvent);
   }
 
-  private clearPersonFields(): void {
-    ['firstName', 'lastName'].forEach((f) => this.resetControl(f));
+  private clearPersonFields(emitEvent = true): void {
+    ['firstName', 'lastName'].forEach((f) =>
+      this.resetControl(f, null, emitEvent),
+    );
+    this.clearAddressFields(emitEvent);
   }
 
-  private clearOrganizationFields(): void {
+  private clearOrganizationFields(emitEvent = true): void {
     [
       'organizationName',
       'publiclyTraded',
       'secFilingWebsite',
-      'addressLine1',
-      'addressLine2',
+      'address',
+      'address2',
       'city',
-      'state',
+      'stateId',
       'zipCode',
-      'country',
-    ].forEach((f) => this.resetControl(f, f === 'country' ? 'US' : null));
+    ].forEach((f) => this.resetControl(f, null, emitEvent));
+    this.resetControl('countryId', 'US', emitEvent);
   }
 
-  private clearSecFilingField(): void {
-    this.resetControl('secFilingWebsite');
+  private clearSecFilingField(emitEvent = true): void {
+    this.resetControl('secFilingWebsite', null, emitEvent);
   }
 
-  private clearAddressFields(): void {
-    [
-      'addressLine1',
-      'addressLine2',
-      'city',
-      'state',
-      'zipCode',
-      'country',
-    ].forEach((f) => this.resetControl(f, f === 'country' ? 'US' : null));
+  private clearAddressFields(emitEvent = true): void {
+    ['address', 'address2', 'city', 'stateId', 'zipCode'].forEach((f) =>
+      this.resetControl(f, null, emitEvent),
+    );
+    this.resetControl('countryId', 'US', emitEvent);
   }
 
-  private resetControl(name: string, value: any = null): void {
+  private resetControl(
+    name: string,
+    value: any = null,
+    emitEvent = true,
+  ): void {
     const ctrl = this.stockholderForm.get(name);
     ctrl?.clearValidators();
-    ctrl?.setValue(value);
+    ctrl?.setValue(value, { emitEvent });
+    ctrl?.updateValueAndValidity({ emitEvent });
     ctrl?.markAsUntouched();
     ctrl?.markAsPristine();
-    ctrl?.updateValueAndValidity();
   }
 
   // ── Load ──────────────────────────────────────────
+
+  private loadStockholderTypes(): void {
+    this.offerorProfileService.GetStockholderTypes().subscribe({
+      next: (types) => (this.stockholderTypes = types),
+      error: (err) => {
+        this.loggingService.logException(
+          new Error(`HTTP Error ${err.status}: ${err.statusText}`),
+          3,
+          {
+            organizationId: this.organizationId,
+            methodName: 'loadStockholderTypes',
+            className: 'StockholderInformationComponent',
+            operation: 'GetStockholderTypes',
+            userId: this.stateService.getUserId(),
+          },
+        );
+      },
+    });
+  }
 
   loadAllStockholders(): void {
     this.offerorProfileService
@@ -334,11 +375,13 @@ export class StockholderInformationComponent implements OnInit {
               .get('hasStockholders')
               ?.setValue(true, { emitEvent: false });
             this.stockholderForm
-              .get('stockholderType')
+              .get('stockholderTypeId')
               ?.setValidators([Validators.required]);
             this.stockholderForm
-              .get('stockholderType')
-              ?.updateValueAndValidity();
+              .get('stockholderTypeId')
+              ?.updateValueAndValidity({ emitEvent: false });
+            this.stockholderForm.get('stockholderTypeId')?.markAsUntouched();
+            this.stockholderForm.get('stockholderTypeId')?.markAsPristine();
             this.stockholderForm.markAsPristine();
           }
         },
@@ -384,20 +427,20 @@ export class StockholderInformationComponent implements OnInit {
     const payload = this.buildPayload();
     const isEdit = this.editingIndex !== null;
     const existingId = isEdit
-      ? this.savedStockholders[this.editingIndex!]
-          .offerorStockholderInformationId
+      ? this.savedStockholders[this.editingIndex!].stockholderId
       : null;
 
-    const request$: Observable<any> = existingId
-      ? this.offerorProfileService.UpdateStockholderInfo(
-          this.organizationId!,
-          existingId,
-          payload,
-        )
-      : this.offerorProfileService.CreateStockholderInfo(
-          this.organizationId!,
-          payload,
-        );
+    const request$: Observable<any> =
+      existingId !== null && existingId !== undefined
+        ? this.offerorProfileService.UpdateStockholderInfo(
+            this.organizationId!,
+            existingId,
+            payload,
+          )
+        : this.offerorProfileService.CreateStockholderInfo(
+            this.organizationId!,
+            payload,
+          );
 
     request$.subscribe({
       next: (response) => {
@@ -406,7 +449,7 @@ export class StockholderInformationComponent implements OnInit {
         if (isEdit) {
           this.savedStockholders[this.editingIndex!] = {
             ...payload,
-            offerorStockholderInformationId: existingId!,
+            stockholderId: existingId!,
           };
           this.savedStockholders = [...this.savedStockholders];
           this.snackbar.showSnackbarSuccess(
@@ -418,7 +461,7 @@ export class StockholderInformationComponent implements OnInit {
             .retStockholderId;
           this.savedStockholders = [
             ...this.savedStockholders,
-            { ...payload, offerorStockholderInformationId: newId },
+            { ...payload, stockholderId: newId },
           ];
           this.snackbar.showSnackbarSuccess('Stockholder saved successfully.');
         }
@@ -450,40 +493,47 @@ export class StockholderInformationComponent implements OnInit {
 
   private buildPayload(): OfferorStockholderInfo {
     const v = this.stockholderForm.value;
-    const isPerson = v.stockholderType === 'Person';
-    const isOrg = v.stockholderType === 'Organization';
+    const isPerson = v.stockholderTypeId === this.STOCKHOLDER_TYPE_PERSON;
+    const isOrg = v.stockholderTypeId === this.STOCKHOLDER_TYPE_ORG;
     const isPubliclyTraded = v.publiclyTraded === true;
 
     return {
-      offerorStockholderInformationId: 0,
+      stockholderId: 0,
       organizationId: this.organizationId,
-      stockholderType: v.stockholderType,
+      stockholderTypeId: v.stockholderTypeId,
       firstName: isPerson ? v.firstName : null,
       lastName: isPerson ? v.lastName : null,
       organizationName: isOrg ? v.organizationName : null,
       publiclyTraded: isOrg ? v.publiclyTraded : null,
       secFilingWebsite: isOrg && isPubliclyTraded ? v.secFilingWebsite : null,
-      addressLine1: isOrg && !isPubliclyTraded ? v.addressLine1 : null,
-      addressLine2: isOrg && !isPubliclyTraded ? v.addressLine2 : null,
-      city: isOrg && !isPubliclyTraded ? v.city : null,
-      state: isOrg && !isPubliclyTraded ? v.state : null,
-      zipCode: isOrg && !isPubliclyTraded ? v.zipCode : null,
-      country: isOrg && !isPubliclyTraded ? v.country : null,
+      // Address always included for org and for person
+      address: isPerson || isOrg ? v.address : null,
+      address2: isPerson || isOrg ? v.address2 : null,
+      city: isPerson || isOrg ? v.city : null,
+      stateId: isPerson || isOrg ? v.stateId : null,
+      zipCode: isPerson || isOrg ? v.zipCode : null,
+      countryId: isPerson || isOrg ? v.countryId : null,
     };
   }
 
   // ── Table actions ─────────────────────────────────
 
+  private isPatchingForm = false;
+
   editStockholder(index: number): void {
-    this.editingIndex = index;
+    this.isPatchingForm = true;
     this.patchFormFromEntry(this.savedStockholders[index]);
-    this.stockholderForm.markAsPristine();
+    this.isPatchingForm = false;
+    this.editingIndex = index;
+    this.stockholderForm.markAsDirty();
+    this.cdr.detectChanges();
     this.scrollToTop();
   }
 
   removeStockholder(index: number): void {
+    console.log('Removing stockholder at index', index);
     const entry = this.savedStockholders[index];
-    if (!entry.offerorStockholderInformationId) {
+    if (!entry.stockholderId) {
       this.savedStockholders = this.savedStockholders.filter(
         (_, i) => i !== index,
       );
@@ -491,7 +541,7 @@ export class StockholderInformationComponent implements OnInit {
     }
 
     this.offerorProfileService
-      .DeleteStockholderInfo(entry.offerorStockholderInformationId)
+      .DeleteStockholderInfo(entry.stockholderId)
       .subscribe({
         next: () => {
           this.savedStockholders = this.savedStockholders.filter(
@@ -528,12 +578,16 @@ export class StockholderInformationComponent implements OnInit {
    * leaving the Yes/No answer intact.
    */
   private resetEntryFields(): void {
-    this.clearAllStockholderFields();
-    // Re-apply required validator on stockholderType since hasStockholders = Yes
+    this.clearAllStockholderFields(false);
+    // Re-apply required validator on stockholderTypeId since hasStockholders = Yes
     this.stockholderForm
-      .get('stockholderType')
+      .get('stockholderTypeId')
       ?.setValidators([Validators.required]);
-    this.stockholderForm.get('stockholderType')?.updateValueAndValidity();
+    this.stockholderForm
+      .get('stockholderTypeId')
+      ?.updateValueAndValidity({ emitEvent: false });
+    this.stockholderForm.get('stockholderTypeId')?.markAsUntouched();
+    this.stockholderForm.get('stockholderTypeId')?.markAsPristine();
     this.stockholderForm.markAsPristine();
     this.stockholderForm.markAsUntouched();
   }
@@ -541,18 +595,18 @@ export class StockholderInformationComponent implements OnInit {
   private patchFormFromEntry(entry: OfferorStockholderInfo): void {
     this.stockholderForm.patchValue({
       hasStockholders: true,
-      stockholderType: entry.stockholderType,
+      stockholderTypeId: entry.stockholderTypeId,
       firstName: entry.firstName,
       lastName: entry.lastName,
       organizationName: entry.organizationName,
       publiclyTraded: entry.publiclyTraded,
       secFilingWebsite: entry.secFilingWebsite,
-      addressLine1: entry.addressLine1,
-      addressLine2: entry.addressLine2,
+      address: entry.address,
+      address2: entry.address2,
       city: entry.city,
-      state: entry.state,
+      stateId: entry.stateId,
       zipCode: entry.zipCode,
-      country: entry.country ?? 'US',
+      countryId: entry.countryId ?? 'US',
     });
   }
 
@@ -564,25 +618,77 @@ export class StockholderInformationComponent implements OnInit {
   }
 
   getDisplayName(entry: OfferorStockholderInfo): string {
-    if (entry.stockholderType === 'Person') {
+    if (entry.stockholderTypeId === this.STOCKHOLDER_TYPE_PERSON) {
       return [entry.firstName, entry.lastName].filter(Boolean).join(' ') || '—';
     }
     return entry.organizationName || '—';
   }
 
   getDisplayAddress(entry: OfferorStockholderInfo): string {
+    const stateLabel =
+      this.states.find(
+        (s) => s.codeId?.toString() === entry.stateId?.toString(),
+      )?.codeDesc ?? null;
+    const countryLabel =
+      this.countries.find(
+        (c) => c.codeId?.toString() === entry.countryId?.toString(),
+      )?.codeDesc ?? null;
+
     const parts = [
-      entry.addressLine1,
-      entry.addressLine2,
+      entry.address,
+      entry.address2,
       entry.city,
-      entry.state,
+      stateLabel,
       entry.zipCode,
+      countryLabel,
     ].filter(Boolean);
+
     return parts.join(', ') || '—';
   }
 
   isFieldInvalid(field: string): boolean {
     const control = this.stockholderForm.get(field);
     return !!(control && control.invalid && (control.dirty || control.touched));
+  }
+
+  // ── Input transformers ────────────────────────────────────────────────────────
+
+  /** Auto-capitalizes first letter, strips digits */
+  capitalizeInput(event: Event, controlName: string): void {
+    const input = event.target as HTMLInputElement;
+    let value = input.value.replace(/[0-9]/g, '');
+    if (value.length > 0) {
+      value = value.charAt(0).toUpperCase() + value.slice(1);
+    }
+    input.value = value;
+    this.stockholderForm
+      .get(controlName)
+      ?.setValue(value, { emitEvent: false });
+    this.stockholderForm.get(controlName)?.updateValueAndValidity();
+  }
+
+  /** Strips non-numeric/hyphen characters from ZIP, auto-formats */
+  formatZipCode(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let value = input.value.replace(/[^0-9-]/g, '');
+
+    if (value.length > 5 && !value.includes('-')) {
+      value = value.slice(0, 5) + '-' + value.slice(5, 9);
+    } else if (value.length > 9) {
+      value = value.slice(0, 10);
+    }
+
+    input.value = value;
+    this.stockholderForm.get('zipCode')?.setValue(value, { emitEvent: false });
+    this.stockholderForm.get('zipCode')?.updateValueAndValidity();
+  }
+
+  /** Trims whitespace on blur */
+  trimOnBlur(controlName: string): void {
+    const ctrl = this.stockholderForm.get(controlName);
+    const trimmed = ctrl?.value?.trim();
+    if (trimmed !== ctrl?.value) {
+      ctrl?.setValue(trimmed);
+    }
   }
 }
