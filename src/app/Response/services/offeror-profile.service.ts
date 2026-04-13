@@ -1,11 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, shareReplay } from 'rxjs';
+import { map, Observable, shareReplay } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { OfferorDetails } from '../model/offeror-details.model';
 import { OfferorLegalInfo } from '../model/offeror-legal-info.model';
 import { OfferorStockholderInfo } from '../model/offeror-stockholder-info.model';
 import { State } from '../../shared/model/state.model';
+import { OrganizationDocument } from '../model/organization-document.model';
+import { DocumentType } from '../model/document-type.model';
 
 @Injectable({
   providedIn: 'root',
@@ -212,5 +214,19 @@ export class OfferorProfileService {
         .pipe(shareReplay(1));
     }
     return this.stockholderTypes$;
+  }
+
+  GetOrganizationDocuments(
+    organizationId: number,
+  ): Observable<OrganizationDocument[]> {
+    return this.http
+      .get<{
+        documents: OrganizationDocument[];
+      }>(`${this.url}OrganizationDocuments/${organizationId}`)
+      .pipe(map((res) => res.documents));
+  }
+
+  GetDocumentTypes(): Observable<DocumentType[]> {
+    return this.http.get<DocumentType[]>(`${this.url}ListData/DocumentTypes`);
   }
 }

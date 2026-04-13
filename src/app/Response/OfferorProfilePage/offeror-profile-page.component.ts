@@ -7,6 +7,13 @@ import { LegalInformationComponent } from './LegalInformation/legal-information.
 import { StockholderInformationComponent } from './StockholderInformation/stockholder-information.component';
 import { OfferorProfileService } from '../services/offeror-profile.service';
 import { State } from '../../shared/model/state.model';
+import { ComplianceDocumentsComponent } from './RequiredComplianceForms/required-compliance-forms.component';
+import { RequiredFilesComponent } from './RequiredFiles/required-files.component';
+import { ProhibitedActivitiesRussiaBelarusComponent } from './ProhibitedActivitiesRussiaBelarus/prohibited-activities-russia-belarus.component';
+import { ProhibitedActivitiesIranComponent } from './ProhibitedActivitiesIran/prohibited-activities-iran.component';
+import { OrganizationDocument } from '../model/organization-document.model';
+import { DocumentType } from '../model/document-type.model';
+import { StateService } from '../../Request/services/state.service';
 
 @Component({
   selector: 'offeror-profile-page',
@@ -20,6 +27,10 @@ import { State } from '../../shared/model/state.model';
     OfferorOrganizationDetailsComponent,
     LegalInformationComponent,
     StockholderInformationComponent,
+    ComplianceDocumentsComponent,
+    RequiredFilesComponent,
+    ProhibitedActivitiesRussiaBelarusComponent,
+    ProhibitedActivitiesIranComponent,
   ],
 })
 export class OfferorProfilePageComponent implements OnInit {
@@ -28,23 +39,59 @@ export class OfferorProfilePageComponent implements OnInit {
   counties: State[] = [];
   referenceDataLoaded = false;
 
-  constructor(private offerorProfileService: OfferorProfileService) {}
+  organizationId: number | null = null;
+  organizationDocuments: OrganizationDocument[] = [];
+  documentTypes: DocumentType[] = [];
+
+  constructor(
+    private offerorProfileService: OfferorProfileService,
+    private stateService: StateService,
+  ) {}
 
   ngOnInit(): void {
+    this.organizationId = this.stateService.getOrganizationId();
+
     forkJoin({
       states: this.offerorProfileService.GetStates(),
       countries: this.offerorProfileService.GetCountries(),
       counties: this.offerorProfileService.GetCounties(),
+      documentTypes: this.offerorProfileService.GetDocumentTypes(),
+      documents: this.offerorProfileService.GetOrganizationDocuments(
+        this.organizationId!,
+      ),
     }).subscribe({
-      next: ({ states, countries, counties }) => {
+      next: ({ states, countries, counties, documentTypes, documents }) => {
         this.states = states;
         this.countries = countries;
         this.counties = counties;
+        this.documentTypes = documentTypes;
+        this.organizationDocuments = documents;
         this.referenceDataLoaded = true;
       },
       error: () => {
         this.referenceDataLoaded = true;
       },
     });
+
+    this.loadDocuments();
+  }
+
+  loadDocuments(): void {
+    if (!this.organizationId) return;
+    this.offerorProfileService
+      .GetOrganizationDocuments(this.organizationId)
+      .subscribe({
+        next: (docs) => {
+          this.organizationDocuments = docs;
+        },
+        error: () => {},
+      });
+  }
+
+  onDocumentUploaded(): void {
+    if (!this.organizationId) return;
+    this.offerorProfileService
+      .GetOrganizationDocuments(this.organizationId)
+      .subscribe({ next: (docs) => (this.organizationDocuments = docs) });
   }
 }

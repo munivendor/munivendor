@@ -156,8 +156,12 @@ export class RequestService {
     organizationId: number,
     municipalityDocument: any,
     file: File,
+    documentTypeId?: number,
   ): Observable<any> {
-    const url = `${this.url}OrganizationDocuments/${organizationId}`;
+    const url =
+      documentTypeId != null
+        ? `${this.url}OrganizationDocuments/${organizationId}/${documentTypeId}`
+        : `${this.url}OrganizationDocuments/${organizationId}`;
     const formData = new FormData();
     formData.append('documentName', municipalityDocument.documentName);
     formData.append('file', file);

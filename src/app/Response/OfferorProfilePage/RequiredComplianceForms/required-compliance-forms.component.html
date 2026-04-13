@@ -1,0 +1,117 @@
+<div class="profile-card">
+  <div class="card-header">
+    <div class="header-accent"></div>
+
+    <div class="header-content">
+      <div class="header-top">
+        <div class="header-left">
+          <h2 class="card-title">Required Compliance Forms</h2>
+        </div>
+      </div>
+      <p class="card-description">
+        The files below are required by all local government organizations in
+        the State of New Jersey.
+      </p>
+    </div>
+  </div>
+
+  <form
+    [formGroup]="complianceForm"
+    class="compliance-form"
+    (submit)="$event.preventDefault()"
+  >
+    <div>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Mandatory Equal Employment Opportunity Language</mat-label>
+        <mat-select formControlName="eeoSelection">
+          <mat-option *ngFor="let option of eeoOptions" [value]="option.codeId">
+            {{ option.codeDesc }}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="isFieldInvalid('eeoSelection')">
+          Please select an EEO document type.
+        </mat-error>
+      </mat-form-field>
+
+      <p class="eeo-hint">
+        N.J.S.A. 10:5-31 et seq. (P.L.1975, c.127) and N.J.A.C. 17:27 et seq.
+        Selected contractors must submit one of the documents listed. Form
+        AA-302 can be downloaded at
+        <a
+          href="https://www.nj.gov/treasury/contract_compliance"
+          target="_blank"
+          rel="noopener"
+        >
+          NJ Department of the Treasury Contract Compliance</a
+        >.
+      </p>
+    </div>
+
+    <div
+      class="upload-section form-section"
+      *ngIf="selectedDocumentType as docType"
+    >
+      <p class="upload-doc-label">
+        <strong>{{ docType.codeDesc }}</strong>
+      </p>
+      <p class="upload-doc-description">
+        Please upload your organization's {{ docType.codeDesc }}.
+      </p>
+
+      <div class="file-input-row">
+        <button
+          type="button"
+          class="file-input-btn"
+          [class.disabled]="isUploading"
+          [disabled]="isUploading"
+          (click)="fileInput.click()"
+        >
+          <input
+            #fileInput
+            type="file"
+            accept=".jpg,.jpeg,.png,.pdf"
+            class="file-input-hidden"
+            (change)="onFileSelected($event)"
+            [disabled]="isUploading"
+          />
+          <mat-spinner
+            *ngIf="isUploading"
+            diameter="16"
+            class="btn-spinner"
+          ></mat-spinner>
+          <span *ngIf="!isUploading">Choose File</span>
+          <span *ngIf="isUploading">Uploading…</span>
+        </button>
+
+        <span class="file-name-display">
+          <ng-container *ngIf="selectedFileName; else noFile">
+            {{ selectedFileName }}
+            <button
+              type="button"
+              class="clear-btn"
+              (click)="clearFile()"
+              title="Remove"
+            >
+              ✕
+            </button>
+          </ng-container>
+          <ng-template #noFile>No file chosen</ng-template>
+        </span>
+      </div>
+
+      <div
+        class="uploaded-file-row"
+        *ngIf="getUploadedDoc(docType.codeName) as doc"
+      >
+        <span class="uploaded-date">Uploaded: </span>
+        <a [href]="doc.fileUrl" target="_blank" class="uploaded-file-link">
+          {{ doc.fileName }}
+        </a>
+      </div>
+
+      <span class="upload-hint"
+        >10MB max size. jpg, png, pdf files may be uploaded.</span
+      >
+    </div>
+  </form>
+</div>
