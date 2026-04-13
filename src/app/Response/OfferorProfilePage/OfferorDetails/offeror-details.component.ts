@@ -158,8 +158,25 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
     if (usa) {
       this.organizationForm.get('countryId')?.setValue(usa.codeId);
       this.countryFilter.setValue(usa, { emitEvent: false });
-      this.organizationForm.markAsPristine();
     }
+
+    const nj = this.getDefaultState();
+    if (nj) {
+      this.organizationForm.get('stateId')?.setValue(nj.codeId);
+      this.stateFilter.setValue(nj, { emitEvent: false });
+    }
+
+    this.organizationForm.markAsPristine();
+  }
+
+  private getDefaultState(): State | null {
+    return (
+      this.states.find(
+        (s) =>
+          s.codeDesc.toLowerCase() === 'new jersey' ||
+          s.codeName?.toLowerCase() === 'nj',
+      ) ?? null
+    );
   }
 
   // entityType is actually organizationSubTypeId in the backend
@@ -244,8 +261,13 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
       fax: this.displayFax,
     });
 
-    const state = this.states.find((s) => s.codeId === data.stateId);
+    const state = data.stateId
+      ? (this.states.find((s) => s.codeId === data.stateId) ??
+        this.getDefaultState())
+      : this.getDefaultState();
+
     if (state) {
+      this.organizationForm.get('stateId')?.setValue(state.codeId);
       this.stateFilter.setValue(state, { emitEvent: false });
     }
 

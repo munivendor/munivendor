@@ -1,0 +1,85 @@
+<div class="profile-card">
+  <div class="card-header">
+    <div class="header-accent"></div>
+
+    <div class="header-content">
+      <div class="header-top">
+        <div class="header-left">
+          <h2 class="card-title">Required Files</h2>
+        </div>
+      </div>
+      <p class="card-description">
+        The files below are required by all local government organizations in
+        the State of New Jersey.
+      </p>
+    </div>
+  </div>
+
+  <div class="required-files-form">
+    <div class="file-row" *ngFor="let fileConfig of requiredFiles">
+      <p class="upload-doc-label">
+        <strong>{{ fileConfig.label }}</strong>
+        <span *ngIf="fileConfig.required" class="required-badge"
+          >(Required)</span
+        >
+      </p>
+
+      <p class="upload-doc-description" *ngIf="fileConfig.description">
+        {{ fileConfig.description }}
+      </p>
+
+      <div class="file-input-row">
+        <button
+          type="button"
+          class="file-input-btn"
+          [class.disabled]="isUploading(fileConfig.key)"
+          [disabled]="isUploading(fileConfig.key)"
+          (click)="fileInput.click()"
+        >
+          <input
+            #fileInput
+            type="file"
+            accept=".jpg,.jpeg,.png,.pdf"
+            class="file-input-hidden"
+            (change)="onFileSelected($event, fileConfig)"
+            [disabled]="isUploading(fileConfig.key)"
+          />
+          <mat-spinner
+            *ngIf="isUploading(fileConfig.key)"
+            diameter="16"
+            class="btn-spinner"
+          ></mat-spinner>
+          <span *ngIf="!isUploading(fileConfig.key)">Choose File</span>
+          <span *ngIf="isUploading(fileConfig.key)">Uploading…</span>
+        </button>
+
+        <span class="file-name-display">
+          <ng-container *ngIf="getFileName(fileConfig.key); else noFile">
+            {{ getFileName(fileConfig.key) }}
+            <button
+              type="button"
+              class="clear-btn"
+              (click)="clearFile(fileConfig.key)"
+              title="Remove"
+            >
+              ✕
+            </button>
+          </ng-container>
+          <ng-template #noFile>No File Chosen</ng-template>
+        </span>
+      </div>
+      <div
+        class="uploaded-file-row"
+        *ngIf="getUploadedDoc(fileConfig.documentName) as doc"
+      >
+        <span class="uploaded-date">Uploaded File: </span>
+        <a [href]="doc.fileUrl" target="_blank" class="uploaded-file-link">
+          {{ doc.fileName }}
+        </a>
+      </div>
+      <span class="upload-hint"
+        >Accepted file types: jpg, png, pdf. Max. file size: 50 MB.</span
+      >
+    </div>
+  </div>
+</div>

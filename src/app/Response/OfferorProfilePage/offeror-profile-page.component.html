@@ -5,4 +5,22 @@
   <app-legal-information />
   <app-stockholder-information [states]="states" [countries]="countries" />
   <app-authorizing-officials [states]="states" [counties]="counties" />
+  <app-required-compliance-forms
+    [uploadedDocuments]="organizationDocuments"
+    [documentTypes]="documentTypes"
+    (documentUploaded)="onDocumentUploaded()"
+  />
+  <app-required-files
+    [uploadedDocuments]="organizationDocuments"
+    [documentTypes]="documentTypes"
+    (documentUploaded)="onDocumentUploaded()"
+  />
+  <app-prohibited-activities-russia-belarus
+    [uploadedDocuments]="organizationDocuments"
+    (documentUploaded)="onDocumentUploaded()"
+  />
+  <app-prohibited-activities-iran
+    [uploadedDocuments]="organizationDocuments"
+    (documentUploaded)="onDocumentUploaded()"
+  />
 </ng-container>

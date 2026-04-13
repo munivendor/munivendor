@@ -222,6 +222,7 @@
       <input
         matInput
         formControlName="confirmEmail"
+        [errorStateMatcher]="emailMismatchMatcher"
         maxlength="255"
         type="email"
         (blur)="normalizeConfirmEmail()"
