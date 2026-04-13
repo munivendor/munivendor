@@ -75,6 +75,19 @@ export class TouchedErrorStateMatcher implements ErrorStateMatcher {
   }
 }
 
+export class EmailMismatchStateMatcher implements ErrorStateMatcher {
+  isErrorState(
+    control: FormControl | null,
+    form: FormGroupDirective | NgForm | null,
+  ): boolean {
+    const controlInvalid = !!(control && control.invalid && control.touched);
+    const groupMismatch = !!(
+      control?.touched && control?.parent?.hasError('emailMismatch')
+    );
+    return controlInvalid || groupMismatch;
+  }
+}
+
 export interface AuthorizingOfficial {
   offerorAuthorizingOfficialId?: number;
   organizationId: number;
@@ -136,6 +149,7 @@ export class AuthorizingOfficialsComponent implements OnInit {
   }
 
   readonly tableColumns = ['name', 'title', 'email', 'phone', 'actions'];
+  readonly emailMismatchMatcher = new EmailMismatchStateMatcher();
 
   private organizationId: number | null = null;
 

@@ -32,11 +32,21 @@
           matInput
           formControlName="organizationName"
           placeholder="Company Name"
+          maxlength="200"
           (blur)="titleCaseField('organizationName')"
         />
         <mat-icon matSuffix class="field-icon">business</mat-icon>
+        <mat-hint align="end">
+          {{ organizationForm.get("organizationName")?.value?.length || 0 }}/200
+        </mat-hint>
         <mat-error *ngIf="isFieldInvalid('organizationName')">
-          Organization name is required.
+          <ng-container
+            *ngIf="
+              organizationForm.get('organizationName')?.hasError('required')
+            "
+          >
+            Organization name is required.
+          </ng-container>
         </mat-error>
       </mat-form-field>
     </div>
