@@ -1,0 +1,145 @@
+<h2 mat-dialog-title>
+  {{ data.isEditMode ? "Edit Decision Maker" : "Add Decision Maker" }}
+</h2>
+
+<mat-dialog-content>
+  <form
+    #dialogForm="ngForm"
+    id="decisionMakerForm"
+    (ngSubmit)="onSubmitDecisionMaker()"
+    style="margin-top: 16px"
+  >
+    <div class="form-row">
+      <mat-form-field appearance="outline">
+        <mat-label>First Name</mat-label>
+        <input
+          matInput
+          #firstNameField="ngModel"
+          [(ngModel)]="formData.firstName"
+          name="firstName"
+          placeholder="John"
+          required
+          (keydown)="onNameKeydown($event)"
+          maxlength="50"
+          (blur)="titleCaseField('firstName')"
+        />
+        <mat-error>First name is required.</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Last Name</mat-label>
+        <input
+          matInput
+          #lastNameField="ngModel"
+          [(ngModel)]="formData.lastName"
+          name="lastName"
+          placeholder="Doe"
+          required
+          (keydown)="onNameKeydown($event)"
+          maxlength="50"
+          (blur)="titleCaseField('lastName')"
+        />
+        <mat-error>Last name is required.</mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field appearance="outline">
+        <mat-label>Title</mat-label>
+        <input
+          matInput
+          #title="ngModel"
+          [(ngModel)]="formData.title"
+          name="title"
+          placeholder="Contracting Officer"
+          required
+          (keydown)="onNameKeydown($event)"
+          maxlength="100"
+        />
+        <mat-error *ngIf="title.hasError('required')"
+          >Title is required.</mat-error
+        >
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Email</mat-label>
+        <input
+          matInput
+          #emailField="ngModel"
+          [(ngModel)]="formData.email"
+          name="email"
+          placeholder="p.henderson@agency.gov"
+          required
+          [pattern]="emailPattern"
+          (blur)="normalizeEmail()"
+        />
+        <mat-error *ngIf="emailField.hasError('required')"
+          >Email is required.</mat-error
+        >
+        <mat-error *ngIf="emailField.hasError('pattern')"
+          >Please enter a valid email address.</mat-error
+        >
+      </mat-form-field>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field appearance="outline">
+        <mat-label>Phone</mat-label>
+        <input
+          matInput
+          #phoneNumberField="ngModel"
+          [ngModel]="displayPhone"
+          (ngModelChange)="onPhoneInput($event)"
+          name="phoneNumber"
+          placeholder="(xxx) xxx-xxxx"
+          maxlength="14"
+          required
+          [pattern]="phonePattern"
+          (keydown)="onPhoneKeydown($event)"
+        />
+        <mat-error *ngIf="phoneNumberField.hasError('required')">
+          Phone number is required.
+        </mat-error>
+        <mat-error *ngIf="phoneNumberField.hasError('pattern')">
+          Please enter a complete 10-digit phone number.
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Email Solicitations</mat-label>
+        <mat-select
+          #emailSolicitationsField="ngModel"
+          [(ngModel)]="formData.emailSolicitations"
+          name="emailSolicitations"
+          required
+        >
+          <mat-option [value]="null" disabled>Select</mat-option>
+          <mat-option [value]="true">Yes</mat-option>
+          <mat-option [value]="false">No</mat-option>
+        </mat-select>
+        <mat-error *ngIf="emailSolicitationsField.hasError('required')">
+          Email solicitations is required.
+        </mat-error>
+      </mat-form-field>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" [mat-dialog-close]="null">Cancel</button>
+  <button
+    mat-raised-button
+    color="primary"
+    type="submit"
+    form="decisionMakerForm"
+    [disabled]="isSaving || dialogForm.invalid || !dialogForm.dirty"
+  >
+    {{
+      isSaving
+        ? "Saving..."
+        : data.isEditMode
+          ? "Save Changes"
+          : "Add Decision Maker"
+    }}
+  </button>
+</mat-dialog-actions>

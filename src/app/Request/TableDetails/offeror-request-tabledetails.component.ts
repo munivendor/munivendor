@@ -1,12 +1,5 @@
 import { CommonModule } from '@angular/common';
-import {
-  Component,
-  inject,
-  Input,
-  OnDestroy,
-  OnInit,
-  ViewChild,
-} from '@angular/core';
+import { Component, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { finalize, Subject, takeUntil } from 'rxjs';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
@@ -24,7 +17,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
-import { ConfirmationDialog } from '../RequestConfirmationDialog/confirmation-dialog.component';
+import { RequestConfirmationDialog } from '../RequestConfirmationDialog/request-confirmation-dialog.component';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CustomCategoryDropdownComponent } from '../../shared/CustomCategoryDropdown/custom-category-dropdown.component';
 import { StateService } from '../services/state.service';
@@ -32,8 +25,8 @@ import { CategoryNode } from '../../shared/model/category-tree.model';
 import { ChangeDetectorRef } from '@angular/core';
 import { LoadingService } from '../../shared/LoadingSpinner/loading.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { HttpClient } from '@angular/common/http';
+import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
 
 interface FlattenedCategoryNode {
   categoryId: string;
@@ -72,7 +65,6 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   @Input() categoryControl!: FormControl<number | null>;
   organizationId!: number | null;
-  private _snackBar = inject(MatSnackBar);
   hierarchicalCategories: CategoryNode[] = [];
   flattenedCategories: FlattenedCategoryNode[] = [];
 
@@ -80,7 +72,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
 
   displayCategoryName = (
     categoryId: string | number | null,
-    categoryFullPath?: string
+    categoryFullPath?: string,
   ): string => {
     // If categoryFullPath is provided, use it directly
     if (categoryFullPath) {
@@ -94,7 +86,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
 
     const searchValue = categoryId.toString();
     const match = this.flattenedCategories.find(
-      (cat) => cat.categoryId === searchValue
+      (cat) => cat.categoryId === searchValue,
     );
     if (match) {
       return this.buildBreadcrumbPath(match);
@@ -109,7 +101,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
 
     while (currentParentId) {
       const parentNode = this.flattenedCategories.find(
-        (cat) => cat.categoryId === currentParentId
+        (cat) => cat.categoryId === currentParentId,
       );
       if (parentNode) {
         path.unshift(parentNode.name);
@@ -124,7 +116,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
 
   prepareCategoriesForTreeRendering(
     categories: CategoryNode[],
-    level: number = 0
+    level: number = 0,
   ): CategoryNode[] {
     return categories
       .filter((cat) => !cat.deleted)
@@ -164,7 +156,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
   }
 
   openConfirmationDialog(action: string, request: any): void {
-    const dialogRef = this.dialog.open(ConfirmationDialog, {
+    const dialogRef = this.dialog.open(RequestConfirmationDialog, {
       width: '600px',
       data: { action, request },
     });
@@ -185,9 +177,10 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this._snackBar.open(`Offer successfully deleted.`, 'Close', {
-            verticalPosition: 'top',
-          });
+          this.snackbarNotificationService.showSnackbarSuccess(
+            'Offer deleted successfully .',
+          );
+
           this.loadAndJoinRequestData();
         },
         error: (error) => {
@@ -205,7 +198,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
               className: 'OfferorTableDetailsComponent',
               operation: 'DeleteRequest',
               userId: this.stateService.getUserId(),
-            }
+            },
           );
         },
       });
@@ -219,7 +212,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
       .post(
         '/api/generate-pdf/' + request.requestId,
         { html: '' },
-        { responseType: 'blob' }
+        { responseType: 'blob' },
       )
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -232,13 +225,8 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
           a.click();
           window.URL.revokeObjectURL(url);
           this.loadingService.hide();
-          this._snackBar.open(
-            'Solicitation successfully downloaded.',
-            'Close',
-            {
-              verticalPosition: 'top',
-              duration: 3000,
-            }
+          this.snackbarNotificationService.showSnackbarSuccess(
+            'Solicitation downloaded successfully.',
           );
         },
         error: (error) => {
@@ -257,7 +245,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
               className: 'OfferorTableDetailsComponent',
               operation: 'GeneratePDF',
               userId: this.stateService.getUserId(),
-            }
+            },
           );
         },
       });
@@ -350,7 +338,8 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private loadingService: LoadingService,
     private loggingService: LoggingService,
-    private http: HttpClient
+    private http: HttpClient,
+    private snackbarNotificationService: SnackbarNotificationService,
   ) {
     this.organizationId = this.stateService.getOrganizationId();
   }
@@ -376,15 +365,23 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
   };
 
   ngOnInit(): void {
+    this.filterForm.patchValue({
+      live: true,
+    });
+
     if (!this.organizationId) {
       setTimeout(() => {
         this.organizationId = this.stateService.getOrganizationId() ?? 0;
         if (this.organizationId) {
-          this.loadAndJoinRequestData();
+          this.loadAndJoinRequestData({
+            agencyRequestStatusIds: [this.agencyRequestStatusMap['live']],
+          });
         }
       }, 100);
     } else {
-      this.loadAndJoinRequestData();
+      this.loadAndJoinRequestData({
+        agencyRequestStatusIds: [this.agencyRequestStatusMap['live']],
+      });
     }
   }
 
@@ -396,13 +393,13 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
       .map(([, value]) => value);
 
     const selectedAgencyRequestStatusIds = Object.entries(
-      this.agencyRequestStatusMap
+      this.agencyRequestStatusMap,
     )
       .filter(([key]) => this.filterForm.get(key)?.value)
       .map(([, value]) => value);
 
     const selectedOfferorRequestStatusIds = Object.entries(
-      this.offerorRequestStatusMap
+      this.offerorRequestStatusMap,
     )
       .filter(([key]) => this.filterForm.get(key)?.value)
       .map(([, value]) => value);
@@ -423,7 +420,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
 
     if (formValues.publishDateFrom) {
       params.startPublishDate = new Date(
-        formValues.publishDateFrom
+        formValues.publishDateFrom,
       ).toISOString();
     }
 
@@ -476,7 +473,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
         .GetRequestsOfferorView(requestParams || {})
         .pipe(
           takeUntil(this.destroy$),
-          finalize(() => this.loadingService.hide())
+          finalize(() => this.loadingService.hide()),
         )
         .subscribe({
           next: (requests) => {
@@ -484,7 +481,6 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
             this.hasLoadedData = requestsData.length > 0;
 
             requestsData.forEach((request: any) => {
-              // Map the friendly names from the API response
               const requestType = {
                 requestTypeId: request.requestTypeId,
                 requestTypeDesc: request.agencyRequestTypeName,
@@ -520,9 +516,42 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
 
             this.dataSource = new MatTableDataSource(combinedData);
 
-            this.dataSource.sortingDataAccessor = (item, property) => {
-              const value = item[property];
-              return typeof value === 'string' ? value.toLowerCase() : value;
+            this.dataSource.sortingDataAccessor = (
+              item: any,
+              property: string,
+            ) => {
+              switch (property) {
+                case 'requestName':
+                  return item.requestName?.toLowerCase() ?? '';
+                case 'agencyOrganizationName':
+                  return item.agencyOrganizationName?.toLowerCase() ?? '';
+                case 'requestId':
+                  return item.requestId ?? 0;
+                case 'requestType':
+                  return item.requestType?.requestTypeDesc?.toLowerCase() ?? '';
+                case 'category':
+                  return item.categoryFullPath?.toLowerCase() ?? '';
+                case 'publishDate':
+                  return item.publishDate
+                    ? new Date(item.publishDate).getTime()
+                    : -1;
+                case 'closeDateAndTime':
+                  return item.closeDate
+                    ? new Date(item.closeDate).getTime()
+                    : -1;
+                case 'offerorRequestStatus':
+                  return (
+                    item.offerorRequestStatus?.requestStatusDesc?.toLowerCase() ??
+                    ''
+                  );
+                case 'agencyRequestStatus':
+                  return (
+                    item.agencyRequestStatus?.requestStatusDesc?.toLowerCase() ??
+                    ''
+                  );
+                default:
+                  return '';
+              }
             };
 
             this.cdr.detectChanges();
@@ -550,7 +579,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
                 className: 'OfferorRequestTableDetailsComponent',
                 operation: 'GetRequestsOfferorView',
                 userId: this.stateService.getUserId(),
-              }
+              },
             );
 
             this.dataSource = new MatTableDataSource<any>([]);

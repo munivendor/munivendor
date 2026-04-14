@@ -38,6 +38,8 @@ import { UserService } from '../../shared/service/user.service';
 import { AuthService } from '../../authorization/auth.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
 import { StateService } from '../../Request/services/state.service';
+import { SafeHtmlPipe } from '../../shared/safe-html.pipe';
+import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
 
 interface DialogData {
   organizationId: number;
@@ -46,6 +48,7 @@ interface DialogData {
   selectedPackage?: CreditPackage;
   showCreditSelection: boolean;
   contextMessage?: string;
+  isForSubmission?: boolean;
 }
 
 @Component({
@@ -67,6 +70,7 @@ interface DialogData {
     MatSelectModule,
     MatTabsModule,
     MatProgressSpinnerModule,
+    SafeHtmlPipe,
   ],
 })
 export class CreditPurchaseDialogComponent implements OnInit {
@@ -95,6 +99,14 @@ export class CreditPurchaseDialogComponent implements OnInit {
 
   readonly MAX_PAYMENT_METHODS = 3;
 
+  get totalCredits(): number {
+    return this.data.selectedPackage?.credits ?? 0;
+  }
+
+  get totalCost(): number {
+    return this.data.total ?? this.calculatedTotal;
+  }
+
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: DialogData,
     private dialogRef: MatDialogRef<CreditPurchaseDialogComponent>,
@@ -105,7 +117,8 @@ export class CreditPurchaseDialogComponent implements OnInit {
     private userService: UserService,
     private authService: AuthService,
     private loggingService: LoggingService,
-    private stateService: StateService
+    private stateService: StateService,
+    private snackbarNotificationService: SnackbarNotificationService,
   ) {}
 
   ngOnInit(): void {
@@ -118,23 +131,29 @@ export class CreditPurchaseDialogComponent implements OnInit {
         });
       }
     });
+
     if (this.data.showCreditSelection) {
       this.currentStep = 'package-selection';
       this.loadCreditPackages();
     } else {
+      // Skip to payment selection, but still load packages
       this.currentStep = 'payment-selection';
       this.loadCreditPackages();
+
+      // If a package was already selected, maintain that selection
       if (this.data.selectedPackage) {
         setTimeout(() => {
           const pkg = this.creditPackages.find(
-            (p) => p.id === this.data.selectedPackage!.id
+            (p) => p.id === this.data.selectedPackage!.id,
           );
           if (pkg) {
             pkg.selected = true;
             pkg.quantity = 1;
+            this.calculatedTotal = this.calculateTotal(pkg);
           }
         });
       }
+
       this.loadPaymentData();
       this.initializeForms();
     }
@@ -151,7 +170,6 @@ export class CreditPurchaseDialogComponent implements OnInit {
       return false;
     }
 
-    // Parse expiration date (assumes format MM/YY or similar)
     const expDateStr = method.expirationDate.trim();
     let month: number, year: number;
 
@@ -163,10 +181,8 @@ export class CreditPurchaseDialogComponent implements OnInit {
       return false;
     }
 
-    // Convert 2-digit year to 4-digit year
     const fullYear = year < 100 ? 2000 + year : year;
 
-    // Create date for last day of expiration month
     const expirationDate = new Date(fullYear, month, 0);
     const currentDate = new Date();
 
@@ -186,11 +202,12 @@ export class CreditPurchaseDialogComponent implements OnInit {
 
         if (this.data.selectedPackage) {
           const pkg = this.creditPackages.find(
-            (p) => p.id === this.data.selectedPackage!.id
+            (p) => p.id === this.data.selectedPackage!.id,
           );
           if (pkg) {
             pkg.selected = true;
             pkg.quantity = 1;
+            this.calculatedTotal = this.calculateTotal(pkg);
           }
         }
 
@@ -211,7 +228,7 @@ export class CreditPurchaseDialogComponent implements OnInit {
             className: 'CreditPurchaseDialogComponent',
             operation: 'getPaymentPlans',
             userId: this.stateService.getUserId(),
-          }
+          },
         );
       },
     });
@@ -232,7 +249,13 @@ export class CreditPurchaseDialogComponent implements OnInit {
     this.ccForm = this.fb.group({
       cardNumber: [
         '',
-        [Validators.required, this.cardNumberValidator.bind(this)],
+        {
+          validators: [
+            Validators.required,
+            this.cardNumberValidator.bind(this),
+          ],
+          updateOn: 'change',
+        },
       ],
       nameOnCard: [
         '',
@@ -240,7 +263,13 @@ export class CreditPurchaseDialogComponent implements OnInit {
       ],
       expirationDate: [
         '',
-        [Validators.required, this.expirationDateValidator.bind(this)],
+        {
+          validators: [
+            Validators.required,
+            this.expirationDateValidator.bind(this),
+          ],
+          updateOn: 'change',
+        },
       ],
       cvv: ['', [Validators.required, this.cvvValidator.bind(this)]],
     });
@@ -267,33 +296,34 @@ export class CreditPurchaseDialogComponent implements OnInit {
         validators: [
           this.matchingFieldsValidator(
             'bankRoutingNumber',
-            'confirmBankRoutingNumber'
+            'confirmBankRoutingNumber',
           ),
           this.matchingFieldsValidator(
             'bankAccountNumber',
-            'confirmBankAccountNumber'
+            'confirmBankAccountNumber',
           ),
         ],
-      }
+      },
     );
 
     this.ccForm.get('cardNumber')?.valueChanges.subscribe(() => {
-      this.sanitizeNumericInput(this.ccForm.get('cardNumber')!);
-    });
+      this.formatCardNumber(this.ccForm.get('cardNumber')!);
+      this.onCardNumberInput();
 
-    this.ccForm.get('cvv')?.valueChanges.subscribe(() => {
-      this.sanitizeNumericInput(this.ccForm.get('cvv')!);
-    });
-
-    // Trigger CVV revalidation when card number changes (for AMEX detection)
-    this.ccForm.get('cardNumber')?.valueChanges.subscribe(() => {
       const cvvControl = this.ccForm.get('cvv');
       if (cvvControl?.value) {
         cvvControl.updateValueAndValidity({ emitEvent: false });
       }
     });
 
-    // Sanitize numeric inputs for ACH
+    this.ccForm.get('cvv')?.valueChanges.subscribe(() => {
+      this.removeNonDigits(this.ccForm.get('cvv')!);
+    });
+
+    this.ccForm.get('expirationDate')?.valueChanges.subscribe(() => {
+      this.formatExpirationDate(this.ccForm.get('expirationDate')!);
+    });
+
     this.achForm.get('bankRoutingNumber')?.valueChanges.subscribe(() => {
       this.sanitizeNumericInput(this.achForm.get('bankRoutingNumber')!);
     });
@@ -311,6 +341,122 @@ export class CreditPurchaseDialogComponent implements OnInit {
     });
   }
 
+  private removeNonDigits(control: AbstractControl): void {
+    const value = control.value;
+    if (!value) return;
+
+    const sanitized = value.replace(/\D/g, '');
+    if (sanitized !== value) {
+      control.setValue(sanitized, { emitEvent: false });
+    }
+  }
+
+  private formatExpirationDate(control: AbstractControl): void {
+    const value = control.value;
+    if (!value) return;
+
+    const digitsOnly = value.replace(/\D/g, '');
+
+    let formatted: string;
+
+    if (digitsOnly.length === 0) {
+      formatted = '';
+    } else if (digitsOnly.length <= 2) {
+      formatted =
+        digitsOnly.length === 2 && !value.endsWith('/')
+          ? digitsOnly + '/'
+          : digitsOnly;
+    } else {
+      formatted = digitsOnly.slice(0, 2) + '/' + digitsOnly.slice(2, 4);
+    }
+
+    if (formatted !== value) {
+      control.setValue(formatted, { emitEvent: false });
+    }
+  }
+
+  detectedCardBrand: string | null = null;
+
+  cardBrandSvgs: { [key: string]: string } = {
+    visa: `
+    <svg width="38" height="24" viewBox="0 0 38 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="38" height="24" rx="4" fill="#1434CB"/>
+      <path d="M15.36 16.53L16.86 7.47H19.35L17.85 16.53H15.36ZM26.76 7.74C26.25 7.53 25.44 7.29 26.45 7.29C21.99 7.29 20.25 8.49 20.25 10.26C20.25 11.55 21.45 12.21 22.35 12.63C23.28 13.05 23.61 13.32 23.61 13.71C23.61 14.28 22.92 14.55 22.26 14.55C21.3 14.55 20.79 14.4 20.04 14.07L19.71 13.92L19.32 16.17C19.92 16.44 21.03 16.68 22.17 16.68C24.81 16.68 26.52 15.51 26.55 13.59C26.55 12.54 25.86 11.73 24.39 11.07C23.52 10.68 23.01 10.41 23.01 9.99C23.01 9.63 23.43 9.24 24.33 9.24C25.11 9.24 25.65 9.39 26.07 9.57L26.28 9.66L26.67 7.5L26.76 7.74ZM30.81 7.47H28.98C28.41 7.47 28.02 7.62 27.75 8.19L24.15 16.53H26.79L27.27 15.18H30.42L30.72 16.53H33.06L30.81 7.47ZM28.26 13.23L29.43 9.87L30.09 13.23H28.26ZM13.65 7.47L11.28 14.19L11.04 13.02C10.62 11.58 9.33 10.02 7.86 9.24L10.05 16.5H12.72L16.35 7.47H13.65Z" fill="white"/>
+      <path d="M9.51 7.47H5.7L5.67 7.68C8.55 8.4 10.47 10.02 11.22 12.06L10.32 8.22C10.17 7.65 9.78 7.5 9.24 7.47H9.51Z" fill="#F7B600"/>
+    </svg>
+  `,
+    mastercard: `
+    <svg width="38" height="24" viewBox="0 0 38 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="38" height="24" rx="4" fill="#000"/>
+      <circle cx="14.5" cy="12" r="7" fill="#EB001B"/>
+      <circle cx="23.5" cy="12" r="7" fill="#F79E1B"/>
+      <path d="M19 6.47C17.85 7.47 17.13 8.97 17.13 10.62C17.13 12.27 17.85 13.77 19 14.77C20.15 13.77 20.87 12.27 20.87 10.62C20.87 8.97 20.15 7.47 19 6.47Z" fill="#FF5F00"/>
+    </svg>
+  `,
+    amex: `
+    <svg width="38" height="24" viewBox="0 0 38 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="38" height="24" rx="4" fill="#006FCF"/>
+      <text x="19" y="15" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="white" text-anchor="middle">AMEX</text>
+    </svg>
+  `,
+    discover: `
+  <svg width="50" height="26" viewBox="0 0 50 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="50" height="26" rx="4" fill="#FF6000"/>
+    <text x="5" y="16" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#000" text-anchor="start">DISC</text>
+    <circle cx="26.2" cy="13.2" r="2.8" fill="#FFA500"/>
+    <text x="29.9" y="16" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#000" text-anchor="start">VER</text>
+  </svg>
+`,
+  };
+
+  getCardBrandSvg(): string | null {
+    return this.detectedCardBrand
+      ? this.cardBrandSvgs[this.detectedCardBrand]
+      : null;
+  }
+
+  onCardNumberInput(): void {
+    const cardNumber = this.ccForm.get('cardNumber')?.value || '';
+
+    const sanitized = cardNumber.replace(/\s/g, '');
+    this.detectedCardBrand = this.detectCardType(sanitized);
+  }
+
+  private formatCardNumber(control: AbstractControl): void {
+    const value = control.value;
+    if (!value) {
+      control.setValue('', { emitEvent: false });
+      return;
+    }
+
+    const digitsOnly = value.replace(/\D/g, '');
+
+    if (!digitsOnly) {
+      control.setValue('', { emitEvent: false });
+      return;
+    }
+
+    const cardType = this.detectCardType(digitsOnly);
+    let formatted: string;
+
+    if (cardType === 'amex') {
+      const len = digitsOnly.length;
+      if (len <= 4) {
+        formatted = digitsOnly;
+      } else if (len <= 10) {
+        formatted = `${digitsOnly.slice(0, 4)} ${digitsOnly.slice(4)}`;
+      } else {
+        formatted = `${digitsOnly.slice(0, 4)} ${digitsOnly.slice(4, 10)} ${digitsOnly.slice(10, 15)}`;
+      }
+    } else {
+      formatted = digitsOnly.match(/.{1,4}/g)?.join(' ') ?? digitsOnly;
+    }
+
+    if (formatted !== value) {
+      control.setValue(formatted, { emitEvent: false });
+    }
+  }
+
   loadPaymentData(): void {
     this.isLoading = true;
 
@@ -318,7 +464,7 @@ export class CreditPurchaseDialogComponent implements OnInit {
       states: this.organizationService.getStates(),
       bankAccountTypes: this.paymentInfoService.getBankAccountTypes(),
       paymentMethods: this.paymentInfoService.getSavedPaymentMethods(
-        this.data.organizationId
+        this.data.organizationId,
       ),
     }).subscribe({
       next: ({ states, bankAccountTypes, paymentMethods }) => {
@@ -347,7 +493,7 @@ export class CreditPurchaseDialogComponent implements OnInit {
 
         const operation =
           Object.entries(operationMap).find(([key]) =>
-            errorUrl.includes(key)
+            errorUrl.includes(key),
           )?.[1] ?? 'UnknownOperation';
 
         this.loggingService.logException(
@@ -361,7 +507,7 @@ export class CreditPurchaseDialogComponent implements OnInit {
             className: 'CreditPurchaseDialogComponent',
             operation: operation,
             userId: this.stateService.getUserId(),
-          }
+          },
         );
       },
     });
@@ -420,10 +566,9 @@ export class CreditPurchaseDialogComponent implements OnInit {
       }
     }
 
-    // Check if selected payment method exists and is not expired
     if (this.selectedPaymentMethodId) {
       const selectedMethod = this.paymentMethods.find(
-        (m) => m.paymentProfileId === this.selectedPaymentMethodId
+        (m) => m.paymentProfileId === this.selectedPaymentMethodId,
       );
       return selectedMethod
         ? !this.isPaymentMethodExpired(selectedMethod)
@@ -433,22 +578,30 @@ export class CreditPurchaseDialogComponent implements OnInit {
     return false;
   }
 
-  confirmPayment(): void {
+  savePaymentMethod(): void {
+    this.isSavingPaymentMethod = true;
+    this.isProcessingPayment = false;
+
     const selectedPackage = this.getSelectedPackage();
     if (!selectedPackage) {
+      this.isSavingPaymentMethod = false;
       return;
     }
 
-    this.isProcessingPayment = false;
+    this.processNewPaymentMethod(selectedPackage);
+  }
+
+  confirmPayment(): void {
+    this.isProcessingPayment = true;
     this.isSavingPaymentMethod = false;
 
-    if (this.showAddNew || this.paymentMethods.length === 0) {
-      this.isSavingPaymentMethod = true;
-      this.processNewPaymentMethod(selectedPackage);
-    } else {
-      this.isProcessingPayment = true;
-      this.processExistingPaymentMethod(selectedPackage);
+    const selectedPackage = this.getSelectedPackage();
+    if (!selectedPackage) {
+      this.isProcessingPayment = false;
+      return;
     }
+
+    this.processExistingPaymentMethod(selectedPackage);
   }
 
   private processNewPaymentMethod(selectedPackage: CreditPackage): void {
@@ -477,10 +630,10 @@ export class CreditPurchaseDialogComponent implements OnInit {
 
     if (this.selectedTabIndex === 0) {
       const { firstName, lastName } = this.splitFullName(
-        this.ccForm.value.nameOnCard
+        this.ccForm.value.nameOnCard,
       );
       const ccPaymentData: any = {
-        CardNumber: this.ccForm.value.cardNumber,
+        CardNumber: this.ccForm.value.cardNumber.replace(/\s/g, ''),
         FirstName: firstName,
         LastName: lastName,
         ExpirationDate: this.ccForm.value.expirationDate,
@@ -496,13 +649,13 @@ export class CreditPurchaseDialogComponent implements OnInit {
           this.data.organizationId,
           customerProfileData,
           ccPaymentData,
-          'CC'
+          'CC',
         )
         .subscribe({
           next: (paymentProfileId) => {
             this.loadPaymentMethodsAndComplete(
               paymentProfileId,
-              selectedPackage.id
+              selectedPackage.id,
             );
           },
           error: (error) => {
@@ -520,13 +673,13 @@ export class CreditPurchaseDialogComponent implements OnInit {
                 className: 'CreditPurchaseDialogComponent',
                 operation: 'saveCreditCardPaymentInfo',
                 userId: this.stateService.getUserId(),
-              }
+              },
             );
           },
         });
     } else {
       const { firstName, lastName } = this.splitFullName(
-        this.achForm.value.nameOnAccount
+        this.achForm.value.nameOnAccount,
       );
 
       const achPaymentData: any = {
@@ -546,13 +699,13 @@ export class CreditPurchaseDialogComponent implements OnInit {
           this.data.organizationId,
           customerProfileData,
           achPaymentData,
-          'ACH'
+          'ACH',
         )
         .subscribe({
           next: (paymentProfileId) => {
             this.loadPaymentMethodsAndComplete(
               paymentProfileId,
-              selectedPackage.id
+              selectedPackage.id,
             );
           },
           error: (error) => {
@@ -570,7 +723,7 @@ export class CreditPurchaseDialogComponent implements OnInit {
                 className: 'CreditPurchaseDialogComponent',
                 operation: 'saveACHPaymentInfo',
                 userId: this.stateService.getUserId(),
-              }
+              },
             );
           },
         });
@@ -579,7 +732,7 @@ export class CreditPurchaseDialogComponent implements OnInit {
 
   private loadPaymentMethodsAndComplete(
     newPaymentProfileId: string,
-    paymentPlanId: number
+    paymentPlanId: number,
   ): void {
     this.isSavingPaymentMethod = true;
 
@@ -596,17 +749,6 @@ export class CreditPurchaseDialogComponent implements OnInit {
           this.addressForm.reset();
           this.ccForm.reset();
           this.achForm.reset();
-
-          const profileId =
-            typeof newPaymentProfileId === 'string'
-              ? parseInt(newPaymentProfileId, 10)
-              : newPaymentProfileId;
-
-          this.dialogRef.close({
-            success: true,
-            paymentPlanId: paymentPlanId,
-            paymentProfileId: profileId,
-          });
         },
         error: (error) => {
           this.isSavingPaymentMethod = false;
@@ -624,7 +766,7 @@ export class CreditPurchaseDialogComponent implements OnInit {
               className: 'CreditPurchaseDialogComponent',
               operation: 'getSavedPaymentMethods',
               userId: this.stateService.getUserId(),
-            }
+            },
           );
         },
       });
@@ -642,6 +784,50 @@ export class CreditPurchaseDialogComponent implements OnInit {
         ? parseInt(this.selectedPaymentMethodId, 10)
         : this.selectedPaymentMethodId;
 
+    // If this is for offer submission (response-review component)
+    // call submitOffer
+    if (this.data.isForSubmission && this.data.requestId) {
+      this.paymentInfoService
+        .submitOffer(
+          this.data.organizationId,
+          this.data.requestId,
+          profileId,
+          selectedPackage.id,
+        )
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response) => {
+            this.isProcessingPayment = false;
+            this.dialogRef.close({
+              success: true,
+              submitted: true,
+            });
+          },
+          error: (error) => {
+            this.isProcessingPayment = false;
+            if (
+              error.status === 402 &&
+              error.error?.detail === 'PAYMENT_DECLINED'
+            ) {
+              this.snackbarNotificationService.showSnackbarError(
+                error.error?.declineReasonCode ||
+                  'Payment was declined. Please try a different payment method.',
+              );
+              this.selectedPaymentMethodId = null;
+              return;
+            }
+
+            this.dialogRef.close({
+              success: false,
+              error: error,
+            });
+          },
+        });
+      return;
+    }
+
+    // If standalone credit purchase
+    // Call chargePayment directly (purchasing/history component)
     this.paymentInfoService
       .chargePayment(this.data.organizationId, selectedPackage.id, profileId)
       .pipe(takeUntil(this.destroy$))
@@ -657,13 +843,26 @@ export class CreditPurchaseDialogComponent implements OnInit {
         error: (error) => {
           this.isProcessingPayment = false;
 
-          // Handle payment declined (402)
-          if (error.status === 402) {
-            // Show error message to user
-            alert(
-              'Payment was declined. Please try a different payment method.'
+          // Handle payment declined (402) - keep dialog open
+          if (
+            error.status === 402 &&
+            error.error?.detail === 'PAYMENT_DECLINED'
+          ) {
+            this.snackbarNotificationService.showSnackbarError(
+              error.error?.declineReasonCode ||
+                'Payment was declined. Please try a different payment method.',
             );
+            this.selectedPaymentMethodId = null;
             return;
+          }
+
+          // Handle 500 specifically for payment flows
+          if (error.status === 500) {
+            const correlationId = error?.error?.correlationId;
+            this.snackbarNotificationService.showSnackbarError(
+              `We were unable to charge the payment method on file. This could be due to a fraud alert, insufficient funds, or a card limit, or something else. Please verify your payment information and try again. If the issue persists and your payment details are correct, then please contact us at vendorsupport@munivendor.com.`,
+            );
+            return; // Keep dialog open so user can retry
           }
 
           const correlationId = error?.error?.correlationId;
@@ -678,7 +877,7 @@ export class CreditPurchaseDialogComponent implements OnInit {
               className: 'CreditPurchaseDialogComponent',
               operation: 'chargePayment',
               userId: this.stateService.getUserId(),
-            }
+            },
           );
 
           this.dialogRef.close({
@@ -704,15 +903,15 @@ export class CreditPurchaseDialogComponent implements OnInit {
 
   // CREDIT CARD VALIDATORS
   private cardNumberValidator(
-    control: AbstractControl
+    control: AbstractControl,
   ): ValidationErrors | null {
     const cardNumber = control.value;
     if (!cardNumber) return null;
 
-    const sanitized = cardNumber.replace(/\D/g, '');
+    const sanitized = cardNumber.replace(/\s/g, '').replace(/\D/g, '');
 
-    if (!/^\d+$/.test(cardNumber)) {
-      return { pattern: true };
+    if (sanitized.length === 0) {
+      return null;
     }
 
     if (sanitized.length < 13 || sanitized.length > 19) {
@@ -751,30 +950,60 @@ export class CreditPurchaseDialogComponent implements OnInit {
     const cardNumber = this.ccForm?.get('cardNumber')?.value || '';
     const cardType = this.detectCardType(cardNumber);
 
-    // AMEX requires 4 digits, others require 3
     const requiredLength = cardType === 'amex' ? 4 : 3;
 
     return cvv.length === requiredLength ? null : { invalidCvv: true };
   }
 
-  private expirationDateValidator(
-    control: AbstractControl
-  ): ValidationErrors | null {
-    const expDate = control.value;
-    if (!expDate) return null;
+  onExpirationDateKeydown(event: KeyboardEvent): void {
+    const input = event.target as HTMLInputElement;
+    const value = input.value;
+    const cursorPosition = input.selectionStart ?? 0;
 
-    // Check format MM/YY
-    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expDate)) {
-      return { pattern: true };
+    if (event.key === 'Backspace') {
+      if (cursorPosition === 3 && value[2] === '/') {
+        event.preventDefault();
+        const newValue = value.slice(0, 1);
+        this.ccForm
+          .get('expirationDate')
+          ?.setValue(newValue, { emitEvent: true });
+
+        setTimeout(() => {
+          input.setSelectionRange(1, 1);
+        }, 0);
+      }
     }
 
-    // Check if date is not expired
-    const [month, year] = expDate.split('/').map(Number);
-    const currentDate = new Date();
-    const currentYear = currentDate.getFullYear() % 100;
-    const currentMonth = currentDate.getMonth() + 1;
+    if (event.key === 'Delete') {
+      if (cursorPosition === 2 && value[2] === '/') {
+        event.preventDefault();
+        setTimeout(() => {
+          input.setSelectionRange(3, 3);
+        }, 0);
+      }
+    }
+  }
 
-    if (year < currentYear || (year === currentYear && month < currentMonth)) {
+  private expirationDateValidator(
+    control: AbstractControl,
+  ): ValidationErrors | null {
+    const value = control.value;
+    if (!value) return null;
+
+    const match = value.match(/^(\d{2})\/(\d{2})$/);
+    if (!match) return { pattern: true };
+
+    const month = parseInt(match[1], 10);
+    const year = parseInt('20' + match[2], 10);
+
+    if (month < 1 || month > 12) {
+      return { invalidMonth: true };
+    }
+
+    const now = new Date();
+    const expiry = new Date(year, month - 1);
+
+    if (expiry < now) {
       return { expired: true };
     }
 
@@ -782,7 +1011,7 @@ export class CreditPurchaseDialogComponent implements OnInit {
   }
 
   private nameOnCardOrAccountValidator(
-    control: AbstractControl
+    control: AbstractControl,
   ): ValidationErrors | null {
     if (!control.value) return null;
 
@@ -792,7 +1021,7 @@ export class CreditPurchaseDialogComponent implements OnInit {
 
   // ACH VALIDATORS
   private routingNumberValidator(
-    control: AbstractControl
+    control: AbstractControl,
   ): ValidationErrors | null {
     const routingNumber = control.value;
     if (!routingNumber) return null;
@@ -817,7 +1046,7 @@ export class CreditPurchaseDialogComponent implements OnInit {
   }
 
   private accountNumberValidator(
-    control: AbstractControl
+    control: AbstractControl,
   ): ValidationErrors | null {
     const accountNumber = control.value;
     if (!accountNumber) return null;
@@ -868,13 +1097,17 @@ export class CreditPurchaseDialogComponent implements OnInit {
     };
   }
 
-  private detectCardType(cardNumber: string = ''): string | null {
-    cardNumber = cardNumber.replace(/\D/g, '');
-    if (/^4/.test(cardNumber)) return 'visa';
-    if (/^5[1-5]/.test(cardNumber) || /^2[2-7]/.test(cardNumber))
+  detectCardType(cardNumber: string = ''): string | null {
+    const sanitized = cardNumber.replace(/\D/g, '');
+
+    if (sanitized.length < 4) return null;
+
+    if (/^4/.test(sanitized)) return 'visa';
+    if (/^5[1-5]/.test(sanitized) || /^2[2-7]/.test(sanitized))
       return 'mastercard';
-    if (/^3[47]/.test(cardNumber)) return 'amex';
-    if (/^6(?:011|5)/.test(cardNumber)) return 'discover';
+    if (/^3[47]/.test(sanitized)) return 'amex';
+    if (/^6(?:011|5)/.test(sanitized)) return 'discover';
+
     return null;
   }
 }

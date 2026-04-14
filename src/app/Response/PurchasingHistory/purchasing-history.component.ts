@@ -1,11 +1,4 @@
-import {
-  Component,
-  OnInit,
-  OnDestroy,
-  ViewChild,
-  inject,
-  Inject,
-} from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -20,11 +13,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import {
-  MatDialog,
-  MatDialogModule,
-  MAT_DIALOG_DATA,
-} from '@angular/material/dialog';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { StateService } from '../../Request/services/state.service';
 import { CreditPurchaseDialogComponent } from '../CreditPurchaseDialog/credit-purchase-dialog.component';
 import {
@@ -88,7 +77,7 @@ export class PurchasingHistoryComponent implements OnInit, OnDestroy {
     private creditPackageService: CreditPackageService,
     private paymentInfoService: PaymentInfoService,
     private loggingService: LoggingService,
-    private snackbarNotificationService: SnackbarNotificationService
+    private snackbarNotificationService: SnackbarNotificationService,
   ) {}
 
   ngOnInit(): void {
@@ -120,7 +109,7 @@ export class PurchasingHistoryComponent implements OnInit, OnDestroy {
                 {
                   hour: '2-digit',
                   minute: '2-digit',
-                }
+                },
               )}`;
 
               return {
@@ -160,7 +149,7 @@ export class PurchasingHistoryComponent implements OnInit, OnDestroy {
                 className: 'PurchasingHistoryComponent',
                 operation: 'getBillingHistory',
                 userId: this.stateService.getUserId(),
-              }
+              },
             );
           },
         });
@@ -194,7 +183,7 @@ export class PurchasingHistoryComponent implements OnInit, OnDestroy {
               className: 'PurchasingHistoryComponent',
               operation: 'getPaymentPlans',
               userId: this.stateService.getUserId(),
-            }
+            },
           );
         },
       });
@@ -223,7 +212,7 @@ export class PurchasingHistoryComponent implements OnInit, OnDestroy {
 
   onPurchase(): void {
     const selectedPackages = this.creditPackages.filter(
-      (pkg) => pkg.selected && pkg.quantity > 0
+      (pkg) => pkg.selected && pkg.quantity > 0,
     );
 
     if (selectedPackages.length === 0) {
@@ -233,43 +222,28 @@ export class PurchasingHistoryComponent implements OnInit, OnDestroy {
     const selectedPackage = selectedPackages[0];
     const total = this.calculateTotal();
 
-    const confirmDialogRef = this.dialog.open(PurchaseConfirmationDialog, {
-      width: '400px',
+    const paymentDialogRef = this.dialog.open(CreditPurchaseDialogComponent, {
+      width: '800px',
+      maxHeight: '90vh',
+      disableClose: true,
       data: {
-        packageName: selectedPackage.name,
-        credits: selectedPackage.credits,
+        organizationId: this.organizationId,
+        selectedPackage: selectedPackage,
         total: total,
+        showCreditSelection: false,
       },
     });
 
-    confirmDialogRef.afterClosed().subscribe((confirmed) => {
-      if (confirmed === true) {
-        const paymentDialogRef = this.dialog.open(
-          CreditPurchaseDialogComponent,
-          {
-            width: '800px',
-            maxHeight: '90vh',
-            disableClose: true,
-            data: {
-              organizationId: this.organizationId,
-              selectedPackage: selectedPackage,
-              showCreditSelection: false,
-            },
-          }
-        );
-
-        paymentDialogRef.afterClosed().subscribe((result) => {
-          if (result?.success) {
-            this.creditPackages.forEach((pkg) => {
-              pkg.selected = false;
-              pkg.quantity = 0;
-            });
-            this.loadOrderHistory();
-            this.snackbarNotificationService.showSnackbarSuccess(
-              'Purchase completed successfully.'
-            );
-          }
+    paymentDialogRef.afterClosed().subscribe((result) => {
+      if (result?.success) {
+        this.creditPackages.forEach((pkg) => {
+          pkg.selected = false;
+          pkg.quantity = 0;
         });
+        this.loadOrderHistory();
+        this.snackbarNotificationService.showSnackbarSuccess(
+          'Purchase completed successfully.',
+        );
       }
     });
   }
@@ -282,40 +256,4 @@ export class PurchasingHistoryComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
   }
-}
-
-@Component({
-  selector: 'purchase-confirmation-dialog',
-  template: `
-    <h2 mat-dialog-title>Confirm Purchase</h2>
-    <mat-dialog-content>
-      <p>Are you sure you want to purchase:</p>
-      <div class="confirmation-details">
-        <p>
-          <strong>{{ data.packageName }}</strong>
-        </p>
-        <p>Credits: {{ data.credits }}</p>
-        <p>Total: &#36;{{ data.total }}.00</p>
-      </div>
-    </mat-dialog-content>
-    <mat-dialog-actions style="justify-content: flex-end">
-      <button mat-button color="warn" [mat-dialog-close]="false">Cancel</button>
-      <button
-        mat-raised-button
-        color="primary"
-        [mat-dialog-close]="true"
-        cdkFocusInitial
-      >
-        Confirm
-      </button>
-    </mat-dialog-actions>
-  `,
-  standalone: true,
-  imports: [CommonModule, MatDialogModule, MatButtonModule],
-})
-export class PurchaseConfirmationDialog {
-  constructor(
-    @Inject(MAT_DIALOG_DATA)
-    public data: { packageName: string; credits: number; total: number }
-  ) {}
 }

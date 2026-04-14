@@ -1,0 +1,138 @@
+<div class="profile-card">
+  <div class="card-header">
+    <div class="header-accent"></div>
+
+    <div class="header-content">
+      <div class="header-top">
+        <div class="header-left">
+          <h2 class="card-title">Prohibited Activities in Iran</h2>
+        </div>
+      </div>
+      <p class="card-description">
+        The information filled out below is used to auto-fill the NJ State form
+        titled "Disclosure of Investment-Activities in Iran".
+      </p>
+    </div>
+  </div>
+
+  <form [formGroup]="iranForm" class="iran-form">
+    <!-- Chapter 25 Identification -->
+    <div>
+      <p class="section-label">
+        <strong>Chapter 25 Identification</strong>
+      </p>
+      <p class="section-question">
+        Is your organization identified on the OFAC Specially Designated
+        Nationals and Blocked Persons list on account of activity related to
+        Russia and/or Belarus?
+      </p>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-select
+          formControlName="chapter25Identification"
+          placeholder="Select One"
+        >
+          <mat-option
+            *ngFor="let option of chapter25Options"
+            [value]="option.value"
+          >
+            {{ option.label }}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="isFieldInvalid('chapter25Identification')">
+          Please select an option.
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <!-- Conditional fields — shown only when user selects 'No' (conducts business in Iran) -->
+    <ng-container *ngIf="showConditionalFields">
+      <!-- Iran File Upload -->
+      <div class="form-section">
+        <p class="section-label">
+          <strong>Iran - File Upload</strong>
+        </p>
+        <p class="upload-doc-description">
+          Please upload any documentation related to the work your organization
+          is performing in Iran.
+        </p>
+
+        <div class="file-input-row">
+          <button
+            type="button"
+            class="file-input-btn"
+            [class.disabled]="isUploading"
+            [disabled]="isUploading"
+            (click)="fileInput.click()"
+          >
+            <input
+              #fileInput
+              type="file"
+              accept=".jpg,.jpeg,.png,.pdf"
+              class="file-input-hidden"
+              (change)="onFileSelected($event)"
+              [disabled]="isUploading"
+            />
+            <mat-spinner
+              *ngIf="isUploading"
+              diameter="16"
+              class="btn-spinner"
+            ></mat-spinner>
+            <span *ngIf="!isUploading">Choose File</span>
+            <span *ngIf="isUploading">Uploading…</span>
+          </button>
+
+          <span class="file-name-display">
+            <ng-container *ngIf="selectedFileName; else noFile">
+              {{ selectedFileName }}
+              <button
+                type="button"
+                class="clear-btn"
+                (click)="clearFile()"
+                title="Remove"
+              >
+                ✕
+              </button>
+            </ng-container>
+            <ng-template #noFile>No File Chosen</ng-template>
+          </span>
+        </div>
+
+        <span class="upload-hint">Max. file size: 50 MB.</span>
+      </div>
+
+      <!-- Detailed Description -->
+      <div class="form-section">
+        <p class="section-label">
+          <strong>Detailed Description</strong>
+          <span class="required-badge">(Required)</span>
+        </p>
+        <p class="upload-doc-description">
+          Please write a detailed description of how your organization's
+          activity related to Iran is consistent with federal law is set forth
+          below.
+        </p>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <textarea
+            matInput
+            formControlName="iranDescription"
+            rows="7"
+            placeholder=""
+          ></textarea>
+          <mat-error *ngIf="isFieldInvalid('iranDescription')">
+            Please provide a description.
+          </mat-error>
+        </mat-form-field>
+      </div>
+    </ng-container>
+
+    <!-- Save Changes -->
+    <div class="form-footer">
+      <button type="button" class="save-btn" (click)="onSubmit()">
+        <mat-icon>save</mat-icon>
+        Save Changes
+      </button>
+    </div>
+  </form>
+</div>

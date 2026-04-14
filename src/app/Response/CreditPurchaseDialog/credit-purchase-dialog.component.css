@@ -10,6 +10,10 @@
   transform: none;
 }
 
+.success-icon {
+  color: #4caf50;
+}
+
 .expired-text {
   color: #d32f2f;
   font-weight: 500;

@@ -1,0 +1,157 @@
+<div class="profile-card">
+  <div class="card-header">
+    <div class="header-accent"></div>
+    <div class="header-content">
+      <h2 class="card-title">Purchasing Designee</h2>
+      <p class="card-description">
+        Every government agency that utilizes MuniVendor for eProcurement must
+        assign a designee for its purchasing, legal and clerk departments.
+        Agencies are unable to post requests until this section is complete.
+        MuniVendor uses this information to (a) automatically email a copy of
+        submission packets from offerors after the closing date, and (b) confirm
+        authorized designee information in the event they require customer
+        service support.
+      </p>
+    </div>
+  </div>
+
+  <div class="state-container" *ngIf="isLoading">
+    <mat-spinner diameter="36"></mat-spinner>
+    <p class="loading-text">Loading purchasing designee...</p>
+  </div>
+
+  <form
+    *ngIf="!isLoading"
+    [formGroup]="form"
+    (ngSubmit)="onSave()"
+    novalidate
+    class="card-form"
+  >
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>First Name</mat-label>
+        <input
+          matInput
+          formControlName="firstName"
+          placeholder="First name"
+          (keydown)="onNameKeydown($event)"
+          (blur)="titleCaseField('firstName')"
+        />
+        <mat-error *ngIf="isFieldInvalid('firstName')"
+          >First name is required.</mat-error
+        >
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Last Name</mat-label>
+        <input
+          matInput
+          formControlName="lastName"
+          placeholder="Last name"
+          (keydown)="onNameKeydown($event)"
+          (blur)="titleCaseField('lastName')"
+        />
+        <mat-error *ngIf="isFieldInvalid('lastName')"
+          >Last name is required.</mat-error
+        >
+      </mat-form-field>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Title</mat-label>
+        <input
+          matInput
+          formControlName="title"
+          placeholder="e.g. Purchasing Director"
+        />
+        <mat-error *ngIf="isFieldInvalid('title')"
+          >Title is required.</mat-error
+        >
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Direct Phone</mat-label>
+        <input
+          matInput
+          formControlName="workPhoneNumber"
+          placeholder="(xxx) xxx-xxxx"
+          [value]="displayPhone"
+          (input)="onPhoneInput($any($event.target).value)"
+          (keydown)="onPhoneKeydown($event)"
+        />
+        <mat-icon matSuffix class="field-icon">phone</mat-icon>
+        <mat-error *ngIf="isFieldInvalid('workPhoneNumber')">
+          {{
+            form.get("workPhoneNumber")?.hasError("required")
+              ? "Direct phone is required."
+              : "Enter a valid 10-digit phone number."
+          }}
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Email</mat-label>
+        <input
+          matInput
+          type="email"
+          formControlName="workEmail"
+          placeholder="email@agency.gov"
+          (blur)="normalizeEmail()"
+        />
+        <mat-icon matSuffix class="field-icon">mail_outline</mat-icon>
+        <mat-error *ngIf="isFieldInvalid('workEmail')">
+          {{
+            form.get("workEmail")?.hasError("required")
+              ? "Email is required."
+              : "Enter a valid email address."
+          }}
+        </mat-error>
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Confirm Email</mat-label>
+        <input
+          matInput
+          type="email"
+          formControlName="confirmEmail"
+          placeholder="Re-enter email"
+        />
+        <mat-icon matSuffix class="field-icon">mail_outline</mat-icon>
+        <mat-error *ngIf="isFieldInvalid('confirmEmail')">
+          {{
+            form.get("confirmEmail")?.hasError("required")
+              ? "Please confirm your email."
+              : "Emails do not match."
+          }}
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="solicitations-field">
+        <mat-label>Email Solicitations</mat-label>
+        <mat-select formControlName="receivesEmailSolicitations">
+          <mat-option [value]="true">Yes</mat-option>
+          <mat-option [value]="false">No</mat-option>
+        </mat-select>
+        <mat-error *ngIf="isFieldInvalid('receivesEmailSolicitations')"
+          >Email solicitations is required.</mat-error
+        >
+      </mat-form-field>
+    </div>
+
+    <div class="card-footer">
+      <button
+        mat-flat-button
+        color="primary"
+        type="submit"
+        class="save-btn"
+        [disabled]="isSaving || form.pristine"
+      >
+        <mat-icon *ngIf="!isSaving">save</mat-icon>
+
+        {{ isSaving ? "Saving..." : "Save Changes" }}
+      </button>
+    </div>
+  </form>
+</div>

@@ -26,7 +26,7 @@ import { Router } from '@angular/router';
 import { DocumentService } from '../../shared/service/document.service';
 import { RequestService } from '../services/request.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
-import { Subject, switchMap, takeUntil, tap, Observable } from 'rxjs';
+import { Subject, switchMap, takeUntil, tap, Observable, finalize } from 'rxjs';
 import { LoadingService } from '../../shared/LoadingSpinner/loading.service';
 
 export interface DialogData {
@@ -35,8 +35,8 @@ export interface DialogData {
 }
 
 @Component({
-  selector: 'confirmation-dialog',
-  templateUrl: './confirmation-dialog.component.html',
+  selector: 'request-confirmation-dialog',
+  templateUrl: './request-confirmation-dialog.component.html',
   standalone: true,
   imports: [
     MatFormFieldModule,
@@ -48,7 +48,7 @@ export interface DialogData {
     MatDialogActions,
   ],
 })
-export class ConfirmationDialog implements OnDestroy {
+export class RequestConfirmationDialog implements OnDestroy {
   @Output() cancellationRequested = new EventEmitter<{
     request: any;
     action: string;
@@ -62,14 +62,14 @@ export class ConfirmationDialog implements OnDestroy {
   }>();
 
   constructor(
-    public dialogRef: MatDialogRef<ConfirmationDialog>,
+    public dialogRef: MatDialogRef<RequestConfirmationDialog>,
     @Inject(MAT_DIALOG_DATA) public requestObjAndUserAction: DialogData,
     public dialog: MatDialog,
     private router: Router,
     private documentService: DocumentService,
     private requestService: RequestService,
     private loggingService: LoggingService,
-    private loadingService: LoadingService
+    private loadingService: LoadingService,
   ) {}
 
   getConfirmationMessage(): string {
@@ -101,6 +101,8 @@ export class ConfirmationDialog implements OnDestroy {
         return 'Are you sure you want to continue working on your response to this solicitation?';
       case 'redownload':
         return 'Are you sure you want to redownload the offeror responses for this solicitation?';
+      case 'duplicate':
+        return 'Are you sure you want to duplicate this solicitation?';
       default:
         return `Are you sure you want to ${this.requestObjAndUserAction.action} this solicitation?`;
     }
@@ -111,137 +113,180 @@ export class ConfirmationDialog implements OnDestroy {
   }
 
   confirm(action: string, request: any): void {
-    if (
-      this.requestObjAndUserAction.action === 'cancel' &&
-      request.requestStatus?.requestStatusDesc === 'Live'
-    ) {
+    const resolvedAction = this.requestObjAndUserAction.action ?? action;
+
+    switch (resolvedAction) {
+      case 'cancel':
+        this.handleCancel(request, resolvedAction);
+        break;
+
+      case 'edit':
+      case 'continue':
+        this.handleEditOrContinue(request);
+        break;
+
+      case 'respond':
+        this.router.navigate(['/response-basic', request.requestId]);
+        this.dialogRef.close(true);
+        break;
+
+      case 'open':
+        this.handleOpen(request);
+        break;
+
+      case 'redownload':
+        this.handleRedownload(request);
+        break;
+
+      case 'duplicate':
+        this.handleDuplicate(request);
+        break;
+
+      default:
+        this.dialogRef.close(false);
+        break;
+    }
+  }
+
+  private handleCancel(request: any, action: string): void {
+    const statusDesc = request.requestStatus?.requestStatusDesc;
+
+    if (statusDesc === 'Live') {
       this.openCancellationReasonDialog(action, request);
-      this.dialogRef.close(true);
-      return;
-    } else if (
-      this.requestObjAndUserAction.action === 'cancel' &&
-      request.requestStatus?.requestStatusDesc === 'Scheduled'
-    ) {
+    } else if (statusDesc === 'Scheduled') {
       this.onCancelUpdateRequestStatus(request, action);
-      this.dialogRef.close(true);
-      return;
+    } else {
+      console.warn(`Unexpected status for cancel action: ${statusDesc}`);
     }
 
-    // navigates to edit view for agency requests or offeror responses
-    if (action === 'edit' || action === 'continue') {
-      const sourceId = request.requestId;
-      const responseId = request.offerorRequestId;
-      if (responseId) {
-        this.router.navigate(['/response-basic', sourceId, 'edit', responseId]);
-      } else {
-        this.router.navigate(['/edit-request-view', sourceId]);
-      }
-      this.dialogRef.close(true);
-      return;
+    this.dialogRef.close(true);
+  }
+
+  private handleEditOrContinue(request: any): void {
+    const { requestId, offerorRequestId } = request;
+
+    if (offerorRequestId) {
+      this.router.navigate([
+        '/response-basic',
+        requestId,
+        'edit',
+        offerorRequestId,
+      ]);
+    } else {
+      this.router.navigate(['/edit-request-view', requestId]);
     }
 
-    if (this.requestObjAndUserAction.action === 'respond') {
-      const sourceId = request.requestId;
-      this.router.navigate(['/response-basic', sourceId]);
-      this.dialogRef.close(true);
-      return;
-    }
+    this.dialogRef.close(true);
+  }
 
-    if (this.requestObjAndUserAction.action === 'open') {
-      this.loadingService.show('Downloading...');
-      this.downloadZipDocuments(request)
-        .pipe(
-          switchMap(() => {
-            this.loadingService.hide();
-            return this.requestService.UpdateRequestStatus(
-              request.requestId,
-              6
-            );
-          }),
-          switchMap((res) => {
-            this.statusUpdated.emit({
-              requestId: request.requestId,
-              newStatusId: 6,
-              newStatusDesc: 'Opened',
-            });
-            return this.requestService.NotifyOfferorSolicitationOpened(
-              request.requestId
-            );
-          })
-        )
-        .subscribe({
-          next: (notifyRes) => {
-            this.loadingService.hide();
-            this.dialogRef.close(true);
-          },
-          error: (error) => {
-            this.loadingService.hide();
+  private handleOpen(request: any): void {
+    this.loadingService.show('Downloading...');
 
-            const errorUrl = error?.url?.toLowerCase?.() || '';
-            const correlationId = error?.error?.correlationId;
-
-            const operationMap: Record<string, string> = {
-              downloadzipdocuments: 'DownloadZipDocuments',
-              download: 'DownloadZipDocuments',
-              updaterequeststatus: 'UpdateRequestStatus',
-              notifyofferorsolicitationopened:
-                'NotifyOfferorSolicitationOpened',
-            };
-
-            const operation =
-              Object.entries(operationMap).find(([key]) =>
-                errorUrl.includes(key)
-              )?.[1] ?? 'UnknownOperation';
-
-            this.loggingService.logException(
-              new Error(`HTTP Error ${error.status}: ${error.statusText}`),
-              3,
-              {
-                requestId: request.requestId,
-                methodName: 'confirm',
-                className: 'ConfirmationDialog',
-                operation: operation,
-                correlationId: correlationId,
-              }
-            );
-            this.dialogRef.close(false);
-          },
-        });
-      return;
-    }
-
-    if (this.requestObjAndUserAction.action === 'redownload') {
-      this.loadingService.show('Re-downloading...');
-
-      this.downloadZipDocuments(request).subscribe({
-        next: () => {
+    this.downloadZipDocuments(request)
+      .pipe(
+        switchMap(() => {
           this.loadingService.hide();
+          return this.requestService.UpdateRequestStatus(request.requestId, 6);
+        }),
+        // switchMap(() =>
+        //   this.requestService.NotifyOfferorSolicitationOpened(
+        //     request.requestId,
+        //   ),
+        // ),
+        finalize(() => this.loadingService.hide()),
+      )
+      .subscribe({
+        next: () => {
+          this.statusUpdated.emit({
+            requestId: request.requestId,
+            newStatusId: 6,
+            newStatusDesc: 'Opened',
+          });
           this.dialogRef.close(true);
         },
+        error: (error) => this.handleOpenError(error, request),
+      });
+  }
+
+  private handleOpenError(error: any, request: any): void {
+    const errorUrl = error?.url?.toLowerCase?.() || '';
+    const correlationId = error?.error?.correlationId;
+
+    const operationMap: Record<string, string> = {
+      downloadzipdocuments: 'DownloadZipDocuments',
+      download: 'DownloadZipDocuments',
+      updaterequeststatus: 'UpdateRequestStatus',
+      // notifyofferorsolicitationopened: 'NotifyOfferorSolicitationOpened',
+    };
+
+    const operation =
+      Object.entries(operationMap).find(([key]) =>
+        errorUrl.includes(key),
+      )?.[1] ?? 'UnknownOperation';
+
+    this.loggingService.logException(
+      new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+      3,
+      {
+        requestId: request.requestId,
+        methodName: 'handleOpen',
+        className: 'RequestConfirmationDialog',
+        operation,
+        correlationId,
+      },
+    );
+
+    this.dialogRef.close(false);
+  }
+
+  private handleRedownload(request: any): void {
+    this.loadingService.show('Re-downloading...');
+
+    this.downloadZipDocuments(request)
+      .pipe(finalize(() => this.loadingService.hide()))
+      .subscribe({
+        next: () => this.dialogRef.close(true),
         error: (error) => {
-          this.loadingService.hide();
-
-          const correlationId = error?.error?.correlationId;
-
           this.loggingService.logException(
             new Error(`HTTP Error ${error.status}: ${error.statusText}`),
             3,
             {
               requestId: request.requestId,
-              methodName: 'confirm',
-              className: 'ConfirmationDialog',
+              methodName: 'handleRedownload',
+              className: 'RequestConfirmationDialog',
               operation: 'DownloadOfferorZipDocuments',
-              correlationId: correlationId,
-            }
+              correlationId: error?.error?.correlationId,
+            },
           );
-
           this.dialogRef.close(false);
         },
       });
-      return;
-    }
+  }
 
-    this.dialogRef.close(true);
+  private handleDuplicate(request: any): void {
+    this.loadingService.show('Duplicating...');
+
+    this.requestService
+      .DuplicateRequest(request.requestId, request.organizationId)
+      .pipe(finalize(() => this.loadingService.hide()))
+      .subscribe({
+        next: () => this.dialogRef.close(true),
+        error: (error) => {
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              requestId: request.requestId,
+              organizationId: request.organizationId,
+              methodName: 'handleDuplicate',
+              className: 'RequestConfirmationDialog',
+              operation: 'DuplicateRequest',
+              correlationId: error?.error?.correlationId,
+            },
+          );
+          this.dialogRef.close(false);
+        },
+      });
   }
 
   private destroy$ = new Subject<void>();
@@ -270,7 +315,7 @@ export class ConfirmationDialog implements OnDestroy {
           link.download = fileName;
           link.click();
           window.URL.revokeObjectURL(blobUrl);
-        })
+        }),
       );
   }
 

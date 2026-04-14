@@ -23,7 +23,7 @@ export class RequestService {
 
   GetDecisionMakers(agencyOrganizationId: number): Observable<DecisionMaker[]> {
     return this.http.get<DecisionMaker[]>(
-      `${this.url}DecisionMakers/${agencyOrganizationId}`
+      `${this.url}DecisionMakers/${agencyOrganizationId}`,
     );
   }
 
@@ -43,7 +43,7 @@ export class RequestService {
 
   UpdateRequest(
     requestId: number,
-    request: Request | Response
+    request: Request | Response,
   ): Observable<any> {
     const headers = { 'Content-Type': 'application/json' };
     const url = `${this.url}Requests/${requestId}`;
@@ -52,7 +52,7 @@ export class RequestService {
 
   SaveRequiredDocuments(
     requestId: number,
-    requiredDocumentTypes: DocumentType[]
+    requiredDocumentTypes: DocumentType[],
   ): Observable<boolean> {
     const body = JSON.stringify(requiredDocumentTypes);
     const headers = { 'Content-Type': 'application/json' };
@@ -68,18 +68,18 @@ export class RequestService {
 
   DeleteRequest(requestId: number, organizationId: number): Observable<void> {
     return this.http.delete<void>(
-      `${this.url}Requests/${requestId}?organizationId=${organizationId}`
+      `${this.url}Requests/${requestId}?organizationId=${organizationId}`,
     );
   }
 
   UpdateRequestStatus(
     requestId: number,
-    newRequestStatusId: number
+    newRequestStatusId: number,
   ): Observable<void> {
     const headers = { 'Content-Type': 'application/json' };
     return this.http.put<void>(
       `${this.url}RequestStatus/${requestId}/${newRequestStatusId}`,
-      { headers }
+      { headers },
     );
   }
 
@@ -90,14 +90,14 @@ export class RequestService {
   UpdateRequestCancelReason(
     requestId: number,
     requestCancelReasonId: number,
-    requestCancelNote: string
+    requestCancelNote: string,
   ): Observable<void> {
     const body = { requestId, requestCancelReasonId, requestCancelNote };
     const headers = { 'Content-Type': 'application/json' };
     return this.http.put<void>(
       `${this.url}RequestCancellationReason/${requestId}`,
       body,
-      { headers }
+      { headers },
     );
   }
 
@@ -120,7 +120,7 @@ export class RequestService {
   SaveRequestSections(
     requestSection: RequestSection,
     requestId: number,
-    sortOrderId: number
+    sortOrderId: number,
   ): Observable<{
     isSuccess: boolean;
     requestSectionId: number | null;
@@ -134,7 +134,7 @@ export class RequestService {
     }>(
       `${this.url}RequestSections/${requestId}/${sortOrderId}`,
       requestSection,
-      { headers }
+      { headers },
     );
   }
 
@@ -148,16 +148,20 @@ export class RequestService {
 
   GetMunicipalityDocuments(organizationId: number): Observable<any> {
     return this.http.get<any>(
-      `${this.url}MunicipalityDocuments/${organizationId}`
+      `${this.url}OrganizationDocuments/${organizationId}`,
     );
   }
 
   SaveOrganizationDocument(
     organizationId: number,
     municipalityDocument: any,
-    file: File
+    file: File,
+    documentTypeId?: number,
   ): Observable<any> {
-    const url = `${this.url}MunicipalityDocuments/${organizationId}`;
+    const url =
+      documentTypeId != null
+        ? `${this.url}OrganizationDocuments/${organizationId}/${documentTypeId}`
+        : `${this.url}OrganizationDocuments/${organizationId}`;
     const formData = new FormData();
     formData.append('documentName', municipalityDocument.documentName);
     formData.append('file', file);
@@ -167,7 +171,7 @@ export class RequestService {
   SaveOfferorDocument(
     requestId: number,
     offerorDocument: any,
-    file: File
+    file: File,
   ): Observable<any> {
     const url = `${this.url}RequestDocuments/DocumentContent/Response/${requestId}`;
     const formData = new FormData();
@@ -178,22 +182,22 @@ export class RequestService {
 
   deleteRequestDocument(
     requestId: number,
-    requestDocumentId: number
+    requestDocumentId: number,
   ): Observable<{ isSuccess: boolean }> {
     return this.http.delete<{ isSuccess: boolean }>(
-      `${this.url}RequestDocuments/${requestId}/${requestDocumentId}`
+      `${this.url}RequestDocuments/${requestId}/${requestDocumentId}`,
     );
   }
 
   DeleteOrganizationDocument(documentId: number): Observable<void> {
     return this.http.delete<void>(
-      `${this.url}MunicipalityDocuments/${documentId}`
+      `${this.url}OrganizationDocuments/${documentId}`,
     );
   }
 
   SaveRequestDocuments(
     requestId: number,
-    requestDocuments: RequestDocument[]
+    requestDocuments: RequestDocument[],
   ): Observable<any> {
     const headers = { 'Content-Type': 'application/json' };
     const url = `${this.url}RequestDocuments/${requestId}`;
@@ -202,26 +206,26 @@ export class RequestService {
 
   GetAgencySpecificDocumentContent(
     organizationDocumentId: number,
-    organizationId: number
+    organizationId: number,
   ): Observable<HttpResponse<Blob>> {
     return this.http.get(
       `${this.url}OrganizationDocuments/DocumentContent/${organizationDocumentId}/${organizationId}`,
       {
         observe: 'response',
         responseType: 'blob',
-      }
+      },
     );
   }
 
   GetOfferorDocumentContent(
-    requestDocumentId: number
+    requestDocumentId: number,
   ): Observable<HttpResponse<Blob>> {
     return this.http.get(
       `${this.url}RequestDocuments/DocumentContent/Response/${requestDocumentId}`,
       {
         observe: 'response',
         responseType: 'blob',
-      }
+      },
     );
   }
 
@@ -235,16 +239,16 @@ export class RequestService {
 
   DeleteDecisionMaker(
     requestId: number,
-    decisionMakerId: number
+    decisionMakerId: number,
   ): Observable<any> {
     return this.http.delete<void>(
-      `${this.url}DecisionMakers/${requestId}/${decisionMakerId}`
+      `${this.url}DecisionMakers/${requestId}/${decisionMakerId}`,
     );
   }
 
   GetDocumentInstances(requestId: number): Observable<DocumentInstance[]> {
     return this.http.get<DocumentInstance[]>(
-      `${this.url}InstanceDocuments/${requestId}`
+      `${this.url}InstanceDocuments/${requestId}`,
     );
   }
 
@@ -318,11 +322,20 @@ export class RequestService {
       params: httpParams,
     });
   }
+  // NotifyOfferorSolicitationOpened(requestId: number): Observable<any> {
+  //   return this.http.post(
+  //     `${this.url}notifications/send/SolicitationOpened/${requestId}`,
+  //     {},
+  //   );
+  // }
 
-  NotifyOfferorSolicitationOpened(requestId: number): Observable<any> {
-    return this.http.post(
-      `${this.url}notifications/send/SolicitationOpened/${requestId}`,
-      {}
+  DuplicateRequest(
+    requestId: number,
+    organizationId: number,
+  ): Observable<number> {
+    return this.http.post<number>(
+      `${this.url}Requests/Clone/${requestId}?organizationId=${organizationId}`,
+      {},
     );
   }
 }

@@ -66,7 +66,7 @@ export class SubmissionCreditsComponent
   constructor(
     private stateService: StateService,
     private creditPackageService: CreditPackageService,
-    private loggingService: LoggingService
+    private loggingService: LoggingService,
   ) {}
 
   private destroy$ = new Subject<void>();
@@ -116,7 +116,7 @@ export class SubmissionCreditsComponent
                 className: 'SubmissionCreditsComponent',
                 operation: 'getSubmissionBalance',
                 userId: this.stateService.getUserId(),
-              }
+              },
             );
           },
         });
@@ -148,7 +148,7 @@ export class SubmissionCreditsComponent
                 {
                   hour: '2-digit',
                   minute: '2-digit',
-                }
+                },
               )}`;
 
               return {
@@ -157,6 +157,7 @@ export class SubmissionCreditsComponent
                 paymentMethodUsed: item.paymentMethodDescription || null,
                 lastFourNumbers: item.lastFourNumbers || null,
                 solicitationId: item.solicitationId?.toString() || 'N/A',
+                solicitationName: item.solicitationName || 'N/A',
                 showAccount: false,
               };
             });
@@ -193,7 +194,7 @@ export class SubmissionCreditsComponent
                 className: 'SubmissionCreditsComponent',
                 operation: 'getSubmissionCreditUsage',
                 userId: this.stateService.getUserId(),
-              }
+              },
             );
           },
         });

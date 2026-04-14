@@ -66,7 +66,7 @@
         mat-raised-button
         color="primary"
         (click)="proceedToPayment()"
-        [disabled]="calculatedTotal === 0 || isLoadingPackages"
+        [disabled]="totalCost === 0 || isLoadingPackages"
       >
         <mat-icon>arrow_forward</mat-icon>
         Continue to Payment
@@ -104,7 +104,12 @@
         "
       >
         <p>Select a payment method to complete your purchase:</p>
-        <p class="total-display">Total: ${{ calculatedTotal }}.00</p>
+        <div style="display: flex; justify-content: space-between">
+          <p class="total-display">
+            Credits: {{ totalCredits }} Submission Credit(s)
+          </p>
+          <p class="total-display">Total: ${{ totalCost }}.00</p>
+        </div>
 
         <mat-radio-group
           [(ngModel)]="selectedPaymentMethodId"
@@ -217,7 +222,23 @@
                   matInput
                   formControlName="cardNumber"
                   placeholder="1234 5678 9012 3456"
+                  (input)="onCardNumberInput()"
+                  maxlength="23"
                 />
+                <span
+                  *ngIf="detectedCardBrand"
+                  matPrefix
+                  [innerHTML]="getCardBrandSvg() || '' | safeHtml"
+                  class="card-brand-icon"
+                  style="margin-left: 16px; margin-right: 6px"
+                ></span>
+                <mat-icon
+                  matSuffix
+                  *ngIf="ccForm.get('cardNumber')?.valid"
+                  class="success-icon"
+                >
+                  check_circle
+                </mat-icon>
                 <mat-error
                   *ngIf="ccForm.get('cardNumber')?.hasError('required')"
                 >
@@ -262,7 +283,16 @@
                     matInput
                     formControlName="expirationDate"
                     placeholder="MM/YY"
+                    maxlength="5"
+                    (keydown)="onExpirationDateKeydown($event)"
                   />
+                  <mat-icon
+                    matSuffix
+                    *ngIf="ccForm.get('expirationDate')?.valid"
+                    class="success-icon"
+                  >
+                    check_circle
+                  </mat-icon>
                   <mat-error
                     *ngIf="ccForm.get('expirationDate')?.hasError('required')"
                   >
@@ -274,25 +304,40 @@
                     Format must be MM/YY
                   </mat-error>
                   <mat-error
+                    *ngIf="
+                      ccForm.get('expirationDate')?.hasError('invalidMonth')
+                    "
+                  >
+                    Month must be between 01 and 12
+                  </mat-error>
+                  <mat-error
                     *ngIf="ccForm.get('expirationDate')?.hasError('expired')"
                   >
-                    Card has expired
+                    Please use a valid card.
                   </mat-error>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
-                  <mat-label>CVV</mat-label>
+                  <mat-label>Security Code (CVV)</mat-label>
                   <input
                     matInput
                     formControlName="cvv"
                     placeholder="123"
                     maxlength="4"
                   />
+                  <mat-icon
+                    matSuffix
+                    *ngIf="ccForm.get('cvv')?.valid"
+                    class="success-icon"
+                  >
+                    check_circle
+                  </mat-icon>
                   <mat-error *ngIf="ccForm.get('cvv')?.hasError('required')">
                     CVV is required
                   </mat-error>
                   <mat-error *ngIf="ccForm.get('cvv')?.hasError('invalidCvv')">
-                    CVV must be 3 or 4 digits
+                    Invalid CVV. Enter 3 digits for Visa, Mastercard, Discover;
+                    4 digits for AMEX.
                   </mat-error>
                 </mat-form-field>
               </div>
@@ -573,9 +618,13 @@
         [disabled]="
           !canProceed() || isProcessingPayment || isSavingPaymentMethod
         "
-        (click)="confirmPayment()"
+        (click)="
+          showAddNew || paymentMethods.length === 0
+            ? savePaymentMethod()
+            : confirmPayment()
+        "
       >
-        <mat-icon *ngIf="!isProcessingPayment">
+        <mat-icon *ngIf="!isProcessingPayment && !isSavingPaymentMethod">
           {{
             showAddNew || paymentMethods.length === 0 ? "save" : "shopping_cart"
           }}
@@ -585,10 +634,12 @@
           isProcessingPayment
             ? "Processing Payment..."
             : isSavingPaymentMethod
-            ? "Saving Payment Method..."
-            : showAddNew || paymentMethods.length === 0
-            ? "Save Payment Method"
-            : "Complete Purchase"
+              ? "Saving Payment Method..."
+              : showAddNew || paymentMethods.length === 0
+                ? "Save Payment Method"
+                : data.isForSubmission
+                  ? "Complete Purchase and Submit Offer"
+                  : "Complete Purchase"
         }}
       </button>
     </mat-dialog-actions>

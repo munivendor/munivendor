@@ -18,6 +18,22 @@
   margin: 0;
 }
 
+.success-icon {
+  color: #4caf50;
+}
+
+.card-brand-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 8px;
+  height: 26px;
+}
+
+.card-brand-icon svg {
+  display: block;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
 /* will need for edit */
 /* .billing-profile-container p {
   font-size: 14px;

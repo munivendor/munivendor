@@ -16,7 +16,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { AuthService } from '../authorization/auth.service';
 import { UserLogin } from '../shared/model/user-login.model';
 import { LoggingService } from '../exceptionhandling/logging.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { SnackbarNotificationService } from '../shared/service/snackbar-notification.service';
 
 @Component({
   selector: 'login',
@@ -43,7 +43,7 @@ export class LoginComponent implements OnInit {
     public dialog: MatDialog,
     private authService: AuthService,
     private loggingService: LoggingService,
-    private snackBar: MatSnackBar
+    private snackbarNotificationService: SnackbarNotificationService,
   ) {}
 
   ngOnInit() {
@@ -77,15 +77,11 @@ export class LoginComponent implements OnInit {
             methodName: 'onSubmit',
             className: 'LoginComponent',
             operation: 'login',
-          }
+          },
         );
-        this.snackBar.open(
+
+        this.snackbarNotificationService.showSnackbarError(
           'Login failed. Please check your credentials and try again.',
-          'Close',
-          {
-            duration: 5000,
-            verticalPosition: 'top',
-          }
         );
       },
     });

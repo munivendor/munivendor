@@ -79,12 +79,7 @@
           Solicitation ID
         </th>
         <td mat-cell *matCellDef="let usage">
-          <a
-            [routerLink]="['/submission', usage.solicitationId]"
-            class="submission-link"
-          >
-            {{ usage.solicitationId }}
-          </a>
+          {{ usage.solicitationId }} - {{ usage.solicitationName }}
         </td>
       </ng-container>
 

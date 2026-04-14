@@ -7,7 +7,7 @@ export class SnackbarNotificationService {
   constructor(private snackBar: MatSnackBar) {}
 
   showSnackbarSupportErrorWithCorrelationId(correlationId?: string): void {
-    const message = `Something went wrong. Please try again later. (Correlation ID: ${
+    const message = `Something went wrong. Please try again later. (Error Info: ${
       correlationId ?? 'N/A'
     }). ${AppConstants.SUPPORT_MESSAGE}`;
     this.snackBar.open(message, 'Close', {
@@ -20,6 +20,7 @@ export class SnackbarNotificationService {
     this.snackBar.open(message, 'Close', {
       duration: AppConstants.SNACKBAR_DURATION,
       verticalPosition: 'top',
+      panelClass: ['snackbar-success'],
     });
   }
 

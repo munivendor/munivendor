@@ -22,7 +22,6 @@ import {
   HttpParams,
 } from '@angular/common/http';
 import { environment } from '../../environments/environment';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { FlowNavigationService } from '../shared/service/flow-navigation.service';
 import { UserService } from '../shared/service/user.service';
 import { User } from '../shared/model/user.model';
@@ -86,9 +85,8 @@ export class AuthService {
     private userService: UserService,
     private stateService: StateService,
     private loggingService: LoggingService,
-    private _snackBar: MatSnackBar,
     private snackbarNotificationService: SnackbarNotificationService,
-    @Inject(PLATFORM_ID) private platformId: Object
+    @Inject(PLATFORM_ID) private platformId: Object,
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     if (this.isBrowser) {
@@ -159,7 +157,7 @@ export class AuthService {
       catchError((error) => {
         this.appInitialized.next(true);
         return of(null);
-      })
+      }),
     );
   }
 
@@ -180,7 +178,7 @@ export class AuthService {
               }
               if (user.organizationTypeId !== undefined) {
                 this.stateService.setOrganizationTypeId(
-                  user.organizationTypeId
+                  user.organizationTypeId,
                 );
               }
               if (user.organizationId !== undefined) {
@@ -190,7 +188,7 @@ export class AuthService {
             catchError((userError) => {
               console.error('Error fetching user data during init:', userError);
               return of(null);
-            })
+            }),
           );
         }),
         catchError((err) => {
@@ -203,7 +201,7 @@ export class AuthService {
           }
           // Return of(null) instead of throwError to prevent error propagation
           return of(null);
-        })
+        }),
       );
   }
 
@@ -217,8 +215,8 @@ export class AuthService {
             !!user &&
             !skipNext &&
             !signupInProgress &&
-            this.router.url !== '/signup'
-        )
+            this.router.url !== '/signup',
+        ),
       )
       .subscribe({
         next: ([user, _skip, _signup]) => {
@@ -231,10 +229,9 @@ export class AuthService {
             next: (userId) => this.completeLoginProcess(userId, user.email),
             error: () => {
               this.safeResetAuthState();
-              this._snackBar.open(
+
+              this.snackbarNotificationService.showSnackbarError(
                 'Login failed. Please check your credentials and try again.',
-                'Close',
-                { verticalPosition: 'top' }
               );
             },
           });
@@ -260,7 +257,7 @@ export class AuthService {
                 }
                 if (user.organizationTypeId !== undefined) {
                   this.stateService.setOrganizationTypeId(
-                    user.organizationTypeId
+                    user.organizationTypeId,
                   );
                 }
                 if (user.userId !== undefined) {
@@ -275,14 +272,14 @@ export class AuthService {
               },
               (error) => {
                 console.error('Error fetching user data:', error);
-              }
+              },
             );
           }
         }),
         catchError((error: HttpErrorResponse) => {
           this.isLoggingIn.next(false);
           return throwError(() => error);
-        })
+        }),
       );
   }
 
@@ -366,7 +363,7 @@ export class AuthService {
         }),
         switchMap(() => {
           return this.flowNavigationService.navigateAfterLogin(userId, email);
-        })
+        }),
       )
       .subscribe({
         next: () => {
@@ -384,13 +381,13 @@ export class AuthService {
               methodName: 'completeLoginProcess',
               className: 'AuthService',
               operation: 'getUser',
-            }
+            },
           );
 
           this.setAuthenticated(false, undefined);
 
           this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
-            correlationId
+            correlationId,
           );
         },
       });
@@ -415,7 +412,7 @@ export class AuthService {
       catchError((error) => {
         console.error('Error manually restoring organization ID:', error);
         return of(null);
-      })
+      }),
     );
   }
 
@@ -427,7 +424,7 @@ export class AuthService {
         headers: {
           'Content-Type': 'application/json',
         },
-      }
+      },
     );
   }
 
