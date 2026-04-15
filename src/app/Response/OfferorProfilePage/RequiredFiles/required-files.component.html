@@ -73,9 +73,9 @@
         *ngIf="getUploadedDoc(fileConfig.documentName) as doc"
       >
         <span class="uploaded-date">Uploaded File: </span>
-        <a [href]="doc.fileUrl" target="_blank" class="uploaded-file-link">
+        <div class="uploaded-file-link">
           {{ doc.fileName }}
-        </a>
+        </div>
       </div>
       <span class="upload-hint"
         >Accepted file types: jpg, png, pdf. Max. file size: 50 MB.</span

@@ -194,14 +194,15 @@ export class ComplianceDocumentsComponent implements OnInit, OnChanges {
     return !!(control && control.invalid && (control.dirty || control.touched));
   }
 
+  private preselectionDone = false;
+
   ngOnChanges(changes: SimpleChanges): void {
-    if (
-      (changes['uploadedDocuments'] || changes['documentTypes']) &&
-      this.uploadedDocuments.length &&
-      this.eeoOptions.length &&
-      !this.complianceForm?.get('eeoSelection')?.value
-    ) {
+    if (this.preselectionDone) return;
+
+    // Wait until both inputs have data before attempting pre-selection
+    if (this.uploadedDocuments.length && this.eeoOptions.length) {
       this.preselectIfUploaded();
+      this.preselectionDone = true;
     }
   }
 
