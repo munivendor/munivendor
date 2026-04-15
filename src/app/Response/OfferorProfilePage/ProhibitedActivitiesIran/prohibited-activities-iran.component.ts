@@ -25,6 +25,8 @@ import { LoggingService } from '../../../exceptionhandling/logging.service';
 import { SnackbarNotificationService } from '../../../shared/service/snackbar-notification.service';
 import { RequestService } from '../../../Request/services/request.service';
 import { OrganizationDocument } from '../../model/organization-document.model';
+import { OfferorProfileService } from '../../services/offeror-profile.service';
+import { DocumentType } from '../../model/document-type.model';
 
 @Component({
   selector: 'app-prohibited-activities-iran',
@@ -49,6 +51,8 @@ export class ProhibitedActivitiesIranComponent implements OnInit {
   isUploading = false;
   selectedFileName: string | null = null;
 
+  readonly IRAN_DOCUMENT_CODE_NAME = 'Disclosure_of_Iran_Investments';
+
   chapter25Options = [
     {
       value: 'yes',
@@ -61,6 +65,7 @@ export class ProhibitedActivitiesIranComponent implements OnInit {
   ];
 
   @Input() uploadedDocuments: OrganizationDocument[] = [];
+  @Input() documentTypes: DocumentType[] = [];
   @Output() documentUploaded = new EventEmitter<void>();
 
   constructor(
@@ -69,6 +74,7 @@ export class ProhibitedActivitiesIranComponent implements OnInit {
     private loggingService: LoggingService,
     private snackbar: SnackbarNotificationService,
     private requestService: RequestService,
+    private offerorProfileService: OfferorProfileService,
   ) {}
 
   ngOnInit(): void {
@@ -107,6 +113,10 @@ export class ProhibitedActivitiesIranComponent implements OnInit {
     if (file) this.processFile(file);
   }
 
+  getDocumentType(codeName: string): DocumentType | undefined {
+    return this.documentTypes.find((dt) => dt.codeName === codeName);
+  }
+
   private processFile(file: File): void {
     const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
     const maxSize = 50 * 1024 * 1024;
@@ -125,15 +135,30 @@ export class ProhibitedActivitiesIranComponent implements OnInit {
 
     if (!this.organizationId) return;
 
-    this.selectedFileName = file.name;
-    const municipalityDocument = {
-      documentName: 'Iran Business Activity Documentation',
-    };
+    const docType = this.getDocumentType(this.IRAN_DOCUMENT_CODE_NAME);
+    if (!docType) {
+      this.snackbar.showSnackbarError(
+        'Document type not recognized. Please try again.',
+      );
+      return;
+    }
 
+    this.selectedFileName = file.name;
     this.isUploading = true;
 
+    const municipalityDocument = {
+      documentName: docType.codeName,
+      codeId: docType.codeId,
+      mapId: docType.mapId,
+    };
+
     this.requestService
-      .SaveOrganizationDocument(this.organizationId, municipalityDocument, file)
+      .SaveOrganizationDocument(
+        this.organizationId,
+        municipalityDocument,
+        file,
+        municipalityDocument.mapId,
+      )
       .subscribe({
         next: () => {
           this.isUploading = false;
@@ -166,10 +191,30 @@ export class ProhibitedActivitiesIranComponent implements OnInit {
       this.iranForm.markAllAsTouched();
       return;
     }
-    // Handle form submission, e.g. save the chapter25Identification and iranDescription values to the backend
+
+    const { iranDescription } = this.iranForm.value;
+
+    // Only POST if there's a textarea value to save
+    if (!iranDescription || !this.organizationId) return;
+
+    this.offerorProfileService
+      .SaveOfferorProfileDetails(this.organizationId, 2, iranDescription)
+      .subscribe({
+        next: () =>
+          this.snackbar.showSnackbarSuccess('Changes saved successfully.'),
+        error: (err) => {
+          this.snackbar.showSnackbarError(
+            'Failed to save changes. Please try again.',
+          );
+          this.loggingService.logException(err, 3, {
+            organizationId: this.organizationId,
+            methodName: 'onSubmit',
+          });
+        },
+      });
   }
 
-  getUploadedDoc(documentName: string): OrganizationDocument | undefined {
-    return this.uploadedDocuments.find((d) => d.documentName === documentName);
+  getUploadedDoc(codeName: string): OrganizationDocument | undefined {
+    return this.uploadedDocuments.find((d) => d.documentName === codeName);
   }
 }
