@@ -186,6 +186,7 @@
             [matDatepicker]="dateOfIncorporationPicker"
             formControlName="dateOfIncorporation"
             placeholder="MM/DD/YYYY"
+            [max]="maxDate"
             readonly
             (keydown)="onDateKeydown($event)"
             (input)="onDateInput($any($event.target).value)"
