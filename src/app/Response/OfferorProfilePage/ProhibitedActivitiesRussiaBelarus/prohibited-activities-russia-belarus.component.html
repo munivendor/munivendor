@@ -92,8 +92,12 @@
           <button
             type="button"
             class="file-input-btn"
-            [class.disabled]="isUploading"
-            [disabled]="isUploading"
+            [class.disabled]="
+              isUploading || !!getUploadedDoc(OFAC_DOCUMENT_CODE_NAME[0])
+            "
+            [disabled]="
+              isUploading || !!getUploadedDoc(OFAC_DOCUMENT_CODE_NAME[0])
+            "
             (click)="fileInput.click()"
           >
             <input
@@ -102,7 +106,9 @@
               accept=".jpg,.jpeg,.png,.pdf"
               class="file-input-hidden"
               (change)="onFileSelected($event)"
-              [disabled]="isUploading"
+              [disabled]="
+                isUploading || !!getUploadedDoc(OFAC_DOCUMENT_CODE_NAME[0])
+              "
             />
             <mat-spinner
               *ngIf="isUploading"
@@ -132,6 +138,15 @@
         <span class="upload-hint">
           Accepted file types: jpg, png, pdf. Max. file size: 50 MB.
         </span>
+        <div
+          class="uploaded-file-row"
+          *ngIf="getUploadedDoc(OFAC_DOCUMENT_CODE_NAME[0]) as doc"
+        >
+          <span class="uploaded-date">Uploaded File: </span>
+          <span class="uploaded-file-link">
+            {{ doc.fileName }}
+          </span>
+        </div>
       </div>
 
       <!-- Conditional description textarea — shown when ofacAdditional is 'yes' -->
@@ -156,8 +171,14 @@
     </ng-container>
 
     <!-- Save Changes -->
-    <div class="form-footer">
-      <button type="button" class="save-btn" (click)="onSubmit()">
+    <div class="card-footer">
+      <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        class="save-btn"
+        (click)="onSubmit()"
+      >
         <mat-icon>save</mat-icon>
         Save Changes
       </button>

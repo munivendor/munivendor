@@ -83,36 +83,8 @@
       <div class="form-row">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Country</mat-label>
-          <input
-            matInput
-            [formControl]="countryFilter"
-            [matAutocomplete]="countryAuto"
-            placeholder="Search countries..."
-            required
-            (blur)="onCountryBlur()"
-          />
-
-          <mat-autocomplete
-            #countryAuto="matAutocomplete"
-            [displayWith]="displayCountryFn"
-            (optionSelected)="onCountrySelected($event.option.value)"
-          >
-            <mat-option
-              *ngFor="let c of filteredCountries$ | async"
-              [value]="c"
-            >
-              {{ c.codeDesc }}
-            </mat-option>
-          </mat-autocomplete>
-
-          <mat-error
-            *ngIf="
-              countryFilter.invalid &&
-              (countryFilter.dirty || countryFilter.touched)
-            "
-          >
-            Country is required.
-          </mat-error>
+          <input matInput value="United States" readonly />
+          <mat-icon matSuffix class="field-icon">public</mat-icon>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
@@ -186,6 +158,7 @@
             [matDatepicker]="dateOfIncorporationPicker"
             formControlName="dateOfIncorporation"
             placeholder="MM/DD/YYYY"
+            [max]="maxDate"
             readonly
             (keydown)="onDateKeydown($event)"
             (input)="onDateInput($any($event.target).value)"

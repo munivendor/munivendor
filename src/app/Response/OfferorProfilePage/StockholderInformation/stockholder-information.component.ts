@@ -163,7 +163,7 @@ export class StockholderInformationComponent implements OnInit {
       city: [null],
       stateId: [null],
       zipCode: [null],
-      countryId: ['US'],
+      countryId: [null],
     });
   }
 
@@ -258,7 +258,7 @@ export class StockholderInformationComponent implements OnInit {
   }
 
   private setAddressValidators(): void {
-    ['address', 'city', 'stateId', 'countryId'].forEach((f) => {
+    ['address', 'city', 'stateId'].forEach((f) => {
       const ctrl = this.stockholderForm.get(f);
       ctrl?.setValidators([Validators.required]);
       ctrl?.updateValueAndValidity({ emitEvent: false });
@@ -293,7 +293,7 @@ export class StockholderInformationComponent implements OnInit {
       'stateId',
       'zipCode',
     ].forEach((f) => this.resetControl(f, null, emitEvent));
-    this.resetControl('countryId', 'US', emitEvent);
+    this.resetControl('countryId', this.getDefaultUsaId(), emitEvent);
   }
 
   private clearPersonFields(emitEvent = true): void {
@@ -314,7 +314,7 @@ export class StockholderInformationComponent implements OnInit {
       'stateId',
       'zipCode',
     ].forEach((f) => this.resetControl(f, null, emitEvent));
-    this.resetControl('countryId', 'US', emitEvent);
+    this.resetControl('countryId', this.getDefaultUsaId(), emitEvent);
   }
 
   private clearSecFilingField(emitEvent = true): void {
@@ -325,7 +325,7 @@ export class StockholderInformationComponent implements OnInit {
     ['address', 'address2', 'city', 'stateId', 'zipCode'].forEach((f) =>
       this.resetControl(f, null, emitEvent),
     );
-    this.resetControl('countryId', 'US', emitEvent);
+    this.resetControl('countryId', this.getDefaultUsaId(), emitEvent);
   }
 
   private resetControl(
@@ -405,13 +405,7 @@ export class StockholderInformationComponent implements OnInit {
 
   onSaveStockholder(): void {
     const hasStockholders = this.stockholderForm.get('hasStockholders')?.value;
-
-    // "No" path — just persist the answer, no stockholder detail needed
     if (hasStockholders === false) {
-      this.isSavingStockholder = true;
-      // TODO: call your API to persist hasStockholders = false if needed
-      // For now we just mark pristine and show success
-      this.isSavingStockholder = false;
       this.stockholderForm.markAsPristine();
       this.snackbar.showSnackbarSuccess('Stockholder information saved.');
       return;
@@ -606,7 +600,7 @@ export class StockholderInformationComponent implements OnInit {
       city: entry.city,
       stateId: entry.stateId,
       zipCode: entry.zipCode,
-      countryId: entry.countryId ?? 'US',
+      countryId: entry.countryId ?? this.getDefaultUsaId(),
     });
   }
 
@@ -690,5 +684,17 @@ export class StockholderInformationComponent implements OnInit {
     if (trimmed !== ctrl?.value) {
       ctrl?.setValue(trimmed);
     }
+  }
+
+  private getDefaultUsaId(): number | null {
+    return (
+      this.countries.find(
+        (c) =>
+          c.codeName?.toLowerCase() === 'us' ||
+          c.codeName?.toLowerCase() === 'usa' ||
+          c.codeDesc.toLowerCase() === 'united states' ||
+          c.codeDesc.toLowerCase() === 'united states of america',
+      )?.codeId ?? null
+    );
   }
 }

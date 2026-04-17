@@ -55,13 +55,12 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
   @Input() states: State[] = [];
   @Input() countries: State[] = [];
   stateFilter = new FormControl<State | null>(null);
-  countryFilter = new FormControl<State | null>(null, Validators.required);
   filteredStates$!: Observable<State[]>;
-  filteredCountries$!: Observable<State[]>;
 
   readonly phonePattern = '^\\(\\d{3}\\) \\d{3}-\\d{4}$';
   readonly zipPattern = '^\\d{5}(-\\d{4})?$';
   readonly taxIdPattern = '^\\d{2}-\\d{7}$';
+  readonly maxDate = new Date();
 
   organizationForm!: FormGroup;
   isLoading = false;
@@ -85,7 +84,6 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
     const orgId = this.organizationId ?? this.stateService.getOrganizationId();
     this.loadOrganizationSubTypes();
     this.initStateFilter();
-    this.initCountryFilter();
     this.loadOrgDetails(orgId);
   }
 
@@ -106,22 +104,6 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
         this.organizationForm.get('stateId')?.markAsDirty();
       }
     });
-  }
-
-  private initCountryFilter(): void {
-    this.filteredCountries$ = this.countryFilter.valueChanges.pipe(
-      startWith(this.countryFilter.value),
-      map((val) => {
-        const term = typeof val === 'string' ? val : (val?.codeDesc ?? '');
-
-        if (!val) {
-          this.organizationForm.get('countryId')?.setValue(null);
-          this.organizationForm.get('countryId')?.markAsDirty();
-        }
-
-        return this.filterList(this.countries, term, ['codeDesc', 'codeName']);
-      }),
-    );
   }
 
   private loadOrgDetails(orgId: number | null): void {
@@ -157,7 +139,6 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
     const usa = this.getDefaultUsa();
     if (usa) {
       this.organizationForm.get('countryId')?.setValue(usa.codeId);
-      this.countryFilter.setValue(usa, { emitEvent: false });
     }
 
     const nj = this.getDefaultState();
@@ -165,7 +146,7 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
       this.organizationForm.get('stateId')?.setValue(nj.codeId);
       this.stateFilter.setValue(nj, { emitEvent: false });
     }
-
+    this.toggleAddressFieldsByCountry(usa?.codeId ?? null);
     this.organizationForm.markAsPristine();
   }
 
@@ -225,11 +206,11 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
       stateId: [null, Validators.required],
       countryId: [null],
       zipCode: ['', [Validators.required, Validators.pattern(this.zipPattern)]],
-      dateOfIncorporation: [''],
+      dateOfIncorporation: ['', Validators.max(new Date().getTime())],
       organizationSubTypeId: [null],
       yearsAtCurrentAddress: [null],
       monthsAtCurrentAddress: [null],
-      taxId: ['', [Validators.required, Validators.pattern(this.taxIdPattern)]],
+      taxId: ['', [Validators.pattern(this.taxIdPattern)]],
       phone: ['', [Validators.required, Validators.pattern(this.phonePattern)]],
       fax: [''],
     });
@@ -271,10 +252,8 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
       this.stateFilter.setValue(state, { emitEvent: false });
     }
 
-    if (resolvedCountry) {
-      this.countryFilter.setValue(resolvedCountry, { emitEvent: false });
-    }
-
+    const usa = this.getDefaultUsa();
+    this.organizationForm.get('countryId')?.setValue(usa?.codeId ?? null);
     this.organizationForm.markAsPristine();
   }
 
@@ -441,16 +420,17 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
       yearsAtCurrentAddress,
       monthsAtCurrentAddress,
       ...rest
-    } = this.organizationForm.value;
+    } = this.organizationForm.getRawValue();
     const orgId = this.organizationId ?? this.stateService.getOrganizationId();
 
     const payload: OfferorDetails = {
       ...rest,
       phone: phone.replace(/\D/g, ''),
       fax: fax ? fax.replace(/\D/g, '') : null,
-      taxId: taxId.replace(/\D/g, ''),
+      taxId: taxId ? taxId.replace(/\D/g, '') : null,
       yearsAtCurrentAddress: yearsAtCurrentAddress ?? null,
       monthsAtCurrentAddress: monthsAtCurrentAddress ?? null,
+      dateOfIncorporation: rest.dateOfIncorporation || null,
     };
 
     this.offerorProfileService
@@ -513,22 +493,32 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
     this.organizationForm.get('stateId')?.markAsTouched();
   }
 
-  onCountryBlur(): void {
-    const current = this.organizationForm.get('countryId')?.value;
-    const country = current
-      ? this.countries.find((c) => c.codeId === current)
-      : null;
-    this.countryFilter.setValue(country ?? null, { emitEvent: false });
-    this.countryFilter.markAsTouched();
-  }
-
   displayCountryFn = (countryId: State | null): string => {
     return countryId?.codeDesc ?? '';
   };
 
-  onCountrySelected(countryId: State): void {
-    this.organizationForm.get('countryId')?.setValue(countryId.codeId);
-    this.organizationForm.get('countryId')?.markAsDirty();
+  private toggleAddressFieldsByCountry(countryId: number | null): void {
+    const usa = this.getDefaultUsa();
+    const isUsa = !!usa && countryId === usa.codeId;
+    const fields = ['address', 'address2', 'city', 'stateId', 'zipCode'];
+
+    fields.forEach((field) => {
+      const control = this.organizationForm.get(field);
+      if (!control) return;
+      if (isUsa) {
+        control.enable();
+      } else {
+        control.disable();
+        control.setValue(null);
+      }
+    });
+
+    if (isUsa) {
+      this.stateFilter.enable();
+    } else {
+      this.stateFilter.disable();
+      this.stateFilter.setValue(null, { emitEvent: false });
+    }
   }
 
   // ── Years / Months at Address ─────────────────────

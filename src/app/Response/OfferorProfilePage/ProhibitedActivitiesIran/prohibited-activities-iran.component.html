@@ -61,8 +61,12 @@
           <button
             type="button"
             class="file-input-btn"
-            [class.disabled]="isUploading"
-            [disabled]="isUploading"
+            [class.disabled]="
+              isUploading || !!getUploadedDoc(IRAN_DOCUMENT_CODE_NAME)
+            "
+            [disabled]="
+              isUploading || !!getUploadedDoc(IRAN_DOCUMENT_CODE_NAME)
+            "
             (click)="fileInput.click()"
           >
             <input
@@ -71,7 +75,9 @@
               accept=".jpg,.jpeg,.png,.pdf"
               class="file-input-hidden"
               (change)="onFileSelected($event)"
-              [disabled]="isUploading"
+              [disabled]="
+                isUploading || !!getUploadedDoc(IRAN_DOCUMENT_CODE_NAME)
+              "
             />
             <mat-spinner
               *ngIf="isUploading"
@@ -98,7 +104,18 @@
           </span>
         </div>
 
-        <span class="upload-hint">Max. file size: 50 MB.</span>
+        <span class="upload-hint">
+          Accepted file types: jpg, png, pdf. Max. file size: 50 MB.
+        </span>
+        <div
+          class="uploaded-file-row"
+          *ngIf="getUploadedDoc(IRAN_DOCUMENT_CODE_NAME) as doc"
+        >
+          <span class="uploaded-date">Uploaded File: </span>
+          <span class="uploaded-file-link">
+            {{ doc.fileName }}
+          </span>
+        </div>
       </div>
 
       <!-- Detailed Description -->
@@ -128,8 +145,14 @@
     </ng-container>
 
     <!-- Save Changes -->
-    <div class="form-footer">
-      <button type="button" class="save-btn" (click)="onSubmit()">
+    <div class="card-footer">
+      <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        class="save-btn"
+        (click)="onSubmit()"
+      >
         <mat-icon>save</mat-icon>
         Save Changes
       </button>

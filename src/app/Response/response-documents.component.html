@@ -157,7 +157,9 @@
 </table>
 <br />
 
-<h2>Agency Required Forms & Documents (Notarization Required)</h2>
+<h2 [hidden]="notarizationRequiredDocumentsDatasource.data.length === 0">
+  Agency Required Forms & Documents (Notarization Required)
+</h2>
 <div [hidden]="notarizationRequiredDocumentsDatasource.data.length === 0">
   <table
     mat-table

@@ -17,10 +17,16 @@
   />
   <app-prohibited-activities-russia-belarus
     [uploadedDocuments]="organizationDocuments"
+    [documentTypes]="documentTypes"
+    [profileDetails]="offerProfileDetails"
     (documentUploaded)="onDocumentUploaded()"
+    (detailsSaved)="onProfileDetailsSaved()"
   />
   <app-prohibited-activities-iran
     [uploadedDocuments]="organizationDocuments"
+    [documentTypes]="documentTypes"
+    [profileDetails]="offerProfileDetails"
     (documentUploaded)="onDocumentUploaded()"
+    (detailsSaved)="onProfileDetailsSaved()"
   />
 </ng-container>

@@ -5,6 +5,7 @@ import {
   OnInit,
   Output,
   ViewEncapsulation,
+  OnChanges,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -25,6 +26,8 @@ import { LoggingService } from '../../../exceptionhandling/logging.service';
 import { SnackbarNotificationService } from '../../../shared/service/snackbar-notification.service';
 import { RequestService } from '../../../Request/services/request.service';
 import { OrganizationDocument } from '../../model/organization-document.model';
+import { OfferorProfileService } from '../../services/offeror-profile.service';
+import { DocumentType } from '../../model/document-type.model';
 
 @Component({
   selector: 'app-prohibited-activities-iran',
@@ -42,12 +45,23 @@ import { OrganizationDocument } from '../../model/organization-document.model';
     MatIconModule,
   ],
 })
-export class ProhibitedActivitiesIranComponent implements OnInit {
+export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
   iranForm!: FormGroup;
 
   organizationId: number | null = null;
   isUploading = false;
   selectedFileName: string | null = null;
+  savedDetails: string | null = null;
+  savedOfferorProfileId: number | null = null;
+
+  @Input() profileDetails: {
+    offerorProfileId: number;
+    formTypeId: number;
+    details: string;
+  }[] = [];
+  @Output() detailsSaved = new EventEmitter<void>();
+
+  readonly IRAN_DOCUMENT_CODE_NAME = 'Disclosure_of_Iran_Investments';
 
   chapter25Options = [
     {
@@ -61,6 +75,7 @@ export class ProhibitedActivitiesIranComponent implements OnInit {
   ];
 
   @Input() uploadedDocuments: OrganizationDocument[] = [];
+  @Input() documentTypes: DocumentType[] = [];
   @Output() documentUploaded = new EventEmitter<void>();
 
   constructor(
@@ -69,7 +84,12 @@ export class ProhibitedActivitiesIranComponent implements OnInit {
     private loggingService: LoggingService,
     private snackbar: SnackbarNotificationService,
     private requestService: RequestService,
+    private offerorProfileService: OfferorProfileService,
   ) {}
+
+  ngOnChanges(): void {
+    this.applyProfileDetails();
+  }
 
   ngOnInit(): void {
     this.organizationId = this.stateService.getOrganizationId();
@@ -102,9 +122,95 @@ export class ProhibitedActivitiesIranComponent implements OnInit {
     return this.iranForm.get('chapter25Identification')?.value === 'no';
   }
 
+  private applyProfileDetails(): void {
+    const match = this.profileDetails.find((d) => d.formTypeId === 2);
+
+    const hasUploadedDoc = this.uploadedDocuments.some(
+      (d) => d.documentName === this.IRAN_DOCUMENT_CODE_NAME,
+    );
+
+    if (match?.details) {
+      this.savedOfferorProfileId = match.offerorProfileId;
+      // Step 1 — patch dropdown first
+      this.iranForm?.patchValue({
+        chapter25Identification: 'no',
+      });
+
+      // Step 2 — patch textarea on next tick
+      setTimeout(() => {
+        this.iranForm?.patchValue({
+          iranDescription: match.details,
+        });
+      }, 0);
+    } else if (hasUploadedDoc) {
+      this.iranForm?.patchValue({
+        chapter25Identification: 'no',
+      });
+    }
+  }
+
   onFileSelected(event: any): void {
     const file: File = event.target.files[0];
     if (file) this.processFile(file);
+  }
+
+  getDocumentType(codeName: string): DocumentType | undefined {
+    return this.documentTypes.find((dt) => dt.codeName === codeName);
+  }
+
+  clearFile(): void {
+    this.selectedFileName = null;
+  }
+
+  isFieldInvalid(field: string): boolean {
+    const control = this.iranForm.get(field);
+    return !!(control && control.invalid && (control.dirty || control.touched));
+  }
+
+  onSubmit(): void {
+    if (this.iranForm.invalid) {
+      this.iranForm.markAllAsTouched();
+      return;
+    }
+
+    const { iranDescription } = this.iranForm.value;
+
+    if (!iranDescription || !this.organizationId) return;
+
+    const formTypeId = 2;
+    const request$ = this.savedOfferorProfileId
+      ? this.offerorProfileService.UpdateOfferorProfileDetails(
+          this.organizationId,
+          this.savedOfferorProfileId,
+          formTypeId,
+          iranDescription,
+        )
+      : this.offerorProfileService.SaveOfferorProfileDetails(
+          this.organizationId,
+          formTypeId,
+          iranDescription,
+        );
+
+    request$.subscribe({
+      next: (res) => {
+        this.savedOfferorProfileId = res.offerorProfileId;
+        this.snackbar.showSnackbarSuccess('Changes saved successfully.');
+        this.detailsSaved.emit();
+      },
+      error: (err) => {
+        this.snackbar.showSnackbarError(
+          'Failed to save changes. Please try again.',
+        );
+        this.loggingService.logException(err, 3, {
+          organizationId: this.organizationId,
+          methodName: 'onSubmit',
+        });
+      },
+    });
+  }
+
+  getUploadedDoc(codeName: string): OrganizationDocument | undefined {
+    return this.uploadedDocuments.find((d) => d.documentName === codeName);
   }
 
   private processFile(file: File): void {
@@ -125,15 +231,30 @@ export class ProhibitedActivitiesIranComponent implements OnInit {
 
     if (!this.organizationId) return;
 
-    this.selectedFileName = file.name;
-    const municipalityDocument = {
-      documentName: 'Iran Business Activity Documentation',
-    };
+    const docType = this.getDocumentType(this.IRAN_DOCUMENT_CODE_NAME);
+    if (!docType) {
+      this.snackbar.showSnackbarError(
+        'Document type not recognized. Please try again.',
+      );
+      return;
+    }
 
+    this.selectedFileName = file.name;
     this.isUploading = true;
 
+    const municipalityDocument = {
+      documentName: docType.codeName,
+      codeId: docType.codeId,
+      mapId: docType.mapId,
+    };
+
     this.requestService
-      .SaveOrganizationDocument(this.organizationId, municipalityDocument, file)
+      .SaveOrganizationDocument(
+        this.organizationId,
+        municipalityDocument,
+        file,
+        municipalityDocument.mapId,
+      )
       .subscribe({
         next: () => {
           this.isUploading = false;
@@ -150,26 +271,5 @@ export class ProhibitedActivitiesIranComponent implements OnInit {
           });
         },
       });
-  }
-
-  clearFile(): void {
-    this.selectedFileName = null;
-  }
-
-  isFieldInvalid(field: string): boolean {
-    const control = this.iranForm.get(field);
-    return !!(control && control.invalid && (control.dirty || control.touched));
-  }
-
-  onSubmit(): void {
-    if (this.iranForm.invalid) {
-      this.iranForm.markAllAsTouched();
-      return;
-    }
-    // Handle form submission, e.g. save the chapter25Identification and iranDescription values to the backend
-  }
-
-  getUploadedDoc(documentName: string): OrganizationDocument | undefined {
-    return this.uploadedDocuments.find((d) => d.documentName === documentName);
   }
 }
