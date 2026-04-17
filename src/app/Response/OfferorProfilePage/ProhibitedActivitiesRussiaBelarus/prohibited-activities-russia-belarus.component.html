@@ -92,8 +92,12 @@
           <button
             type="button"
             class="file-input-btn"
-            [class.disabled]="isUploading"
-            [disabled]="isUploading"
+            [class.disabled]="
+              isUploading || !!getUploadedDoc(OFAC_DOCUMENT_CODE_NAME[0])
+            "
+            [disabled]="
+              isUploading || !!getUploadedDoc(OFAC_DOCUMENT_CODE_NAME[0])
+            "
             (click)="fileInput.click()"
           >
             <input
@@ -102,7 +106,9 @@
               accept=".jpg,.jpeg,.png,.pdf"
               class="file-input-hidden"
               (change)="onFileSelected($event)"
-              [disabled]="isUploading"
+              [disabled]="
+                isUploading || !!getUploadedDoc(OFAC_DOCUMENT_CODE_NAME[0])
+              "
             />
             <mat-spinner
               *ngIf="isUploading"
@@ -137,9 +143,9 @@
           *ngIf="getUploadedDoc(OFAC_DOCUMENT_CODE_NAME[0]) as doc"
         >
           <span class="uploaded-date">Uploaded File: </span>
-          <div class="uploaded-file-link">
+          <span class="uploaded-file-link">
             {{ doc.fileName }}
-          </div>
+          </span>
         </div>
       </div>
 

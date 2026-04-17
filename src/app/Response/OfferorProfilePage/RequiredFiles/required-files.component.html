@@ -32,8 +32,14 @@
         <button
           type="button"
           class="file-input-btn"
-          [class.disabled]="isUploading(fileConfig.key)"
-          [disabled]="isUploading(fileConfig.key)"
+          [class.disabled]="
+            isUploading(fileConfig.key) ||
+            !!getUploadedDoc(fileConfig.documentName)
+          "
+          [disabled]="
+            isUploading(fileConfig.key) ||
+            !!getUploadedDoc(fileConfig.documentName)
+          "
           (click)="fileInput.click()"
         >
           <input
@@ -42,7 +48,10 @@
             accept=".jpg,.jpeg,.png,.pdf"
             class="file-input-hidden"
             (change)="onFileSelected($event, fileConfig)"
-            [disabled]="isUploading(fileConfig.key)"
+            [disabled]="
+              isUploading(fileConfig.key) ||
+              !!getUploadedDoc(fileConfig.documentName)
+            "
           />
           <mat-spinner
             *ngIf="isUploading(fileConfig.key)"
@@ -55,7 +64,7 @@
 
         <span class="file-name-display">
           <ng-container *ngIf="getFileName(fileConfig.key); else noFile">
-            {{ getFileName(fileConfig.key) }}
+            {{ getFileName(fileConfig.key) }}dsa
             <button
               type="button"
               class="clear-btn"
@@ -73,9 +82,9 @@
         *ngIf="getUploadedDoc(fileConfig.documentName) as doc"
       >
         <span class="uploaded-date">Uploaded File: </span>
-        <div class="uploaded-file-link">
+        <span class="uploaded-file-link">
           {{ doc.fileName }}
-        </div>
+        </span>
       </div>
       <span class="upload-hint"
         >Accepted file types: jpg, png, pdf. Max. file size: 50 MB.</span

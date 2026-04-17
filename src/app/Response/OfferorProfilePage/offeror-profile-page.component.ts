@@ -43,6 +43,12 @@ export class OfferorProfilePageComponent implements OnInit {
   organizationDocuments: OrganizationDocument[] = [];
   documentTypes: DocumentType[] = [];
 
+  offerProfileDetails: {
+    offerorProfileId: number;
+    formTypeId: number;
+    details: string;
+  }[] = [];
+
   constructor(
     private offerorProfileService: OfferorProfileService,
     private stateService: StateService,
@@ -59,13 +65,25 @@ export class OfferorProfilePageComponent implements OnInit {
       documents: this.offerorProfileService.GetOrganizationDocuments(
         this.organizationId!,
       ),
+      profileDetails:
+        this.offerorProfileService.GetOfferorProfileDiscloserDetails(
+          this.organizationId!,
+        ),
     }).subscribe({
-      next: ({ states, countries, counties, documentTypes, documents }) => {
+      next: ({
+        states,
+        countries,
+        counties,
+        documentTypes,
+        documents,
+        profileDetails,
+      }) => {
         this.states = states;
         this.countries = countries;
         this.counties = counties;
         this.documentTypes = documentTypes;
         this.organizationDocuments = documents;
+        this.offerProfileDetails = profileDetails;
         this.referenceDataLoaded = true;
       },
       error: () => {
@@ -93,5 +111,12 @@ export class OfferorProfilePageComponent implements OnInit {
     this.offerorProfileService
       .GetOrganizationDocuments(this.organizationId)
       .subscribe({ next: (docs) => (this.organizationDocuments = docs) });
+  }
+
+  onProfileDetailsSaved(): void {
+    if (!this.organizationId) return;
+    this.offerorProfileService
+      .GetOfferorProfileDiscloserDetails(this.organizationId)
+      .subscribe({ next: (details) => (this.offerProfileDetails = details) });
   }
 }

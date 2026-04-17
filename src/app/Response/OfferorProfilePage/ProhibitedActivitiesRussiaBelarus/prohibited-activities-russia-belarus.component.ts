@@ -5,6 +5,7 @@ import {
   OnInit,
   Output,
   ViewEncapsulation,
+  OnChanges,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -47,12 +48,23 @@ import { DocumentType } from '../../model/document-type.model';
     MatInputModule,
   ],
 })
-export class ProhibitedActivitiesRussiaBelarusComponent implements OnInit {
+export class ProhibitedActivitiesRussiaBelarusComponent
+  implements OnInit, OnChanges
+{
   prohibitedForm!: FormGroup;
 
   organizationId: number | null = null;
   isUploading = false;
   selectedFileName: string | null = null;
+  savedDetails: string | null = null;
+  savedOfferorProfileId: number | null = null;
+
+  @Input() profileDetails: {
+    offerorProfileId: number;
+    formTypeId: number;
+    details: string;
+  }[] = [];
+  @Output() detailsSaved = new EventEmitter<void>();
 
   readonly OFAC_DOCUMENT_CODE_NAME = [
     'Disclosure_of_Prohibited_Activites_in_Russia_or_Belarus',
@@ -138,6 +150,10 @@ export class ProhibitedActivitiesRussiaBelarusComponent implements OnInit {
       });
   }
 
+  ngOnChanges(): void {
+    this.applyProfileDetails();
+  }
+
   private buildForm(): void {
     this.prohibitedForm = this.fb.group({
       ofacIdentification: [null, Validators.required],
@@ -152,6 +168,33 @@ export class ProhibitedActivitiesRussiaBelarusComponent implements OnInit {
 
   get showDescriptionField(): boolean {
     return this.prohibitedForm.get('ofacAdditional')?.value === 'yes';
+  }
+
+  private applyProfileDetails(): void {
+    const match = this.profileDetails.find((d) => d.formTypeId === 1);
+    const hasUploadedDoc = this.uploadedDocuments.some(
+      (d) => d.documentName === this.OFAC_DOCUMENT_CODE_NAME[0],
+    );
+
+    if (match?.details) {
+      this.savedOfferorProfileId = match.offerorProfileId;
+      // Step 1 — patch dropdowns first so conditional fields render
+      this.prohibitedForm?.patchValue({
+        ofacIdentification: 'yes',
+        ofacAdditional: 'yes',
+      });
+
+      // Step 2 — patch textarea on next tick after DOM has rendered
+      setTimeout(() => {
+        this.prohibitedForm?.patchValue({
+          ofacDescription: match.details,
+        });
+      }, 0);
+    } else if (hasUploadedDoc) {
+      this.prohibitedForm?.patchValue({
+        ofacIdentification: 'yes',
+      });
+    }
   }
 
   onFileSelected(event: any): void {
@@ -176,24 +219,38 @@ export class ProhibitedActivitiesRussiaBelarusComponent implements OnInit {
 
     const { ofacDescription } = this.prohibitedForm.value;
 
-    // Only POST if there's a textarea value to save
     if (!ofacDescription || !this.organizationId) return;
 
-    this.offerorProfileService
-      .SaveOfferorProfileDetails(this.organizationId, 1, ofacDescription)
-      .subscribe({
-        next: () =>
-          this.snackbar.showSnackbarSuccess('Changes saved successfully.'),
-        error: (err) => {
-          this.snackbar.showSnackbarError(
-            'Failed to save changes. Please try again.',
-          );
-          this.loggingService.logException(err, 3, {
-            organizationId: this.organizationId,
-            methodName: 'onSubmit',
-          });
-        },
-      });
+    const formTypeId = 1;
+    const request$ = this.savedOfferorProfileId
+      ? this.offerorProfileService.UpdateOfferorProfileDetails(
+          this.organizationId,
+          this.savedOfferorProfileId,
+          formTypeId,
+          ofacDescription,
+        )
+      : this.offerorProfileService.SaveOfferorProfileDetails(
+          this.organizationId,
+          formTypeId,
+          ofacDescription,
+        );
+
+    request$.subscribe({
+      next: (res) => {
+        this.savedOfferorProfileId = res.offerorProfileId;
+        this.snackbar.showSnackbarSuccess('Changes saved successfully.');
+        this.detailsSaved.emit();
+      },
+      error: (err) => {
+        this.snackbar.showSnackbarError(
+          'Failed to save changes. Please try again.',
+        );
+        this.loggingService.logException(err, 3, {
+          organizationId: this.organizationId,
+          methodName: 'onSubmit',
+        });
+      },
+    });
   }
 
   getUploadedDoc(codeName: string): OrganizationDocument | undefined {

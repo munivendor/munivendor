@@ -240,4 +240,35 @@ export class OfferorProfileService {
       { formTypeId, details },
     );
   }
+
+  GetOfferorProfileDiscloserDetails(
+    organizationId: number,
+  ): Observable<
+    { offerorProfileId: number; formTypeId: number; details: string }[]
+  > {
+    return this.http
+      .get<{
+        correlationId: string;
+        offerProfileDetails: {
+          offerorProfileId: number;
+          formTypeId: number;
+          formTypeName: string | null;
+          details: string;
+          organizationId: number;
+        }[];
+      }>(`${this.url}OfferorProfiles/Details/${organizationId}`)
+      .pipe(map((res) => res?.offerProfileDetails ?? []));
+  }
+
+  UpdateOfferorProfileDetails(
+    organizationId: number,
+    offerorProfileId: number,
+    formTypeId: number,
+    details: string,
+  ): Observable<{ offerorProfileId: number }> {
+    return this.http.put<{ offerorProfileId: number }>(
+      `${this.url}OfferorProfiles/Details/${organizationId}`,
+      { offerorProfileId, formTypeId, details },
+    );
+  }
 }
