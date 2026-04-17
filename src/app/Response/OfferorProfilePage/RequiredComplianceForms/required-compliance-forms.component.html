@@ -62,8 +62,8 @@
         <button
           type="button"
           class="file-input-btn"
-          [class.disabled]="isUploading"
-          [disabled]="isUploading"
+          [class.disabled]="isUploading || !!getUploadedDoc(docType.codeName)"
+          [disabled]="isUploading || !!getUploadedDoc(docType.codeName)"
           (click)="fileInput.click()"
         >
           <input
@@ -72,7 +72,7 @@
             accept=".jpg,.jpeg,.png,.pdf"
             class="file-input-hidden"
             (change)="onFileSelected($event)"
-            [disabled]="isUploading"
+            [disabled]="isUploading || !!getUploadedDoc(docType.codeName)"
           />
           <mat-spinner
             *ngIf="isUploading"
@@ -103,10 +103,10 @@
         class="uploaded-file-row"
         *ngIf="getUploadedDoc(docType.codeName) as doc"
       >
-        <span class="uploaded-date">Uploaded: </span>
-        <a [href]="doc.fileUrl" target="_blank" class="uploaded-file-link">
+        <span class="uploaded-date">Uploaded File: </span>
+        <span class="uploaded-file-link">
           {{ doc.fileName }}
-        </a>
+        </span>
       </div>
 
       <span class="upload-hint"
