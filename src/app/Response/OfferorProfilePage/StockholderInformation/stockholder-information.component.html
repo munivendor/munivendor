@@ -299,16 +299,8 @@
           <div class="form-row">
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Country</mat-label>
-              <mat-select formControlName="countryId">
-                <mat-option *ngFor="let c of countries" [value]="c.codeId">
-                  {{ c.codeDesc }}
-                </mat-option>
-              </mat-select>
-              <mat-error
-                *ngIf="stockholderForm.get('countryId')?.hasError('required')"
-              >
-                Country is required.
-              </mat-error>
+              <input matInput value="United States" readonly />
+              <mat-icon matSuffix class="field-icon">public</mat-icon>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="city-field">
@@ -447,7 +439,7 @@
             {{
               row.stockholderTypeId === STOCKHOLDER_TYPE_PERSON
                 ? "Person"
-                : row.stockholderTypeId === STOCKHOLDER_TYPE_ORG
+                : "Organization"
             }}
           </td>
         </ng-container>
