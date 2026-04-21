@@ -20,6 +20,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 
 import { StateService } from '../../../Request/services/state.service';
 import { LoggingService } from '../../../exceptionhandling/logging.service';
@@ -43,6 +44,7 @@ import { DocumentType } from '../../model/document-type.model';
     MatInputModule,
     MatProgressSpinnerModule,
     MatIconModule,
+    MatButtonModule,
   ],
 })
 export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {

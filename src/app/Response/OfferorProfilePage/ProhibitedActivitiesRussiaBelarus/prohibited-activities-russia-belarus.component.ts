@@ -20,6 +20,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
 
 import { StateService } from '../../../Request/services/state.service';
 import { LoggingService } from '../../../exceptionhandling/logging.service';
@@ -46,6 +47,7 @@ import { DocumentType } from '../../model/document-type.model';
     MatProgressSpinnerModule,
     MatIconModule,
     MatInputModule,
+    MatButtonModule,
   ],
 })
 export class ProhibitedActivitiesRussiaBelarusComponent

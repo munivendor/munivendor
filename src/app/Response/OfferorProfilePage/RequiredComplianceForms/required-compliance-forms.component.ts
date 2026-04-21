@@ -216,14 +216,6 @@ export class ComplianceDocumentsComponent implements OnInit, OnChanges {
       this.complianceForm.get('eeoSelection')?.setValue(matchedDoc.codeId, {
         emitEvent: false,
       });
-
-      // pre-populate the file name display from the uploaded doc
-      const uploaded = this.uploadedDocuments.find(
-        (d) => d.documentName === matchedDoc.codeName,
-      );
-      if (uploaded) {
-        this.selectedFileName = uploaded.fileName;
-      }
     }
   }
 }
