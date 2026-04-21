@@ -43,10 +43,7 @@
               formControlName="contractFailureDetails"
               rows="4"
             ></textarea>
-            <mat-hint align="end">
-              {{ legalForm.get("contractFailureDetails")?.value?.length || 0 }}
-              / 5000
-            </mat-hint>
+
             <mat-error *ngIf="isFieldInvalid('contractFailureDetails')">
               Please provide details for the contract failure.
             </mat-error>
@@ -91,10 +88,7 @@
               formControlName="liensLawsuitsDetails"
               rows="4"
             ></textarea>
-            <mat-hint align="end">
-              {{ legalForm.get("liensLawsuitsDetails")?.value?.length || 0 }} /
-              5000
-            </mat-hint>
+
             <mat-error *ngIf="isFieldInvalid('liensLawsuitsDetails')">
               Please provide details for the liens and/or lawsuits.
             </mat-error>

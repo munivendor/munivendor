@@ -12,6 +12,8 @@ import {
   FormGroup,
   Validators,
   FormControl,
+  AbstractControl,
+  ValidationErrors,
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -29,6 +31,30 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { map, Observable, startWith } from 'rxjs';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
+
+/** Rejects strings that are blank or whitespace-only. */
+function noWhitespaceValidator(
+  control: AbstractControl,
+): ValidationErrors | null {
+  const val: string = control.value ?? '';
+  return val.trim().length === 0 && val.length > 0
+    ? { whitespace: true }
+    : null;
+}
+
+/**
+ * Validates fax only when a value is present.
+ * Keeps fax optional but enforces the phone pattern when filled in.
+ */
+function conditionalPhoneValidator(pattern: RegExp) {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const val: string = control.value ?? '';
+    if (!val) return null;
+    return pattern.test(val)
+      ? null
+      : { pattern: { requiredPattern: pattern.source, actualValue: val } };
+  };
+}
 
 @Component({
   selector: 'app-offeror-details',
@@ -57,16 +83,16 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
   stateFilter = new FormControl<State | null>(null);
   filteredStates$!: Observable<State[]>;
 
-  readonly phonePattern = '^\\(\\d{3}\\) \\d{3}-\\d{4}$';
+  readonly phonePattern = /^\(\d{3}\) \d{3}-\d{4}$/;
+  readonly phonePatternStr = '^\\(\\d{3}\\) \\d{3}-\\d{4}$';
   readonly zipPattern = '^\\d{5}(-\\d{4})?$';
   readonly taxIdPattern = '^\\d{2}-\\d{7}$';
+  readonly cityPattern = '^[a-zA-Z\\s\\-\\.]+$';
   readonly maxDate = new Date();
 
   organizationForm!: FormGroup;
   isLoading = false;
   isSaving = false;
-  displayPhone = '';
-  displayFax = '';
 
   entityTypes: State[] = [];
 
@@ -199,26 +225,36 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
 
   private buildForm(): void {
     this.organizationForm = this.fb.group({
-      organizationName: ['', Validators.required],
-      address: ['', Validators.required],
+      organizationName: ['', [Validators.required, noWhitespaceValidator]],
+      address: ['', [Validators.required, noWhitespaceValidator]],
       address2: [null],
-      city: ['', Validators.required],
+      city: [
+        '',
+        [
+          Validators.required,
+          noWhitespaceValidator,
+          Validators.pattern(this.cityPattern),
+        ],
+      ],
       stateId: [null, Validators.required],
       countryId: [null],
       zipCode: ['', [Validators.required, Validators.pattern(this.zipPattern)]],
-      dateOfIncorporation: ['', Validators.max(new Date().getTime())],
+      dateOfIncorporation: [null],
       organizationSubTypeId: [null],
-      yearsAtCurrentAddress: [null],
-      monthsAtCurrentAddress: [null],
+      yearsAtCurrentAddress: [null, [Validators.min(0), Validators.max(99)]],
+      monthsAtCurrentAddress: [null, [Validators.min(0), Validators.max(11)]],
       taxId: ['', [Validators.pattern(this.taxIdPattern)]],
-      phone: ['', [Validators.required, Validators.pattern(this.phonePattern)]],
-      fax: [''],
+      phone: [
+        '',
+        [Validators.required, Validators.pattern(this.phonePatternStr)],
+      ],
+      fax: ['', [conditionalPhoneValidator(this.phonePattern)]],
     });
   }
 
   private patchForm(data: OfferorDetails): void {
-    if (data.phone) this.displayPhone = this.formatPhone(data.phone);
-    if (data.fax) this.displayFax = this.formatPhone(data.fax);
+    const formattedPhone = data.phone ? this.formatPhone(data.phone) : '';
+    const formattedFax = data.fax ? this.formatPhone(data.fax) : '';
 
     const resolvedCountry = data.countryId
       ? (this.countries.find((c) => c.codeId === data.countryId) ??
@@ -233,13 +269,13 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
       stateId: data.stateId,
       countryId: resolvedCountry?.codeId ?? null,
       zipCode: data.zipCode,
-      dateOfIncorporation: data.dateOfIncorporation ?? '',
+      dateOfIncorporation: data.dateOfIncorporation ?? null,
       organizationSubTypeId: data.organizationSubTypeId ?? null,
       yearsAtCurrentAddress: data.yearsAtCurrentAddress ?? null,
       monthsAtCurrentAddress: data.monthsAtCurrentAddress ?? null,
       taxId: data.taxId ? this.formatTaxId(data.taxId) : '',
-      phone: this.displayPhone,
-      fax: this.displayFax,
+      phone: formattedPhone,
+      fax: formattedFax,
     });
 
     const state = data.stateId
@@ -272,21 +308,18 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
   // ── Phone ─────────────────────────────────────────
 
   onPhoneInput(value: string): void {
-    this.displayPhone = this.formatPhone(value);
+    const formatted = this.formatPhone(value);
     this.organizationForm
       .get('phone')
-      ?.setValue(this.displayPhone, { emitEvent: false });
+      ?.setValue(formatted, { emitEvent: false });
     this.organizationForm.get('phone')?.markAsDirty();
   }
 
   onFaxInput(value: string): void {
-    this.displayFax = this.formatPhone(value);
-    this.organizationForm
-      .get('fax')
-      ?.setValue(this.displayFax, { emitEvent: false });
+    const formatted = this.formatPhone(value);
+    this.organizationForm.get('fax')?.setValue(formatted, { emitEvent: false });
     this.organizationForm.get('fax')?.markAsDirty();
   }
-
   formatPhone(digits: string): string {
     const d = digits.replace(/\D/g, '').slice(0, 10);
     if (d.length === 0) return '';
@@ -323,6 +356,28 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
     ];
     if (controlKeys.includes(event.key)) return;
     if (!/[\d\-]/.test(event.key)) event.preventDefault();
+  }
+
+  /**
+   * Strips any character that isn't a digit or hyphen, then auto-inserts
+   * the hyphen at position 5 when the user has typed all 9 raw digits.
+   * This also covers paste events that bypass the keydown guard.
+   */
+  onZipInput(value: string): void {
+    let sanitized = value.replace(/[^\d\-]/g, '');
+
+    const digits = sanitized.replace(/-/g, '');
+    if (digits.length >= 6 && !sanitized.includes('-')) {
+      sanitized = `${digits.slice(0, 5)}-${digits.slice(5, 9)}`;
+    } else if (digits.length > 9) {
+      sanitized = `${digits.slice(0, 5)}-${digits.slice(5, 9)}`;
+    }
+
+    this.organizationForm
+      .get('zipCode')
+      ?.setValue(sanitized, { emitEvent: false });
+    this.organizationForm.get('zipCode')?.markAsDirty();
+    this.organizationForm.get('zipCode')?.updateValueAndValidity();
   }
 
   // ── Tax ID ────────────────────────────────────────
@@ -525,9 +580,11 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
 
   onYearsAtAddressInput(value: string): void {
     const digits = value.replace(/\D/g, '');
+    let years = digits ? parseInt(digits, 10) : null;
+    if (years !== null && years > 99) years = 99;
     this.organizationForm
       .get('yearsAtCurrentAddress')
-      ?.setValue(digits ? parseInt(digits, 10) : null, { emitEvent: false });
+      ?.setValue(years, { emitEvent: false });
     this.organizationForm.get('yearsAtCurrentAddress')?.markAsDirty();
   }
 
