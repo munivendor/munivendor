@@ -39,10 +39,12 @@
           (input)="capitalizeInput($event, 'firstName')"
           (blur)="trimOnBlur('firstName')"
         />
-        <mat-hint align="end">
-          {{ officialForm.get("firstName")?.value?.length || 0 }} / 50
-        </mat-hint>
-        <mat-error *ngIf="officialForm.get('firstName')?.hasError('required')">
+        <mat-error
+          *ngIf="
+            officialForm.get('firstName')?.hasError('required') ||
+            officialForm.get('firstName')?.hasError('whitespace')
+          "
+        >
           First name is required.
         </mat-error>
         <mat-error
@@ -64,10 +66,12 @@
           (input)="capitalizeInput($event, 'lastName')"
           (blur)="trimOnBlur('lastName')"
         />
-        <mat-hint align="end">
-          {{ officialForm.get("lastName")?.value?.length || 0 }} / 50
-        </mat-hint>
-        <mat-error *ngIf="officialForm.get('lastName')?.hasError('required')">
+        <mat-error
+          *ngIf="
+            officialForm.get('lastName')?.hasError('required') ||
+            officialForm.get('lastName')?.hasError('whitespace')
+          "
+        >
           Last name is required.
         </mat-error>
         <mat-error *ngIf="officialForm.get('lastName')?.hasError('hasNumbers')">
@@ -91,10 +95,12 @@
         maxlength="100"
         (blur)="trimOnBlur('title')"
       />
-      <mat-hint align="end">
-        {{ officialForm.get("title")?.value?.length || 0 }} / 100
-      </mat-hint>
-      <mat-error *ngIf="officialForm.get('title')?.hasError('required')">
+      <mat-error
+        *ngIf="
+          officialForm.get('title')?.hasError('required') ||
+          officialForm.get('title')?.hasError('whitespace')
+        "
+      >
         Title is required.
       </mat-error>
       <mat-error *ngIf="officialForm.get('title')?.hasError('maxlength')">
@@ -137,9 +143,15 @@
       <input
         matInput
         formControlName="address"
+        maxlength="150"
         (blur)="trimOnBlur('address')"
       />
-      <mat-error *ngIf="officialForm.get('address')?.hasError('required')">
+      <mat-error
+        *ngIf="
+          officialForm.get('address')?.hasError('required') ||
+          officialForm.get('address')?.hasError('whitespace')
+        "
+      >
         Street address is required.
       </mat-error>
     </mat-form-field>
@@ -149,6 +161,7 @@
       <input
         matInput
         formControlName="address2"
+        maxlength="100"
         (blur)="trimOnBlur('address2')"
       />
     </mat-form-field>
@@ -156,8 +169,18 @@
     <div class="form-row">
       <mat-form-field appearance="outline" class="city-field">
         <mat-label>City</mat-label>
-        <input matInput formControlName="city" (blur)="trimOnBlur('city')" />
-        <mat-error *ngIf="officialForm.get('city')?.hasError('required')">
+        <input
+          matInput
+          formControlName="city"
+          maxlength="100"
+          (blur)="trimOnBlur('city')"
+        />
+        <mat-error
+          *ngIf="
+            officialForm.get('city')?.hasError('required') ||
+            officialForm.get('city')?.hasError('whitespace')
+          "
+        >
           City is required.
         </mat-error>
       </mat-form-field>
@@ -206,7 +229,12 @@
         type="email"
         (blur)="normalizeEmail()"
       />
-      <mat-error *ngIf="officialForm.get('email')?.hasError('required')">
+      <mat-error
+        *ngIf="
+          officialForm.get('email')?.hasError('required') ||
+          officialForm.get('email')?.hasError('whitespace')
+        "
+      >
         Email is required.
       </mat-error>
       <mat-error *ngIf="officialForm.get('email')?.hasError('pattern')">
@@ -227,7 +255,12 @@
         type="email"
         (blur)="normalizeConfirmEmail()"
       />
-      <mat-error *ngIf="officialForm.get('confirmEmail')?.hasError('required')">
+      <mat-error
+        *ngIf="
+          officialForm.get('confirmEmail')?.hasError('required') ||
+          officialForm.get('confirmEmail')?.hasError('whitespace')
+        "
+      >
         Please confirm your email address.
       </mat-error>
       <mat-error *ngIf="confirmEmailMismatch">
@@ -246,7 +279,6 @@
         <input
           matInput
           formControlName="phone"
-          [value]="displayPhone"
           placeholder="(xxx) xxx-xxxx"
           maxlength="14"
           (input)="onPhoneInput($event)"

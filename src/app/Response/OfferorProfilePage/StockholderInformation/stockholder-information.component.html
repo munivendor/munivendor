@@ -81,11 +81,12 @@
                 (input)="capitalizeInput($event, 'firstName')"
                 (blur)="trimOnBlur('firstName')"
               />
-              <mat-hint align="end">
-                {{ stockholderForm.get("firstName")?.value?.length || 0 }} / 50
-              </mat-hint>
+
               <mat-error
-                *ngIf="stockholderForm.get('firstName')?.hasError('required')"
+                *ngIf="
+                  stockholderForm.get('firstName')?.hasError('required') ||
+                  stockholderForm.get('firstName')?.hasError('whitespace')
+                "
               >
                 First name is required.
               </mat-error>
@@ -110,11 +111,12 @@
                 (input)="capitalizeInput($event, 'lastName')"
                 (blur)="trimOnBlur('lastName')"
               />
-              <mat-hint align="end">
-                {{ stockholderForm.get("lastName")?.value?.length || 0 }} / 50
-              </mat-hint>
+
               <mat-error
-                *ngIf="stockholderForm.get('lastName')?.hasError('required')"
+                *ngIf="
+                  stockholderForm.get('lastName')?.hasError('required') ||
+                  stockholderForm.get('lastName')?.hasError('whitespace')
+                "
               >
                 Last name is required.
               </mat-error>
@@ -154,16 +156,13 @@
             <input
               matInput
               formControlName="organizationName"
-              maxlength="100"
+              maxlength="200"
               (blur)="trimOnBlur('organizationName')"
             />
-            <mat-hint align="end">
-              {{ stockholderForm.get("organizationName")?.value?.length || 0 }}
-              / 100
-            </mat-hint>
             <mat-error
               *ngIf="
-                stockholderForm.get('organizationName')?.hasError('required')
+                stockholderForm.get('organizationName')?.hasError('required') ||
+                stockholderForm.get('organizationName')?.hasError('whitespace')
               "
             >
               Organization name is required.
@@ -230,12 +229,7 @@
                 placeholder="https://www.sec.gov/..."
                 (blur)="trimOnBlur('secFilingWebsite')"
               />
-              <mat-hint align="end">
-                {{
-                  stockholderForm.get("secFilingWebsite")?.value?.length || 0
-                }}
-                / 300
-              </mat-hint>
+
               <mat-error
                 *ngIf="
                   stockholderForm.get('secFilingWebsite')?.hasError('required')
@@ -278,10 +272,14 @@
             <input
               matInput
               formControlName="address"
+              maxlength="150"
               (blur)="trimOnBlur('address')"
             />
             <mat-error
-              *ngIf="stockholderForm.get('address')?.hasError('required')"
+              *ngIf="
+                stockholderForm.get('address')?.hasError('required') ||
+                stockholderForm.get('address')?.hasError('whitespace')
+              "
             >
               Street address is required.
             </mat-error>
@@ -308,10 +306,14 @@
               <input
                 matInput
                 formControlName="city"
+                maxlength="100"
                 (blur)="trimOnBlur('city')"
               />
               <mat-error
-                *ngIf="stockholderForm.get('city')?.hasError('required')"
+                *ngIf="
+                  stockholderForm.get('city')?.hasError('required') ||
+                  stockholderForm.get('city')?.hasError('whitespace')
+                "
               >
                 City is required.
               </mat-error>
