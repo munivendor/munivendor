@@ -12,9 +12,8 @@
         </div>
       </div>
       <p class="card-description">
-        The Authorizing Official is the person whose name and signature will be
+        The Authorizing Official is the person who's name and signature will be
         entered into the forms requested by the local government organization.
-        Please enter their contact and address information below.
       </p>
     </div>
   </div>
@@ -24,8 +23,9 @@
     <div class="subsection-label-group">
       <span class="subsection-label">Authorizing Official Name</span>
       <span class="subsection-hint">
-        This name will be automatically entered into forms required by the local
-        government organization publishing the opportunity.
+        This is the name of the person that MuniVendor will automatically enter
+        into the forms required by the local government organization publishing
+        the opportunity.
       </span>
     </div>
 
@@ -85,14 +85,18 @@
 
     <!-- ── Title ── -->
     <div class="subsection-label-group">
-      <span class="subsection-label">Title</span>
+      <span class="subsection-label">Authorized Official Title</span>
+      <span class="subsection-hint">
+        Please enter the title of the authorizing official. For example,
+        "owner", "partner", etc.
+      </span>
     </div>
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Title</mat-label>
       <input
         matInput
         formControlName="title"
-        maxlength="100"
+        maxlength="50"
         (blur)="trimOnBlur('title')"
       />
       <mat-error
@@ -104,7 +108,7 @@
         Title is required.
       </mat-error>
       <mat-error *ngIf="officialForm.get('title')?.hasError('maxlength')">
-        Title cannot exceed 100 characters.
+        Title cannot exceed 50 characters.
       </mat-error>
     </mat-form-field>
 
@@ -112,7 +116,7 @@
     <div class="subsection-label-group">
       <span class="subsection-label">Notarization County</span>
       <span class="subsection-hint">
-        Please indicate the county in which you will be present when completing
+        Please indicate the County in which you will be present when completing
         digital notarization.
       </span>
     </div>
@@ -132,9 +136,9 @@
     <div class="subsection-label-group">
       <span class="subsection-label">Address</span>
       <span class="subsection-hint">
-        This address enables MuniVendor to autofill several forms, including the
-        Non-Collusion Affidavit, which is required for most local government
-        organizations.
+        This content enables MuniVendor to autofill several forms, including the
+        Non-Collusion Affidavit, which is a required form for most local
+        government organizations.
       </span>
     </div>
 

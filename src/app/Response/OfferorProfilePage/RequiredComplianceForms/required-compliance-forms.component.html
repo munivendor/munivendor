@@ -20,19 +20,7 @@
     class="compliance-form"
     (submit)="$event.preventDefault()"
   >
-    <div>
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Mandatory Equal Employment Opportunity Language</mat-label>
-        <mat-select formControlName="eeoSelection">
-          <mat-option *ngFor="let option of eeoOptions" [value]="option.codeId">
-            {{ option.codeDesc }}
-          </mat-option>
-        </mat-select>
-        <mat-error *ngIf="isFieldInvalid('eeoSelection')">
-          Please select an EEO document type.
-        </mat-error>
-      </mat-form-field>
-
+    <div class="upload-section">
       <p class="eeo-hint">
         N.J.S.A. 10:5-31 et seq. (P.L.1975, c.127) and N.J.A.C. 17:27 et seq.
         Selected contractors must submit one of the documents listed. Form
@@ -45,6 +33,17 @@
           NJ Department of the Treasury Contract Compliance</a
         >.
       </p>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Mandatory Equal Employment Opportunity Language</mat-label>
+        <mat-select formControlName="eeoSelection">
+          <mat-option *ngFor="let option of eeoOptions" [value]="option.codeId">
+            {{ option.codeDesc }}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="isFieldInvalid('eeoSelection')">
+          Please select an EEO document type.
+        </mat-error>
+      </mat-form-field>
     </div>
 
     <div

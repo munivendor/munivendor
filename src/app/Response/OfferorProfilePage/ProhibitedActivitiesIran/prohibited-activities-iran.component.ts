@@ -68,7 +68,7 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
   chapter25Options = [
     {
       value: 'yes',
-      label: 'Yes, I can certify. We DO NOT conduct business in Iran.',
+      label: 'Yes, I certify that we DO NOT conduct any business in Iran.',
     },
     {
       value: 'no',
@@ -217,7 +217,7 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
 
   private processFile(file: File): void {
     const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
-    const maxSize = 50 * 1024 * 1024;
+    const maxSize = 20 * 1024 * 1024;
 
     if (!allowedTypes.includes(file.type)) {
       this.snackbar.showSnackbarError(
@@ -227,7 +227,7 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
     }
 
     if (file.size > maxSize) {
-      this.snackbar.showSnackbarError('File exceeds the 50MB size limit.');
+      this.snackbar.showSnackbarError('File exceeds the 20MB size limit.');
       return;
     }
 

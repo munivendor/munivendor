@@ -85,7 +85,8 @@
         <p class="upload-doc-description">
           Please upload any documentation related to the work your organization
           is performing in Russia and/or Belarus to show that it is consistent
-          with federal law, regulation license or exemption.
+          with federal law, regulation license or exemption. This file will be
+          included in your submissions.
         </p>
 
         <div class="file-input-row">
@@ -136,7 +137,7 @@
         </div>
 
         <span class="upload-hint">
-          Accepted file types: jpg, png, pdf. Max. file size: 50 MB.
+          Accepted file types: jpg, png, pdf. Max. file size: 20 MB.
         </span>
         <div
           class="uploaded-file-row"
@@ -162,6 +163,7 @@
             formControlName="ofacDescription"
             rows="7"
             placeholder=""
+            maxlength="1000"
           ></textarea>
           <mat-error *ngIf="isFieldInvalid('ofacDescription')">
             Please provide a description.

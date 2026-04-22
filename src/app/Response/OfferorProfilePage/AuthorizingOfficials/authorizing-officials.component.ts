@@ -242,7 +242,7 @@ export class AuthorizingOfficialsComponent implements OnInit {
           [
             Validators.required,
             noWhitespaceValidator(),
-            Validators.maxLength(100),
+            Validators.maxLength(50),
           ],
         ],
         notarizationCountyId: [null, Validators.required],
