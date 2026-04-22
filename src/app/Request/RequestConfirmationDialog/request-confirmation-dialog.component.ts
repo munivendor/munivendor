@@ -184,12 +184,6 @@ export class RequestConfirmationDialog implements OnDestroy {
   }
 
   private handleOpen(request: any): void {
-    const snackBarRef = this.snackBar.open(
-      'Downloading offeror responses, please wait…',
-      'Dismiss',
-      { duration: 0 },
-    );
-
     this.dialogRef.close(true);
 
     this.downloadZipDocuments(request)
@@ -209,11 +203,6 @@ export class RequestConfirmationDialog implements OnDestroy {
             requestId: request.requestId,
             newStatusId: 6,
             newStatusDesc: 'Opened',
-          });
-          this.snackBar.open('Download complete!', 'Close', {
-            duration: 3000,
-            verticalPosition: 'top',
-            horizontalPosition: 'center',
           });
         },
         error: (error) => {
@@ -257,23 +246,13 @@ export class RequestConfirmationDialog implements OnDestroy {
   }
 
   private handleRedownload(request: any): void {
-    const snackBarRef = this.snackBar.open(
-      'Re-download in Progress — The offers from this solicitation are currently being decrypted and zipped and will be downloaded in the background. You may continue to use the MuniVendor platform during this operation.',
-      'Dismiss',
-      { duration: 0, verticalPosition: 'top', horizontalPosition: 'center' },
-    );
-
     this.dialogRef.close(true);
 
     this.downloadZipDocuments(request)
-      .pipe(finalize(() => snackBarRef.dismiss()))
+      .pipe()
       .subscribe({
         next: () => {
-          this.snackBar.open('Re-download complete!', 'Close', {
-            duration: 3000,
-            verticalPosition: 'top',
-            horizontalPosition: 'center',
-          });
+          this.dialogRef.close(true);
         },
         error: (error) => {
           this.loggingService.logException(
@@ -331,7 +310,7 @@ export class RequestConfirmationDialog implements OnDestroy {
     this.snackBar.open(
       'Download in Progress — The offers from this solicitation are currently being decrypted and zipped and will be downloaded in the background. You may continue to use the MuniVendor platform during this operation.',
       'Dismiss',
-      { duration: 5000, verticalPosition: 'top', horizontalPosition: 'center' },
+      { duration: 0, verticalPosition: 'top', horizontalPosition: 'center' },
     );
 
     return this.documentService
