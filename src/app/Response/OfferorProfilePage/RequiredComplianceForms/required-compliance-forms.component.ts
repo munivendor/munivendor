@@ -108,6 +108,8 @@ export class ComplianceDocumentsComponent implements OnInit, OnChanges {
     this.complianceForm.get('eeoSelection')?.valueChanges.subscribe(() => {
       this.selectedFileName = null;
     });
+
+    this.tryPreselect();
   }
 
   private buildForm(): void {
@@ -198,16 +200,18 @@ export class ComplianceDocumentsComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (this.preselectionDone) return;
-
-    // Wait until both inputs have data before attempting pre-selection
-    if (this.uploadedDocuments.length && this.eeoOptions.length) {
-      this.preselectIfUploaded();
-      this.preselectionDone = true;
-    }
+    this.tryPreselect();
   }
 
-  private preselectIfUploaded(): void {
-    // find the first EEO option that has already been uploaded
+  private tryPreselect(): void {
+    // Guard: only proceed when both inputs have data AND the form exists
+    if (
+      !this.complianceForm ||
+      !this.uploadedDocuments?.length ||
+      !this.eeoOptions?.length
+    )
+      return;
+
     const matchedDoc = this.eeoOptions.find((opt) =>
       this.uploadedDocuments.some((d) => d.documentName === opt.codeName),
     );
@@ -217,5 +221,7 @@ export class ComplianceDocumentsComponent implements OnInit, OnChanges {
         emitEvent: false,
       });
     }
+
+    this.preselectionDone = true;
   }
 }
