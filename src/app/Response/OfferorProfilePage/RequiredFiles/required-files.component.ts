@@ -102,7 +102,7 @@ export class RequiredFilesComponent implements OnInit {
 
   private processFile(file: File, fileConfig: RequiredFileConfig): void {
     const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
-    const maxSize = 50 * 1024 * 1024;
+    const maxSize = 10 * 1024 * 1024;
 
     if (!allowedTypes.includes(file.type)) {
       this.snackbar.showSnackbarError(
@@ -112,7 +112,7 @@ export class RequiredFilesComponent implements OnInit {
     }
 
     if (file.size > maxSize) {
-      this.snackbar.showSnackbarError('File exceeds the 50MB size limit.');
+      this.snackbar.showSnackbarError('File exceeds the 10MB size limit.');
       return;
     }
 

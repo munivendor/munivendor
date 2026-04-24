@@ -594,13 +594,11 @@ export class RequestRequiredDocumentsComponent
           const contentDisposition = response.headers.get(
             'Content-Disposition',
           );
-          let fileName = 'document';
-          if (contentDisposition) {
-            const match = contentDisposition.match(/filename="?([^"]+)"?/);
-            if (match && match[1]) {
-              fileName = match[1];
-            }
-          }
+
+          const fileName = this.parseContentDispositionFileName(
+            contentDisposition,
+            'download',
+          );
 
           const a = document.createElement('a');
           const blobUrl = URL.createObjectURL(blob);
@@ -649,13 +647,10 @@ export class RequestRequiredDocumentsComponent
         if (!blob) return;
 
         const contentDisposition = response.headers.get('Content-Disposition');
-        let fileName = 'download';
-        if (contentDisposition) {
-          const match = contentDisposition.match(/filename="?([^"]+)"?/);
-          if (match && match[1]) {
-            fileName = match[1];
-          }
-        }
+        const fileName = this.parseContentDispositionFileName(
+          contentDisposition,
+          'download',
+        );
 
         const a = document.createElement('a');
         const blobUrl = URL.createObjectURL(blob);
@@ -744,5 +739,28 @@ export class RequestRequiredDocumentsComponent
           );
         },
       });
+  }
+
+  private parseContentDispositionFileName(
+    contentDisposition: string | null,
+    fallback: string = 'document',
+  ): string {
+    if (!contentDisposition) return fallback;
+
+    // Prefer RFC 5987 filename* (UTF-8 encoded)
+    const rfcMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+    if (rfcMatch?.[1]) {
+      return decodeURIComponent(rfcMatch[1].trim());
+    }
+
+    // Quoted filename
+    const quotedMatch = contentDisposition.match(/filename="([^"]+)"/);
+    if (quotedMatch?.[1]) return quotedMatch[1];
+
+    // Unquoted filename
+    const unquotedMatch = contentDisposition.match(/filename=([^;]+)/);
+    if (unquotedMatch?.[1]) return unquotedMatch[1].trim();
+
+    return fallback;
   }
 }

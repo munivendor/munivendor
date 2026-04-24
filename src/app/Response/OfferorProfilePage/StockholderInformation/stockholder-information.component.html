@@ -12,8 +12,11 @@
         </div>
       </div>
       <p class="card-description">
-        Please enter ownership information for each stockholder with a 10% or
-        greater interest in the business.
+        Please enter the names and addresses of all stockholders who hold 10% or
+        more of the issued and outstanding stock of the organization. The
+        information in this section is used to auto-fill the Stockholder
+        Disclosure Certification form, and the Statement of Ownership Disclosure
+        N.J.S.A. 52:2524.2 (P.L. 1977, c.33, as amended by P.L. 2016, c.43).
       </p>
     </div>
   </div>
@@ -27,7 +30,8 @@
       <span class="subsection-label">Stockholder Ownership</span>
       <span class="subsection-hint">
         Are there stockholders who hold 10% or more of the issued and/or
-        outstanding stock of the organization?
+        outstanding stock of the organization? Selecting "No" for this field
+        means that no one stockholder holds 10% or more of your organization.
       </span>
     </div>
     <mat-form-field appearance="outline" class="full-width">
@@ -156,7 +160,7 @@
             <input
               matInput
               formControlName="organizationName"
-              maxlength="200"
+              maxlength="100"
               (blur)="trimOnBlur('organizationName')"
             />
             <mat-error

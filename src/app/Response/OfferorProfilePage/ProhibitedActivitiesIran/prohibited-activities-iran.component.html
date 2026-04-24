@@ -22,9 +22,11 @@
         <strong>Chapter 25 Identification</strong>
       </p>
       <p class="section-question">
-        Is your organization identified on the OFAC Specially Designated
-        Nationals and Blocked Persons list on account of activity related to
-        Russia and/or Belarus?
+        Can you certify that neither the person or organization submitting
+        responses listed above, nor any parent entity, subsidiary, or affiliate
+        thereof is listed on the N.J. Department of the Treasury’s list of
+        entities determined to be engaged in prohibited activities in Iran
+        pursuant to P.L. 2012, c. 25 ("Chapter 25 List").
       </p>
 
       <mat-form-field appearance="outline" class="full-width">
@@ -105,7 +107,7 @@
         </div>
 
         <span class="upload-hint">
-          Accepted file types: jpg, png, pdf. Max. file size: 50 MB.
+          Accepted file types: jpg, png, pdf. Max. file size: 20 MB.
         </span>
         <div
           class="uploaded-file-row"
@@ -136,6 +138,7 @@
             formControlName="iranDescription"
             rows="7"
             placeholder=""
+            maxlength="1000"
           ></textarea>
           <mat-error *ngIf="isFieldInvalid('iranDescription')">
             Please provide a description.

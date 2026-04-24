@@ -93,12 +93,12 @@ export class ProhibitedActivitiesRussiaBelarusComponent
     {
       value: 'yes',
       label:
-        'Yes-the work or activity in which this organization is engaged in Russia and/or Belarus IS consistent with federal law, regulation, license, or exemption.',
+        'Yes - the work or activity in which this organization is engaged in Russia and/or Belarus IS consistent with federal law, regulation, license, or exemption.',
     },
     {
       value: 'no',
       label:
-        'No-the work or activity in which this organization is engaged in Russia and/or Belarus IS NOT consistent with federal law, regulation, license, or exemption.',
+        'No - the work or activity in which this organization is engaged in Russia and/or Belarus IS NOT consistent with federal law, regulation, license, or exemption.',
     },
   ];
 
@@ -261,7 +261,7 @@ export class ProhibitedActivitiesRussiaBelarusComponent
 
   private processFile(file: File): void {
     const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
-    const maxSize = 50 * 1024 * 1024;
+    const maxSize = 20 * 1024 * 1024;
 
     if (!allowedTypes.includes(file.type)) {
       this.snackbar.showSnackbarError(
@@ -271,7 +271,7 @@ export class ProhibitedActivitiesRussiaBelarusComponent
     }
 
     if (file.size > maxSize) {
-      this.snackbar.showSnackbarError('File exceeds the 50MB size limit.');
+      this.snackbar.showSnackbarError('File exceeds the 20MB size limit.');
       return;
     }
 
