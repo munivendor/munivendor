@@ -36,13 +36,11 @@
           (blur)="titleCaseField('organizationName')"
         />
         <mat-icon matSuffix class="field-icon">business</mat-icon>
-        <mat-hint align="end">
-          {{ organizationForm.get("organizationName")?.value?.length || 0 }}/200
-        </mat-hint>
         <mat-error *ngIf="isFieldInvalid('organizationName')">
           <ng-container
             *ngIf="
-              organizationForm.get('organizationName')?.hasError('required')
+              organizationForm.get('organizationName')?.hasError('required') ||
+              organizationForm.get('organizationName')?.hasError('whitespace')
             "
           >
             Organization name is required.
@@ -63,10 +61,18 @@
           matInput
           formControlName="address"
           placeholder="Street Address Line 1"
+          maxlength="150"
           (blur)="titleCaseField('address')"
         />
         <mat-error *ngIf="isFieldInvalid('address')">
-          Street address is required.
+          <ng-container
+            *ngIf="
+              organizationForm.get('address')?.hasError('required') ||
+              organizationForm.get('address')?.hasError('whitespace')
+            "
+          >
+            Street address is required.
+          </ng-container>
         </mat-error>
       </mat-form-field>
 
@@ -76,6 +82,7 @@
           matInput
           formControlName="address2"
           placeholder="Suite, floor, unit (optional)"
+          maxlength="100"
           (blur)="titleCaseField('address2')"
         />
       </mat-form-field>
@@ -93,10 +100,23 @@
             matInput
             formControlName="city"
             placeholder="City"
+            maxlength="100"
             (blur)="titleCaseField('city')"
           />
           <mat-error *ngIf="isFieldInvalid('city')">
-            City is required.
+            <ng-container
+              *ngIf="
+                organizationForm.get('city')?.hasError('required') ||
+                organizationForm.get('city')?.hasError('whitespace')
+              "
+            >
+              City is required.
+            </ng-container>
+            <ng-container
+              *ngIf="organizationForm.get('city')?.hasError('pattern')"
+            >
+              City may contain letters, spaces, hyphens, and periods only.
+            </ng-container>
           </mat-error>
         </mat-form-field>
       </div>
@@ -121,9 +141,13 @@
               {{ s.codeDesc }} ({{ s.codeName }})
             </mat-option>
           </mat-autocomplete>
-          <mat-error *ngIf="isFieldInvalid('stateId')"
-            >State is required.</mat-error
+          <mat-error
+            *ngIf="
+              isFieldInvalid('stateId') || stateFilter.hasError('required')
+            "
           >
+            State is required.
+          </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
@@ -131,8 +155,9 @@
           <input
             matInput
             formControlName="zipCode"
-            placeholder="00000"
+            placeholder="12345 or 12345-6789"
             maxlength="10"
+            (input)="onZipInput($any($event.target).value)"
             (keydown)="onZipKeydown($event)"
           />
           <mat-error *ngIf="isFieldInvalid('zipCode')">
@@ -169,6 +194,17 @@
             #dateOfIncorporationPicker
             (closed)="onDatepickerClosed()"
           ></mat-datepicker>
+          <mat-error *ngIf="isFieldInvalid('dateOfIncorporation')">
+            <ng-container
+              *ngIf="
+                organizationForm
+                  .get('dateOfIncorporation')
+                  ?.hasError('matDatepickerMax')
+              "
+            >
+              Date cannot be in the future.
+            </ng-container>
+          </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
@@ -187,16 +223,19 @@
           <input
             matInput
             formControlName="yearsAtCurrentAddress"
-            placeholder="e.g. 5"
+            placeholder="Enter values 0–99"
             type="text"
             inputmode="numeric"
             (input)="onYearsAtAddressInput($any($event.target).value)"
             (keydown)="onYearsAtAddressKeydown($event)"
           />
+          <mat-error *ngIf="isFieldInvalid('yearsAtCurrentAddress')">
+            Years must be between 0 and 99.
+          </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="half-width">
-          <mat-label>Months</mat-label>
+          <mat-label>Length of time at current address (Months)</mat-label>
           <input
             matInput
             formControlName="monthsAtCurrentAddress"
@@ -206,6 +245,9 @@
             (input)="onMonthsAtAddressInput($any($event.target).value)"
             (keydown)="onMonthsAtAddressKeydown($event)"
           />
+          <mat-error *ngIf="isFieldInvalid('monthsAtCurrentAddress')">
+            Months must be between 0 and 11.
+          </mat-error>
         </mat-form-field>
       </div>
     </div>
@@ -237,11 +279,7 @@
         />
         <mat-icon matSuffix class="field-icon">tag</mat-icon>
         <mat-error *ngIf="isFieldInvalid('taxId')">
-          {{
-            organizationForm.get("taxId")?.hasError("required")
-              ? "Tax ID is required."
-              : "Enter a valid FEIN (e.g. 12-3456789)."
-          }}
+          Enter a valid FEIN (e.g. 12-3456789).
         </mat-error>
       </mat-form-field>
 
@@ -252,7 +290,6 @@
             matInput
             formControlName="phone"
             placeholder="(xxx) xxx-xxxx"
-            [value]="displayPhone"
             (input)="onPhoneInput($any($event.target).value)"
             (keydown)="onPhoneKeydown($event)"
           />
@@ -272,11 +309,13 @@
             matInput
             formControlName="fax"
             placeholder="(xxx) xxx-xxxx"
-            [value]="displayFax"
             (input)="onFaxInput($any($event.target).value)"
             (keydown)="onPhoneKeydown($event)"
           />
           <mat-icon matSuffix class="field-icon">fax</mat-icon>
+          <mat-error *ngIf="isFieldInvalid('fax')">
+            Enter a valid 10-digit fax number.
+          </mat-error>
         </mat-form-field>
       </div>
     </div>

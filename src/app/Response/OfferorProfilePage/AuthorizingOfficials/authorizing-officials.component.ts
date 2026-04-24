@@ -66,6 +66,16 @@ export function zipCodeValidator(): ValidatorFn {
   };
 }
 
+/** Rejects strings that are blank or whitespace-only (e.g. "   "). */
+export function noWhitespaceValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const val: string = control.value ?? '';
+    return val.trim().length === 0 && val.length > 0
+      ? { whitespace: true }
+      : null;
+  };
+}
+
 export class TouchedErrorStateMatcher implements ErrorStateMatcher {
   isErrorState(
     control: FormControl | null,
@@ -211,34 +221,56 @@ export class AuthorizingOfficialsComponent implements OnInit {
       {
         firstName: [
           null,
-          [Validators.required, Validators.maxLength(50), noNumbersValidator()],
+          [
+            Validators.required,
+            noWhitespaceValidator(),
+            Validators.maxLength(50),
+            noNumbersValidator(),
+          ],
         ],
         lastName: [
           null,
-          [Validators.required, Validators.maxLength(50), noNumbersValidator()],
+          [
+            Validators.required,
+            noWhitespaceValidator(),
+            Validators.maxLength(50),
+            noNumbersValidator(),
+          ],
         ],
-        title: [null, [Validators.required, Validators.maxLength(100)]],
+        title: [
+          null,
+          [
+            Validators.required,
+            noWhitespaceValidator(),
+            Validators.maxLength(50),
+          ],
+        ],
         notarizationCountyId: [null, Validators.required],
-        address: [null, Validators.required],
+        address: [null, [Validators.required, noWhitespaceValidator()]],
         address2: [null],
-        city: [null, Validators.required],
+        city: [null, [Validators.required, noWhitespaceValidator()]],
         stateId: [null, Validators.required],
         zipCode: [null, [Validators.required, zipCodeValidator()]],
         email: [
           null,
           [
             Validators.required,
+            noWhitespaceValidator(),
             Validators.maxLength(255),
             Validators.pattern(this.emailPattern),
           ],
         ],
-        confirmEmail: [null, [Validators.required]],
+        confirmEmail: [null, [Validators.required, noWhitespaceValidator()]],
         phone: [null, [Validators.pattern(this.phonePattern)]],
         bestTimeToCallId: [null, Validators.required],
         digitalSignatureConsented: [false],
       },
       { validators: emailMatchValidator },
     );
+    const stateCtrl = this.officialForm.get('stateId');
+    if (!stateCtrl?.value) {
+      stateCtrl?.setValue(this.getDefaultNjId(), { emitEvent: false });
+    }
   }
 
   // ── Input handlers ────────────────────────────────────────────────────────
@@ -275,7 +307,6 @@ export class AuthorizingOfficialsComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     const digits = input.value.replace(/\D/g, '').slice(0, 10);
     const formatted = this.formatPhoneDisplay(digits);
-    this.displayPhone = formatted;
     input.value = formatted;
     this.officialForm.get('phone')?.setValue(formatted, { emitEvent: false });
     this.officialForm.get('phone')?.updateValueAndValidity();
@@ -345,7 +376,6 @@ export class AuthorizingOfficialsComponent implements OnInit {
       .subscribe({
         next: (data: AuthorizingOfficial[]) => {
           this.dataSource.data = data ?? [];
-
           this.isLoading = false;
           this.cdr.detectChanges();
           this.dataSource.paginator = this.paginator;
@@ -462,14 +492,9 @@ export class AuthorizingOfficialsComponent implements OnInit {
     if (entry.phone) {
       const digits = entry.phone.replace(/\D/g, '');
       const formatted = this.formatPhoneDisplay(digits);
-
-      this.displayPhone = formatted;
-
-      this.officialForm.patchValue({
-        phone: formatted,
-      });
+      this.officialForm.patchValue({ phone: formatted });
     } else {
-      this.displayPhone = '';
+      this.officialForm.patchValue({ phone: null });
     }
   }
 
@@ -495,7 +520,9 @@ export class AuthorizingOfficialsComponent implements OnInit {
 
   private resetForm(): void {
     this.officialForm.reset({ digitalSignatureConsented: false });
-    this.displayPhone = '';
+    this.officialForm
+      .get('stateId')
+      ?.setValue(this.getDefaultNjId(), { emitEvent: false });
     this.officialForm.markAsPristine();
     this.officialForm.markAsUntouched();
     this.scrollToTop();
@@ -535,5 +562,15 @@ export class AuthorizingOfficialsComponent implements OnInit {
       behavior: 'smooth',
       block: 'start',
     });
+  }
+
+  private getDefaultNjId(): number | null {
+    return (
+      this.states.find(
+        (s) =>
+          s.codeName?.toLowerCase() === 'nj' ||
+          s.codeDesc.toLowerCase() === 'new jersey',
+      )?.codeId ?? null
+    );
   }
 }

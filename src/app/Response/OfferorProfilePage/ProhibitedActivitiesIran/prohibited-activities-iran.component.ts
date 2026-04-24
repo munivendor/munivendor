@@ -20,6 +20,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 
 import { StateService } from '../../../Request/services/state.service';
 import { LoggingService } from '../../../exceptionhandling/logging.service';
@@ -43,6 +44,7 @@ import { DocumentType } from '../../model/document-type.model';
     MatInputModule,
     MatProgressSpinnerModule,
     MatIconModule,
+    MatButtonModule,
   ],
 })
 export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
@@ -66,7 +68,7 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
   chapter25Options = [
     {
       value: 'yes',
-      label: 'Yes, I can certify. We DO NOT conduct business in Iran.',
+      label: 'Yes, I certify that we DO NOT conduct any business in Iran.',
     },
     {
       value: 'no',
@@ -215,7 +217,7 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
 
   private processFile(file: File): void {
     const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
-    const maxSize = 50 * 1024 * 1024;
+    const maxSize = 20 * 1024 * 1024;
 
     if (!allowedTypes.includes(file.type)) {
       this.snackbar.showSnackbarError(
@@ -225,7 +227,7 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
     }
 
     if (file.size > maxSize) {
-      this.snackbar.showSnackbarError('File exceeds the 50MB size limit.');
+      this.snackbar.showSnackbarError('File exceeds the 20MB size limit.');
       return;
     }
 

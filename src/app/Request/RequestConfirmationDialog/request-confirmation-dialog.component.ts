@@ -28,6 +28,8 @@ import { RequestService } from '../services/request.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
 import { Subject, switchMap, takeUntil, tap, Observable, finalize } from 'rxjs';
 import { LoadingService } from '../../shared/LoadingSpinner/loading.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 export interface DialogData {
   action: string;
@@ -46,6 +48,7 @@ export interface DialogData {
     MatDialogTitle,
     MatDialogContent,
     MatDialogActions,
+    MatSnackBarModule,
   ],
 })
 export class RequestConfirmationDialog implements OnDestroy {
@@ -70,6 +73,7 @@ export class RequestConfirmationDialog implements OnDestroy {
     private requestService: RequestService,
     private loggingService: LoggingService,
     private loadingService: LoadingService,
+    private snackBar: MatSnackBar,
   ) {}
 
   getConfirmationMessage(): string {
@@ -180,12 +184,11 @@ export class RequestConfirmationDialog implements OnDestroy {
   }
 
   private handleOpen(request: any): void {
-    this.loadingService.show('Downloading...');
+    this.dialogRef.close(true);
 
     this.downloadZipDocuments(request)
       .pipe(
         switchMap(() => {
-          this.loadingService.hide();
           return this.requestService.UpdateRequestStatus(request.requestId, 6);
         }),
         // switchMap(() =>
@@ -193,7 +196,6 @@ export class RequestConfirmationDialog implements OnDestroy {
         //     request.requestId,
         //   ),
         // ),
-        finalize(() => this.loadingService.hide()),
       )
       .subscribe({
         next: () => {
@@ -202,9 +204,13 @@ export class RequestConfirmationDialog implements OnDestroy {
             newStatusId: 6,
             newStatusDesc: 'Opened',
           });
-          this.dialogRef.close(true);
         },
-        error: (error) => this.handleOpenError(error, request),
+        error: (error) => {
+          this.handleOpenError(error, request);
+          this.snackBar.open('Download failed. Please try again.', 'Close', {
+            duration: 5000,
+          });
+        },
       });
   }
 
@@ -240,12 +246,14 @@ export class RequestConfirmationDialog implements OnDestroy {
   }
 
   private handleRedownload(request: any): void {
-    this.loadingService.show('Re-downloading...');
+    this.dialogRef.close(true);
 
     this.downloadZipDocuments(request)
-      .pipe(finalize(() => this.loadingService.hide()))
+      .pipe()
       .subscribe({
-        next: () => this.dialogRef.close(true),
+        next: () => {
+          this.dialogRef.close(true);
+        },
         error: (error) => {
           this.loggingService.logException(
             new Error(`HTTP Error ${error.status}: ${error.statusText}`),
@@ -258,7 +266,9 @@ export class RequestConfirmationDialog implements OnDestroy {
               correlationId: error?.error?.correlationId,
             },
           );
-          this.dialogRef.close(false);
+          this.snackBar.open('Re-download failed. Please try again.', 'Close', {
+            duration: 5000,
+          });
         },
       });
   }
@@ -297,10 +307,18 @@ export class RequestConfirmationDialog implements OnDestroy {
   }
 
   downloadZipDocuments(request: any): Observable<Blob> {
+    this.snackBar.open(
+      'Download in Progress — The offers from this solicitation are currently being decrypted and zipped and will be downloaded in the background. You may continue to use the MuniVendor platform during this operation.',
+      'Dismiss',
+      { duration: 0, verticalPosition: 'top', horizontalPosition: 'center' },
+    );
+
     return this.documentService
       .DownloadOfferorZipDocuments(request.requestId)
       .pipe(
         tap((zipBlob) => {
+          this.snackBar.dismiss();
+
           const date = new Date(request.publishDate);
           const month = String(date.getMonth() + 1).padStart(2, '0');
           const day = String(date.getDate()).padStart(2, '0');

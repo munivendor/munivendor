@@ -67,6 +67,16 @@ export function zipCodeValidator(): ValidatorFn {
   };
 }
 
+/** Rejects strings that are blank or whitespace-only (e.g. "   "). */
+export function noWhitespaceValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const val: string = control.value ?? '';
+    return val.trim().length === 0 && val.length > 0
+      ? { whitespace: true }
+      : null;
+  };
+}
+
 export class TouchedErrorStateMatcher implements ErrorStateMatcher {
   isErrorState(
     control: FormControl | null,
@@ -239,6 +249,7 @@ export class StockholderInformationComponent implements OnInit {
       const ctrl = this.stockholderForm.get(f);
       ctrl?.setValidators([
         Validators.required,
+        noWhitespaceValidator(),
         Validators.maxLength(50),
         noNumbersValidator(),
       ]);
@@ -251,20 +262,33 @@ export class StockholderInformationComponent implements OnInit {
 
   private setOrganizationNameValidator(): void {
     const ctrl = this.stockholderForm.get('organizationName');
-    ctrl?.setValidators([Validators.required, Validators.maxLength(100)]);
+    ctrl?.setValidators([
+      Validators.required,
+      noWhitespaceValidator(),
+      Validators.maxLength(100),
+    ]);
     ctrl?.updateValueAndValidity({ emitEvent: false });
     ctrl?.markAsUntouched();
     ctrl?.markAsPristine();
   }
 
   private setAddressValidators(): void {
-    ['address', 'city', 'stateId'].forEach((f) => {
+    ['address', 'city'].forEach((f) => {
       const ctrl = this.stockholderForm.get(f);
-      ctrl?.setValidators([Validators.required]);
+      ctrl?.setValidators([Validators.required, noWhitespaceValidator()]);
       ctrl?.updateValueAndValidity({ emitEvent: false });
       ctrl?.markAsUntouched();
       ctrl?.markAsPristine();
     });
+
+    const stateCtrl = this.stockholderForm.get('stateId');
+    stateCtrl?.setValidators([Validators.required]);
+    if (!stateCtrl?.value) {
+      stateCtrl?.setValue(this.getDefaultNjId(), { emitEvent: false });
+    }
+    stateCtrl?.updateValueAndValidity({ emitEvent: false });
+    stateCtrl?.markAsUntouched();
+    stateCtrl?.markAsPristine();
 
     const zipCtrl = this.stockholderForm.get('zipCode');
     zipCtrl?.setValidators([Validators.required, zipCodeValidator()]);
@@ -322,9 +346,10 @@ export class StockholderInformationComponent implements OnInit {
   }
 
   private clearAddressFields(emitEvent = true): void {
-    ['address', 'address2', 'city', 'stateId', 'zipCode'].forEach((f) =>
+    ['address', 'address2', 'city', 'zipCode'].forEach((f) =>
       this.resetControl(f, null, emitEvent),
     );
+    this.resetControl('stateId', this.getDefaultNjId(), emitEvent);
     this.resetControl('countryId', this.getDefaultUsaId(), emitEvent);
   }
 
@@ -694,6 +719,16 @@ export class StockholderInformationComponent implements OnInit {
           c.codeName?.toLowerCase() === 'usa' ||
           c.codeDesc.toLowerCase() === 'united states' ||
           c.codeDesc.toLowerCase() === 'united states of america',
+      )?.codeId ?? null
+    );
+  }
+
+  private getDefaultNjId(): number | null {
+    return (
+      this.states.find(
+        (s) =>
+          s.codeName?.toLowerCase() === 'nj' ||
+          s.codeDesc.toLowerCase() === 'new jersey',
       )?.codeId ?? null
     );
   }
