@@ -77,9 +77,13 @@ export class RequiredFilesComponent implements OnInit {
     { selectedFileName: string | null; isUploading: boolean }
   > = {};
 
+  insuranceUploading = false;
+  deletingDocumentIds = new Set<number>();
+
   @Input() uploadedDocuments: OrganizationDocument[] = [];
   @Input() documentTypes: DocumentType[] = [];
   @Output() documentUploaded = new EventEmitter<void>();
+  @Output() documentDeleted = new EventEmitter<void>();
 
   constructor(
     private stateService: StateService,
@@ -98,6 +102,14 @@ export class RequiredFilesComponent implements OnInit {
   onFileSelected(event: any, fileConfig: RequiredFileConfig): void {
     const file: File = event.target.files[0];
     if (file) this.processFile(file, fileConfig);
+    event.target.value = '';
+  }
+
+  onInsuranceFilesSelected(event: any): void {
+    const files: FileList = event.target.files;
+    if (!files?.length) return;
+    Array.from(files).forEach((file) => this.processInsuranceFile(file));
+    event.target.value = '';
   }
 
   private processFile(file: File, fileConfig: RequiredFileConfig): void {
@@ -126,7 +138,6 @@ export class RequiredFilesComponent implements OnInit {
       return;
     }
 
-    this.fileStates[fileConfig.key].selectedFileName = file.name;
     this.fileStates[fileConfig.key].isUploading = true;
 
     const municipalityDocument = {
@@ -150,7 +161,6 @@ export class RequiredFilesComponent implements OnInit {
         },
         error: (err) => {
           this.fileStates[fileConfig.key].isUploading = false;
-          this.fileStates[fileConfig.key].selectedFileName = null;
           this.snackbar.showSnackbarError('Upload failed. Please try again.');
           this.loggingService.logException(err, 3, {
             organizationId: this.organizationId,
@@ -161,16 +171,94 @@ export class RequiredFilesComponent implements OnInit {
       });
   }
 
-  clearFile(key: string): void {
-    this.fileStates[key].selectedFileName = null;
+  private processInsuranceFile(file: File): void {
+    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    const maxSize = 10 * 1024 * 1024;
+
+    if (!allowedTypes.includes(file.type)) {
+      this.snackbar.showSnackbarError(
+        'Invalid file type. Only JPG, PNG, and PDF are allowed.',
+      );
+      return;
+    }
+
+    if (file.size > maxSize) {
+      this.snackbar.showSnackbarError('File exceeds the 10MB size limit.');
+      return;
+    }
+
+    if (!this.organizationId) return;
+
+    const docType = this.getDocumentType('Insurance_Policy');
+    if (!docType) {
+      this.snackbar.showSnackbarError(
+        'Document type not recognized. Please try again.',
+      );
+      return;
+    }
+
+    this.insuranceUploading = true;
+
+    const municipalityDocument = {
+      documentName: docType.codeName,
+      codeId: docType.codeId,
+      mapId: docType.mapId,
+    };
+
+    this.requestService
+      .SaveOrganizationDocument(
+        this.organizationId,
+        municipalityDocument,
+        file,
+        municipalityDocument.mapId,
+      )
+      .subscribe({
+        next: () => {
+          this.insuranceUploading = false;
+          this.snackbar.showSnackbarSuccess('Document uploaded successfully.');
+          this.documentUploaded.emit();
+        },
+        error: (err) => {
+          this.insuranceUploading = false;
+          this.snackbar.showSnackbarError('Upload failed. Please try again.');
+          this.loggingService.logException(err, 3, {
+            organizationId: this.organizationId,
+            methodName: 'processInsuranceFile',
+          });
+        },
+      });
+  }
+
+  deleteDocument(doc: OrganizationDocument): void {
+    if (!doc.documentId || this.deletingDocumentIds.has(doc.documentId)) return;
+    this.deletingDocumentIds.add(doc.documentId);
+
+    this.requestService
+      .DeleteOrganizationDocumentAsync(doc.documentId)
+      .subscribe({
+        next: () => {
+          this.deletingDocumentIds.delete(doc.documentId);
+          this.snackbar.showSnackbarSuccess('Document deleted successfully.');
+          this.documentDeleted.emit();
+        },
+        error: (err) => {
+          this.deletingDocumentIds.delete(doc.documentId);
+          this.snackbar.showSnackbarError('Delete failed. Please try again.');
+          this.loggingService.logException(err, 3, {
+            organizationId: this.organizationId,
+            documentId: doc.documentId,
+            methodName: 'deleteDocument',
+          });
+        },
+      });
+  }
+
+  isDeleting(doc: OrganizationDocument): boolean {
+    return this.deletingDocumentIds.has(doc.documentId);
   }
 
   isUploading(key: string): boolean {
     return this.fileStates[key]?.isUploading ?? false;
-  }
-
-  getFileName(key: string): string | null {
-    return this.fileStates[key]?.selectedFileName ?? null;
   }
 
   get sectionDocumentTypes(): DocumentType[] {
@@ -185,5 +273,9 @@ export class RequiredFilesComponent implements OnInit {
 
   getUploadedDoc(codeName: string): OrganizationDocument | undefined {
     return this.uploadedDocuments.find((d) => d.documentName === codeName);
+  }
+
+  getUploadedDocs(codeName: string): OrganizationDocument[] {
+    return this.uploadedDocuments.filter((d) => d.documentName === codeName);
   }
 }

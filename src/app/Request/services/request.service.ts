@@ -338,4 +338,8 @@ export class RequestService {
       {},
     );
   }
+
+  DeleteOrganizationDocumentAsync(documentId: number): Observable<any> {
+    return this.http.delete(`${this.url}OrganizationDocuments/${documentId}`);
+  }
 }
