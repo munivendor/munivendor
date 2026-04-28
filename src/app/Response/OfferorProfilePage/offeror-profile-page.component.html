@@ -13,7 +13,8 @@
   <app-required-files
     [uploadedDocuments]="organizationDocuments"
     [documentTypes]="documentTypes"
-    (documentUploaded)="onDocumentUploaded()"
+    (documentUploaded)="loadDocuments()"
+    (documentDeleted)="loadDocuments()"
   />
   <app-prohibited-activities-russia-belarus
     [uploadedDocuments]="organizationDocuments"
