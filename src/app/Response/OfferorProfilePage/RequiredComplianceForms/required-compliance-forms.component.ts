@@ -161,6 +161,7 @@ export class ComplianceDocumentsComponent implements OnInit, OnChanges {
     this.selectedFileName = file.name;
     this.isUploading = true;
 
+    // mapId = documentTypeId
     const municipalityDocument = {
       documentName: docType.codeName,
       codeId: docType.codeId,
