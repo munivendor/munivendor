@@ -129,6 +129,7 @@ export class RequiredFilesComponent implements OnInit {
     this.fileStates[fileConfig.key].selectedFileName = file.name;
     this.fileStates[fileConfig.key].isUploading = true;
 
+    // mapId = documentTypeId
     const municipalityDocument = {
       documentName: docType.codeName,
       codeId: docType.codeId,

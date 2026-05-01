@@ -29,6 +29,7 @@ import { RequestService } from '../../../Request/services/request.service';
 import { OrganizationDocument } from '../../model/organization-document.model';
 import { OfferorProfileService } from '../../services/offeror-profile.service';
 import { DocumentType } from '../../model/document-type.model';
+import { Observable, forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-prohibited-activities-iran',
@@ -55,10 +56,11 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
   selectedFileName: string | null = null;
   savedDetails: string | null = null;
   savedOfferorProfileId: number | null = null;
+  private deletionJustOccurred = false;
 
   @Input() profileDetails: {
     offerorProfileId: number;
-    formTypeId: number;
+    documentTypeId: number;
     details: string;
   }[] = [];
   @Output() detailsSaved = new EventEmitter<void>();
@@ -79,6 +81,8 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
   @Input() uploadedDocuments: OrganizationDocument[] = [];
   @Input() documentTypes: DocumentType[] = [];
   @Output() documentUploaded = new EventEmitter<void>();
+  @Output() documentDeleted = new EventEmitter<void>();
+  @Output() detailsDeleted = new EventEmitter<void>();
 
   constructor(
     private fb: FormBuilder,
@@ -88,10 +92,6 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
     private requestService: RequestService,
     private offerorProfileService: OfferorProfileService,
   ) {}
-
-  ngOnChanges(): void {
-    this.applyProfileDetails();
-  }
 
   ngOnInit(): void {
     this.organizationId = this.stateService.getOrganizationId();
@@ -111,6 +111,12 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
         }
         this.iranForm.get('iranDescription')?.updateValueAndValidity();
       });
+
+    this.applyProfileDetails();
+  }
+
+  ngOnChanges(): void {
+    this.applyProfileDetails();
   }
 
   private buildForm(): void {
@@ -125,7 +131,18 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
   }
 
   private applyProfileDetails(): void {
-    const match = this.profileDetails.find((d) => d.formTypeId === 2);
+    if (!this.iranForm) return;
+    if (this.deletionJustOccurred) {
+      this.deletionJustOccurred = false;
+      return;
+    }
+    // mapId = documentTypeId for Iran details is 7 (per backend)
+    const matches = this.profileDetails.filter((d) => d.documentTypeId === 7);
+    const match = matches.length
+      ? matches.reduce((a, b) =>
+          a.offerorProfileId > b.offerorProfileId ? a : b,
+        )
+      : null;
 
     const hasUploadedDoc = this.uploadedDocuments.some(
       (d) => d.documentName === this.IRAN_DOCUMENT_CODE_NAME,
@@ -133,19 +150,17 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
 
     if (match?.details) {
       this.savedOfferorProfileId = match.offerorProfileId;
-      // Step 1 — patch dropdown first
-      this.iranForm?.patchValue({
+      this.iranForm.patchValue({
         chapter25Identification: 'no',
       });
 
-      // Step 2 — patch textarea on next tick
       setTimeout(() => {
-        this.iranForm?.patchValue({
+        this.iranForm.patchValue({
           iranDescription: match.details,
         });
       }, 0);
     } else if (hasUploadedDoc) {
-      this.iranForm?.patchValue({
+      this.iranForm.patchValue({
         chapter25Identification: 'no',
       });
     }
@@ -175,21 +190,69 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
       return;
     }
 
-    const { iranDescription } = this.iranForm.value;
+    const { chapter25Identification, iranDescription } = this.iranForm.value;
 
+    // User says NOT associated — delete file (if exists) and details (if exists)
+    if (chapter25Identification === 'yes') {
+      const uploadedDoc = this.getUploadedDoc(this.IRAN_DOCUMENT_CODE_NAME);
+      const deleteDoc$ = uploadedDoc
+        ? this.requestService.DeleteOrganizationDocument(uploadedDoc.documentId)
+        : null;
+      const deleteDetails$ = this.savedOfferorProfileId
+        ? this.offerorProfileService.DeleteOfferorProfileDetails(
+            this.organizationId!,
+            7,
+          )
+        : null;
+
+      if (!deleteDoc$ && !deleteDetails$) {
+        this.snackbar.showSnackbarSuccess('Changes saved successfully.');
+        return;
+      }
+
+      const deletes: Observable<void>[] = [
+        ...(deleteDoc$ ? [deleteDoc$] : []),
+        ...(deleteDetails$ ? [deleteDetails$] : []),
+      ];
+
+      forkJoin(deletes).subscribe({
+        next: () => {
+          this.savedOfferorProfileId = null;
+          this.selectedFileName = null;
+          this.deletionJustOccurred = true;
+
+          this.iranForm.reset({ chapter25Identification: 'yes' });
+
+          this.snackbar.showSnackbarSuccess('Changes saved successfully.');
+          if (deleteDoc$) this.documentDeleted.emit();
+          if (deleteDetails$) this.detailsDeleted.emit();
+        },
+        error: (err) => {
+          this.snackbar.showSnackbarError(
+            'Failed to save changes. Please try again.',
+          );
+          this.loggingService.logException(err, 3, {
+            organizationId: this.organizationId,
+            methodName: 'onSubmit - delete',
+          });
+        },
+      });
+      return;
+    }
+
+    // User IS associated — save textarea details
     if (!iranDescription || !this.organizationId) return;
 
-    const formTypeId = 2;
     const request$ = this.savedOfferorProfileId
       ? this.offerorProfileService.UpdateOfferorProfileDetails(
           this.organizationId,
           this.savedOfferorProfileId,
-          formTypeId,
+          7,
           iranDescription,
         )
       : this.offerorProfileService.SaveOfferorProfileDetails(
           this.organizationId,
-          formTypeId,
+          7,
           iranDescription,
         );
 
@@ -244,6 +307,7 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
     this.selectedFileName = file.name;
     this.isUploading = true;
 
+    // mapId = documentTypeId
     const municipalityDocument = {
       documentName: docType.codeName,
       codeId: docType.codeId,

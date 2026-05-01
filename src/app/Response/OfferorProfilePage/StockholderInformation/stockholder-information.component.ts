@@ -430,9 +430,42 @@ export class StockholderInformationComponent implements OnInit {
 
   onSaveStockholder(): void {
     const hasStockholders = this.stockholderForm.get('hasStockholders')?.value;
+
     if (hasStockholders === false) {
       this.stockholderForm.markAsPristine();
-      this.snackbar.showSnackbarSuccess('Stockholder information saved.');
+
+      if (this.savedStockholders.length > 0 && this.organizationId) {
+        this.isSavingStockholder = true;
+        this.offerorProfileService
+          .DeleteStockholderInfo(this.organizationId)
+          .subscribe({
+            next: () => {
+              this.isSavingStockholder = false;
+              this.savedStockholders = [];
+              this.snackbar.showSnackbarSuccess(
+                'Stockholder information saved.',
+              );
+            },
+            error: (err) => {
+              this.isSavingStockholder = false;
+              this.snackbar.showSnackbarError('Failed to remove stockholders.');
+              this.loggingService.logException(
+                new Error(`HTTP Error ${err.status}: ${err.statusText}`),
+                3,
+                {
+                  organizationId: this.organizationId,
+                  methodName: 'onSaveStockholder',
+                  className: 'StockholderInformationComponent',
+                  operation: 'DeleteStockholderInfo',
+                  userId: this.stateService.getUserId(),
+                },
+              );
+            },
+          });
+      } else {
+        this.snackbar.showSnackbarSuccess('Stockholder information saved.');
+      }
+
       return;
     }
 
@@ -482,10 +515,9 @@ export class StockholderInformationComponent implements OnInit {
             ...this.savedStockholders,
             { ...payload, stockholderId: newId },
           ];
-          this.snackbar.showSnackbarSuccess('Stockholder saved successfully.');
+          this.snackbar.showSnackbarSuccess('Stockholder added successfully.');
         }
 
-        // Reset form fields below hasStockholders, keep Yes selected
         this.resetEntryFields();
       },
       error: (err) => {
@@ -550,7 +582,6 @@ export class StockholderInformationComponent implements OnInit {
   }
 
   removeStockholder(index: number): void {
-    console.log('Removing stockholder at index', index);
     const entry = this.savedStockholders[index];
     if (!entry.stockholderId) {
       this.savedStockholders = this.savedStockholders.filter(
@@ -560,7 +591,7 @@ export class StockholderInformationComponent implements OnInit {
     }
 
     this.offerorProfileService
-      .DeleteStockholderInfo(entry.stockholderId)
+      .DeleteStockholderInfo(this.organizationId!, entry.stockholderId)
       .subscribe({
         next: () => {
           this.savedStockholders = this.savedStockholders.filter(
