@@ -189,9 +189,14 @@ export class RequestService {
     );
   }
 
-  DeleteOrganizationDocument(documentId: number): Observable<void> {
+  // for now passing in documentId
+  // will be updated to pass in organizationDocumentId
+  DeleteOrganizationDocument(
+    organizationId: number,
+    documentId: number,
+  ): Observable<void> {
     return this.http.delete<void>(
-      `${this.url}OrganizationDocuments/${documentId}`,
+      `${this.url}OrganizationDocuments/${organizationId}/${documentId}`,
     );
   }
 

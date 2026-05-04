@@ -536,8 +536,11 @@ export class RequestRequiredDocumentsComponent
   }
 
   deleteOrganizationDocument(documentId: number): void {
+    if (this.organizationId === null) {
+      return;
+    }
     this.requestService
-      .DeleteOrganizationDocument(documentId)
+      .DeleteOrganizationDocument(this.organizationId, documentId)
       .pipe(takeUntil(this.destroy$))
       .subscribe(
         () => {
