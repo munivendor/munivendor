@@ -351,7 +351,24 @@ export class AuthorizingOfficialsComponent implements OnInit {
 
   private loadTimeOptions(): void {
     this.offerorProfileService.GetTimeOptions().subscribe({
-      next: (options) => (this.bestTimeOptions = options),
+      next: (options) => {
+        const allowedCodes = new Set([
+          '0800',
+          '0900',
+          '1000',
+          '1100',
+          '1200',
+          '1300',
+          '1400',
+          '1500',
+          '1600',
+          '1700',
+          '1800',
+        ]);
+        this.bestTimeOptions = options.filter((opt) =>
+          allowedCodes.has(opt.codeName),
+        );
+      },
       error: (err) => {
         this.loggingService.logException(
           new Error(`HTTP Error ${err.status}: ${err.statusText}`),
