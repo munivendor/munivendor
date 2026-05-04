@@ -87,7 +87,6 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
   @Output() documentDeleted = new EventEmitter<void>();
   @Output() detailsDeleted = new EventEmitter<void>();
 
-
   constructor(
     private fb: FormBuilder,
     private stateService: StateService,
@@ -199,9 +198,13 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
     // User says NOT associated — delete file (if exists) and details (if exists)
     if (chapter25Identification === 'yes') {
       const uploadedDoc = this.getUploadedDoc(this.IRAN_DOCUMENT_CODE_NAME);
-      const deleteDoc$ = uploadedDoc
-        ? this.requestService.DeleteOrganizationDocument(uploadedDoc.documentId)
-        : null;
+      const deleteDoc$ =
+        uploadedDoc && this.organizationId
+          ? this.requestService.DeleteOrganizationDocument(
+              this.organizationId,
+              uploadedDoc.documentId,
+            )
+          : null;
       const deleteDetails$ = this.savedOfferorProfileId
         ? this.offerorProfileService.DeleteOfferorProfileDetails(
             this.organizationId!,

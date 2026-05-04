@@ -72,7 +72,6 @@ export class ProhibitedActivitiesRussiaBelarusComponent
     details: string;
   }[] = [];
   @Output() detailsSaved = new EventEmitter<void>();
-  @Output() documentDeleted = new EventEmitter<void>();
   @Output() detailsDeleted = new EventEmitter<void>();
 
   readonly OFAC_DOCUMENT_CODE_NAME = [
@@ -331,9 +330,13 @@ export class ProhibitedActivitiesRussiaBelarusComponent
     // User says NOT associated — delete file (if exists) and details (if exists)
     if (ofacIdentification === 'no') {
       const uploadedDoc = this.getUploadedDoc(this.OFAC_DOCUMENT_CODE_NAME[0]);
-      const deleteDoc$ = uploadedDoc
-        ? this.requestService.DeleteOrganizationDocument(uploadedDoc.documentId)
-        : null;
+      const deleteDoc$ =
+        uploadedDoc && this.organizationId
+          ? this.requestService.DeleteOrganizationDocument(
+              this.organizationId,
+              uploadedDoc.documentId,
+            )
+          : null;
       const deleteDetails$ = this.savedOfferorProfileId
         ? this.offerorProfileService.DeleteOfferorProfileDetails(
             this.organizationId!,
