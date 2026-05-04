@@ -152,6 +152,7 @@ export class RequestService {
     );
   }
 
+  // mapId = documentTypeId
   SaveOrganizationDocument(
     organizationId: number,
     municipalityDocument: any,

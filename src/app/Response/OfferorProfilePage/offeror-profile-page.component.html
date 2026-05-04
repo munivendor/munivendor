@@ -21,16 +21,19 @@
     [uploadedDocuments]="organizationDocuments"
     [documentTypes]="documentTypes"
     [profileDetails]="offerProfileDetails"
-    (documentUploaded)="loadDocuments()"
-    (documentDeleted)="loadDocuments()"
+    (documentUploaded)="onDocumentUploaded()"
+    (documentDeleted)="onDocumentUploaded()"
+
     (detailsSaved)="onProfileDetailsSaved()"
+    (detailsDeleted)="onProfileDetailsSaved()"
   />
   <app-prohibited-activities-iran
     [uploadedDocuments]="organizationDocuments"
     [documentTypes]="documentTypes"
     [profileDetails]="offerProfileDetails"
-    (documentUploaded)="loadDocuments()"
-    (documentDeleted)="loadDocuments()"
+    (documentUploaded)="onDocumentUploaded()"
+    (documentDeleted)="onDocumentUploaded()"
     (detailsSaved)="onProfileDetailsSaved()"
+    (detailsDeleted)="onProfileDetailsSaved()"
   />
 </ng-container>

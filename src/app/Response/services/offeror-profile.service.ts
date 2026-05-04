@@ -150,13 +150,19 @@ export class OfferorProfileService {
     );
   }
 
+  /**
+   * DELETE /OfferorProfile/Stockholder/{organizationId}/{stockholderId}
+   *
+   * Deletes a stockholder record by its ID.
+   */
   DeleteStockholderInfo(
     organizationId: number,
-    stockholderId: number,
+    stockholderId?: number,
   ): Observable<void> {
-    return this.http.delete<void>(
-      `${this.url}OfferorProfile/Stockholder/${organizationId}/${stockholderId}`,
-    );
+    const url = stockholderId
+      ? `${this.url}OfferorProfile/Stockholder/${organizationId}/${stockholderId}`
+      : `${this.url}OfferorProfile/Stockholder/${organizationId}`;
+    return this.http.delete<void>(url);
   }
 
   // ── List Data ─────────────────────────────────────
@@ -218,26 +224,26 @@ export class OfferorProfileService {
 
   SaveOfferorProfileDetails(
     organizationId: number,
-    formTypeId: number,
+    documentTypeId: number,
     details: string | null,
   ): Observable<{ offerorProfileId: number }> {
     return this.http.post<{ offerorProfileId: number }>(
       `${this.url}OfferorProfiles/Details/${organizationId}`,
-      { formTypeId, details },
+      { documentTypeId, details },
     );
   }
 
   GetOfferorProfileDiscloserDetails(
     organizationId: number,
   ): Observable<
-    { offerorProfileId: number; formTypeId: number; details: string }[]
+    { offerorProfileId: number; documentTypeId: number; details: string }[]
   > {
     return this.http
       .get<{
         correlationId: string;
         offerProfileDetails: {
           offerorProfileId: number;
-          formTypeId: number;
+          documentTypeId: number;
           formTypeName: string | null;
           details: string;
           organizationId: number;
@@ -249,12 +255,22 @@ export class OfferorProfileService {
   UpdateOfferorProfileDetails(
     organizationId: number,
     offerorProfileId: number,
-    formTypeId: number,
+    documentTypeId: number,
     details: string,
   ): Observable<{ offerorProfileId: number }> {
     return this.http.put<{ offerorProfileId: number }>(
       `${this.url}OfferorProfiles/Details/${organizationId}`,
-      { offerorProfileId, formTypeId, details },
+      { offerorProfileId, documentTypeId, details },
+    );
+  }
+
+  // mapId = documentTypeId
+  DeleteOfferorProfileDetails(
+    organizationId: number,
+    documentTypeId: number,
+  ): Observable<void> {
+    return this.http.delete<void>(
+      `${this.url}OfferorProfiles/Details/${organizationId}/${documentTypeId}`,
     );
   }
 }

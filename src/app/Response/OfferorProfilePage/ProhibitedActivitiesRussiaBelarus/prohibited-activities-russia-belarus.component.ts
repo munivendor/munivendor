@@ -29,6 +29,7 @@ import { RequestService } from '../../../Request/services/request.service';
 import { OrganizationDocument } from '../../model/organization-document.model';
 import { OfferorProfileService } from '../../services/offeror-profile.service';
 import { DocumentType } from '../../model/document-type.model';
+import { forkJoin, Observable } from 'rxjs';
 
 @Component({
   selector: 'app-prohibited-activities-russia-belarus',
@@ -60,16 +61,19 @@ export class ProhibitedActivitiesRussiaBelarusComponent
   selectedFileName: string | null = null;
   savedDetails: string | null = null;
   savedOfferorProfileId: number | null = null;
+  private deletionJustOccurred = false;
 
   deletingDocumentIds = new Set<number>();
   downloadingDocumentIds = new Set<number>();
 
   @Input() profileDetails: {
     offerorProfileId: number;
-    formTypeId: number;
+    documentTypeId: number;
     details: string;
   }[] = [];
   @Output() detailsSaved = new EventEmitter<void>();
+  @Output() documentDeleted = new EventEmitter<void>();
+  @Output() detailsDeleted = new EventEmitter<void>();
 
   readonly OFAC_DOCUMENT_CODE_NAME = [
     'Disclosure_of_Prohibited_Activites_in_Russia_or_Belarus',
@@ -154,6 +158,8 @@ export class ProhibitedActivitiesRussiaBelarusComponent
         }
         this.prohibitedForm.get('ofacDescription')?.updateValueAndValidity();
       });
+
+    this.applyProfileDetails();
   }
 
   ngOnChanges(): void {
@@ -177,27 +183,37 @@ export class ProhibitedActivitiesRussiaBelarusComponent
   }
 
   private applyProfileDetails(): void {
-    const match = this.profileDetails.find((d) => d.formTypeId === 1);
+    if (!this.prohibitedForm) return;
+    if (this.deletionJustOccurred) {
+      this.deletionJustOccurred = false;
+      return;
+    }
+    // mapId = documentTypeId for Russia/Belarus details is 8 (per backend)
+    const matches = this.profileDetails.filter((d) => d.documentTypeId === 8);
+    const match = matches.length
+      ? matches.reduce((a, b) =>
+          a.offerorProfileId > b.offerorProfileId ? a : b,
+        )
+      : null;
+
     const hasUploadedDoc = this.uploadedDocuments.some(
       (d) => d.documentName === this.OFAC_DOCUMENT_CODE_NAME[0],
     );
 
     if (match?.details) {
       this.savedOfferorProfileId = match.offerorProfileId;
-      // Step 1 — patch dropdowns first so conditional fields render
-      this.prohibitedForm?.patchValue({
+      this.prohibitedForm.patchValue({
         ofacIdentification: 'yes',
         ofacAdditional: 'yes',
       });
 
-      // Step 2 — patch textarea on next tick after DOM has rendered
       setTimeout(() => {
-        this.prohibitedForm?.patchValue({
+        this.prohibitedForm.patchValue({
           ofacDescription: match.details,
         });
       }, 0);
     } else if (hasUploadedDoc) {
-      this.prohibitedForm?.patchValue({
+      this.prohibitedForm.patchValue({
         ofacIdentification: 'yes',
       });
     }
@@ -309,21 +325,96 @@ export class ProhibitedActivitiesRussiaBelarusComponent
       return;
     }
 
-    const { ofacDescription } = this.prohibitedForm.value;
+    const { ofacIdentification, ofacAdditional, ofacDescription } =
+      this.prohibitedForm.value;
 
+    // User says NOT associated — delete file (if exists) and details (if exists)
+    if (ofacIdentification === 'no') {
+      const uploadedDoc = this.getUploadedDoc(this.OFAC_DOCUMENT_CODE_NAME[0]);
+      const deleteDoc$ = uploadedDoc
+        ? this.requestService.DeleteOrganizationDocument(uploadedDoc.documentId)
+        : null;
+      const deleteDetails$ = this.savedOfferorProfileId
+        ? this.offerorProfileService.DeleteOfferorProfileDetails(
+            this.organizationId!,
+            8,
+          )
+        : null;
+
+      if (!deleteDoc$ && !deleteDetails$) {
+        this.snackbar.showSnackbarSuccess('Changes saved successfully.');
+        return;
+      }
+
+      const deletes: Observable<void>[] = [
+        ...(deleteDoc$ ? [deleteDoc$] : []),
+        ...(deleteDetails$ ? [deleteDetails$] : []),
+      ];
+
+      forkJoin(deletes).subscribe({
+        next: () => {
+          this.savedOfferorProfileId = null;
+          this.selectedFileName = null;
+          this.deletionJustOccurred = true;
+          this.prohibitedForm.reset({ ofacIdentification: 'no' });
+          this.snackbar.showSnackbarSuccess('Changes saved successfully.');
+          if (deleteDoc$) this.documentDeleted.emit();
+          if (deleteDetails$) this.detailsDeleted.emit();
+        },
+        error: (err) => {
+          this.snackbar.showSnackbarError(
+            'Failed to save changes. Please try again.',
+          );
+          this.loggingService.logException(err, 3, {
+            organizationId: this.organizationId,
+            methodName: 'onSubmit - delete',
+          });
+        },
+      });
+      return;
+    }
+
+    // User is associated but activity is NOT consistent — delete textarea details only
+    if (ofacIdentification === 'yes' && ofacAdditional === 'no') {
+      if (!this.savedOfferorProfileId) {
+        this.snackbar.showSnackbarSuccess('Changes saved successfully.');
+        return;
+      }
+
+      this.offerorProfileService
+        .DeleteOfferorProfileDetails(this.organizationId!, 8)
+        .subscribe({
+          next: () => {
+            this.savedOfferorProfileId = null;
+            this.detailsDeleted.emit();
+            this.snackbar.showSnackbarSuccess('Changes saved successfully.');
+          },
+          error: (err) => {
+            this.snackbar.showSnackbarError(
+              'Failed to save changes. Please try again.',
+            );
+            this.loggingService.logException(err, 3, {
+              organizationId: this.organizationId,
+              methodName: 'onSubmit - deleteDetails',
+            });
+          },
+        });
+      return;
+    }
+
+    // User is associated and activity IS consistent — save textarea details
     if (!ofacDescription || !this.organizationId) return;
 
-    const formTypeId = 1;
     const request$ = this.savedOfferorProfileId
       ? this.offerorProfileService.UpdateOfferorProfileDetails(
           this.organizationId,
           this.savedOfferorProfileId,
-          formTypeId,
+          8,
           ofacDescription,
         )
       : this.offerorProfileService.SaveOfferorProfileDetails(
           this.organizationId,
-          formTypeId,
+          8,
           ofacDescription,
         );
 
@@ -378,6 +469,7 @@ export class ProhibitedActivitiesRussiaBelarusComponent
     this.selectedFileName = file.name;
     this.isUploading = true;
 
+    // mapId = documentTypeId
     const municipalityDocument = {
       documentName: docType.codeName,
       codeId: docType.codeId,
