@@ -79,6 +79,7 @@ export class RequiredFilesComponent implements OnInit {
 
   insuranceUploading = false;
   deletingDocumentIds = new Set<number>();
+  downloadingDocumentIds = new Set<number>();
 
   @Input() uploadedDocuments: OrganizationDocument[] = [];
   @Input() documentTypes: DocumentType[] = [];
@@ -229,12 +230,72 @@ export class RequiredFilesComponent implements OnInit {
       });
   }
 
+  downloadDocument(doc: OrganizationDocument): void {
+    if (
+      !doc.organizationDocumentId ||
+      !this.organizationId ||
+      this.downloadingDocumentIds.has(doc.organizationDocumentId)
+    )
+      return;
+    this.downloadingDocumentIds.add(doc.organizationDocumentId);
+
+    this.requestService
+      .GetAgencySpecificDocumentContent(
+        doc.organizationDocumentId,
+        this.organizationId,
+      )
+      .subscribe({
+        next: (response) => {
+          this.downloadingDocumentIds.delete(doc.organizationDocumentId);
+
+          const contentDisposition = response.headers.get(
+            'Content-Disposition',
+          );
+          let fileName = doc.fileName ?? 'download';
+          if (contentDisposition) {
+            const match = contentDisposition.match(
+              /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/,
+            );
+            if (match?.[1]) fileName = match[1].replace(/['"]/g, '');
+          }
+
+          const blob = new Blob([response.body!], {
+            type: response.body!.type,
+          });
+          const url = URL.createObjectURL(blob);
+          const anchor = document.createElement('a');
+          anchor.href = url;
+          anchor.download = fileName;
+          anchor.click();
+          URL.revokeObjectURL(url);
+        },
+        error: (err) => {
+          this.downloadingDocumentIds.delete(doc.organizationDocumentId);
+          this.snackbar.showSnackbarError('Download failed. Please try again.');
+          this.loggingService.logException(err, 3, {
+            organizationId: this.organizationId,
+            organizationDocumentId: doc.organizationDocumentId,
+            methodName: 'downloadDocument',
+          });
+        },
+      });
+  }
+
+  isDownloading(doc: OrganizationDocument): boolean {
+    return this.downloadingDocumentIds.has(doc.organizationDocumentId);
+  }
+
   deleteDocument(doc: OrganizationDocument): void {
-    if (!doc.documentId || this.deletingDocumentIds.has(doc.documentId)) return;
+    if (
+      !doc.documentId ||
+      !this.organizationId ||
+      this.deletingDocumentIds.has(doc.documentId)
+    )
+      return;
     this.deletingDocumentIds.add(doc.documentId);
 
     this.requestService
-      .DeleteOrganizationDocumentAsync(doc.documentId)
+      .DeleteOrganizationDocument(this.organizationId, doc.documentId)
       .subscribe({
         next: () => {
           this.deletingDocumentIds.delete(doc.documentId);

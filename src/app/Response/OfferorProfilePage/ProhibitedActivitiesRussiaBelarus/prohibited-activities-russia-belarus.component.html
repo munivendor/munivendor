@@ -51,7 +51,7 @@
     <!-- Conditional fields — only shown when OFAC answer is 'yes' -->
     <ng-container *ngIf="showConditionalFields">
       <!-- OFAC Additional -->
-      <div class="form-section">
+      <div>
         <p class="section-label">
           <strong>OFAC Identification Additional</strong>
           <span class="required-badge">(Required)</span>
@@ -78,7 +78,7 @@
       </div>
 
       <!-- OFAC File Upload -->
-      <div class="form-section">
+      <div>
         <p class="section-label">
           <strong>OFAC - File Upload</strong>
         </p>
@@ -89,69 +89,76 @@
           included in your submissions.
         </p>
 
-        <div class="file-input-row">
+        <input
+          #fileInput
+          type="file"
+          accept=".jpg,.jpeg,.png,.pdf"
+          class="file-input-hidden"
+          (change)="onFileSelected($event)"
+        />
+        <button
+          type="button"
+          class="upload-btn"
+          [class.disabled]="
+            isUploading || !!getUploadedDoc(OFAC_DOCUMENT_CODE_NAME[0])
+          "
+          [disabled]="
+            isUploading || !!getUploadedDoc(OFAC_DOCUMENT_CODE_NAME[0])
+          "
+          (click)="fileInput.click()"
+        >
+          <mat-spinner
+            *ngIf="isUploading"
+            diameter="16"
+            class="btn-spinner"
+          ></mat-spinner>
+          <mat-icon *ngIf="!isUploading">upload</mat-icon>
+          <span>{{ isUploading ? "Uploading…" : "Upload File" }}</span>
+        </button>
+
+        <div
+          class="uploaded-file-row"
+          *ngIf="getUploadedDoc(OFAC_DOCUMENT_CODE_NAME[0]) as doc"
+        >
+          <mat-icon class="uploaded-file-icon">insert_drive_file</mat-icon>
+          <span class="uploaded-file-name">{{ doc.fileName }}</span>
           <button
             type="button"
-            class="file-input-btn"
-            [class.disabled]="
-              isUploading || !!getUploadedDoc(OFAC_DOCUMENT_CODE_NAME[0])
-            "
-            [disabled]="
-              isUploading || !!getUploadedDoc(OFAC_DOCUMENT_CODE_NAME[0])
-            "
-            (click)="fileInput.click()"
+            class="download-btn"
+            [disabled]="isDownloading(doc)"
+            (click)="downloadDocument(doc)"
+            title="Download"
           >
-            <input
-              #fileInput
-              type="file"
-              accept=".jpg,.jpeg,.png,.pdf"
-              class="file-input-hidden"
-              (change)="onFileSelected($event)"
-              [disabled]="
-                isUploading || !!getUploadedDoc(OFAC_DOCUMENT_CODE_NAME[0])
-              "
-            />
             <mat-spinner
-              *ngIf="isUploading"
-              diameter="16"
+              *ngIf="isDownloading(doc)"
+              diameter="14"
               class="btn-spinner"
             ></mat-spinner>
-            <span *ngIf="!isUploading">Choose File</span>
-            <span *ngIf="isUploading">Uploading…</span>
+            <mat-icon *ngIf="!isDownloading(doc)">download</mat-icon>
           </button>
-
-          <span class="file-name-display">
-            <ng-container *ngIf="selectedFileName; else noFile">
-              {{ selectedFileName }}
-              <button
-                type="button"
-                class="clear-btn"
-                (click)="clearFile()"
-                title="Remove"
-              >
-                ✕
-              </button>
-            </ng-container>
-            <ng-template #noFile>No File Chosen</ng-template>
-          </span>
+          <button
+            type="button"
+            class="delete-btn"
+            [disabled]="isDeleting(doc)"
+            (click)="deleteDocument(doc)"
+            title="Delete"
+          >
+            <mat-spinner
+              *ngIf="isDeleting(doc)"
+              diameter="14"
+              class="btn-spinner"
+            ></mat-spinner>
+            <mat-icon *ngIf="!isDeleting(doc)">delete</mat-icon>
+          </button>
         </div>
 
         <span class="upload-hint">
           Accepted file types: jpg, png, pdf. Max. file size: 20 MB.
         </span>
-        <div
-          class="uploaded-file-row"
-          *ngIf="getUploadedDoc(OFAC_DOCUMENT_CODE_NAME[0]) as doc"
-        >
-          <span class="uploaded-date">Uploaded File: </span>
-          <span class="uploaded-file-link">
-            {{ doc.fileName }}
-          </span>
-        </div>
       </div>
 
       <!-- Conditional description textarea — shown when ofacAdditional is 'yes' -->
-      <div class="form-section" *ngIf="showDescriptionField">
+      <div *ngIf="showDescriptionField">
         <p class="upload-doc-description">
           Please write a detailed description of how your organization's
           activity related to Russia and/or Belarus is consistent with federal

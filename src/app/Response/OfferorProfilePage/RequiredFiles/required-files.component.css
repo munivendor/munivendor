@@ -67,13 +67,6 @@
   gap: 28px;
 }
 
-/* ── Each file row ───────────────────────────────── */
-.file-row {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
 /* ── Labels ──────────────────────────────────────── */
 .upload-doc-label {
   margin: 0;
@@ -97,45 +90,41 @@
   line-height: 1.55;
 }
 
-/* ── File input row ──────────────────────────────── */
-.file-input-row {
-  display: flex;
-  align-items: center;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  overflow: hidden;
-  background: #fff;
-  height: 42px;
-}
-
-.file-input-btn {
+/* ── Upload button ───────────────────────────────── */
+.upload-btn {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 0 16px;
-  height: 100%;
-  background: #f3f4f6;
+  gap: 8px;
+  padding: 0 18px;
+  height: 38px;
+  background: #2563eb;
+  color: #ffffff;
   border: none;
-  border-right: 1px solid #d1d5db;
+  border-radius: 6px;
   font-size: 0.85rem;
   font-weight: 500;
-  color: #374151;
   cursor: pointer;
-  white-space: nowrap;
   transition: background 0.15s;
-  flex-shrink: 0;
+  white-space: nowrap;
+  margin-bottom: 8px;
 }
 
-.file-input-btn:hover:not(.disabled) {
-  background: #e5e7eb;
+.upload-btn:hover:not(.disabled) {
+  background: #1d4ed8;
 }
 
-.file-input-btn.disabled {
+.upload-btn.disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
+.upload-btn mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+/* ── Hidden file input ───────────────────────────── */
 .file-input-hidden {
   position: absolute;
   width: 0;
@@ -154,7 +143,7 @@
 
 /* ── Spinner ─────────────────────────────────────── */
 .btn-spinner {
-  color: #3b82f6;
+  color: #ffffff;
 }
 
 /* ── Uploaded file rows ──────────────────────────── */
@@ -169,6 +158,7 @@
   background: #fff;
   font-size: 0.85rem;
   color: #374151;
+  margin-bottom: 8px;
 }
 
 .uploaded-file-icon {
@@ -187,7 +177,8 @@
   color: #374151;
 }
 
-.delete-btn {
+.delete-btn,
+.download-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -208,12 +199,13 @@
   background: #fef2f2;
 }
 
-.delete-btn[disabled] {
-  opacity: 0.5;
-  cursor: not-allowed;
+.download-btn:hover:not([disabled]) {
+  color: #2563eb;
+  background: #e0e7ff;
 }
 
-.delete-btn mat-icon {
+.delete-btn mat-icon,
+.download-btn mat-icon {
   font-size: 18px;
   width: 18px;
   height: 18px;
