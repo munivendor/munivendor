@@ -37,6 +37,15 @@ export class OfferorProfileService {
     );
   }
 
+  DeleteOfferorAuthorizingOfficial(
+    organizationId: number,
+    officialId: number,
+  ): Observable<any> {
+    return this.http.delete(
+      `${this.url}OfferorProfile/AuthorizingOfficials/${organizationId}/${officialId}`,
+    );
+  }
+
   UpdateOfferorAuthorizingOfficial(
     officialId: number,
     official: any,
@@ -111,13 +120,6 @@ export class OfferorProfileService {
   }
 
   // ── Stockholder Information ───────────────────────
-
-  /**
-   * GET /OfferorProfile/Stockholder/{organizationId?}/{stockholderId?}
-   *
-   * Fetches all stockholders for an organization, or a single one
-   * when stockholderId is also provided.
-   */
   GetAllStockholderInfo(
     organizationId: number,
     stockholderId?: number,
@@ -127,14 +129,6 @@ export class OfferorProfileService {
     return this.http.get<OfferorStockholderInfo[]>(url);
   }
 
-  /**
-   * POST /OfferorProfile/Stockholder/{organizationId}
-   *
-   * Creates a new stockholder record. Returns the new stockholder ID
-   * and a correlation ID from the backend.
-   * Note: The backend endpoint is MapPost despite the naming convention
-   * used by the other endpoints.
-   */
   CreateStockholderInfo(
     organizationId: number,
     payload: OfferorStockholderInfo,
@@ -145,12 +139,6 @@ export class OfferorProfileService {
     );
   }
 
-  /**
-   * PUT /OfferorProfile/Stockholder/{organizationId}/{stockholderId}
-   *
-   * Updates an existing stockholder record. Returns the stockholder ID
-   * and a correlation ID from the backend.
-   */
   UpdateStockholderInfo(
     organizationId: number,
     stockholderId: number,
@@ -162,14 +150,12 @@ export class OfferorProfileService {
     );
   }
 
-  /**
-   * DELETE /OfferorProfile/Stockholder/{stockholderId}
-   *
-   * Deletes a stockholder record by its ID.
-   */
-  DeleteStockholderInfo(stockholderId: number): Observable<void> {
+  DeleteStockholderInfo(
+    organizationId: number,
+    stockholderId: number,
+  ): Observable<void> {
     return this.http.delete<void>(
-      `${this.url}OfferorProfile/Stockholder/${stockholderId}`,
+      `${this.url}OfferorProfile/Stockholder/${organizationId}/${stockholderId}`,
     );
   }
 

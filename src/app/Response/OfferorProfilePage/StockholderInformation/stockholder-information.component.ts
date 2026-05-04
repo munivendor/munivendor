@@ -67,7 +67,6 @@ export function zipCodeValidator(): ValidatorFn {
   };
 }
 
-/** Rejects strings that are blank or whitespace-only (e.g. "   "). */
 export function noWhitespaceValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     const val: string = control.value ?? '';
@@ -550,7 +549,6 @@ export class StockholderInformationComponent implements OnInit {
   }
 
   removeStockholder(index: number): void {
-    console.log('Removing stockholder at index', index);
     const entry = this.savedStockholders[index];
     if (!entry.stockholderId) {
       this.savedStockholders = this.savedStockholders.filter(
@@ -560,7 +558,7 @@ export class StockholderInformationComponent implements OnInit {
     }
 
     this.offerorProfileService
-      .DeleteStockholderInfo(entry.stockholderId)
+      .DeleteStockholderInfo(this.organizationId!, entry.stockholderId)
       .subscribe({
         next: () => {
           this.savedStockholders = this.savedStockholders.filter(
@@ -671,8 +669,6 @@ export class StockholderInformationComponent implements OnInit {
   }
 
   // ── Input transformers ────────────────────────────────────────────────────────
-
-  /** Auto-capitalizes first letter, strips digits */
   capitalizeInput(event: Event, controlName: string): void {
     const input = event.target as HTMLInputElement;
     let value = input.value.replace(/[0-9]/g, '');
@@ -686,7 +682,6 @@ export class StockholderInformationComponent implements OnInit {
     this.stockholderForm.get(controlName)?.updateValueAndValidity();
   }
 
-  /** Strips non-numeric/hyphen characters from ZIP, auto-formats */
   formatZipCode(event: Event): void {
     const input = event.target as HTMLInputElement;
     let value = input.value.replace(/[^0-9-]/g, '');
@@ -702,7 +697,6 @@ export class StockholderInformationComponent implements OnInit {
     this.stockholderForm.get('zipCode')?.updateValueAndValidity();
   }
 
-  /** Trims whitespace on blur */
   trimOnBlur(controlName: string): void {
     const ctrl = this.stockholderForm.get(controlName);
     const trimmed = ctrl?.value?.trim();

@@ -341,7 +341,7 @@
     <!-- ── Actions ── -->
     <div class="form-actions">
       <button
-        *ngIf="editingIndex !== null"
+        *ngIf="editingOfficialId !== null"
         mat-flat-button
         type="button"
         class="cancel-btn"
@@ -359,12 +359,12 @@
         [disabled]="isSaving || officialForm.pristine"
       >
         <mat-icon *ngIf="!isSaving">{{
-          editingIndex !== null ? "save" : "person_add"
+          editingOfficialId !== null ? "save" : "person_add"
         }}</mat-icon>
         {{
           isSaving
             ? "Saving..."
-            : editingIndex !== null
+            : editingOfficialId !== null
               ? "Save Changes"
               : "Add Authorizing Official"
         }}
@@ -427,7 +427,9 @@
         <td
           mat-cell
           *matCellDef="let row; let i = index"
-          [class.row-editing]="editingIndex === i"
+          [class.row-editing]="
+            editingOfficialId === row.offerorAuthorizingOfficialId
+          "
           class="actions-col"
         >
           <div class="action-buttons">
@@ -435,11 +437,26 @@
               mat-icon-button
               type="button"
               class="btn-edit"
-              (click)="editOfficial(i)"
+              (click)="editOfficial(row)"
               matTooltip="Edit this official"
-              [disabled]="editingIndex !== null && editingIndex !== i"
+              [disabled]="
+                editingOfficialId !== null &&
+                editingOfficialId !== row.offerorAuthorizingOfficialId
+              "
             >
               <mat-icon>edit</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              type="button"
+              color="warn"
+              (click)="deleteOfficial(row)"
+              matTooltip="Remove this authorizing official"
+              [disabled]="
+                editingOfficialId === row.offerorAuthorizingOfficialId
+              "
+            >
+              <mat-icon>delete</mat-icon>
             </button>
           </div>
         </td>

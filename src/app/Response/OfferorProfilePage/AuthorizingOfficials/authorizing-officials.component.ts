@@ -163,10 +163,9 @@ export class AuthorizingOfficialsComponent implements OnInit {
 
   private organizationId: number | null = null;
 
-  editingIndex: number | null = null;
+  editingOfficialId: number | null = null;
   private isPatchingForm = false;
 
-  // ── Display phone ─────────────────────────────────────────────────────────
   displayPhone = '';
 
   // ── Reference data ────────────────────────────────────────────────────────
@@ -406,33 +405,24 @@ export class AuthorizingOfficialsComponent implements OnInit {
 
     this.isSaving = true;
     const payload = this.buildPayload();
-    const isEdit = this.editingIndex !== null;
-    const existingId = isEdit
-      ? this.savedOfficials[this.editingIndex!].offerorAuthorizingOfficialId
-      : null;
-
-    if (isEdit && !existingId) {
-      this.isSaving = false;
-      this.snackbar.showSnackbarError('Unable to update: missing record ID.');
-      return;
-    }
+    const isEdit = this.editingOfficialId !== null;
 
     const request$ = isEdit
       ? this.offerorProfileService.UpdateOfferorAuthorizingOfficial(
-          existingId!,
+          this.editingOfficialId!,
           payload,
         )
       : this.offerorProfileService.SaveOfferorAuthorizingOfficial(payload);
 
     request$.subscribe({
-      next: (_response) => {
+      next: () => {
         this.isSaving = false;
         this.snackbar.showSnackbarSuccess(
           isEdit
             ? 'Authorizing official updated successfully.'
             : 'Authorizing official added successfully.',
         );
-        if (isEdit) this.editingIndex = null;
+        this.editingOfficialId = null;
         this.loadOfficials();
         this.resetForm();
       },
@@ -456,18 +446,55 @@ export class AuthorizingOfficialsComponent implements OnInit {
     });
   }
 
-  editOfficial(index: number): void {
+  deleteOfficial(official: AuthorizingOfficial): void {
+    if (!official.offerorAuthorizingOfficialId) {
+      this.snackbar.showSnackbarError('Unable to delete: missing record ID.');
+      return;
+    }
+
+    this.offerorProfileService
+      .DeleteOfferorAuthorizingOfficial(
+        this.organizationId!,
+        official.offerorAuthorizingOfficialId,
+      )
+      .subscribe({
+        next: () => {
+          this.snackbar.showSnackbarSuccess(
+            'Authorizing official deleted successfully.',
+          );
+          this.loadOfficials();
+        },
+        error: (err) => {
+          this.snackbar.showSnackbarError(
+            'Failed to delete authorizing official.',
+          );
+          this.loggingService.logException(
+            new Error(`HTTP Error ${err.status}: ${err.statusText}`),
+            3,
+            {
+              organizationId: this.organizationId,
+              methodName: 'deleteOfficial',
+              className: 'AuthorizingOfficialsComponent',
+              operation: 'DeleteOfferorAuthorizingOfficial',
+              userId: this.stateService.getUserId(),
+            },
+          );
+        },
+      });
+  }
+
+  editOfficial(official: AuthorizingOfficial): void {
     this.isPatchingForm = true;
-    this.patchFormFromEntry(this.dataSource.data[index]);
+    this.patchFormFromEntry(official);
     this.isPatchingForm = false;
-    this.editingIndex = index;
+    this.editingOfficialId = official.offerorAuthorizingOfficialId ?? null;
     this.officialForm.markAsDirty();
     this.cdr.detectChanges();
     this.scrollToTop();
   }
 
   cancelEdit(): void {
-    this.editingIndex = null;
+    this.editingOfficialId = null;
     this.resetForm();
   }
 
@@ -518,16 +545,6 @@ export class AuthorizingOfficialsComponent implements OnInit {
     };
   }
 
-  private resetForm(): void {
-    this.officialForm.reset({ digitalSignatureConsented: false });
-    this.officialForm
-      .get('stateId')
-      ?.setValue(this.getDefaultNjId(), { emitEvent: false });
-    this.officialForm.markAsPristine();
-    this.officialForm.markAsUntouched();
-    this.scrollToTop();
-  }
-
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   get confirmEmailMismatch(): boolean {
@@ -572,5 +589,19 @@ export class AuthorizingOfficialsComponent implements OnInit {
           s.codeDesc.toLowerCase() === 'new jersey',
       )?.codeId ?? null
     );
+  }
+
+  get isEditing(): boolean {
+    return this.editingOfficialId !== null;
+  }
+
+  private resetForm(): void {
+    this.officialForm.reset({ digitalSignatureConsented: false });
+    this.officialForm
+      .get('stateId')
+      ?.setValue(this.getDefaultNjId(), { emitEvent: false });
+    this.officialForm.markAsPristine();
+    this.officialForm.markAsUntouched();
+    this.scrollToTop();
   }
 }
