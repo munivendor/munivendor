@@ -341,7 +341,7 @@
     <!-- ── Actions ── -->
     <div class="form-actions">
       <button
-        *ngIf="editingOfficialId !== null"
+        *ngIf="authorizingOfficialId !== null"
         mat-flat-button
         type="button"
         class="cancel-btn"
@@ -359,12 +359,12 @@
         [disabled]="isSaving || officialForm.pristine"
       >
         <mat-icon *ngIf="!isSaving">{{
-          editingOfficialId !== null ? "save" : "person_add"
+          authorizingOfficialId !== null ? "save" : "person_add"
         }}</mat-icon>
         {{
           isSaving
             ? "Saving..."
-            : editingOfficialId !== null
+            : authorizingOfficialId !== null
               ? "Save Changes"
               : "Add Authorizing Official"
         }}
@@ -428,7 +428,7 @@
           mat-cell
           *matCellDef="let row; let i = index"
           [class.row-editing]="
-            editingOfficialId === row.offerorAuthorizingOfficialId
+            authorizingOfficialId === row.offerorAuthorizingOfficialId
           "
           class="actions-col"
         >
@@ -440,8 +440,8 @@
               (click)="editOfficial(row)"
               matTooltip="Edit this official"
               [disabled]="
-                editingOfficialId !== null &&
-                editingOfficialId !== row.offerorAuthorizingOfficialId
+                authorizingOfficialId !== null &&
+                authorizingOfficialId !== row.offerorAuthorizingOfficialId
               "
             >
               <mat-icon>edit</mat-icon>
@@ -453,7 +453,7 @@
               (click)="deleteOfficial(row)"
               matTooltip="Remove this authorizing official"
               [disabled]="
-                editingOfficialId === row.offerorAuthorizingOfficialId
+                authorizingOfficialId === row.offerorAuthorizingOfficialId
               "
             >
               <mat-icon>delete</mat-icon>

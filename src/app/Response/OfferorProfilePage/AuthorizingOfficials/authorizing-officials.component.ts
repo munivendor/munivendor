@@ -163,7 +163,7 @@ export class AuthorizingOfficialsComponent implements OnInit {
 
   private organizationId: number | null = null;
 
-  editingOfficialId: number | null = null;
+  authorizingOfficialId: number | null = null;
   private isPatchingForm = false;
 
   displayPhone = '';
@@ -422,11 +422,11 @@ export class AuthorizingOfficialsComponent implements OnInit {
 
     this.isSaving = true;
     const payload = this.buildPayload();
-    const isEdit = this.editingOfficialId !== null;
+    const isEdit = this.authorizingOfficialId !== null;
 
     const request$ = isEdit
       ? this.offerorProfileService.UpdateOfferorAuthorizingOfficial(
-          this.editingOfficialId!,
+          this.authorizingOfficialId!,
           payload,
         )
       : this.offerorProfileService.SaveOfferorAuthorizingOfficial(payload);
@@ -439,7 +439,7 @@ export class AuthorizingOfficialsComponent implements OnInit {
             ? 'Authorizing official updated successfully.'
             : 'Authorizing official added successfully.',
         );
-        this.editingOfficialId = null;
+        this.authorizingOfficialId = null;
         this.loadOfficials();
         this.resetForm();
       },
@@ -504,14 +504,14 @@ export class AuthorizingOfficialsComponent implements OnInit {
     this.isPatchingForm = true;
     this.patchFormFromEntry(official);
     this.isPatchingForm = false;
-    this.editingOfficialId = official.offerorAuthorizingOfficialId ?? null;
+    this.authorizingOfficialId = official.offerorAuthorizingOfficialId ?? null;
     this.officialForm.markAsDirty();
     this.cdr.detectChanges();
     this.scrollToTop();
   }
 
   cancelEdit(): void {
-    this.editingOfficialId = null;
+    this.authorizingOfficialId = null;
     this.resetForm();
   }
 
@@ -609,7 +609,7 @@ export class AuthorizingOfficialsComponent implements OnInit {
   }
 
   get isEditing(): boolean {
-    return this.editingOfficialId !== null;
+    return this.authorizingOfficialId !== null;
   }
 
   private resetForm(): void {
