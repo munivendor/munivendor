@@ -63,13 +63,15 @@ export class ProhibitedActivitiesRussiaBelarusComponent
   savedOfferorProfileId: number | null = null;
   private deletionJustOccurred = false;
 
+  deletingDocumentIds = new Set<number>();
+  downloadingDocumentIds = new Set<number>();
+
   @Input() profileDetails: {
     offerorProfileId: number;
-    documentTypeId: number;
+    formTypeId: number;
     details: string;
   }[] = [];
   @Output() detailsSaved = new EventEmitter<void>();
-  @Output() documentDeleted = new EventEmitter<void>();
   @Output() detailsDeleted = new EventEmitter<void>();
 
   readonly OFAC_DOCUMENT_CODE_NAME = [
@@ -109,6 +111,7 @@ export class ProhibitedActivitiesRussiaBelarusComponent
   @Input() uploadedDocuments: OrganizationDocument[] = [];
   @Input() documentTypes: DocumentType[] = [];
   @Output() documentUploaded = new EventEmitter<void>();
+  @Output() documentDeleted = new EventEmitter<void>();
 
   constructor(
     private fb: FormBuilder,
@@ -184,8 +187,9 @@ export class ProhibitedActivitiesRussiaBelarusComponent
       this.deletionJustOccurred = false;
       return;
     }
-    // mapId = documentTypeId for Russia/Belarus details is 8 (per backend)
-    const matches = this.profileDetails.filter((d) => d.documentTypeId === 8);
+    // // Before: mapId = documentTypeId for Russia/Belarus details is 8 (per backend)
+    // Fix: mapId = formTypeId (mapId=7 for Iran), not documentTypeId
+    const matches = this.profileDetails.filter((d) => d.formTypeId === 8);
     const match = matches.length
       ? matches.reduce((a, b) =>
           a.offerorProfileId > b.offerorProfileId ? a : b,
@@ -218,6 +222,7 @@ export class ProhibitedActivitiesRussiaBelarusComponent
   onFileSelected(event: any): void {
     const file: File = event.target.files[0];
     if (file) this.processFile(file);
+    event.target.value = '';
   }
 
   clearFile(): void {
@@ -227,6 +232,91 @@ export class ProhibitedActivitiesRussiaBelarusComponent
   isFieldInvalid(field: string): boolean {
     const control = this.prohibitedForm.get(field);
     return !!(control && control.invalid && (control.dirty || control.touched));
+  }
+
+  deleteOfferorProfileDocument(doc: OrganizationDocument): void {
+    if (
+      !doc.documentId ||
+      !this.organizationId ||
+      this.deletingDocumentIds.has(doc.documentId)
+    )
+      return;
+    this.deletingDocumentIds.add(doc.documentId);
+
+    this.requestService
+      .DeleteOrganizationDocument(this.organizationId, doc.documentId)
+      .subscribe({
+        next: () => {
+          this.deletingDocumentIds.delete(doc.documentId);
+          this.snackbar.showSnackbarSuccess('Document deleted successfully.');
+          this.documentDeleted.emit();
+        },
+        error: (err) => {
+          this.deletingDocumentIds.delete(doc.documentId);
+          this.snackbar.showSnackbarError('Delete failed. Please try again.');
+          this.loggingService.logException(err, 3, {
+            organizationId: this.organizationId,
+            documentId: doc.documentId,
+            methodName: 'deleteOfferorProfileDocument',
+          });
+        },
+      });
+  }
+
+  downloadDocument(doc: OrganizationDocument): void {
+    if (
+      !doc.documentId ||
+      !this.organizationId ||
+      this.downloadingDocumentIds.has(doc.documentId)
+    )
+      return;
+    this.downloadingDocumentIds.add(doc.documentId);
+
+    this.requestService
+      .GetAgencySpecificDocumentContent(doc.documentId, this.organizationId)
+      .subscribe({
+        next: (response) => {
+          this.downloadingDocumentIds.delete(doc.documentId);
+
+          const contentDisposition = response.headers.get(
+            'Content-Disposition',
+          );
+          let fileName = doc.fileName ?? 'download';
+          if (contentDisposition) {
+            const match = contentDisposition.match(
+              /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/,
+            );
+            if (match?.[1]) fileName = match[1].replace(/['"]/g, '');
+          }
+
+          const blob = new Blob([response.body!], {
+            type: response.body!.type,
+          });
+          const url = URL.createObjectURL(blob);
+          const anchor = document.createElement('a');
+          anchor.href = url;
+          anchor.download = fileName;
+          anchor.click();
+          URL.revokeObjectURL(url);
+        },
+        error: (err) => {
+          this.downloadingDocumentIds.delete(doc.documentId);
+          this.snackbar.showSnackbarError('Download failed. Please try again.');
+          this.loggingService.logException(err, 3, {
+            organizationId: this.organizationId,
+            documentId: doc.documentId,
+            methodName: 'downloadDocument',
+          });
+        },
+      });
+  }
+
+  isDeleting(doc: OrganizationDocument): boolean {
+    return this.deletingDocumentIds.has(doc.documentId);
+  }
+
+  isDownloading(doc: OrganizationDocument): boolean {
+    return this.downloadingDocumentIds.has(doc.documentId);
   }
 
   onSubmit(): void {
@@ -241,9 +331,13 @@ export class ProhibitedActivitiesRussiaBelarusComponent
     // User says NOT associated — delete file (if exists) and details (if exists)
     if (ofacIdentification === 'no') {
       const uploadedDoc = this.getUploadedDoc(this.OFAC_DOCUMENT_CODE_NAME[0]);
-      const deleteDoc$ = uploadedDoc
-        ? this.requestService.DeleteOrganizationDocument(uploadedDoc.documentId)
-        : null;
+      const deleteDoc$ =
+        uploadedDoc && this.organizationId
+          ? this.requestService.DeleteOrganizationDocument(
+              this.organizationId,
+              uploadedDoc.documentId,
+            )
+          : null;
       const deleteDetails$ = this.savedOfferorProfileId
         ? this.offerorProfileService.DeleteOfferorProfileDetails(
             this.organizationId!,

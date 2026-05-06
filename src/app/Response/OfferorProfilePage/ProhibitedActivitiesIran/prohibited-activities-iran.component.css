@@ -108,79 +108,12 @@
   line-height: 1.55;
 }
 
-/* ── File input row ──────────────────────────────── */
-.file-input-row {
-  display: flex;
-  align-items: center;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  overflow: hidden;
-  background: #fff;
-  height: 42px;
-}
-
-.file-input-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 0 16px;
-  height: 100%;
-  background: #f3f4f6;
-  border-right: 1px solid #d1d5db;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #374151;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.15s;
-  flex-shrink: 0;
-}
-
-.file-input-btn:hover:not(.disabled) {
-  background: #e5e7eb;
-}
-
-.file-input-btn.disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 .file-input-hidden {
   position: absolute;
   width: 0;
   height: 0;
   opacity: 0;
   pointer-events: none;
-}
-
-.file-name-display {
-  flex: 1;
-  padding: 0 14px;
-  font-size: 0.85rem;
-  color: #6b7280;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.file-name-display .clear-btn {
-  background: none;
-  border: none;
-  color: #9ca3af;
-  font-size: 0.75rem;
-  cursor: pointer;
-  padding: 2px 4px;
-  border-radius: 3px;
-  flex-shrink: 0;
-  transition: color 0.15s;
-}
-
-.file-name-display .clear-btn:hover {
-  color: #ef4444;
 }
 
 /* ── Hint text ───────────────────────────────────── */
@@ -194,11 +127,4 @@
 /* ── Spinner ─────────────────────────────────────── */
 .btn-spinner {
   color: #3b82f6;
-}
-
-/* ── Form footer / Save button ───────────────────── */
-.form-footer {
-  display: flex;
-  justify-content: flex-end;
-  padding-top: 8px;
 }

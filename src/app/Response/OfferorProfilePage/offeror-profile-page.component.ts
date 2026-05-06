@@ -45,7 +45,7 @@ export class OfferorProfilePageComponent implements OnInit {
 
   offerProfileDetails: {
     offerorProfileId: number;
-    documentTypeId: number;
+    formTypeId: number;
     details: string;
   }[] = [];
 
@@ -90,8 +90,6 @@ export class OfferorProfilePageComponent implements OnInit {
         this.referenceDataLoaded = true;
       },
     });
-
-    this.loadDocuments();
   }
 
   loadDocuments(): void {
