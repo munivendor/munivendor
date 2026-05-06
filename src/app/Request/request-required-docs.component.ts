@@ -535,7 +535,7 @@ export class RequestRequiredDocumentsComponent
     }
   }
 
-  deleteOrganizationDocument(documentId: number): void {
+  deleteAgencySpecificDocument(documentId: number): void {
     if (this.organizationId === null) {
       return;
     }
@@ -568,7 +568,7 @@ export class RequestRequiredDocumentsComponent
               organizationId: this.organizationId,
               correlationId: correlationId,
               documentId: documentId,
-              methodName: 'deleteOrganizationDocument',
+              methodName: 'deleteAgencySpecificDocument',
               className: 'RequestRequiredDocumentsComponent',
               operation: 'DeleteOrganizationDocument',
               userId: this.stateService.getUserId(),

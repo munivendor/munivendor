@@ -233,7 +233,7 @@ export class ProhibitedActivitiesRussiaBelarusComponent
     return !!(control && control.invalid && (control.dirty || control.touched));
   }
 
-  deleteDocument(doc: OrganizationDocument): void {
+  deleteOfferorProfileDocument(doc: OrganizationDocument): void {
     if (
       !doc.documentId ||
       !this.organizationId ||
@@ -256,7 +256,7 @@ export class ProhibitedActivitiesRussiaBelarusComponent
           this.loggingService.logException(err, 3, {
             organizationId: this.organizationId,
             documentId: doc.documentId,
-            methodName: 'deleteDocument',
+            methodName: 'deleteOfferorProfileDocument',
           });
         },
       });

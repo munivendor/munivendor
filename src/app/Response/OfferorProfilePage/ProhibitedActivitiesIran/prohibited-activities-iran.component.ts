@@ -346,7 +346,7 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
       });
   }
 
-  deleteDocument(doc: OrganizationDocument): void {
+  deleteOfferorProfileDocument(doc: OrganizationDocument): void {
     if (
       !doc.documentId ||
       !this.organizationId ||
@@ -369,7 +369,7 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
           this.loggingService.logException(err, 3, {
             organizationId: this.organizationId,
             documentId: doc.documentId,
-            methodName: 'deleteDocument',
+            methodName: 'deleteOfferorProfileDocument',
           });
         },
       });

@@ -286,7 +286,7 @@ export class RequiredFilesComponent implements OnInit {
     return this.downloadingDocumentIds.has(doc.organizationDocumentId);
   }
 
-  deleteDocument(doc: OrganizationDocument): void {
+  deleteOfferorProfileDocument(doc: OrganizationDocument): void {
     if (
       !doc.documentId ||
       !this.organizationId ||
@@ -309,7 +309,7 @@ export class RequiredFilesComponent implements OnInit {
           this.loggingService.logException(err, 3, {
             organizationId: this.organizationId,
             documentId: doc.documentId,
-            methodName: 'deleteDocument',
+            methodName: 'deleteOfferorProfileDocument',
           });
         },
       });
