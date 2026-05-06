@@ -6,7 +6,7 @@ import {
   HttpEvent,
 } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { ConfigService } from '../../core/services/config.service';
 
 @Injectable()
 export class WithCredentialsInterceptor implements HttpInterceptor {
@@ -16,13 +16,15 @@ export class WithCredentialsInterceptor implements HttpInterceptor {
     '/users/validate',
   ];
 
+  constructor(private config: ConfigService) {}
+
   intercept(
     req: HttpRequest<any>,
-    next: HttpHandler
+    next: HttpHandler,
   ): Observable<HttpEvent<any>> {
-    const isApiRequest = req.url.startsWith(environment.apiUrl);
+    const isApiRequest = req.url.startsWith(this.config.apiUrl);
     const isPublicEndpoint = this.publicPaths.some((path) =>
-      req.url.includes(path)
+      req.url.includes(path),
     );
 
     const needsCredentials = isApiRequest && !isPublicEndpoint;

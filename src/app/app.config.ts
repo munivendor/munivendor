@@ -1,4 +1,8 @@
-import { ApplicationConfig, ErrorHandler } from '@angular/core';
+import {
+  ApplicationConfig,
+  ErrorHandler,
+  APP_INITIALIZER,
+} from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideClientHydration } from '@angular/platform-browser';
 import {
@@ -12,21 +16,29 @@ import {
   SocialAuthServiceConfig,
 } from '@abacritt/angularx-social-login';
 import { GoogleLoginProvider } from '@abacritt/angularx-social-login';
-import { APP_INITIALIZER } from '@angular/core';
 import { AuthService } from './authorization/auth.service';
-import { Observable } from 'rxjs';
 import { routes } from './app.routes';
 import { GlobalErrorHandler } from './exceptionhandling/global-error-handler';
 import { WithCredentialsInterceptor } from './core/interceptors/with-credentials.interceptor';
 import { ErrorHandlerInterceptor } from './core/interceptors/error-handler.interceptor';
+import { ConfigService } from './core/services/config.service';
 
 const CLIENT_ID =
   '954795010792-oafduvq9mhtlatg68rhl4hadtcuajos6.apps.googleusercontent.com';
 
-function initializeApp(authService: AuthService): () => Observable<any> {
-  return (): Observable<any> => {
-    return authService.initializeApp();
-  };
+function initializeConfig(configService: ConfigService): () => Promise<void> {
+  return () => configService.load();
+}
+
+// ConfigService injected here so auth can safely use apiUrl at init time
+function initializeApp(
+  authService: AuthService,
+  configService: ConfigService,
+): () => Promise<any> {
+  return (): Promise<any> =>
+    configService.load().then(() => {
+      return authService.initializeApp().toPromise();
+    });
 }
 
 export const appConfig: ApplicationConfig = {
@@ -51,10 +63,11 @@ export const appConfig: ApplicationConfig = {
       } as SocialAuthServiceConfig,
     },
 
+    // ✅ Runs after — auth can now safely call configService.apiUrl
     {
       provide: APP_INITIALIZER,
       useFactory: initializeApp,
-      deps: [AuthService],
+      deps: [AuthService, ConfigService],
       multi: true,
     },
 

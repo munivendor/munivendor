@@ -58,7 +58,12 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
     '/users/validate',
   ];
 
-  private readonly silentPaths: string[] = ['/me', '/auth/check'];
+  private readonly silentPaths: string[] = [
+    '/me',
+    '/auth/check',
+    'accounts.google.com', // ✅ ignore Google auth errors
+    'gsi/status', // ✅ ignore Google Sign-In status checks
+  ];
 
   private readonly guestUrls = new Set([
     '/',
@@ -84,6 +89,18 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
     httpRequest: HttpRequest<any>,
     next: HttpHandler,
   ): Observable<HttpEvent<any>> {
+    const isExternalRequest =
+      httpRequest.url.startsWith('http') &&
+      !httpRequest.url.includes('localhost') &&
+      !httpRequest.url.includes('munivendor.com');
+
+    const isConfigRequest = httpRequest.url.includes('config.json');
+
+    if (isExternalRequest || isConfigRequest) {
+      console.log('SKIPPING external request:', httpRequest.url); // ✅ add this
+      return next.handle(httpRequest);
+    }
+
     return next.handle(httpRequest).pipe(
       catchError((error: HttpErrorResponse) => {
         const isPublicPath = this.publicPaths.some((APIEndpoint) =>
@@ -195,6 +212,11 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
     error: HttpErrorResponse,
     httpRequest: HttpRequest<any>,
   ): void {
+    console.log(
+      'handleSnackbarNon401 triggered:',
+      httpRequest.url,
+      error.status,
+    );
     const correlationId = error.error?.correlationId || 'N/A';
     this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
       correlationId,
@@ -206,6 +228,7 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
     error: HttpErrorResponse,
     httpRequest: HttpRequest<any>,
   ): void {
+    console.log('handleError triggered:', httpRequest.url, error.status); //
     const errorDetails = {
       statusCode: error.status,
       statusText: error.statusText,

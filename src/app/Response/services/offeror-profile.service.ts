@@ -8,19 +8,25 @@ import { OfferorStockholderInfo } from '../model/offeror-stockholder-info.model'
 import { State } from '../../shared/model/state.model';
 import { OrganizationDocument } from '../model/organization-document.model';
 import { DocumentType } from '../model/document-type.model';
+import { ConfigService } from '../../core/services/config.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class OfferorProfileService {
-  url = environment.apiUrl;
+  private get url(): string {
+    return this.config.apiUrl;
+  }
   private states$?: Observable<State[]>;
   private countries$?: Observable<State[]>;
   private stockholderTypes$?: Observable<State[]>;
   private counties$?: Observable<State[]>;
   private timeOptions$?: Observable<State[]>;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private config: ConfigService,
+  ) {}
 
   // ── Authorizing Officials ─────────────────────────
 

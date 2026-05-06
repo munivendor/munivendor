@@ -4,18 +4,24 @@ import { Observable } from 'rxjs';
 import { DecisionMaker } from '../model/decisionmaker.model';
 import { RequestType } from '../model/requesttype.model';
 import { Request } from '../model/request.model';
-import { environment } from '../../../environments/environment';
+import { ConfigService } from '../../core/services/config.service';
 import { RequestSection } from '../model/requestsection.model';
 import { RequestDocument } from '../model/requestdocument.model';
 import { DocumentInstance } from '../model/documentinstance.model';
 import { Response } from '../../shared/model/response.model';
+
 @Injectable({
   providedIn: 'root',
 })
 export class RequestService {
-  url = environment.apiUrl;
+  private get url(): string {
+    return this.config.apiUrl;
+  }
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private config: ConfigService,
+  ) {}
 
   loadRequests(): Observable<any> {
     return this.http.get<any>(this.url);
@@ -48,22 +54,6 @@ export class RequestService {
     const headers = { 'Content-Type': 'application/json' };
     const url = `${this.url}Requests/${requestId}`;
     return this.http.put<number>(url, request, { headers });
-  }
-
-  SaveRequiredDocuments(
-    requestId: number,
-    requiredDocumentTypes: DocumentType[],
-  ): Observable<boolean> {
-    const body = JSON.stringify(requiredDocumentTypes);
-    const headers = { 'Content-Type': 'application/json' };
-    const options = { headers };
-    const url = `${this.url}saverequireddocuments/${requestId}`;
-    return this.http.post<boolean>(url, body, options);
-  }
-
-  UploadDocument(documentId: number, formData: FormData): Observable<any> {
-    const url = `${this.url}Documents/${documentId}`;
-    return this.http.post<void>(url, formData);
   }
 
   DeleteRequest(requestId: number, organizationId: number): Observable<void> {
