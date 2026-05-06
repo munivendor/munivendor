@@ -63,7 +63,7 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
 
   @Input() profileDetails: {
     offerorProfileId: number;
-    documentTypeId: number;
+    formTypeId: number; // mapId
     details: string;
   }[] = [];
   @Output() detailsSaved = new EventEmitter<void>();
@@ -139,8 +139,9 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
       this.deletionJustOccurred = false;
       return;
     }
-    // mapId = documentTypeId for Iran details is 7 (per backend)
-    const matches = this.profileDetails.filter((d) => d.documentTypeId === 7);
+    // Before: mapId = documentTypeId for Iran details is 7 (per backend)
+    // Fix: mapId = formTypeId (mapId=7 for Iran), not documentTypeId
+    const matches = this.profileDetails.filter((d) => d.formTypeId === 7);
     const match = matches.length
       ? matches.reduce((a, b) =>
           a.offerorProfileId > b.offerorProfileId ? a : b,

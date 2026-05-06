@@ -68,7 +68,7 @@ export class ProhibitedActivitiesRussiaBelarusComponent
 
   @Input() profileDetails: {
     offerorProfileId: number;
-    documentTypeId: number;
+    formTypeId: number;
     details: string;
   }[] = [];
   @Output() detailsSaved = new EventEmitter<void>();
@@ -187,8 +187,9 @@ export class ProhibitedActivitiesRussiaBelarusComponent
       this.deletionJustOccurred = false;
       return;
     }
-    // mapId = documentTypeId for Russia/Belarus details is 8 (per backend)
-    const matches = this.profileDetails.filter((d) => d.documentTypeId === 8);
+    // // Before: mapId = documentTypeId for Russia/Belarus details is 8 (per backend)
+    // Fix: mapId = formTypeId (mapId=7 for Iran), not documentTypeId
+    const matches = this.profileDetails.filter((d) => d.formTypeId === 8);
     const match = matches.length
       ? matches.reduce((a, b) =>
           a.offerorProfileId > b.offerorProfileId ? a : b,

@@ -224,26 +224,26 @@ export class OfferorProfileService {
 
   SaveOfferorProfileDetails(
     organizationId: number,
-    documentTypeId: number,
+    formTypeId: number, // mapId = documentTypeId = formTypeId
     details: string | null,
   ): Observable<{ offerorProfileId: number }> {
     return this.http.post<{ offerorProfileId: number }>(
       `${this.url}OfferorProfiles/Details/${organizationId}`,
-      { documentTypeId, details },
+      { formTypeId, details },
     );
   }
 
   GetOfferorProfileDiscloserDetails(
     organizationId: number,
   ): Observable<
-    { offerorProfileId: number; documentTypeId: number; details: string }[]
+    { offerorProfileId: number; formTypeId: number; details: string }[]
   > {
     return this.http
       .get<{
         correlationId: string;
         offerProfileDetails: {
           offerorProfileId: number;
-          documentTypeId: number;
+          formTypeId: number;
           formTypeName: string | null;
           details: string;
           organizationId: number;

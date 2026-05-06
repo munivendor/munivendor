@@ -45,7 +45,7 @@ export class OfferorProfilePageComponent implements OnInit {
 
   offerProfileDetails: {
     offerorProfileId: number;
-    documentTypeId: number;
+    formTypeId: number;
     details: string;
   }[] = [];
 
