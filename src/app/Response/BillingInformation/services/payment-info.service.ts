@@ -5,7 +5,6 @@ import { map } from 'rxjs/operators';
 import { CCPaymentProfileData } from '../model/CCPaymentProfileData';
 import { ACHPaymentProfileData } from '../model/ACHPaymentProfileData';
 import { CustomerProfileData } from '../model/CustomerProfileData';
-import { environment } from '../../../../environments/environment';
 
 export interface SavedPaymentMethod {
   paymentProfileId: string;
@@ -42,8 +41,6 @@ export interface SubmitOfferResponse {
   providedIn: 'root',
 })
 export class PaymentInfoService {
-  apiUrl = `${environment.apiUrl}paymentprofile`;
-
   constructor(private http: HttpClient) {}
 
   private getHeaders(): HttpHeaders {
@@ -60,7 +57,7 @@ export class PaymentInfoService {
     organizationId: number,
     customerProfileData: CustomerProfileData,
     CCPaymentProfileData: CCPaymentProfileData,
-    selectedPaymentType: string
+    selectedPaymentType: string,
   ): Observable<string> {
     const body = {
       selectedPaymentType,
@@ -74,7 +71,7 @@ export class PaymentInfoService {
     organizationId: number,
     customerProfileData: CustomerProfileData,
     ACHPaymentProfileData: ACHPaymentProfileData,
-    selectedPaymentType: string
+    selectedPaymentType: string,
   ): Observable<string> {
     const body = {
       selectedPaymentType,
@@ -85,7 +82,7 @@ export class PaymentInfoService {
   }
 
   getSavedPaymentMethods(
-    organizationId: number
+    organizationId: number,
   ): Observable<SavedPaymentMethod[]> {
     return this.http
       .get<any>(`api/PaymentProfiles/Summary/${organizationId}`, {
@@ -98,7 +95,7 @@ export class PaymentInfoService {
           }
 
           return response?.paymentProfileDetails || [];
-        })
+        }),
       );
   }
 
@@ -123,33 +120,33 @@ export class PaymentInfoService {
   updatePaymentMethod(
     organizationId: number,
     paymentProfileId: string,
-    paymentProfileRequest: any
+    paymentProfileRequest: any,
   ): Observable<{ paymentProfileId: string; correlationId: string }> {
     return this.http.post<{ paymentProfileId: string; correlationId: string }>(
       `api/PaymentProfile/Update/${organizationId}?paymentProfileId=${paymentProfileId}`,
       paymentProfileRequest,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
   }
 
   deletePaymentMethod(
     organizationId: number,
-    paymentProfileId: string
+    paymentProfileId: string,
   ): Observable<any> {
     return this.http.delete<any>(
       `api/PaymentProfiles/${organizationId}/${paymentProfileId}`,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
   }
 
   setDefaultPaymentMethod(
     organizationId: number,
-    paymentMethodId: string
+    paymentMethodId: string,
   ): Observable<any> {
     return this.http.post<any>(
       `api/PaymentProfiles/SetDefault/${organizationId}/${paymentMethodId}`,
       {},
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
   }
 
@@ -162,11 +159,11 @@ export class PaymentInfoService {
   chargePayment(
     organizationId: number,
     paymentPlanId: number,
-    paymentProfileId: number
+    paymentProfileId: number,
   ): Observable<any> {
     return this.http.post(
       `api/Payment/Charge/${organizationId}/${paymentPlanId}/${paymentProfileId}`,
-      {}
+      {},
     );
   }
 
@@ -176,7 +173,7 @@ export class PaymentInfoService {
     organizationId: number,
     requestId: number,
     paymentProfileId?: number,
-    paymentPlanId?: number
+    paymentPlanId?: number,
   ): Observable<SubmitOfferResponse> {
     let url = `api/Offer/Submit/${organizationId}/${requestId}`;
 
@@ -193,7 +190,7 @@ export class PaymentInfoService {
       {},
       {
         headers: this.getHeaders(),
-      }
+      },
     );
   }
 }

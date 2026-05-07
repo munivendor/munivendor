@@ -2,16 +2,26 @@ import { Injectable } from '@angular/core';
 import { User } from '../model/user.model';
 import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
 import { Designation } from '../model/designation.model';
+import { ConfigService } from '../../core/services/config.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class UserService {
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private config: ConfigService,
+  ) {}
 
-  userApiUrl = `${environment.apiUrl}users/`;
+  private get userApiUrl(): string {
+    return `${this.config.apiUrl}users/`;
+  }
+
+  private get designeeApiUrl(): string {
+    return `${this.config.apiUrl}designations`;
+  }
+
   createUser(user: User): Observable<number> {
     const headers = { 'Content-Type': 'application/json' };
     return this.http.post<number>(`${this.userApiUrl}`, user, { headers });
@@ -19,18 +29,14 @@ export class UserService {
 
   loginUser(
     username: string,
-    password: string
+    password: string,
   ): Observable<{ userId: number }> {
     const headers = { 'Content-Type': 'application/json' };
     const loginPayload = { username, password };
-
     return this.http.post<{ userId: number }>(
-      `${environment.apiUrl}login`,
+      `${this.config.apiUrl}login`,
       loginPayload,
-      {
-        headers,
-        withCredentials: true,
-      }
+      { headers, withCredentials: true },
     );
   }
 
@@ -54,7 +60,7 @@ export class UserService {
     return this.http.post<boolean>(
       `${this.userApiUrl}sendveremail/${userId}`,
       null,
-      { headers }
+      { headers },
     );
   }
 
@@ -63,11 +69,10 @@ export class UserService {
     return this.http.post<boolean>(
       `${this.userApiUrl}validate/${token}/${userId}`,
       null,
-      { headers }
+      { headers },
     );
   }
 
-  designeeApiUrl = `${environment.apiUrl}designations`;
   getDesigneeTypes(): Observable<Designation[]> {
     return this.http.get<Designation[]>(this.designeeApiUrl);
   }

@@ -1,17 +1,21 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../environments/environment';
+import { ConfigService } from '../../../core/services/config.service';
 import { Department } from '../model/department.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class DepartmentService {
+  private get url(): string {
+    return `${this.config.apiUrl}departments`;
+  }
 
-  url = `${environment.apiUrl}departments`;
-
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    private config: ConfigService,
+  ) {}
 
   saveDepartment(department: Department): Observable<number> {
     const headers = { 'Content-Type': 'application/json' };
@@ -19,7 +23,6 @@ export class DepartmentService {
   }
 
   getDepartments(): Observable<Department[]> {
-    return this.http.get<Department[]>(`${this.url}`);
+    return this.http.get<Department[]>(this.url);
   }
 }
-

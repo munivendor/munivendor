@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { ConfigService } from '../../core/services/config.service';
 import { DecisionMaker } from '../model/decisionmaker.model';
 import { UserDesignation } from '../model/user-designation.model';
 import { AgencyDetails } from '../model/agency-details.model';
@@ -20,9 +20,14 @@ export interface DecisionMakerResponse {
   providedIn: 'root',
 })
 export class AgencyProfileService {
-  url = environment.apiUrl;
+  private get url(): string {
+    return this.config.apiUrl;
+  }
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private config: ConfigService,
+  ) {}
 
   GetAgencyDecisionMakers(agencyOrganizationId: number): Observable<any[]> {
     return this.http.get<any[]>(
