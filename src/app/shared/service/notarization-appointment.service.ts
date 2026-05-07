@@ -37,7 +37,9 @@ export class NotarizationAppointmentService {
     return this.http
       .get<{
         timeSlots: string[];
-      }>(`${this.url}NotarizationAppointments/OpenTimeSlots/${date}`, { params })
+      }>(`${this.url}NotarizationAppointments/OpenTimeSlots/${date}`, {
+        params,
+      })
       .pipe(map((response) => response.timeSlots));
   }
 

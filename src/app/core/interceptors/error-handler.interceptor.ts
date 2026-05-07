@@ -61,8 +61,8 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
   private readonly silentPaths: string[] = [
     '/me',
     '/auth/check',
-    'accounts.google.com', // ✅ ignore Google auth errors
-    'gsi/status', // ✅ ignore Google Sign-In status checks
+    'accounts.google.com',
+    'gsi/status',
   ];
 
   private readonly guestUrls = new Set([
@@ -97,7 +97,6 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
     const isConfigRequest = httpRequest.url.includes('config.json');
 
     if (isExternalRequest || isConfigRequest) {
-      console.log('SKIPPING external request:', httpRequest.url); // ✅ add this
       return next.handle(httpRequest);
     }
 
