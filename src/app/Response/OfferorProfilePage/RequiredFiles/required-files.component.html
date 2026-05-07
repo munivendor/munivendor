@@ -115,6 +115,12 @@
             isUploading(fileConfig.key) ||
             !!getUploadedDoc(fileConfig.documentName)
           "
+          [matTooltip]="
+            getUploadedDoc(fileConfig.documentName)
+              ? 'Please remove the existing file before uploading a new one.'
+              : ''
+          "
+          matTooltipPosition="above"
           (click)="fileInput.click()"
         >
           <mat-spinner

@@ -105,6 +105,12 @@
           [disabled]="
             isUploading || !!getUploadedDoc(OFAC_DOCUMENT_CODE_NAME[0])
           "
+          [matTooltip]="
+            getUploadedDoc(OFAC_DOCUMENT_CODE_NAME[0])
+              ? 'Please remove the existing file before uploading a new one.'
+              : ''
+          "
+          matTooltipPosition="above"
           (click)="fileInput.click()"
         >
           <mat-spinner

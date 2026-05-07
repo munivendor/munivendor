@@ -66,6 +66,12 @@
         class="upload-btn"
         [class.disabled]="isUploading || !!getUploadedDoc(docType.codeName)"
         [disabled]="isUploading || !!getUploadedDoc(docType.codeName)"
+        [matTooltip]="
+          getUploadedDoc(docType.codeName)
+            ? 'Please remove the existing file before uploading a new one.'
+            : ''
+        "
+        matTooltipPosition="above"
         (click)="fileInput.click()"
       >
         <mat-spinner

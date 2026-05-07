@@ -171,7 +171,7 @@ export class RequestService {
     return this.http.post<any>(url, formData);
   }
 
-  deleteRequestDocument(
+  DeleteRequestDocument(
     requestId: number,
     requestDocumentId: number,
   ): Observable<{ isSuccess: boolean }> {
@@ -242,6 +242,7 @@ export class RequestService {
     );
   }
 
+  // not being used anywhere
   GetDocumentInstances(requestId: number): Observable<DocumentInstance[]> {
     return this.http.get<DocumentInstance[]>(
       `${this.url}InstanceDocuments/${requestId}`,
@@ -335,6 +336,7 @@ export class RequestService {
     );
   }
 
+  // not being used anywhere
   DeleteOrganizationDocumentAsync(documentId: number): Observable<any> {
     return this.http.delete(`${this.url}OrganizationDocuments/${documentId}`);
   }

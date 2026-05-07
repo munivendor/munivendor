@@ -8,16 +8,15 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
-
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
-
 import { StateService } from '../../../Request/services/state.service';
 import { LoggingService } from '../../../exceptionhandling/logging.service';
 import { SnackbarNotificationService } from '../../../shared/service/snackbar-notification.service';
 import { RequestService } from '../../../Request/services/request.service';
 import { OrganizationDocument } from '../../model/organization-document.model';
 import { DocumentType } from '../../model/document-type.model';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 export interface RequiredFileConfig {
   key: string;
@@ -38,6 +37,7 @@ export interface RequiredFileConfig {
     ReactiveFormsModule,
     MatProgressSpinnerModule,
     MatIconModule,
+    MatTooltipModule,
   ],
 })
 export class RequiredFilesComponent implements OnInit {
