@@ -664,7 +664,7 @@ export class ResponseDocumentsComponent
     const requestDocId = +requestDocumentId;
 
     this.requestService
-      .deleteRequestDocument(requestId, requestDocId)
+      .DeleteRequestDocument(requestId, requestDocId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
@@ -696,7 +696,7 @@ export class ResponseDocumentsComponent
               correlationId: correlationId,
               methodName: 'deleteForm',
               className: 'ResponseDocumentsComponent',
-              operation: 'deleteRequestDocument',
+              operation: 'DeleteRequestDocument',
               userId: this.stateService.getUserId(),
             },
           );

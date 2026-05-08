@@ -26,17 +26,13 @@ import { ConfigService } from './core/services/config.service';
 const CLIENT_ID =
   '954795010792-oafduvq9mhtlatg68rhl4hadtcuajos6.apps.googleusercontent.com';
 
-function initializeConfig(configService: ConfigService): () => Promise<void> {
-  return () => configService.load();
-}
-
 // ConfigService injected here so auth can safely use apiUrl at init time
 function initializeApp(
   authService: AuthService,
   configService: ConfigService,
 ): () => Promise<any> {
   return (): Promise<any> =>
-    configService.load().then(() => {
+    configService.loadStaticConfig().then(() => {
       return authService.initializeApp().toPromise();
     });
 }
@@ -62,8 +58,6 @@ export const appConfig: ApplicationConfig = {
         ],
       } as SocialAuthServiceConfig,
     },
-
-    // ✅ Runs after — auth can now safely call configService.apiUrl
     {
       provide: APP_INITIALIZER,
       useFactory: initializeApp,

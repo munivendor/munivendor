@@ -21,6 +21,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { StateService } from '../../../Request/services/state.service';
 import { LoggingService } from '../../../exceptionhandling/logging.service';
@@ -46,6 +47,7 @@ import { Observable, forkJoin } from 'rxjs';
     MatProgressSpinnerModule,
     MatIconModule,
     MatButtonModule,
+    MatTooltipModule,
   ],
 })
 export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {

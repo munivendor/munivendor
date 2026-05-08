@@ -1,4 +1,3 @@
-// src/app/core/services/config.service.ts
 import { Injectable, PLATFORM_ID, Inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -21,7 +20,7 @@ export class ConfigService {
     @Inject(PLATFORM_ID) private platformId: Object,
   ) {}
 
-  load(): Promise<void> {
+  async loadStaticConfig(): Promise<void> {
     if (!isPlatformBrowser(this.platformId)) {
       this.config = {
         apiUrl: '/api/',
@@ -31,20 +30,18 @@ export class ConfigService {
       return Promise.resolve();
     }
 
-    return firstValueFrom(
-      this.http.get<AppConfig>(`/assets/config.json?v=${Date.now()}`),
-    )
-      .then((config) => {
-        this.config = config;
-      })
-      .catch(() => {
-        console.error('Failed to load config.json');
-        this.config = {
-          apiUrl: '/api/',
-          disableAuthGuard: false,
-          appInsights: { connectionString: '' },
-        };
-      });
+    try {
+      const config = await firstValueFrom(
+        this.http.get<AppConfig>(`/assets/config.json?v=${Date.now()}`),
+      );
+      this.config = config;
+    } catch {
+      this.config = {
+        apiUrl: '/api/',
+        disableAuthGuard: false,
+        appInsights: { connectionString: '' },
+      };
+    }
   }
 
   get apiUrl(): string {

@@ -20,7 +20,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
-
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { StateService } from '../../../Request/services/state.service';
 import { LoggingService } from '../../../exceptionhandling/logging.service';
 import { SnackbarNotificationService } from '../../../shared/service/snackbar-notification.service';
@@ -41,6 +41,7 @@ import { DocumentType } from '../../model/document-type.model';
     MatSelectModule,
     MatProgressSpinnerModule,
     MatIconModule,
+    MatTooltipModule,
   ],
 })
 export class ComplianceDocumentsComponent implements OnInit, OnChanges {
