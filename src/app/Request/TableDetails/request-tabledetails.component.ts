@@ -36,6 +36,7 @@ import { LoggingService } from '../../exceptionhandling/logging.service';
 import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
 import { HttpClient } from '@angular/common/http';
 import { TooltipDirective } from '../../shared/directive/tooltip.directive';
+import { FilterStateService } from '../../shared/service/filter-state.service';
 
 interface FlattenedCategoryNode {
   categoryId: string;
@@ -166,6 +167,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     private loggingService: LoggingService,
     private snackbarNotificationService: SnackbarNotificationService,
     private http: HttpClient,
+    private filterStateService: FilterStateService,
   ) {}
 
   readonly requestTypeMap = {
@@ -261,15 +263,20 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    const saved = this.filterStateService.load();
+    this.filterForm.patchValue(saved ?? {});
+
+    this.filterForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((values) => this.filterStateService.save(values));
+
     if (!this.organizationId) {
       setTimeout(() => {
         this.organizationId = this.stateService.getOrganizationId() ?? 0;
-        if (this.organizationId) {
-          this.loadAndJoinRequestData();
-        }
+        if (this.organizationId) this.onSearch();
       }, 100);
     } else {
-      this.loadAndJoinRequestData();
+      this.onSearch();
     }
   }
 

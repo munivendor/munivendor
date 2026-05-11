@@ -27,6 +27,7 @@ import { LoadingService } from '../../shared/LoadingSpinner/loading.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
 import { HttpClient } from '@angular/common/http';
 import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
+import { FilterStateService } from '../../shared/service/filter-state.service';
 
 interface FlattenedCategoryNode {
   categoryId: string;
@@ -340,6 +341,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
     private loggingService: LoggingService,
     private http: HttpClient,
     private snackbarNotificationService: SnackbarNotificationService,
+    private filterStateService: FilterStateService,
   ) {
     this.organizationId = this.stateService.getOrganizationId();
   }
@@ -365,23 +367,26 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
   };
 
   ngOnInit(): void {
-    this.filterForm.patchValue({
-      live: true,
-    });
+    // Load persisted filters, or fall back to the default (live: true)
+    const saved = this.filterStateService.load();
+    this.filterForm.patchValue(saved ?? { live: true });
 
+    // Save on every change
+    this.filterForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((values) => this.filterStateService.save(values));
+
+    this.triggerInitialSearch();
+  }
+
+  private triggerInitialSearch(): void {
     if (!this.organizationId) {
       setTimeout(() => {
         this.organizationId = this.stateService.getOrganizationId() ?? 0;
-        if (this.organizationId) {
-          this.loadAndJoinRequestData({
-            agencyRequestStatusIds: [this.agencyRequestStatusMap['live']],
-          });
-        }
+        if (this.organizationId) this.onSearch();
       }, 100);
     } else {
-      this.loadAndJoinRequestData({
-        agencyRequestStatusIds: [this.agencyRequestStatusMap['live']],
-      });
+      this.onSearch();
     }
   }
 
