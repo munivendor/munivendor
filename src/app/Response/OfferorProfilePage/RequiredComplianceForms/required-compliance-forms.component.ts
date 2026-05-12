@@ -55,7 +55,7 @@ export class ComplianceDocumentsComponent implements OnInit, OnChanges {
   downloadingDocumentIds = new Set<number>();
 
   private readonly OWNED_CODE_NAMES = [
-    'Letter of Federal_Affirmative_Action_Plan_Approval',
+    'Letter_of_Federal_Affirmative_Action_Plan_Approval',
     'Certificate_of_Employee_Information_Report',
     'Employee_Information_Report_Form_AA-302',
   ];

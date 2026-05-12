@@ -2,13 +2,16 @@ import {
   ApplicationConfig,
   ErrorHandler,
   APP_INITIALIZER,
+  PLATFORM_ID,
 } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { provideRouter } from '@angular/router';
 import { provideClientHydration } from '@angular/platform-browser';
 import {
   HTTP_INTERCEPTORS,
   provideHttpClient,
   withInterceptorsFromDi,
+  withFetch,
 } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import {
@@ -26,22 +29,26 @@ import { ConfigService } from './core/services/config.service';
 const CLIENT_ID =
   '954795010792-oafduvq9mhtlatg68rhl4hadtcuajos6.apps.googleusercontent.com';
 
-// ConfigService injected here so auth can safely use apiUrl at init time
 function initializeApp(
   authService: AuthService,
   configService: ConfigService,
+  platformId: Object,
 ): () => Promise<any> {
-  return (): Promise<any> =>
-    configService.loadStaticConfig().then(() => {
+  return (): Promise<any> => {
+    if (!isPlatformBrowser(platformId)) {
+      return Promise.resolve();
+    }
+    return configService.loadStaticConfig().then(() => {
       return authService.initializeApp().toPromise();
     });
+  };
 }
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
     provideClientHydration(),
-    provideHttpClient(withInterceptorsFromDi()),
+    provideHttpClient(withInterceptorsFromDi(), withFetch()),
     { provide: ErrorHandler, useClass: GlobalErrorHandler },
     provideAnimationsAsync('noop'),
 
@@ -61,7 +68,7 @@ export const appConfig: ApplicationConfig = {
     {
       provide: APP_INITIALIZER,
       useFactory: initializeApp,
-      deps: [AuthService, ConfigService],
+      deps: [AuthService, ConfigService, PLATFORM_ID],
       multi: true,
     },
 

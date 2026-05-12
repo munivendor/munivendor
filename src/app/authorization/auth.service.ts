@@ -28,6 +28,7 @@ import { StateService } from '../Request/services/state.service';
 import { LoggingService } from '../exceptionhandling/logging.service';
 import { SnackbarNotificationService } from '../shared/service/snackbar-notification.service';
 import { ConfigService } from '../core/services/config.service';
+import { FilterStateService } from '../shared/service/filter-state.service';
 
 export interface ForgotPasswordResponse {
   message?: string;
@@ -89,6 +90,7 @@ export class AuthService {
     private loggingService: LoggingService,
     private snackbarNotificationService: SnackbarNotificationService,
     private config: ConfigService,
+    private filterStateService: FilterStateService,
     @Inject(PLATFORM_ID) private platformId: Object,
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
@@ -298,6 +300,7 @@ export class AuthService {
       .subscribe({
         next: async () => {
           this.clearCurrentSession();
+          this.filterStateService.clear();
           try {
             if (this.userSubject.value) {
               await this.socialAuthService.signOut();
