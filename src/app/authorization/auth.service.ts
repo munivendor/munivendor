@@ -21,13 +21,14 @@ import {
   HttpErrorResponse,
   HttpParams,
 } from '@angular/common/http';
-import { environment } from '../../environments/environment';
 import { FlowNavigationService } from '../shared/service/flow-navigation.service';
 import { UserService } from '../shared/service/user.service';
 import { User } from '../shared/model/user.model';
 import { StateService } from '../Request/services/state.service';
 import { LoggingService } from '../exceptionhandling/logging.service';
 import { SnackbarNotificationService } from '../shared/service/snackbar-notification.service';
+import { ConfigService } from '../core/services/config.service';
+import { FilterStateService } from '../shared/service/filter-state.service';
 
 export interface ForgotPasswordResponse {
   message?: string;
@@ -48,7 +49,9 @@ export class AuthService {
   setSignupInProgress(inProgress: boolean): void {
     this.signupInProgressSubject.next(inProgress);
   }
-  private url = environment.apiUrl;
+  private get url(): string {
+    return this.config.apiUrl;
+  }
   private userSubject = new BehaviorSubject<number | null>(null);
 
   user$: Observable<number | null> = this.userSubject.asObservable();
@@ -86,6 +89,8 @@ export class AuthService {
     private stateService: StateService,
     private loggingService: LoggingService,
     private snackbarNotificationService: SnackbarNotificationService,
+    private config: ConfigService,
+    private filterStateService: FilterStateService,
     @Inject(PLATFORM_ID) private platformId: Object,
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
@@ -295,6 +300,7 @@ export class AuthService {
       .subscribe({
         next: async () => {
           this.clearCurrentSession();
+          this.filterStateService.clear();
           try {
             if (this.userSubject.value) {
               await this.socialAuthService.signOut();

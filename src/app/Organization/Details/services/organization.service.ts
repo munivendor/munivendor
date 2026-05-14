@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../environments/environment';
+import { ConfigService } from '../../../core/services/config.service';
 import { Organization } from '../model/organization.model';
 import { State } from '../../../shared/model/state.model';
 
@@ -9,24 +9,36 @@ import { State } from '../../../shared/model/state.model';
   providedIn: 'root',
 })
 export class OrganizationService {
-  url = `${environment.apiUrl}`;
-  organizationUrl = `${environment.apiUrl}organizations`;
+  private get url(): string {
+    return this.config.apiUrl;
+  }
 
-  constructor(private http: HttpClient) {}
+  private get organizationUrl(): string {
+    return `${this.config.apiUrl}organizations`;
+  }
+
+  constructor(
+    private http: HttpClient,
+    private config: ConfigService,
+  ) {}
 
   initializeOrganization(organization: Organization): Observable<any> {
-    const url = `${this.organizationUrl}/initialize`;
-    return this.http.post<any>(url, organization);
+    return this.http.post<any>(
+      `${this.organizationUrl}/initialize`,
+      organization,
+    );
   }
 
   updateOrganization(organization: Organization): Observable<any> {
-    const url = `${this.organizationUrl}/${organization.organizationId}`;
-    return this.http.put<any>(url, organization);
+    return this.http.put<any>(
+      `${this.organizationUrl}/${organization.organizationId}`,
+      organization,
+    );
   }
 
   getOrganization(organizationId: number): Observable<Organization> {
     return this.http.get<Organization>(
-      `${this.organizationUrl}/${organizationId}`
+      `${this.organizationUrl}/${organizationId}`,
     );
   }
 

@@ -8,19 +8,25 @@ import { OfferorStockholderInfo } from '../model/offeror-stockholder-info.model'
 import { State } from '../../shared/model/state.model';
 import { OrganizationDocument } from '../model/organization-document.model';
 import { DocumentType } from '../model/document-type.model';
+import { ConfigService } from '../../core/services/config.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class OfferorProfileService {
-  url = environment.apiUrl;
+  private get url(): string {
+    return this.config.apiUrl;
+  }
   private states$?: Observable<State[]>;
   private countries$?: Observable<State[]>;
   private stockholderTypes$?: Observable<State[]>;
   private counties$?: Observable<State[]>;
   private timeOptions$?: Observable<State[]>;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private config: ConfigService,
+  ) {}
 
   // ── Authorizing Officials ─────────────────────────
 
@@ -34,6 +40,15 @@ export class OfferorProfileService {
     return this.http.post(
       `${this.url}OfferorProfile/AuthorizingOfficials`,
       official,
+    );
+  }
+
+  DeleteOfferorAuthorizingOfficial(
+    organizationId: number,
+    officialId: number,
+  ): Observable<any> {
+    return this.http.delete(
+      `${this.url}OfferorProfile/AuthorizingOfficials/${organizationId}/${officialId}`,
     );
   }
 
@@ -111,13 +126,6 @@ export class OfferorProfileService {
   }
 
   // ── Stockholder Information ───────────────────────
-
-  /**
-   * GET /OfferorProfile/Stockholder/{organizationId?}/{stockholderId?}
-   *
-   * Fetches all stockholders for an organization, or a single one
-   * when stockholderId is also provided.
-   */
   GetAllStockholderInfo(
     organizationId: number,
     stockholderId?: number,
@@ -127,14 +135,6 @@ export class OfferorProfileService {
     return this.http.get<OfferorStockholderInfo[]>(url);
   }
 
-  /**
-   * POST /OfferorProfile/Stockholder/{organizationId}
-   *
-   * Creates a new stockholder record. Returns the new stockholder ID
-   * and a correlation ID from the backend.
-   * Note: The backend endpoint is MapPost despite the naming convention
-   * used by the other endpoints.
-   */
   CreateStockholderInfo(
     organizationId: number,
     payload: OfferorStockholderInfo,
@@ -145,12 +145,6 @@ export class OfferorProfileService {
     );
   }
 
-  /**
-   * PUT /OfferorProfile/Stockholder/{organizationId}/{stockholderId}
-   *
-   * Updates an existing stockholder record. Returns the stockholder ID
-   * and a correlation ID from the backend.
-   */
   UpdateStockholderInfo(
     organizationId: number,
     stockholderId: number,
@@ -163,14 +157,18 @@ export class OfferorProfileService {
   }
 
   /**
-   * DELETE /OfferorProfile/Stockholder/{stockholderId}
+   * DELETE /OfferorProfile/Stockholder/{organizationId}/{stockholderId}
    *
    * Deletes a stockholder record by its ID.
    */
-  DeleteStockholderInfo(stockholderId: number): Observable<void> {
-    return this.http.delete<void>(
-      `${this.url}OfferorProfile/Stockholder/${stockholderId}`,
-    );
+  DeleteStockholderInfo(
+    organizationId: number,
+    stockholderId?: number,
+  ): Observable<void> {
+    const url = stockholderId
+      ? `${this.url}OfferorProfile/Stockholder/${organizationId}/${stockholderId}`
+      : `${this.url}OfferorProfile/Stockholder/${organizationId}`;
+    return this.http.delete<void>(url);
   }
 
   // ── List Data ─────────────────────────────────────
@@ -232,7 +230,7 @@ export class OfferorProfileService {
 
   SaveOfferorProfileDetails(
     organizationId: number,
-    formTypeId: number,
+    formTypeId: number, // mapId = documentTypeId = formTypeId
     details: string | null,
   ): Observable<{ offerorProfileId: number }> {
     return this.http.post<{ offerorProfileId: number }>(
@@ -263,12 +261,22 @@ export class OfferorProfileService {
   UpdateOfferorProfileDetails(
     organizationId: number,
     offerorProfileId: number,
-    formTypeId: number,
+    documentTypeId: number,
     details: string,
   ): Observable<{ offerorProfileId: number }> {
     return this.http.put<{ offerorProfileId: number }>(
       `${this.url}OfferorProfiles/Details/${organizationId}`,
-      { offerorProfileId, formTypeId, details },
+      { offerorProfileId, documentTypeId, details },
+    );
+  }
+
+  // mapId = documentTypeId
+  DeleteOfferorProfileDetails(
+    organizationId: number,
+    documentTypeId: number,
+  ): Observable<void> {
+    return this.http.delete<void>(
+      `${this.url}OfferorProfiles/Details/${organizationId}/${documentTypeId}`,
     );
   }
 }

@@ -46,10 +46,7 @@
       </mat-form-field>
     </div>
 
-    <div
-      class="upload-section form-section"
-      *ngIf="selectedDocumentType as docType"
-    >
+    <div *ngIf="selectedDocumentType as docType">
       <p class="upload-doc-label">
         <strong>{{ docType.codeDesc }}</strong>
       </p>
@@ -57,55 +54,69 @@
         Please upload your organization's {{ docType.codeDesc }}.
       </p>
 
-      <div class="file-input-row">
-        <button
-          type="button"
-          class="file-input-btn"
-          [class.disabled]="isUploading || !!getUploadedDoc(docType.codeName)"
-          [disabled]="isUploading || !!getUploadedDoc(docType.codeName)"
-          (click)="fileInput.click()"
-        >
-          <input
-            #fileInput
-            type="file"
-            accept=".jpg,.jpeg,.png,.pdf"
-            class="file-input-hidden"
-            (change)="onFileSelected($event)"
-            [disabled]="isUploading || !!getUploadedDoc(docType.codeName)"
-          />
-          <mat-spinner
-            *ngIf="isUploading"
-            diameter="16"
-            class="btn-spinner"
-          ></mat-spinner>
-          <span *ngIf="!isUploading">Choose File</span>
-          <span *ngIf="isUploading">Uploading…</span>
-        </button>
-
-        <span class="file-name-display">
-          <ng-container *ngIf="selectedFileName; else noFile">
-            {{ selectedFileName }}
-            <button
-              type="button"
-              class="clear-btn"
-              (click)="clearFile()"
-              title="Remove"
-            >
-              ✕
-            </button>
-          </ng-container>
-          <ng-template #noFile>No File Chosen</ng-template>
-        </span>
-      </div>
+      <input
+        #fileInput
+        type="file"
+        accept=".jpg,.jpeg,.png,.pdf"
+        class="file-input-hidden"
+        (change)="onFileSelected($event)"
+      />
+      <button
+        type="button"
+        class="upload-btn"
+        [class.disabled]="isUploading || !!getUploadedDoc(docType.codeName)"
+        [disabled]="isUploading || !!getUploadedDoc(docType.codeName)"
+        [matTooltip]="
+          getUploadedDoc(docType.codeName)
+            ? 'Please remove the existing file before uploading a new one.'
+            : ''
+        "
+        matTooltipPosition="above"
+        (click)="fileInput.click()"
+      >
+        <mat-spinner
+          *ngIf="isUploading"
+          diameter="16"
+          class="btn-spinner"
+        ></mat-spinner>
+        <mat-icon *ngIf="!isUploading">upload</mat-icon>
+        <span>{{ isUploading ? "Uploading…" : "Upload File" }}</span>
+      </button>
 
       <div
         class="uploaded-file-row"
         *ngIf="getUploadedDoc(docType.codeName) as doc"
       >
-        <span class="uploaded-date">Uploaded File: </span>
-        <span class="uploaded-file-link">
-          {{ doc.fileName }}
-        </span>
+        <mat-icon class="uploaded-file-icon">insert_drive_file</mat-icon>
+        <span class="uploaded-file-name">{{ doc.fileName }}</span>
+        <button
+          type="button"
+          class="download-btn"
+          [disabled]="isDownloading(doc)"
+          (click)="downloadDocument(doc)"
+          title="Download"
+        >
+          <mat-spinner
+            *ngIf="isDownloading(doc)"
+            diameter="14"
+            class="btn-spinner"
+          ></mat-spinner>
+          <mat-icon *ngIf="!isDownloading(doc)">download</mat-icon>
+        </button>
+        <button
+          type="button"
+          class="delete-btn"
+          [disabled]="isDeleting(doc)"
+          (click)="deleteOfferorProfileDocument(doc)"
+          title="Delete"
+        >
+          <mat-spinner
+            *ngIf="isDeleting(doc)"
+            diameter="14"
+            class="btn-spinner"
+          ></mat-spinner>
+          <mat-icon *ngIf="!isDeleting(doc)">delete</mat-icon>
+        </button>
       </div>
 
       <span class="upload-hint"

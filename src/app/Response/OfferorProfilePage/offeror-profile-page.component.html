@@ -8,25 +8,31 @@
   <app-required-compliance-forms
     [uploadedDocuments]="organizationDocuments"
     [documentTypes]="documentTypes"
-    (documentUploaded)="onDocumentUploaded()"
+    (documentUploaded)="loadDocuments()"
+    (documentDeleted)="loadDocuments()"
   />
   <app-required-files
     [uploadedDocuments]="organizationDocuments"
     [documentTypes]="documentTypes"
-    (documentUploaded)="onDocumentUploaded()"
+    (documentUploaded)="loadDocuments()"
+    (documentDeleted)="loadDocuments()"
   />
   <app-prohibited-activities-russia-belarus
     [uploadedDocuments]="organizationDocuments"
     [documentTypes]="documentTypes"
     [profileDetails]="offerProfileDetails"
     (documentUploaded)="onDocumentUploaded()"
+    (documentDeleted)="onDocumentUploaded()"
     (detailsSaved)="onProfileDetailsSaved()"
+    (detailsDeleted)="onProfileDetailsSaved()"
   />
   <app-prohibited-activities-iran
     [uploadedDocuments]="organizationDocuments"
     [documentTypes]="documentTypes"
     [profileDetails]="offerProfileDetails"
     (documentUploaded)="onDocumentUploaded()"
+    (documentDeleted)="onDocumentUploaded()"
     (detailsSaved)="onProfileDetailsSaved()"
+    (detailsDeleted)="onProfileDetailsSaved()"
   />
 </ng-container>

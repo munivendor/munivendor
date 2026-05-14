@@ -90,8 +90,6 @@ export class OfferorProfilePageComponent implements OnInit {
         this.referenceDataLoaded = true;
       },
     });
-
-    this.loadDocuments();
   }
 
   loadDocuments(): void {

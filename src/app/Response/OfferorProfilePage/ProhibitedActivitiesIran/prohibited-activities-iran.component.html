@@ -50,7 +50,7 @@
     <!-- Conditional fields — shown only when user selects 'No' (conducts business in Iran) -->
     <ng-container *ngIf="showConditionalFields">
       <!-- Iran File Upload -->
-      <div class="form-section">
+      <div>
         <p class="section-label">
           <strong>Iran - File Upload</strong>
         </p>
@@ -59,69 +59,79 @@
           is performing in Iran.
         </p>
 
-        <div class="file-input-row">
+        <input
+          #fileInput
+          type="file"
+          accept=".jpg,.jpeg,.png,.pdf"
+          class="file-input-hidden"
+          (change)="onFileSelected($event)"
+        />
+        <button
+          type="button"
+          class="upload-btn"
+          [class.disabled]="
+            isUploading || !!getUploadedDoc(IRAN_DOCUMENT_CODE_NAME)
+          "
+          [disabled]="isUploading || !!getUploadedDoc(IRAN_DOCUMENT_CODE_NAME)"
+          [matTooltip]="
+            getUploadedDoc(IRAN_DOCUMENT_CODE_NAME)
+              ? 'Please remove the existing file before uploading a new one.'
+              : ''
+          "
+          matTooltipPosition="above"
+          (click)="fileInput.click()"
+        >
+          <mat-spinner
+            *ngIf="isUploading"
+            diameter="16"
+            class="btn-spinner"
+          ></mat-spinner>
+          <span>{{ isUploading ? "Uploading…" : "Upload File" }}</span>
+        </button>
+
+        <div
+          class="uploaded-file-row"
+          *ngIf="getUploadedDoc(IRAN_DOCUMENT_CODE_NAME) as doc"
+        >
+          <mat-icon class="uploaded-file-icon">insert_drive_file</mat-icon>
+          <span class="uploaded-file-name">{{ doc.fileName }}</span>
           <button
             type="button"
-            class="file-input-btn"
-            [class.disabled]="
-              isUploading || !!getUploadedDoc(IRAN_DOCUMENT_CODE_NAME)
-            "
-            [disabled]="
-              isUploading || !!getUploadedDoc(IRAN_DOCUMENT_CODE_NAME)
-            "
-            (click)="fileInput.click()"
+            class="download-btn"
+            [disabled]="isDownloading(doc)"
+            (click)="downloadDocument(doc)"
+            title="Download"
           >
-            <input
-              #fileInput
-              type="file"
-              accept=".jpg,.jpeg,.png,.pdf"
-              class="file-input-hidden"
-              (change)="onFileSelected($event)"
-              [disabled]="
-                isUploading || !!getUploadedDoc(IRAN_DOCUMENT_CODE_NAME)
-              "
-            />
             <mat-spinner
-              *ngIf="isUploading"
-              diameter="16"
+              *ngIf="isDownloading(doc)"
+              diameter="14"
               class="btn-spinner"
             ></mat-spinner>
-            <span *ngIf="!isUploading">Choose File</span>
-            <span *ngIf="isUploading">Uploading…</span>
+            <mat-icon *ngIf="!isDownloading(doc)">download</mat-icon>
           </button>
-
-          <span class="file-name-display">
-            <ng-container *ngIf="selectedFileName; else noFile">
-              {{ selectedFileName }}
-              <button
-                type="button"
-                class="clear-btn"
-                (click)="clearFile()"
-                title="Remove"
-              >
-                ✕
-              </button>
-            </ng-container>
-            <ng-template #noFile>No File Chosen</ng-template>
-          </span>
+          <button
+            type="button"
+            class="delete-btn"
+            [disabled]="isDeleting(doc)"
+            (click)="deleteOfferorProfileDocument(doc)"
+            title="Delete"
+          >
+            <mat-spinner
+              *ngIf="isDeleting(doc)"
+              diameter="14"
+              class="btn-spinner"
+            ></mat-spinner>
+            <mat-icon *ngIf="!isDeleting(doc)">delete</mat-icon>
+          </button>
         </div>
 
         <span class="upload-hint">
           Accepted file types: jpg, png, pdf. Max. file size: 20 MB.
         </span>
-        <div
-          class="uploaded-file-row"
-          *ngIf="getUploadedDoc(IRAN_DOCUMENT_CODE_NAME) as doc"
-        >
-          <span class="uploaded-date">Uploaded File: </span>
-          <span class="uploaded-file-link">
-            {{ doc.fileName }}
-          </span>
-        </div>
       </div>
 
       <!-- Detailed Description -->
-      <div class="form-section">
+      <div>
         <p class="section-label">
           <strong>Detailed Description</strong>
           <span class="required-badge">(Required)</span>

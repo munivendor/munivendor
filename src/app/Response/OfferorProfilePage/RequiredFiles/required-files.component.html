@@ -28,10 +28,85 @@
         {{ fileConfig.description }}
       </p>
 
-      <div class="file-input-row">
+      <!-- Insurance Policies: multi-file upload -->
+      <ng-container
+        *ngIf="fileConfig.key === 'insurancePolicies'; else singleUpload"
+      >
+        <input
+          #insuranceInput
+          type="file"
+          accept=".jpg,.jpeg,.png,.pdf"
+          multiple
+          class="file-input-hidden"
+          (change)="onInsuranceFilesSelected($event)"
+        />
         <button
           type="button"
-          class="file-input-btn"
+          class="upload-btn"
+          [class.disabled]="insuranceUploading"
+          [disabled]="insuranceUploading"
+          (click)="insuranceInput.click()"
+        >
+          <mat-spinner
+            *ngIf="insuranceUploading"
+            diameter="16"
+            class="btn-spinner"
+          ></mat-spinner>
+          <mat-icon *ngIf="!insuranceUploading">upload</mat-icon>
+          <span>{{
+            insuranceUploading ? "Uploading…" : "Upload File(s)"
+          }}</span>
+        </button>
+
+        <div
+          class="uploaded-file-row"
+          *ngFor="let doc of getUploadedDocs(fileConfig.documentName)"
+        >
+          <mat-icon class="uploaded-file-icon">insert_drive_file</mat-icon>
+          <span class="uploaded-file-name">{{ doc.fileName }}</span>
+          <button
+            type="button"
+            class="download-btn"
+            [disabled]="isDownloading(doc)"
+            (click)="downloadDocument(doc)"
+            title="Download"
+          >
+            <mat-spinner
+              *ngIf="isDownloading(doc)"
+              diameter="14"
+              class="btn-spinner"
+            ></mat-spinner>
+            <mat-icon *ngIf="!isDownloading(doc)">download</mat-icon>
+          </button>
+          <button
+            type="button"
+            class="delete-btn"
+            [disabled]="isDeleting(doc)"
+            (click)="deleteOfferorProfileDocument(doc)"
+            title="Delete"
+          >
+            <mat-spinner
+              *ngIf="isDeleting(doc)"
+              diameter="14"
+              class="btn-spinner"
+            ></mat-spinner>
+            <mat-icon *ngIf="!isDeleting(doc)">delete</mat-icon>
+          </button>
+        </div>
+      </ng-container>
+
+      <!-- All other fields: single-file upload -->
+      <ng-template #singleUpload>
+        <input
+          #fileInput
+          type="file"
+          accept=".jpg,.jpeg,.png,.pdf"
+          class="file-input-hidden"
+          (change)="onFileSelected($event, fileConfig)"
+        />
+        <button
+          type="button"
+          class="upload-btn"
           [class.disabled]="
             isUploading(fileConfig.key) ||
             !!getUploadedDoc(fileConfig.documentName)
@@ -40,52 +115,62 @@
             isUploading(fileConfig.key) ||
             !!getUploadedDoc(fileConfig.documentName)
           "
+          [matTooltip]="
+            getUploadedDoc(fileConfig.documentName)
+              ? 'Please remove the existing file before uploading a new one.'
+              : ''
+          "
+          matTooltipPosition="above"
           (click)="fileInput.click()"
         >
-          <input
-            #fileInput
-            type="file"
-            accept=".jpg,.jpeg,.png,.pdf"
-            class="file-input-hidden"
-            (change)="onFileSelected($event, fileConfig)"
-            [disabled]="
-              isUploading(fileConfig.key) ||
-              !!getUploadedDoc(fileConfig.documentName)
-            "
-          />
           <mat-spinner
             *ngIf="isUploading(fileConfig.key)"
             diameter="16"
             class="btn-spinner"
           ></mat-spinner>
-          <span *ngIf="!isUploading(fileConfig.key)">Choose File</span>
-          <span *ngIf="isUploading(fileConfig.key)">Uploading…</span>
+          <mat-icon *ngIf="!isUploading(fileConfig.key)">upload</mat-icon>
+          <span>{{
+            isUploading(fileConfig.key) ? "Uploading…" : "Upload File"
+          }}</span>
         </button>
 
-        <span class="file-name-display">
-          <ng-container *ngIf="getFileName(fileConfig.key); else noFile">
-            {{ getFileName(fileConfig.key) }}
-            <button
-              type="button"
-              class="clear-btn"
-              (click)="clearFile(fileConfig.key)"
-              title="Remove"
-            >
-              ✕
-            </button>
-          </ng-container>
-          <ng-template #noFile>No File Chosen</ng-template>
-        </span>
-      </div>
-      <div
-        class="uploaded-file-row"
-        *ngIf="getUploadedDoc(fileConfig.documentName) as doc"
-      >
-        <span class="uploaded-date">Uploaded File: </span>
-        <span class="uploaded-file-link">
-          {{ doc.fileName }}
-        </span>
-      </div>
+        <div
+          class="uploaded-file-row"
+          *ngIf="getUploadedDoc(fileConfig.documentName) as doc"
+        >
+          <mat-icon class="uploaded-file-icon">insert_drive_file</mat-icon>
+          <span class="uploaded-file-name">{{ doc.fileName }}</span>
+          <button
+            type="button"
+            class="download-btn"
+            [disabled]="isDownloading(doc)"
+            (click)="downloadDocument(doc)"
+            title="Download"
+          >
+            <mat-spinner
+              *ngIf="isDownloading(doc)"
+              diameter="14"
+              class="btn-spinner"
+            ></mat-spinner>
+            <mat-icon *ngIf="!isDownloading(doc)">download</mat-icon>
+          </button>
+          <button
+            type="button"
+            class="delete-btn"
+            [disabled]="isDeleting(doc)"
+            (click)="deleteOfferorProfileDocument(doc)"
+            title="Delete"
+          >
+            <mat-spinner
+              *ngIf="isDeleting(doc)"
+              diameter="14"
+              class="btn-spinner"
+            ></mat-spinner>
+            <mat-icon *ngIf="!isDeleting(doc)">delete</mat-icon>
+          </button>
+        </div>
+      </ng-template>
+
       <span class="upload-hint"
         >Accepted file types: jpg, png, pdf. Max. file size: 10 MB.</span
       >
