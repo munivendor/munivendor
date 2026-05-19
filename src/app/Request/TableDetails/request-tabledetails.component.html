@@ -117,19 +117,40 @@
                 >Cancelled</mat-checkbox
               >
             </div>
+
             <div class="checkbox-group">
               <strong>Type</strong>
+              <mat-checkbox
+                color="primary"
+                formControlName="competitiveContracting"
+                >Competitive Contracting</mat-checkbox
+              >
               <mat-checkbox color="primary" formControlName="rfq"
-                >RFQ</mat-checkbox
+                >Fair & Open RFQ (Professional Services)</mat-checkbox
               >
               <mat-checkbox color="primary" formControlName="rfp"
-                >RFP</mat-checkbox
+                >Fair & Open RFP (Professional Services)</mat-checkbox
               >
-              <mat-checkbox color="primary" formControlName="rfi"
-                >RFI</mat-checkbox
+              <mat-checkbox color="primary" formControlName="bidPublicWorks"
+                >Public Bid - Public Works</mat-checkbox
               >
-              <mat-checkbox color="primary" formControlName="bid"
-                >BID</mat-checkbox
+              <mat-checkbox color="primary" formControlName="bidGoodsServices"
+                >Public Bid - Goods/Services</mat-checkbox
+              >
+              <mat-checkbox
+                color="primary"
+                formControlName="nonFairOpenProfessionalServices"
+                >Non-Fair & Open Professional Services</mat-checkbox
+              >
+              <mat-checkbox
+                color="primary"
+                formControlName="extraordinaryUnspecifiableServices"
+                >Extraordinary Unspecifiable Services (EUS)</mat-checkbox
+              >
+              <mat-checkbox
+                color="primary"
+                formControlName="quotationsUnderThreshold"
+                >Quotations Under Threshold</mat-checkbox
               >
             </div>
           </div>
