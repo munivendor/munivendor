@@ -96,67 +96,79 @@
 
         <div class="field-container">
           <div class="inline-field">
-            <div class="checkbox-group">
-              <strong>Solicitation Status</strong>
-              <mat-checkbox color="primary" formControlName="live"
-                >Live</mat-checkbox
-              >
-              <mat-checkbox color="primary" formControlName="closed"
-                >Closed</mat-checkbox
-              >
-              <mat-checkbox color="primary" formControlName="opened"
-                >Opened</mat-checkbox
-              >
-              <mat-checkbox color="primary" formControlName="cancelled"
-                >Cancelled</mat-checkbox
-              >
-            </div>
-            <div class="checkbox-group">
-              <strong>Offeror Status</strong>
-              <mat-checkbox color="primary" formControlName="inProgress"
-                >In Progress</mat-checkbox
-              >
-              <mat-checkbox color="primary" formControlName="submitted"
-                >Submitted</mat-checkbox
-              >
-              <mat-checkbox color="primary" formControlName="none"
-                >None</mat-checkbox
-              >
-            </div>
-            <div class="checkbox-group">
-              <strong>Type</strong>
-              <mat-checkbox
-                color="primary"
-                formControlName="competitiveContracting"
-                >Competitive Contracting</mat-checkbox
-              >
-              <mat-checkbox color="primary" formControlName="rfq"
-                >Fair & Open RFQ (Professional Services)</mat-checkbox
-              >
-              <mat-checkbox color="primary" formControlName="rfp"
-                >Fair & Open RFP (Professional Services)</mat-checkbox
-              >
-              <mat-checkbox color="primary" formControlName="bidPublicWorks"
-                >Public Bid - Public Works</mat-checkbox
-              >
-              <mat-checkbox color="primary" formControlName="bidGoodsServices"
-                >Public Bid - Goods/Services</mat-checkbox
-              >
-              <mat-checkbox
-                color="primary"
-                formControlName="nonFairOpenProfessionalServices"
-                >Non-Fair & Open Professional Services</mat-checkbox
-              >
-              <mat-checkbox
-                color="primary"
-                formControlName="extraordinaryUnspecifiableServices"
-                >Extraordinary Unspecifiable Services (EUS)</mat-checkbox
-              >
-              <mat-checkbox
-                color="primary"
-                formControlName="quotationsUnderThreshold"
-                >Quotations Under Threshold</mat-checkbox
-              >
+            <div class="checkbox-section">
+              <div class="checkbox-group">
+                <strong>Solicitation Status</strong>
+                <div class="checkbox-items status-items">
+                  <mat-checkbox color="primary" formControlName="live"
+                    >Live</mat-checkbox
+                  >
+                  <mat-checkbox color="primary" formControlName="closed"
+                    >Closed</mat-checkbox
+                  >
+                  <mat-checkbox color="primary" formControlName="opened"
+                    >Opened</mat-checkbox
+                  >
+                  <mat-checkbox color="primary" formControlName="cancelled"
+                    >Cancelled</mat-checkbox
+                  >
+                </div>
+              </div>
+
+              <div class="checkbox-group">
+                <strong>Offeror Status</strong>
+                <div class="checkbox-items status-items">
+                  <mat-checkbox color="primary" formControlName="inProgress"
+                    >In Progress</mat-checkbox
+                  >
+                  <mat-checkbox color="primary" formControlName="submitted"
+                    >Submitted</mat-checkbox
+                  >
+                  <mat-checkbox color="primary" formControlName="none"
+                    >None</mat-checkbox
+                  >
+                </div>
+              </div>
+
+              <div class="checkbox-group">
+                <strong>Type</strong>
+                <div class="checkbox-items type-items">
+                  <mat-checkbox
+                    color="primary"
+                    formControlName="competitiveContracting"
+                    >Competitive Contracting</mat-checkbox
+                  >
+                  <mat-checkbox color="primary" formControlName="rfq"
+                    >Fair & Open RFQ (Professional Services)</mat-checkbox
+                  >
+                  <mat-checkbox color="primary" formControlName="rfp"
+                    >Fair & Open RFP (Professional Services)</mat-checkbox
+                  >
+                  <mat-checkbox color="primary" formControlName="bidPublicWorks"
+                    >Public Bid - Public Works</mat-checkbox
+                  >
+                  <mat-checkbox
+                    color="primary"
+                    formControlName="bidGoodsServices"
+                    >Public Bid - Goods/Services</mat-checkbox
+                  >
+                  <mat-checkbox
+                    color="primary"
+                    formControlName="nonFairOpenProfessionalServices"
+                    >Non-Fair & Open Professional Services</mat-checkbox
+                  >
+                  <mat-checkbox
+                    color="primary"
+                    formControlName="extraordinaryUnspecifiableServices"
+                    >Extraordinary Unspecifiable Services (EUS)</mat-checkbox
+                  >
+                  <mat-checkbox
+                    color="primary"
+                    formControlName="quotationsUnderThreshold"
+                    >Quotations Under Threshold</mat-checkbox
+                  >
+                </div>
+              </div>
             </div>
           </div>
         </div>
