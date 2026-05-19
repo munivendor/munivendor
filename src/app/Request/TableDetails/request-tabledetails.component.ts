@@ -128,10 +128,14 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     inProgress: [false],
     submitted: [false],
     none: [false],
+    competitiveContracting: [false],
     rfq: [false],
     rfp: [false],
-    rfi: [false],
-    bid: [false],
+    bidPublicWorks: [false],
+    bidGoodsServices: [false],
+    nonFairOpenProfessionalServices: [false],
+    extraordinaryUnspecifiableServices: [false],
+    quotationsUnderThreshold: [false],
   });
 
   displayedColumns: string[] = [
@@ -171,10 +175,14 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
   ) {}
 
   readonly requestTypeMap = {
-    rfi: 1,
+    competitiveContracting: 1,
     rfq: 2,
     rfp: 3,
-    bid: 4,
+    bidPublicWorks: 4,
+    bidGoodsServices: 5,
+    nonFairOpenProfessionalServices: 6,
+    extraordinaryUnspecifiableServices: 7,
+    quotationsUnderThreshold: 8,
   };
 
   readonly requestStatusMap = {
