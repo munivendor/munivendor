@@ -8,7 +8,7 @@ import { FlowProgressService } from '../shared/service/flow-progress.service';
 import { LoggingService } from '../exceptionhandling/logging.service';
 
 export const AuthGuard: CanActivateFn = (
-  route: ActivatedRouteSnapshot
+  route: ActivatedRouteSnapshot,
 ): Observable<boolean> => {
   const authService = inject(AuthService);
   const router = inject(Router);
@@ -25,12 +25,25 @@ export const AuthGuard: CanActivateFn = (
         router.navigate(['/login']);
         return false;
       }
-    })
+    }),
   );
 };
 
+export const AgencySignupGuard: CanActivateFn = (): boolean => {
+  const router = inject(Router);
+  const host = window.location.hostname;
+
+  const isOfferorOnlyHost = host === 'app.munivendor.com';
+
+  if (isOfferorOnlyHost) {
+    router.navigate(['/offeror/signup']);
+    return false;
+  }
+  return true;
+};
+
 export const GuestGuard: CanActivateFn = (
-  route: ActivatedRouteSnapshot
+  route: ActivatedRouteSnapshot,
 ): Observable<boolean> => {
   const authService = inject(AuthService);
   const router = inject(Router);
@@ -91,18 +104,18 @@ export const GuestGuard: CanActivateFn = (
               className: 'auth.guard.ts',
               operation: 'getFlowProgress',
               userId: userId,
-            }
+            },
           );
           router.navigate(['/organization-details']);
           return of(false);
-        })
+        }),
       );
-    })
+    }),
   );
 };
 
 export const FlowCompletionGuard: CanActivateFn = (
-  route: ActivatedRouteSnapshot
+  route: ActivatedRouteSnapshot,
 ): Observable<boolean> => {
   const authService = inject(AuthService);
   const router = inject(Router);
@@ -156,12 +169,12 @@ export const FlowCompletionGuard: CanActivateFn = (
               className: 'auth.guard.ts',
               operation: 'getFlowProgress',
               userId: userId,
-            }
+            },
           );
           router.navigate(['/organization-details']);
           return of(false);
-        })
+        }),
       );
-    })
+    }),
   );
 };

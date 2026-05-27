@@ -146,6 +146,10 @@ export class RequestConfirmationDialog implements OnDestroy {
         this.handleDuplicate(request);
         break;
 
+      case 'delete':
+        this.dialogRef.close(true);
+        break;
+
       default:
         this.dialogRef.close(false);
         break;

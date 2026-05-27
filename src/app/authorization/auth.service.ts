@@ -74,6 +74,8 @@ export class AuthService {
     '/',
     '/login',
     '/signup',
+    '/offeror/signup',
+    '/agency/signup',
     '/forgot-password',
     '/email-verification',
     '/validateuser',
@@ -126,7 +128,6 @@ export class AuthService {
         this.forceLogoutThisTab();
       }
     } catch (error) {
-      console.error('Error parsing session data:', error);
       this.forceLogoutThisTab();
     }
   }
@@ -191,7 +192,6 @@ export class AuthService {
               }
             }),
             catchError((userError) => {
-              console.error('Error fetching user data during init:', userError);
               return of(null);
             }),
           );
@@ -204,7 +204,6 @@ export class AuthService {
           ) {
             this.router.navigate(['/login']);
           }
-          // Return of(null) instead of throwError to prevent error propagation
           return of(null);
         }),
       );
@@ -221,6 +220,8 @@ export class AuthService {
             !skipNext &&
             !signupInProgress &&
             this.router.url !== '/signup',
+          this.router.url !== '/offeror/signup' &&
+            this.router.url !== '/agency/signup',
         ),
       )
       .subscribe({
@@ -291,7 +292,7 @@ export class AuthService {
   logout(): void {
     if (!this.authState.value) {
       this.clearCurrentSession();
-      console.warn('User is already logged out, skipping redundant logout.');
+
       return;
     }
 
@@ -307,13 +308,11 @@ export class AuthService {
             }
             this.userLoggedOut$.next();
           } catch (error) {
-            console.error('Google Sign-Out Error:', error);
           } finally {
             this.safeResetAuthState();
           }
         },
         error: (error) => {
-          console.error('Logout Error:', error);
           this.safeResetAuthState();
         },
       });
@@ -321,7 +320,6 @@ export class AuthService {
 
   private safeResetAuthState(): void {
     if (!this.authState.value) {
-      console.warn('Auth state is already reset. Skipping duplicate reset.');
       return;
     }
 
@@ -416,7 +414,6 @@ export class AuthService {
         }
       }),
       catchError((error) => {
-        console.error('Error manually restoring organization ID:', error);
         return of(null);
       }),
     );
