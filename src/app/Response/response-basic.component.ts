@@ -75,6 +75,8 @@ export class ResponseBasicComponent implements OnInit {
   @Output() formValidityChange = new EventEmitter<boolean>();
   @Input() isEditMode = false;
   @Input() responseIdParam?: string | undefined | null;
+  @Output() isSavingChange = new EventEmitter<boolean>();
+
   requestForm!: FormGroup;
   request: Response | undefined;
   responseForm: FormGroup;
@@ -473,6 +475,8 @@ export class ResponseBasicComponent implements OnInit {
     const effectiveResponseId =
       this.responseIdParam ?? responseIdFromStateService;
 
+    this.isSavingChange.emit(true);
+
     if (effectiveResponseId) {
       this.requestService
         .UpdateRequest(Number(effectiveResponseId), request)
@@ -487,8 +491,10 @@ export class ResponseBasicComponent implements OnInit {
                 responseRequestId.toString(),
               );
             }
+            this.isSavingChange.emit(false);
           },
           (error) => {
+            this.isSavingChange.emit(false);
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(
@@ -523,8 +529,11 @@ export class ResponseBasicComponent implements OnInit {
               .UpdateRequestStatus(response, 8)
               .pipe(takeUntil(this.destroy$))
               .subscribe(
-                (statusResponse) => {},
+                (statusResponse) => {
+                  this.isSavingChange.emit(false);
+                },
                 (error) => {
+                  this.isSavingChange.emit(false);
                   console.error('Error updating response status:', error);
 
                   const correlationId = error?.error?.correlationId;
@@ -547,6 +556,7 @@ export class ResponseBasicComponent implements OnInit {
               );
           },
           (error) => {
+            this.isSavingChange.emit(false);
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(
