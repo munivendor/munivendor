@@ -27,6 +27,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { UserDesignation } from '../../model/user-designation.model';
 import { Observable } from 'rxjs';
+import { UserService } from '../../../shared/service/user.service';
 
 function emailMatchValidator(group: AbstractControl): ValidationErrors | null {
   const email = group.get('workEmail')?.value;
@@ -67,6 +68,7 @@ export class ClerkDesigneeComponent implements OnInit, OnChanges {
   readonly phonePattern = '^\\(\\d{3}\\) \\d{3}-\\d{4}$';
   readonly emailPattern =
     '^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$';
+  readonly designationId = 3;
 
   form!: FormGroup;
   isSaving = false;
@@ -79,6 +81,7 @@ export class ClerkDesigneeComponent implements OnInit, OnChanges {
     private loggingService: LoggingService,
     private stateService: StateService,
     private agencyProfileService: AgencyProfileService,
+    private userProfileService: UserService,
   ) {}
 
   get isLoading(): boolean {
@@ -200,9 +203,7 @@ export class ClerkDesigneeComponent implements OnInit, OnChanges {
     this.isSaving = true;
 
     const { confirmEmail, workPhoneNumber, ...formFields } = this.form.value;
-
     const rawPhone = workPhoneNumber.replace(/\D/g, '');
-
     const isExistingUser =
       this.existingDesignee != null && this.existingDesignee.userId != null;
 
@@ -213,17 +214,17 @@ export class ClerkDesigneeComponent implements OnInit, OnChanges {
       ...(isExistingUser && { userId: this.existingDesignee!.userId }),
     };
 
-    const save$ = (
-      isExistingUser
-        ? this.agencyProfileService.CreateUser(userPayload)
-        : this.agencyProfileService
-            .CreateUser(userPayload)
-            .pipe(
-              switchMap((newUserId: number) =>
-                this.agencyProfileService.SaveUserDesignations(newUserId, [1]),
-              ),
-            )
-    ) as Observable<unknown>;
+    const save$: Observable<unknown> = isExistingUser
+      ? this.userProfileService.updateUser(userPayload)
+      : this.agencyProfileService
+          .CreateUser(userPayload)
+          .pipe(
+            switchMap((newUserId: number) =>
+              this.agencyProfileService.SaveUserDesignations(newUserId, [
+                this.designationId,
+              ]),
+            ),
+          );
 
     save$.subscribe({
       next: () => {

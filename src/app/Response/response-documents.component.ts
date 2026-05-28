@@ -34,6 +34,7 @@ import { LoggingService } from '../exceptionhandling/logging.service';
 import { LoadingService } from '../shared/LoadingSpinner/loading.service';
 import { SnackbarNotificationService } from '../shared/service/snackbar-notification.service';
 import { MatSort, MatSortModule } from '@angular/material/sort';
+import { SplitCamelCasePipe } from '../shared/pipes/split-camel-case.pipe';
 
 @Component({
   selector: 'response-documents',
@@ -49,6 +50,7 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
     ReactiveFormsModule,
     TooltipDirective,
     MatSortModule,
+    SplitCamelCasePipe,
   ],
   templateUrl: './response-documents.component.html',
   styleUrls: ['./response-documents.component.css'],
@@ -76,7 +78,12 @@ export class ResponseDocumentsComponent
     'documentInstanceStatus',
   ];
 
-  offerorDocumentsColumns: string[] = ['formName', 'download', 'delete'];
+  offerorDocumentsColumns: string[] = [
+    'formName',
+    'source',
+    'download',
+    'delete',
+  ];
 
   requiredDocumentsDatasource = new MatTableDataSource<any>([]);
   notarizationRequiredDocumentsDatasource = new MatTableDataSource<any>([]);
@@ -231,6 +238,7 @@ export class ResponseDocumentsComponent
         documentId: [doc.documentId || doc.requestDocumentId],
         requestDocumentId: [doc.requestDocumentId ?? null],
         documentName: [doc.documentName],
+        documentSource: [doc.documentSource],
         documentRequired: [doc.documentRequired],
         selected: [doc.selected],
         requiresNotarization: [
@@ -287,18 +295,23 @@ export class ResponseDocumentsComponent
           next: (response) => {
             this.loadingService.hide();
             if (response.isSuccess && this.currentRow?.requestDocumentId) {
-              const dataToUpdate =
-                this.currentSource === 'notarizationNotRequired'
-                  ? this.requiredDocumentsDatasource.data
-                  : this.notarizationRequiredDocumentsDatasource.data;
+              const isNotarization =
+                this.currentSource === 'notarizationRequired';
+              const datasource = isNotarization
+                ? this.notarizationRequiredDocumentsDatasource
+                : this.requiredDocumentsDatasource;
 
-              const rowToUpdate = dataToUpdate.find(
-                (doc: any) =>
-                  doc.requestDocumentId === this.currentRow.requestDocumentId,
+              // Reassign array so Angular detects the change
+              datasource.data = datasource.data.map((doc: any) =>
+                doc.requestDocumentId === this.currentRow.requestDocumentId
+                  ? {
+                      ...doc,
+                      documentInstanceStatus: 'Complete',
+                      documentSourceId: 2,
+                      derived: false,
+                    }
+                  : doc,
               );
-              if (rowToUpdate) {
-                rowToUpdate.documentInstanceStatus = 'Complete';
-              }
 
               this.snackbarNotificationService.showSnackbarSuccess(
                 'Document uploaded successfully.',
@@ -565,6 +578,7 @@ export class ResponseDocumentsComponent
             documentId: [newDocument.documentId],
             requestDocumentId: [newDocument.requestDocumentId ?? null],
             documentName: [newDocument.documentName],
+            documentSource: [newDocument.documentSource ?? 'UserUpload'],
           });
           this.optionalOfferorDocuments.push(formGroup);
           this.updateCombinedDatasource();
@@ -706,6 +720,20 @@ export class ResponseDocumentsComponent
 
   goToOfferorProfilePage() {
     this.router.navigate(['/offeror-profile-page']);
+  }
+  // documentSourceId
+  // 1 = AUTOFILL
+  // 2 = user upload = manual upload
+  // 3 - offeror profile upload
+
+  getUploadIconColor(row: any): string {
+    if (row.documentSourceId === 3) {
+      return '#3f51b5'; // blue = uploaded from Offeror Profile
+    }
+    if (row.documentSourceId === 2) {
+      return 'green'; // green = user uploaded
+    }
+    return 'gray'; // gray = not yet uploaded
   }
 
   ngOnDestroy(): void {

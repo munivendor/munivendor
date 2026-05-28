@@ -16,6 +16,7 @@
         [sourceIdParam]="sourceIdParam"
         [responseIdParam]="responseIdParam"
         (formValidityChange)="onFormValidityChange($event)"
+        (isSavingChange)="onSavingChange($event)"
       ></response-basic>
       <div>
         <button
@@ -43,7 +44,14 @@
         >
           Back
         </button>
-        <button mat-raised-button matStepperNext color="primary">Next</button>
+        <button
+          mat-raised-button
+          matStepperNext
+          color="primary"
+          [disabled]="isSaving"
+        >
+          Next
+        </button>
       </div>
       <response-details
         #step2
@@ -63,14 +71,24 @@
         <!-- <button mat-raised-button matStepperNext [disabled]="!isAutoFillComplete" color="primary">
           Next
         </button> -->
-        <button mat-raised-button matStepperNext color="primary">Next</button>
+        <button
+          mat-raised-button
+          matStepperNext
+          color="primary"
+          [disabled]="isSaving"
+        >
+          Next
+        </button>
       </div>
     </ng-template>
   </mat-step>
 
   <mat-step label="Required Forms & Documents">
     <ng-template matStepContent>
-      <div class="response-stepper-button-container">
+      <div
+        class="response-stepper-button-container"
+        style="margin-bottom: 12px"
+      >
         <button
           mat-raised-button
           matStepperPrevious
@@ -81,9 +99,32 @@
         </button>
         <button mat-raised-button matStepperNext color="primary">Next</button>
       </div>
-      <response-documents
-        [responseIdParam]="responseIdParam"
-      ></response-documents>
+
+      <div class="documents-legend">
+        <mat-card>
+          <mat-card-content>
+            <div style="display: flex; align-items: center; gap: 8px">
+              <mat-icon style="color: gray">upload</mat-icon>
+              <span>User has not uploaded form</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px">
+              <mat-icon style="color: green">upload</mat-icon>
+              <span>User has successfully uploaded form</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px">
+              <mat-icon color="primary">upload</mat-icon>
+              <span>Form has been uploaded from Offeror Profile</span>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <div>
+        <response-documents
+          [responseIdParam]="responseIdParam"
+        ></response-documents>
+      </div>
+
       <div class="response-stepper-button-container">
         <button
           mat-raised-button
