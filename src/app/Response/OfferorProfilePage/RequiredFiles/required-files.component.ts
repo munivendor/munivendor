@@ -149,12 +149,7 @@ export class RequiredFilesComponent implements OnInit {
     };
 
     this.requestService
-      .SaveOrganizationDocument(
-        this.organizationId,
-        municipalityDocument,
-        file,
-        municipalityDocument.mapId,
-      )
+      .SaveOrganizationDocument(this.organizationId, municipalityDocument, file)
       .subscribe({
         next: () => {
           this.fileStates[fileConfig.key].isUploading = false;
@@ -208,12 +203,7 @@ export class RequiredFilesComponent implements OnInit {
     };
 
     this.requestService
-      .SaveOrganizationDocument(
-        this.organizationId,
-        municipalityDocument,
-        file,
-        municipalityDocument.mapId,
-      )
+      .SaveOrganizationDocument(this.organizationId, municipalityDocument, file)
       .subscribe({
         next: () => {
           this.insuranceUploading = false;

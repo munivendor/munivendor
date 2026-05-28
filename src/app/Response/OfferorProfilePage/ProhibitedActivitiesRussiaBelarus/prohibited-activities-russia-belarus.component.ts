@@ -483,12 +483,7 @@ export class ProhibitedActivitiesRussiaBelarusComponent
     };
 
     this.requestService
-      .SaveOrganizationDocument(
-        this.organizationId,
-        municipalityDocument,
-        file,
-        municipalityDocument.mapId,
-      )
+      .SaveOrganizationDocument(this.organizationId, municipalityDocument, file)
       .subscribe({
         next: () => {
           this.isUploading = false;
