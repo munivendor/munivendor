@@ -24,6 +24,7 @@ import { TooltipDirective } from '../../shared/directive/tooltip.directive';
 import { MatIconModule } from '@angular/material/icon';
 // import { ResponseNotarizationComponent } from '../response-notarization.component';
 import { StepperSelectionEvent } from '@angular/cdk/stepper';
+import { MatCardModule } from '@angular/material/card';
 
 @Component({
   selector: 'response-stepper',
@@ -45,7 +46,8 @@ import { StepperSelectionEvent } from '@angular/cdk/stepper';
     ResponseReviewComponent,
     TooltipDirective,
     MatIconModule,
-    // ResponseNotarizationComponent
+    // ResponseNotarizationComponent,
+    MatCardModule,
   ],
 })
 export class ResponseStepper implements OnInit, OnDestroy {
@@ -71,12 +73,13 @@ export class ResponseStepper implements OnInit, OnDestroy {
   isStepValid = false;
   isAutoFillComplete = false;
   organizationId = 1;
+  isSaving = false;
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private stateService: StateService,
-    @Inject(PLATFORM_ID) private platformId: Object
+    @Inject(PLATFORM_ID) private platformId: Object,
   ) {
     this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       this.sourceIdParam = params.get('sourceId');
@@ -109,15 +112,19 @@ export class ResponseStepper implements OnInit, OnDestroy {
     this.router.events
       .pipe(
         filter(
-          (event): event is NavigationStart => event instanceof NavigationStart
+          (event): event is NavigationStart => event instanceof NavigationStart,
         ),
-        takeUntil(this.destroy$)
+        takeUntil(this.destroy$),
       )
       .subscribe((event) => {
         if (!event.url.includes('/response-basic-view')) {
           this.clearCreationSessionStorage();
         }
       });
+  }
+
+  onSavingChange(saving: boolean) {
+    this.isSaving = saving;
   }
 
   onStepChange(event: StepperSelectionEvent): void {

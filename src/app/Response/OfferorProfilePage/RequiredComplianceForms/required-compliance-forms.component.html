@@ -40,6 +40,9 @@
             {{ option.codeDesc }}
           </mat-option>
         </mat-select>
+        <mat-hint *ngIf="hasAnyUploadedEeoDoc">
+          Note: Remove the uploaded document to change your selection.
+        </mat-hint>
         <mat-error *ngIf="isFieldInvalid('eeoSelection')">
           Please select an EEO document type.
         </mat-error>

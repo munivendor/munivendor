@@ -1,24 +1,3 @@
-<!-- legend for document status 'uploaded, not uploaded...' -->
-<!-- <div style="display: flex; justify-content: end">
-  <div></div>
-  <mat-card style="width: 180px; background-color: rgb(255, 243, 207)">
-    <mat-card-content>
-      <div style="display: flex">
-        <mat-icon color="primary">upload</mat-icon>
-        <div>: No File Uploaded</div>
-      </div>
-      <div style="display: flex">
-        <mat-icon style="color: green">upload</mat-icon>
-        <div>: File Uploaded</div>
-      </div>
-
-      <div style="display: flex">
-      <mat-icon style="color: gray">upload</mat-icon>
-      <div>: Upload Disabled (MV Autofill Selected)</div>
-    </div>
-    </mat-card-content>
-  </mat-card>
-</div> -->
 <h2>Agency Required Forms & Documents</h2>
 <table
   mat-table
@@ -73,16 +52,15 @@
       <button
         style="margin-left: -12px"
         mat-icon-button
-        color="primary"
         (click)="onDownloadRequiredAgencyDocuments(row)"
       >
-        <mat-icon>download</mat-icon>
+        <mat-icon style="color: gray">download</mat-icon>
       </button>
       <button
         mat-icon-button
         (click)="onUploadClick(row, 'notarizationNotRequired')"
       >
-        <mat-icon>upload</mat-icon>
+        <mat-icon [style.color]="getUploadIconColor(row)">upload</mat-icon>
       </button>
     </td>
   </ng-container>
@@ -211,16 +189,15 @@
         <button
           style="margin-left: -12px"
           mat-icon-button
-          color="primary"
           (click)="onDownloadRequiredAgencyDocuments(row)"
         >
-          <mat-icon>download</mat-icon>
+          <mat-icon style="color: gray">download</mat-icon>
         </button>
         <button
           mat-icon-button
           (click)="onUploadClick(row, 'notarizationRequired')"
         >
-          <mat-icon>upload</mat-icon>
+          <mat-icon [style.color]="getUploadIconColor(row)">upload</mat-icon>
         </button>
       </td>
     </ng-container>
@@ -287,6 +264,13 @@
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Form Name</th>
         <td mat-cell *matCellDef="let row">
           {{ row.documentName }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="source">
+        <th mat-header-cell *matHeaderCellDef>Source</th>
+        <td mat-cell *matCellDef="let row">
+          {{ row.documentSource | splitCamelCase }}
         </td>
       </ng-container>
 

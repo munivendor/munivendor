@@ -1,5 +1,9 @@
 import { Routes } from '@angular/router';
-import { AuthGuard, GuestGuard } from './authorization/auth.guard';
+import {
+  AuthGuard,
+  GuestGuard,
+  AgencySignupGuard,
+} from './authorization/auth.guard';
 
 // Non-authorized pages
 import { SignupComponent } from './Signup/signup.component';
@@ -42,9 +46,20 @@ export const routes: Routes = [
   // Guest-only routes (authenticated users will be redirected)
   {
     path: 'signup',
+    redirectTo: '/offeror/signup',
+    pathMatch: 'full',
+  },
+  {
+    path: 'offeror/signup',
     component: SignupComponent,
     canActivate: [GuestGuard],
-    data: { showSidenav: false },
+    data: { showSidenav: false, signupMode: 'offeror' },
+  },
+  {
+    path: 'agency/signup',
+    component: SignupComponent,
+    canActivate: [AgencySignupGuard, GuestGuard],
+    data: { showSidenav: false, signupMode: 'agency' },
   },
   {
     path: 'login',

@@ -87,10 +87,16 @@ export class ComplianceDocumentsComponent implements OnInit, OnChanges {
   }
 
   get selectedDocumentType(): DocumentType | undefined {
-    const selection = this.complianceForm?.get('eeoSelection')?.value;
+    const selection = this.complianceForm?.getRawValue().eeoSelection;
     return selection
       ? this.documentTypes.find((dt) => dt.codeId === selection)
       : undefined;
+  }
+
+  get hasAnyUploadedEeoDoc(): boolean {
+    return this.eeoOptions.some((opt) =>
+      this.uploadedDocuments.some((d) => d.documentName === opt.codeName),
+    );
   }
 
   getUploadedDoc(codeName: string): OrganizationDocument | undefined {
@@ -114,12 +120,23 @@ export class ComplianceDocumentsComponent implements OnInit, OnChanges {
     });
 
     this.tryPreselect();
+    this.syncDropdownState();
   }
 
   private buildForm(): void {
     this.complianceForm = this.fb.group({
       eeoSelection: [null, Validators.required],
     });
+  }
+
+  private syncDropdownState(): void {
+    if (!this.complianceForm) return;
+    const control = this.complianceForm.get('eeoSelection');
+    if (this.hasAnyUploadedEeoDoc) {
+      control?.disable();
+    } else {
+      control?.enable();
+    }
   }
 
   onDragOver(event: DragEvent): void {
@@ -166,7 +183,6 @@ export class ComplianceDocumentsComponent implements OnInit, OnChanges {
     this.selectedFileName = file.name;
     this.isUploading = true;
 
-    // mapId = documentTypeId
     const municipalityDocument = {
       documentName: docType.codeName,
       codeId: docType.codeId,
@@ -290,12 +306,16 @@ export class ComplianceDocumentsComponent implements OnInit, OnChanges {
   private preselectionDone = false;
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (this.preselectionDone) return;
-    this.tryPreselect();
+    if (!this.preselectionDone) {
+      this.tryPreselect();
+    }
+
+    if (changes['uploadedDocuments']) {
+      this.syncDropdownState();
+    }
   }
 
   private tryPreselect(): void {
-    // Guard: only proceed when both inputs have data AND the form exists
     if (
       !this.complianceForm ||
       !this.uploadedDocuments?.length ||

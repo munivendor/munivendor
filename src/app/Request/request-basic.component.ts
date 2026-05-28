@@ -61,6 +61,36 @@ interface FlattenedCategoryNode {
   children?: FlattenedCategoryNode[];
 }
 
+// Non-legally-permissible close dates (hardcoded — update annually or migrate
+// to a backend endpoint when multi-year / multi-agency support is needed).
+
+const RESTRICTED_CLOSE_DATES_2026: ReadonlySet<string> = new Set([
+  '2026-06-18', // Thursday  – Juneteenth observed (day before)
+  '2026-06-19', // Friday    – Juneteenth
+  '2026-07-03', // Friday    – Independence Day observed
+  '2026-09-07', // Monday    – Labor Day
+  '2026-10-12', // Monday    – Columbus Day
+  '2026-11-10', // Tuesday   – Veterans Day observed
+  '2026-11-11', // Wednesday – Veterans Day
+  '2026-11-25', // Wednesday – Day before Thanksgiving
+  '2026-11-26', // Thursday  – Thanksgiving
+  '2026-12-24', // Thursday  – Christmas Eve
+  '2026-12-25', // Friday    – Christmas Day
+]);
+
+/** Returns true when the given date is a restricted close date. */
+function isRestrictedCloseDate(date: Date): boolean {
+  // All Mondays are non-permissible
+  if (date.getDay() === 1) return true;
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const iso = `${year}-${month}-${day}`;
+
+  return RESTRICTED_CLOSE_DATES_2026.has(iso);
+}
+
 @Component({
   selector: 'request-basic',
   standalone: true,
@@ -1009,6 +1039,8 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     return isFutureOrToday && isWeekday && isAfterOrEqualToStartDate;
   };
 
+  // Close Date filter — combines existing business rules with the hardcoded
+  // list of non-legally-permissible dates (holidays + all Mondays).
   disableCloseDates = (date: Date | null): boolean => {
     if (!date) return false;
 
@@ -1016,7 +1048,12 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     today.setHours(0, 0, 0, 0);
 
     const isFutureOrToday = date >= today;
-    const isWeekday = date.getDay() !== 0 && date.getDay() !== 6;
+    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+
+    // Reject weekends, past dates, and restricted close dates
+    if (!isFutureOrToday || isWeekend || isRestrictedCloseDate(date)) {
+      return false;
+    }
 
     const publishDate = this.basicsFormGroup?.get('publishDate')?.value;
 
@@ -1027,7 +1064,7 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
       isAfterOrEqualToPublishDate = date >= pubDate;
     }
 
-    return isFutureOrToday && isWeekday && isAfterOrEqualToPublishDate;
+    return isAfterOrEqualToPublishDate;
   };
 
   ngOnDestroy(): void {
