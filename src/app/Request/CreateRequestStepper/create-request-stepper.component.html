@@ -13,9 +13,9 @@
             mat-raised-button
             (click)="saveRequest()"
             matStepperNext
-            [disabled]="!isStepValid"
             color="primary"
             style="float: right"
+            [disabled]="!isStepValid"
           >
             Next
           </button>
@@ -38,20 +38,11 @@
             mat-raised-button
             matStepperNext
             (click)="saveSections()"
-            [disabled]="!isStepValid"
             color="primary"
+            [disabled]="!isStepValid"
           >
             Next
           </button>
-          <!-- not disabled for testing purposes -->
-          <!-- <button
-            mat-raised-button
-            matStepperNext
-            (click)="saveSections()"
-            color="primary"
-          >
-            Next
-          </button> -->
         </div>
         <request-overview
           #step2

@@ -325,12 +325,7 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
     };
 
     this.requestService
-      .SaveOrganizationDocument(
-        this.organizationId,
-        municipalityDocument,
-        file,
-        municipalityDocument.mapId,
-      )
+      .SaveOrganizationDocument(this.organizationId, municipalityDocument, file)
       .subscribe({
         next: () => {
           this.isUploading = false;

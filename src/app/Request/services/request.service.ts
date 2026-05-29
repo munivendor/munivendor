@@ -147,14 +147,14 @@ export class RequestService {
     organizationId: number,
     municipalityDocument: any,
     file: File,
-    documentTypeId?: number,
   ): Observable<any> {
-    const url =
-      documentTypeId != null
-        ? `${this.url}OrganizationDocuments/${organizationId}/${documentTypeId}`
-        : `${this.url}OrganizationDocuments/${organizationId}`;
+    const url = `${this.url}OrganizationDocuments/${organizationId}`;
     const formData = new FormData();
     formData.append('documentName', municipalityDocument.documentName);
+    formData.append(
+      'documentTypeId',
+      municipalityDocument.mapId?.toString() ?? '',
+    );
     formData.append('file', file);
     return this.http.post<any>(url, formData);
   }

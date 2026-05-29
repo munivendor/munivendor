@@ -179,7 +179,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.snackbarNotificationService.showSnackbarSuccess(
-            'Offer deleted successfully .',
+            'Offer deleted successfully.',
           );
 
           this.loadAndJoinRequestData();
