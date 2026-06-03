@@ -67,6 +67,7 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
     offerorProfileId: number;
     formTypeId: number; // mapId
     details: string;
+    chapter25Identification?: boolean | null;
   }[] = [];
   @Output() detailsSaved = new EventEmitter<void>();
 
@@ -141,8 +142,9 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
       this.deletionJustOccurred = false;
       return;
     }
+
     // Before: mapId = documentTypeId for Iran details is 7 (per backend)
-    // Fix: mapId = formTypeId (mapId=7 for Iran), not documentTypeId
+    // Fix: mapId = formTypeId
     const matches = this.profileDetails.filter((d) => d.formTypeId === 7);
     const match = matches.length
       ? matches.reduce((a, b) =>
@@ -150,25 +152,23 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
         )
       : null;
 
-    const hasUploadedDoc = this.uploadedDocuments.some(
-      (d) => d.documentName === this.IRAN_DOCUMENT_CODE_NAME,
-    );
+    if (!match) return;
 
-    if (match?.details) {
-      this.savedOfferorProfileId = match.offerorProfileId;
-      this.iranForm.patchValue({
-        chapter25Identification: 'no',
-      });
+    this.savedOfferorProfileId = match.offerorProfileId;
 
+    const chapter25 =
+      match.chapter25Identification === true
+        ? 'yes'
+        : match.chapter25Identification === false
+          ? 'no'
+          : null;
+
+    this.iranForm.patchValue({ chapter25Identification: chapter25 });
+
+    if (match.details) {
       setTimeout(() => {
-        this.iranForm.patchValue({
-          iranDescription: match.details,
-        });
+        this.iranForm.patchValue({ iranDescription: match.details });
       }, 0);
-    } else if (hasUploadedDoc) {
-      this.iranForm.patchValue({
-        chapter25Identification: 'no',
-      });
     }
   }
 
@@ -198,77 +198,47 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
 
     const { chapter25Identification, iranDescription } = this.iranForm.value;
 
-    // User says NOT associated — delete file (if exists) and details (if exists)
-    if (chapter25Identification === 'yes') {
-      const uploadedDoc = this.getUploadedDoc(this.IRAN_DOCUMENT_CODE_NAME);
-      const deleteDoc$ =
-        uploadedDoc && this.organizationId
-          ? this.requestService.DeleteOrganizationDocument(
-              this.organizationId,
-              uploadedDoc.documentId,
-            )
-          : null;
-      const deleteDetails$ = this.savedOfferorProfileId
-        ? this.offerorProfileService.DeleteOfferorProfileDetails(
-            this.organizationId!,
-            7,
+    // 'yes' = does NOT conduct business, 'no' = DOES conduct business
+    const chapter25Bool = chapter25Identification === 'yes';
+
+    const saveOrUpdate$ = this.savedOfferorProfileId
+      ? this.offerorProfileService.UpdateOfferorProfileDetails(
+          this.organizationId!,
+          this.savedOfferorProfileId,
+          7,
+          !chapter25Bool ? iranDescription : null,
+          null,
+          null,
+          chapter25Bool,
+        )
+      : this.offerorProfileService.SaveOfferorProfileDetails(
+          this.organizationId!,
+          7,
+          !chapter25Bool ? iranDescription : null,
+          null,
+          null,
+          chapter25Bool,
+        );
+
+    // Delete doc if user certified they do NOT conduct business
+    const uploadedDoc = this.getUploadedDoc(this.IRAN_DOCUMENT_CODE_NAME);
+    const deleteDoc$ =
+      chapter25Bool && uploadedDoc && this.organizationId
+        ? this.requestService.DeleteOrganizationDocument(
+            this.organizationId,
+            uploadedDoc.documentId,
           )
         : null;
 
-      if (!deleteDoc$ && !deleteDetails$) {
-        this.snackbar.showSnackbarSuccess('Changes saved successfully.');
-        return;
-      }
+    const requests$: Observable<any>[] = [
+      saveOrUpdate$,
+      ...(deleteDoc$ ? [deleteDoc$] : []),
+    ];
 
-      const deletes: Observable<void>[] = [
-        ...(deleteDoc$ ? [deleteDoc$] : []),
-        ...(deleteDetails$ ? [deleteDetails$] : []),
-      ];
-
-      forkJoin(deletes).subscribe({
-        next: () => {
-          this.savedOfferorProfileId = null;
-          this.selectedFileName = null;
-          this.deletionJustOccurred = true;
-
-          this.iranForm.reset({ chapter25Identification: 'yes' });
-
-          this.snackbar.showSnackbarSuccess('Changes saved successfully.');
-          if (deleteDoc$) this.documentDeleted.emit();
-          if (deleteDetails$) this.detailsDeleted.emit();
-        },
-        error: (err) => {
-          this.snackbar.showSnackbarError(
-            'Failed to save changes. Please try again.',
-          );
-          this.loggingService.logException(err, 3, {
-            organizationId: this.organizationId,
-            methodName: 'onSubmit - delete',
-          });
-        },
-      });
-      return;
-    }
-
-    // User IS associated — save textarea details
-    if (!iranDescription || !this.organizationId) return;
-
-    const request$ = this.savedOfferorProfileId
-      ? this.offerorProfileService.UpdateOfferorProfileDetails(
-          this.organizationId,
-          this.savedOfferorProfileId,
-          7,
-          iranDescription,
-        )
-      : this.offerorProfileService.SaveOfferorProfileDetails(
-          this.organizationId,
-          7,
-          iranDescription,
-        );
-
-    request$.subscribe({
-      next: (res) => {
-        this.savedOfferorProfileId = res.offerorProfileId;
+    forkJoin(requests$).subscribe({
+      next: ([saveRes]) => {
+        this.savedOfferorProfileId = saveRes.offerorProfileId;
+        if (deleteDoc$) this.documentDeleted.emit();
         this.snackbar.showSnackbarSuccess('Changes saved successfully.');
         this.detailsSaved.emit();
       },

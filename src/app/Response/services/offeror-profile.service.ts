@@ -230,12 +230,21 @@ export class OfferorProfileService {
 
   SaveOfferorProfileDetails(
     organizationId: number,
-    formTypeId: number, // mapId = documentTypeId = formTypeId
+    formTypeId: number, // formTypeId === documentTypeId
     details: string | null,
+    ofacIdentification?: boolean | null,
+    ofacIdentificationAdditional?: boolean | null,
+    chapter25Identification?: boolean | null,
   ): Observable<{ offerorProfileId: number }> {
     return this.http.post<{ offerorProfileId: number }>(
       `${this.url}OfferorProfiles/Details/${organizationId}`,
-      { formTypeId, details },
+      {
+        formTypeId,
+        details,
+        ofacIdentification,
+        ofacIdentificationAdditional,
+        chapter25Identification,
+      },
     );
   }
 
@@ -261,12 +270,22 @@ export class OfferorProfileService {
   UpdateOfferorProfileDetails(
     organizationId: number,
     offerorProfileId: number,
-    documentTypeId: number,
-    details: string,
+    formTypeId: number, // formTypeId === documentTypeId
+    details: string | null,
+    ofacIdentification?: boolean | null,
+    ofacIdentificationAdditional?: boolean | null,
+    chapter25Identification?: boolean | null,
   ): Observable<{ offerorProfileId: number }> {
     return this.http.put<{ offerorProfileId: number }>(
       `${this.url}OfferorProfiles/Details/${organizationId}`,
-      { offerorProfileId, documentTypeId, details },
+      {
+        offerorProfileId,
+        formTypeId,
+        details,
+        ofacIdentification,
+        ofacIdentificationAdditional,
+        chapter25Identification,
+      },
     );
   }
 
