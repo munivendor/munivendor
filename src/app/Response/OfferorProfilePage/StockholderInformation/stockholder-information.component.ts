@@ -114,8 +114,8 @@ export class StockholderInformationComponent implements OnInit {
   isSavingStockholder = false;
 
   savedStockholders: OfferorStockholderInfo[] = [];
-  readonly STOCKHOLDER_TYPE_PERSON = 396;
-  readonly STOCKHOLDER_TYPE_ORG = 395;
+  readonly STOCKHOLDER_TYPE_PERSON = 395;
+  readonly STOCKHOLDER_TYPE_ORG = 394;
 
   readonly tableColumns = [
     'type',
@@ -393,7 +393,6 @@ export class StockholderInformationComponent implements OnInit {
         next: (data: OfferorStockholderInfo[]) => {
           this.savedStockholders = data ?? [];
 
-          // If records exist, pre-select Yes for the ownership question
           if (this.savedStockholders.length > 0) {
             this.stockholderForm
               .get('hasStockholders')
@@ -406,6 +405,12 @@ export class StockholderInformationComponent implements OnInit {
               ?.updateValueAndValidity({ emitEvent: false });
             this.stockholderForm.get('stockholderTypeId')?.markAsUntouched();
             this.stockholderForm.get('stockholderTypeId')?.markAsPristine();
+            this.stockholderForm.markAsPristine();
+          } else {
+            // 204 / empty — user previously answered "No" (or never answered)
+            this.stockholderForm
+              .get('hasStockholders')
+              ?.setValue(false, { emitEvent: false });
             this.stockholderForm.markAsPristine();
           }
         },
