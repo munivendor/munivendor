@@ -75,12 +75,10 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
     categoryId: string | number | null,
     categoryFullPath?: string,
   ): string => {
-    // If categoryFullPath is provided, use it directly
     if (categoryFullPath) {
       return categoryFullPath;
     }
 
-    // Fallback to old logic for backwards compatibility
     if (categoryId == null) {
       return '';
     }
@@ -181,7 +179,6 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
           this.snackbarNotificationService.showSnackbarSuccess(
             'Offer deleted successfully.',
           );
-
           this.loadAndJoinRequestData();
         },
         error: (error) => {
@@ -278,7 +275,6 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
 
     if (request) {
       const solicitationName = request.requestName || 'Unknown';
-
       const closeDate = request.closeDate
         ? formatDate(request.closeDate)
         : 'NoDate';
@@ -375,14 +371,25 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
   };
 
   ngOnInit(): void {
-    // Load persisted filters, or fall back to the default (live: true)
     const saved = this.filterStateService.load();
     this.filterForm.patchValue(saved ?? { live: true });
 
-    // Save on every change
     this.filterForm.valueChanges
       .pipe(takeUntil(this.destroy$))
-      .subscribe((values) => this.filterStateService.save(values));
+      .subscribe(
+        ({
+          requestName,
+          category,
+          requestId,
+          publishDateFrom,
+          publishDateTo,
+          closeDateFrom,
+          closeDateTo,
+          ...checkboxes
+        }) => {
+          this.filterStateService.save(checkboxes);
+        },
+      );
 
     this.triggerInitialSearch();
   }
