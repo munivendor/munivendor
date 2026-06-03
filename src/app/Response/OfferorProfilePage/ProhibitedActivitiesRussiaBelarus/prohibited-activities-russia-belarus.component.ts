@@ -72,6 +72,8 @@ export class ProhibitedActivitiesRussiaBelarusComponent
     offerorProfileId: number;
     formTypeId: number;
     details: string;
+    ofacIdentification?: boolean | null;
+    ofacIdentificationAdditional?: boolean | null;
   }[] = [];
   @Output() detailsSaved = new EventEmitter<void>();
   @Output() detailsDeleted = new EventEmitter<void>();
@@ -189,8 +191,8 @@ export class ProhibitedActivitiesRussiaBelarusComponent
       this.deletionJustOccurred = false;
       return;
     }
-    // // Before: mapId = documentTypeId for Russia/Belarus details is 8 (per backend)
-    // Fix: mapId = formTypeId (mapId=7 for Iran), not documentTypeId
+    // Before: mapId = documentTypeId for Russia/Belarus details is 8 (per backend)
+    // Fix: mapId = formTypeId
     const matches = this.profileDetails.filter((d) => d.formTypeId === 8);
     const match = matches.length
       ? matches.reduce((a, b) =>
@@ -198,26 +200,33 @@ export class ProhibitedActivitiesRussiaBelarusComponent
         )
       : null;
 
-    const hasUploadedDoc = this.uploadedDocuments.some(
-      (d) => d.documentName === this.OFAC_DOCUMENT_CODE_NAME[0],
-    );
+    if (!match) return;
 
-    if (match?.details) {
-      this.savedOfferorProfileId = match.offerorProfileId;
-      this.prohibitedForm.patchValue({
-        ofacIdentification: 'yes',
-        ofacAdditional: 'yes',
-      });
+    this.savedOfferorProfileId = match.offerorProfileId;
 
+    // Restore booleans from the saved record
+    const ofacId =
+      match.ofacIdentification === true
+        ? 'yes'
+        : match.ofacIdentification === false
+          ? 'no'
+          : null;
+    const ofacAdd =
+      match.ofacIdentificationAdditional === true
+        ? 'yes'
+        : match.ofacIdentificationAdditional === false
+          ? 'no'
+          : null;
+
+    this.prohibitedForm.patchValue({
+      ofacIdentification: ofacId,
+      ofacAdditional: ofacAdd,
+    });
+
+    if (match.details) {
       setTimeout(() => {
-        this.prohibitedForm.patchValue({
-          ofacDescription: match.details,
-        });
+        this.prohibitedForm.patchValue({ ofacDescription: match.details });
       }, 0);
-    } else if (hasUploadedDoc) {
-      this.prohibitedForm.patchValue({
-        ofacIdentification: 'yes',
-      });
     }
   }
 
@@ -330,103 +339,49 @@ export class ProhibitedActivitiesRussiaBelarusComponent
     const { ofacIdentification, ofacAdditional, ofacDescription } =
       this.prohibitedForm.value;
 
-    // User says NOT associated — delete file (if exists) and details (if exists)
-    if (ofacIdentification === 'no') {
-      const uploadedDoc = this.getUploadedDoc(this.OFAC_DOCUMENT_CODE_NAME[0]);
-      const deleteDoc$ =
-        uploadedDoc && this.organizationId
-          ? this.requestService.DeleteOrganizationDocument(
-              this.organizationId,
-              uploadedDoc.documentId,
-            )
-          : null;
-      const deleteDetails$ = this.savedOfferorProfileId
-        ? this.offerorProfileService.DeleteOfferorProfileDetails(
-            this.organizationId!,
-            8,
+    const ofacIdentificationBool = ofacIdentification === 'yes';
+    const ofacAdditionalBool =
+      ofacAdditional === 'yes' ? true : ofacAdditional === 'no' ? false : null;
+
+    // Always save/update the boolean selections
+    const saveOrUpdate$ = this.savedOfferorProfileId
+      ? this.offerorProfileService.UpdateOfferorProfileDetails(
+          this.organizationId!,
+          this.savedOfferorProfileId,
+          8,
+          ofacIdentificationBool ? ofacDescription : null,
+          ofacIdentificationBool,
+          ofacAdditionalBool,
+          null,
+        )
+      : this.offerorProfileService.SaveOfferorProfileDetails(
+          this.organizationId!,
+          8,
+          ofacIdentificationBool ? ofacDescription : null,
+          ofacIdentificationBool,
+          ofacAdditionalBool,
+          null,
+        );
+
+    // Conditionally delete doc if user answered 'no'
+    const uploadedDoc = this.getUploadedDoc(this.OFAC_DOCUMENT_CODE_NAME[0]);
+    const deleteDoc$ =
+      !ofacIdentificationBool && uploadedDoc && this.organizationId
+        ? this.requestService.DeleteOrganizationDocument(
+            this.organizationId,
+            uploadedDoc.documentId,
           )
         : null;
 
-      if (!deleteDoc$ && !deleteDetails$) {
-        this.snackbar.showSnackbarSuccess('Changes saved successfully.');
-        return;
-      }
+    const requests$: Observable<any>[] = [
+      saveOrUpdate$,
+      ...(deleteDoc$ ? [deleteDoc$] : []),
+    ];
 
-      const deletes: Observable<void>[] = [
-        ...(deleteDoc$ ? [deleteDoc$] : []),
-        ...(deleteDetails$ ? [deleteDetails$] : []),
-      ];
-
-      forkJoin(deletes).subscribe({
-        next: () => {
-          this.savedOfferorProfileId = null;
-          this.selectedFileName = null;
-          this.deletionJustOccurred = true;
-          this.prohibitedForm.reset({ ofacIdentification: 'no' });
-          this.snackbar.showSnackbarSuccess('Changes saved successfully.');
-          if (deleteDoc$) this.documentDeleted.emit();
-          if (deleteDetails$) this.detailsDeleted.emit();
-        },
-        error: (err) => {
-          this.snackbar.showSnackbarError(
-            'Failed to save changes. Please try again.',
-          );
-          this.loggingService.logException(err, 3, {
-            organizationId: this.organizationId,
-            methodName: 'onSubmit - delete',
-          });
-        },
-      });
-      return;
-    }
-
-    // User is associated but activity is NOT consistent — delete textarea details only
-    if (ofacIdentification === 'yes' && ofacAdditional === 'no') {
-      if (!this.savedOfferorProfileId) {
-        this.snackbar.showSnackbarSuccess('Changes saved successfully.');
-        return;
-      }
-
-      this.offerorProfileService
-        .DeleteOfferorProfileDetails(this.organizationId!, 8)
-        .subscribe({
-          next: () => {
-            this.savedOfferorProfileId = null;
-            this.detailsDeleted.emit();
-            this.snackbar.showSnackbarSuccess('Changes saved successfully.');
-          },
-          error: (err) => {
-            this.snackbar.showSnackbarError(
-              'Failed to save changes. Please try again.',
-            );
-            this.loggingService.logException(err, 3, {
-              organizationId: this.organizationId,
-              methodName: 'onSubmit - deleteDetails',
-            });
-          },
-        });
-      return;
-    }
-
-    // User is associated and activity IS consistent — save textarea details
-    if (!ofacDescription || !this.organizationId) return;
-
-    const request$ = this.savedOfferorProfileId
-      ? this.offerorProfileService.UpdateOfferorProfileDetails(
-          this.organizationId,
-          this.savedOfferorProfileId,
-          8,
-          ofacDescription,
-        )
-      : this.offerorProfileService.SaveOfferorProfileDetails(
-          this.organizationId,
-          8,
-          ofacDescription,
-        );
-
-    request$.subscribe({
-      next: (res) => {
-        this.savedOfferorProfileId = res.offerorProfileId;
+    forkJoin(requests$).subscribe({
+      next: ([saveRes]) => {
+        this.savedOfferorProfileId = saveRes.offerorProfileId;
+        if (deleteDoc$) this.documentDeleted.emit();
         this.snackbar.showSnackbarSuccess('Changes saved successfully.');
         this.detailsSaved.emit();
       },
