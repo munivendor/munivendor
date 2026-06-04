@@ -1,4 +1,11 @@
-import { Component, OnInit, Input, OnDestroy } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  Input,
+  OnDestroy,
+  ViewChild,
+  AfterViewInit,
+} from '@angular/core';
 import { RouterModule } from '@angular/router';
 import {
   FormGroup,
@@ -16,15 +23,7 @@ import { RequestService } from './services/request.service';
 import { Document } from './model/document.model';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RequestDocument } from './model/requestdocument.model';
-import {
-  catchError,
-  forkJoin,
-  map,
-  Observable,
-  Subject,
-  takeUntil,
-  tap,
-} from 'rxjs';
+import { forkJoin, map, Observable, Subject, takeUntil, tap } from 'rxjs';
 import { StateService } from './services/state.service';
 import { SelectionModel } from '@angular/cdk/collections';
 import { MatTableModule } from '@angular/material/table';
@@ -33,6 +32,10 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DocumentService } from '../shared/service/document.service';
 import { LoggingService } from '../exceptionhandling/logging.service';
+import { LoadingService } from '../shared/LoadingSpinner/loading.service';
+import { SnackbarNotificationService } from '../shared/service/snackbar-notification.service';
+import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatTableDataSource } from '@angular/material/table';
 
 @Component({
   selector: 'request-required-documents',
@@ -51,9 +54,12 @@ import { LoggingService } from '../exceptionhandling/logging.service';
     MatFormFieldModule,
     MatSelectModule,
     MatTooltipModule,
+    MatSortModule,
   ],
 })
-export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
+export class RequestRequiredDocumentsComponent
+  implements OnInit, OnDestroy, AfterViewInit
+{
   @Input() idParam?: string | null | undefined;
   displayedColumns: string[] = [
     'select',
@@ -62,9 +68,15 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
     'download',
     'delete',
   ];
-  requiredStateDocumentsDatasource: FormGroup[] = [];
-  optionalStateDocumentsDatasource: FormGroup[] = [];
-  optionalMunicipalityDocumentsDatasource: FormGroup[] = [];
+  requiredStateDocumentsDatasource = new MatTableDataSource<FormGroup>([]);
+  optionalStateDocumentsDatasource = new MatTableDataSource<FormGroup>([]);
+  optionalMunicipalityDocumentsDatasource = new MatTableDataSource<FormGroup>(
+    [],
+  );
+
+  @ViewChild('requiredSort') requiredSort!: MatSort;
+  @ViewChild('optionalStateSort') optionalStateSort!: MatSort;
+  @ViewChild('municipalitySort') municipalitySort!: MatSort;
   selection = new SelectionModel<Document>(true, []);
   private destroy$ = new Subject<void>();
   requestDocumentsFormGroup!: FormGroup;
@@ -84,10 +96,13 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
     private stateService: StateService,
     private documentService: DocumentService,
     public dialog: MatDialog,
-    private loggingService: LoggingService
+    private loggingService: LoggingService,
+    private loadingService: LoadingService,
+    private snackbarNotificationService: SnackbarNotificationService,
   ) {}
 
   ngOnInit(): void {
+    this.loadingService.show();
     this.initializeRequestDocuments();
   }
 
@@ -96,19 +111,47 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  ngAfterViewInit(): void {
+    this.requiredStateDocumentsDatasource.sort = this.requiredSort;
+    this.optionalStateDocumentsDatasource.sort = this.optionalStateSort;
+    this.optionalMunicipalityDocumentsDatasource.sort = this.municipalitySort;
+
+    this.configureSortingAccessor(this.requiredStateDocumentsDatasource);
+    this.configureSortingAccessor(this.optionalStateDocumentsDatasource);
+    this.configureSortingAccessor(this.optionalMunicipalityDocumentsDatasource);
+  }
+
+  private configureSortingAccessor(
+    datasource: MatTableDataSource<FormGroup>,
+  ): void {
+    datasource.sortingDataAccessor = (
+      formGroup: FormGroup,
+      sortHeaderId: string,
+    ) => {
+      switch (sortHeaderId) {
+        case 'formName':
+          return formGroup.get('documentName')?.value?.toLowerCase() ?? '';
+        case 'notarization':
+          return formGroup.get('requiresNotarization')?.value ? 1 : 0;
+        default:
+          return '';
+      }
+    };
+  }
+
   get requiredStateDocuments(): FormArray {
     return this.requestDocumentsFormGroup.get(
-      'requiredStateDocuments'
+      'requiredStateDocuments',
     ) as FormArray;
   }
   get optionalStateDocuments(): FormArray {
     return this.requestDocumentsFormGroup.get(
-      'optionalStateDocuments'
+      'optionalStateDocuments',
     ) as FormArray;
   }
   get optionalMunicipalityDocuments(): FormArray {
     return this.requestDocumentsFormGroup.get(
-      'optionalMunicipalityDocuments'
+      'optionalMunicipalityDocuments',
     ) as FormArray;
   }
 
@@ -130,18 +173,19 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
     this.getAllDocumentTypes(
       Number(this.organizationId),
       undefined,
-      forceUpdate
+      forceUpdate,
     )
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          console.log('Documents fetched and form initialized for creation.');
+          this.loadingService.hide();
         },
         error: (error) => {
+          this.loadingService.hide();
           this.handleDocumentLoadError(
             error,
             'initializeForCreation',
-            'getAllDocumentTypes - GetRequiredDocuments/GetOptionalDocuments/GetMunicipalityDocuments'
+            'getAllDocumentTypes - GetRequiredDocuments/GetOptionalDocuments/GetMunicipalityDocuments',
           );
         },
       });
@@ -162,7 +206,7 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
 
           this.getAllDocumentTypes(
             Number(this.organizationId),
-            Number(this.idParam)
+            Number(this.idParam),
           )
             .pipe(takeUntil(this.destroy$))
             .subscribe({
@@ -171,27 +215,31 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
                   const enrichedRequestDocuments =
                     this.enrichRequestDocumentsWithOrganizationId(
                       documents,
-                      allDocuments.optionalMunicipalityDocuments ?? []
+                      allDocuments.optionalMunicipalityDocuments ?? [],
                     );
 
                   if (enrichedRequestDocuments.length > 0) {
                     this.populateRequestDocuments(enrichedRequestDocuments);
                     this.mergeUnselectedDocuments(
                       allDocuments,
-                      enrichedRequestDocuments
+                      enrichedRequestDocuments,
                     );
                   } else {
                     this.initializeForCreation(true);
+                    return;
                   }
+
+                  this.loadingService.hide();
                 } catch (err) {
                   this.fallbackToCreation();
                 }
               },
               error: (error) => {
+                this.loadingService.hide();
                 this.handleDocumentLoadError(
                   error,
                   'initializeForEditing',
-                  'getAllDocumentTypes'
+                  'getAllDocumentTypes',
                 );
                 if (error.status >= 500) {
                   this.fallbackToCreation();
@@ -203,7 +251,7 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
           this.handleDocumentLoadError(
             error,
             'initializeForEditing',
-            'GetRequestRequiredDocumentsById'
+            'GetRequestRequiredDocumentsById',
           );
           if (error.status >= 500) {
             this.fallbackToCreation();
@@ -214,7 +262,7 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
 
   private enrichRequestDocumentsWithOrganizationId(
     requestDocs: any[],
-    optionalMunicipalityDocs: any[]
+    optionalMunicipalityDocs: any[],
   ): any[] {
     const municipalityDocs = Array.isArray(optionalMunicipalityDocs)
       ? optionalMunicipalityDocs
@@ -222,7 +270,7 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
 
     return requestDocs.map((reqDoc) => {
       const matched = municipalityDocs.find(
-        (doc) => doc.documentId === reqDoc.documentId
+        (doc) => doc.documentId === reqDoc.documentId,
       );
 
       return {
@@ -236,12 +284,15 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
     this.getAllDocumentTypes(Number(this.organizationId), undefined, true)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: () => {},
+        next: () => {
+          this.loadingService.hide();
+        },
         error: (error) => {
+          this.loadingService.hide();
           this.handleDocumentLoadError(
             error,
             'fallbackToCreation',
-            'getAllDocumentTypes'
+            'getAllDocumentTypes',
           );
         },
       });
@@ -250,7 +301,7 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
   private handleDocumentLoadError(
     error: any,
     methodContext: string,
-    operation: string
+    operation: string,
   ): void {
     const correlationId = error?.error?.correlationId;
     this.loggingService.logException(
@@ -264,14 +315,14 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
         operation: operation,
         userId: this.stateService.getUserId(),
         requestId: this.idParam,
-      }
+      },
     );
   }
 
   getAllDocumentTypes(
     organizationId: number,
     requestId?: number,
-    forceUpdate: boolean = false
+    forceUpdate: boolean = false,
   ): Observable<any> {
     return forkJoin({
       requiredStateDocuments: this.requestService.GetRequiredDocuments(),
@@ -288,24 +339,24 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
           if (!this.idParam || forceUpdate) {
             this.populateFormArray(
               this.requiredStateDocuments,
-              requiredStateDocuments
+              requiredStateDocuments,
             );
             this.populateFormArray(
               this.optionalStateDocuments,
-              optionalStateDocuments
+              optionalStateDocuments,
             );
             this.populateFormArray(
               this.optionalMunicipalityDocuments,
-              optionalMunicipalityDocuments
+              optionalMunicipalityDocuments,
             );
-            this.requiredStateDocumentsDatasource = this.requiredStateDocuments
-              .controls as FormGroup[];
-            this.optionalStateDocumentsDatasource = this.optionalStateDocuments
-              .controls as FormGroup[];
-            this.optionalMunicipalityDocumentsDatasource = this
+            this.requiredStateDocumentsDatasource.data = this
+              .requiredStateDocuments.controls as FormGroup[];
+            this.optionalStateDocumentsDatasource.data = this
+              .optionalStateDocuments.controls as FormGroup[];
+            this.optionalMunicipalityDocumentsDatasource.data = this
               .optionalMunicipalityDocuments.controls as FormGroup[];
           }
-        }
+        },
       ),
       map(
         ({
@@ -317,8 +368,8 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
           optionalStateDocuments: optionalStateDocuments.documents,
           optionalMunicipalityDocuments:
             optionalMunicipalityDocuments.documents,
-        })
-      )
+        }),
+      ),
     );
   }
 
@@ -367,35 +418,35 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
 
     this.populateFormArray(
       this.requiredStateDocuments,
-      filterOutSelected(requiredStateDocuments)
+      filterOutSelected(requiredStateDocuments),
     );
     this.populateFormArray(
       this.optionalStateDocuments,
-      filterOutSelected(optionalStateDocuments)
+      filterOutSelected(optionalStateDocuments),
     );
     this.populateFormArray(
       this.optionalMunicipalityDocuments,
-      filterOutSelected(optionalMunicipalityDocuments)
+      filterOutSelected(optionalMunicipalityDocuments),
     );
 
-    this.requiredStateDocumentsDatasource = this.requiredStateDocuments
+    this.requiredStateDocumentsDatasource.data = this.requiredStateDocuments
       .controls as FormGroup[];
-    this.optionalStateDocumentsDatasource = this.optionalStateDocuments
+    this.optionalStateDocumentsDatasource.data = this.optionalStateDocuments
       .controls as FormGroup[];
-    this.optionalMunicipalityDocumentsDatasource = this
+    this.optionalMunicipalityDocumentsDatasource.data = this
       .optionalMunicipalityDocuments.controls as FormGroup[];
   }
 
   isDocumentSelected(documentId: number): boolean {
     return (
       this.requiredStateDocuments.value.some(
-        (doc: any) => doc.documentId === documentId
+        (doc: any) => doc.documentId === documentId,
       ) ||
       this.optionalStateDocuments.value.some(
-        (doc: any) => doc.documentId === documentId
+        (doc: any) => doc.documentId === documentId,
       ) ||
       this.optionalMunicipalityDocuments.value.some(
-        (doc: any) => doc.documentId === documentId
+        (doc: any) => doc.documentId === documentId,
       )
     );
   }
@@ -426,7 +477,7 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
               },
             ],
             organizationDocumentId: [document.organizationDocumentId ?? null],
-          })
+          }),
         );
       }
     });
@@ -465,7 +516,7 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
 
           this.optionalMunicipalityDocuments.push(formGroup);
 
-          this.optionalMunicipalityDocumentsDatasource = [
+          this.optionalMunicipalityDocumentsDatasource.data = [
             ...this.optionalMunicipalityDocuments.controls,
           ] as FormGroup[];
         }
@@ -484,23 +535,29 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
     }
   }
 
-  deleteOrganizationDocument(documentId: number): void {
+  deleteAgencySpecificDocument(documentId: number): void {
+    if (this.organizationId === null) {
+      return;
+    }
     this.requestService
-      .DeleteOrganizationDocument(documentId)
+      .DeleteOrganizationDocument(this.organizationId, documentId)
       .pipe(takeUntil(this.destroy$))
       .subscribe(
         () => {
           const formArray = this.optionalMunicipalityDocuments;
           const indexToDelete = formArray.controls.findIndex(
-            (control) => control.get('documentId')?.value === documentId
+            (control) => control.get('documentId')?.value === documentId,
           );
 
           if (indexToDelete > -1) {
             formArray.removeAt(indexToDelete);
-            this.optionalMunicipalityDocumentsDatasource = [
+            this.optionalMunicipalityDocumentsDatasource.data = [
               ...formArray.controls,
             ] as FormGroup[];
           }
+          this.snackbarNotificationService.showSnackbarSuccess(
+            'Document deleted successfully .',
+          );
         },
         (error) => {
           const correlationId = error?.error?.correlationId;
@@ -511,23 +568,26 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
               organizationId: this.organizationId,
               correlationId: correlationId,
               documentId: documentId,
-              methodName: 'deleteOrganizationDocument',
+              methodName: 'deleteAgencySpecificDocument',
               className: 'RequestRequiredDocumentsComponent',
               operation: 'DeleteOrganizationDocument',
               userId: this.stateService.getUserId(),
               requestId: this.idParam,
-            }
+            },
           );
-        }
+        },
       );
   }
 
   onDownloadAgencySpecificDocument(row: FormGroup): void {
     const organizationDocumentId = row.get('organizationDocumentId')?.value;
+
+    this.loadingService.show('Downloading...');
+
     this.requestService
       .GetAgencySpecificDocumentContent(
         organizationDocumentId,
-        Number(this.organizationId)
+        Number(this.organizationId),
       )
       .subscribe({
         next: (response) => {
@@ -535,15 +595,13 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
           if (!blob) return;
 
           const contentDisposition = response.headers.get(
-            'Content-Disposition'
+            'Content-Disposition',
           );
-          let fileName = 'document';
-          if (contentDisposition) {
-            const match = contentDisposition.match(/filename="?([^"]+)"?/);
-            if (match && match[1]) {
-              fileName = match[1];
-            }
-          }
+
+          const fileName = this.parseContentDispositionFileName(
+            contentDisposition,
+            'download',
+          );
 
           const a = document.createElement('a');
           const blobUrl = URL.createObjectURL(blob);
@@ -553,8 +611,11 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
           a.click();
           document.body.removeChild(a);
           URL.revokeObjectURL(blobUrl);
+
+          this.loadingService.hide();
         },
         error: (error) => {
+          this.loadingService.hide();
           const correlationId = error?.error?.correlationId;
           this.loggingService.logException(
             new Error(`HTTP Error ${error.status}: ${error.statusText}`),
@@ -568,7 +629,7 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
               operation: 'GetAgencySpecificDocumentContent',
               userId: this.stateService.getUserId(),
               requestId: this.idParam,
-            }
+            },
           );
         },
       });
@@ -581,19 +642,18 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.loadingService.show('Downloading...');
+
     this.documentService.GetStateDocumentContent(documentId).subscribe({
       next: (response) => {
         const blob = response.body;
         if (!blob) return;
 
         const contentDisposition = response.headers.get('Content-Disposition');
-        let fileName = 'download';
-        if (contentDisposition) {
-          const match = contentDisposition.match(/filename="?([^"]+)"?/);
-          if (match && match[1]) {
-            fileName = match[1];
-          }
-        }
+        const fileName = this.parseContentDispositionFileName(
+          contentDisposition,
+          'download',
+        );
 
         const a = document.createElement('a');
         const blobUrl = URL.createObjectURL(blob);
@@ -603,8 +663,10 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(blobUrl);
+        this.loadingService.hide();
       },
       error: (error: any) => {
+        this.loadingService.hide();
         const correlationId = error?.error?.correlationId;
         this.loggingService.logException(
           new Error(`HTTP Error ${error.status}: ${error.statusText}`),
@@ -618,7 +680,7 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
             operation: 'GetStateDocumentContent',
             userId: this.stateService.getUserId(),
             requestId: this.idParam,
-          }
+          },
         );
       },
     });
@@ -676,9 +738,32 @@ export class RequestRequiredDocumentsComponent implements OnInit, OnDestroy {
               operation: 'SaveRequestDocuments',
               userId: this.stateService.getUserId(),
               requestId: this.requestId,
-            }
+            },
           );
         },
       });
+  }
+
+  private parseContentDispositionFileName(
+    contentDisposition: string | null,
+    fallback: string = 'document',
+  ): string {
+    if (!contentDisposition) return fallback;
+
+    // Prefer RFC 5987 filename* (UTF-8 encoded)
+    const rfcMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+    if (rfcMatch?.[1]) {
+      return decodeURIComponent(rfcMatch[1].trim());
+    }
+
+    // Quoted filename
+    const quotedMatch = contentDisposition.match(/filename="([^"]+)"/);
+    if (quotedMatch?.[1]) return quotedMatch[1];
+
+    // Unquoted filename
+    const unquotedMatch = contentDisposition.match(/filename=([^;]+)/);
+    if (unquotedMatch?.[1]) return unquotedMatch[1].trim();
+
+    return fallback;
   }
 }

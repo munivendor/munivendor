@@ -1,0 +1,179 @@
+<div class="profile-card">
+  <div class="card-header">
+    <div class="header-accent"></div>
+
+    <div class="header-content">
+      <div class="header-top">
+        <div class="header-left">
+          <h2 class="card-title">Required Files</h2>
+        </div>
+      </div>
+      <p class="card-description">
+        The files below are required by all local government organizations in
+        the State of New Jersey.
+      </p>
+    </div>
+  </div>
+
+  <div class="required-files-form">
+    <div class="file-row" *ngFor="let fileConfig of requiredFiles">
+      <p class="upload-doc-label">
+        <strong>{{ fileConfig.label }}</strong>
+        <span *ngIf="fileConfig.required" class="required-badge"
+          >(Required)</span
+        >
+      </p>
+
+      <p class="upload-doc-description" *ngIf="fileConfig.description">
+        {{ fileConfig.description }}
+      </p>
+
+      <!-- Insurance Policies: multi-file upload -->
+      <ng-container
+        *ngIf="fileConfig.key === 'insurancePolicies'; else singleUpload"
+      >
+        <input
+          #insuranceInput
+          type="file"
+          accept=".jpg,.jpeg,.png,.pdf"
+          multiple
+          class="file-input-hidden"
+          (change)="onInsuranceFilesSelected($event)"
+        />
+        <button
+          type="button"
+          class="upload-btn"
+          [class.disabled]="insuranceUploading"
+          [disabled]="insuranceUploading"
+          (click)="insuranceInput.click()"
+        >
+          <mat-spinner
+            *ngIf="insuranceUploading"
+            diameter="16"
+            class="btn-spinner"
+          ></mat-spinner>
+          <mat-icon *ngIf="!insuranceUploading">upload</mat-icon>
+          <span>{{
+            insuranceUploading ? "Uploading…" : "Upload File(s)"
+          }}</span>
+        </button>
+
+        <div
+          class="uploaded-file-row"
+          *ngFor="let doc of getUploadedDocs(fileConfig.documentName)"
+        >
+          <mat-icon class="uploaded-file-icon">insert_drive_file</mat-icon>
+          <span class="uploaded-file-name">{{ doc.fileName }}</span>
+          <button
+            type="button"
+            class="download-btn"
+            [disabled]="isDownloading(doc)"
+            (click)="downloadDocument(doc)"
+            title="Download"
+          >
+            <mat-spinner
+              *ngIf="isDownloading(doc)"
+              diameter="14"
+              class="btn-spinner"
+            ></mat-spinner>
+            <mat-icon *ngIf="!isDownloading(doc)">download</mat-icon>
+          </button>
+          <button
+            type="button"
+            class="delete-btn"
+            [disabled]="isDeleting(doc)"
+            (click)="deleteOfferorProfileDocument(doc)"
+            title="Delete"
+          >
+            <mat-spinner
+              *ngIf="isDeleting(doc)"
+              diameter="14"
+              class="btn-spinner"
+            ></mat-spinner>
+            <mat-icon *ngIf="!isDeleting(doc)">delete</mat-icon>
+          </button>
+        </div>
+      </ng-container>
+
+      <!-- All other fields: single-file upload -->
+      <ng-template #singleUpload>
+        <input
+          #fileInput
+          type="file"
+          accept=".jpg,.jpeg,.png,.pdf"
+          class="file-input-hidden"
+          (change)="onFileSelected($event, fileConfig)"
+        />
+        <button
+          type="button"
+          class="upload-btn"
+          [class.disabled]="
+            isUploading(fileConfig.key) ||
+            !!getUploadedDoc(fileConfig.documentName)
+          "
+          [disabled]="
+            isUploading(fileConfig.key) ||
+            !!getUploadedDoc(fileConfig.documentName)
+          "
+          [matTooltip]="
+            getUploadedDoc(fileConfig.documentName)
+              ? 'Please remove the existing file before uploading a new one.'
+              : ''
+          "
+          matTooltipPosition="above"
+          (click)="fileInput.click()"
+        >
+          <mat-spinner
+            *ngIf="isUploading(fileConfig.key)"
+            diameter="16"
+            class="btn-spinner"
+          ></mat-spinner>
+          <mat-icon *ngIf="!isUploading(fileConfig.key)">upload</mat-icon>
+          <span>{{
+            isUploading(fileConfig.key) ? "Uploading…" : "Upload File"
+          }}</span>
+        </button>
+
+        <div
+          class="uploaded-file-row"
+          *ngIf="getUploadedDoc(fileConfig.documentName) as doc"
+        >
+          <mat-icon class="uploaded-file-icon">insert_drive_file</mat-icon>
+          <span class="uploaded-file-name">{{ doc.fileName }}</span>
+          <button
+            type="button"
+            class="download-btn"
+            [disabled]="isDownloading(doc)"
+            (click)="downloadDocument(doc)"
+            title="Download"
+          >
+            <mat-spinner
+              *ngIf="isDownloading(doc)"
+              diameter="14"
+              class="btn-spinner"
+            ></mat-spinner>
+            <mat-icon *ngIf="!isDownloading(doc)">download</mat-icon>
+          </button>
+          <button
+            type="button"
+            class="delete-btn"
+            [disabled]="isDeleting(doc)"
+            (click)="deleteOfferorProfileDocument(doc)"
+            title="Delete"
+          >
+            <mat-spinner
+              *ngIf="isDeleting(doc)"
+              diameter="14"
+              class="btn-spinner"
+            ></mat-spinner>
+            <mat-icon *ngIf="!isDeleting(doc)">delete</mat-icon>
+          </button>
+        </div>
+      </ng-template>
+
+      <span class="upload-hint"
+        >Accepted file types: jpg, png, pdf. Max. file size: 10 MB.</span
+      >
+    </div>
+  </div>
+</div>

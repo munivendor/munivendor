@@ -6,10 +6,25 @@ import { AppConstants } from '../../constants/app.constants';
 export class SnackbarNotificationService {
   constructor(private snackBar: MatSnackBar) {}
 
-  showSnackbarError(correlationId?: string): void {
-    const message = `Something went wrong. Please try again later. (Correlation ID: ${
+  showSnackbarSupportErrorWithCorrelationId(correlationId?: string): void {
+    const message = `Something went wrong. Please try again later. (Error Info: ${
       correlationId ?? 'N/A'
     }). ${AppConstants.SUPPORT_MESSAGE}`;
+    this.snackBar.open(message, 'Close', {
+      duration: AppConstants.SNACKBAR_DURATION,
+      verticalPosition: 'top',
+    });
+  }
+
+  showSnackbarSuccess(message: string): void {
+    this.snackBar.open(message, 'Close', {
+      duration: AppConstants.SNACKBAR_DURATION,
+      verticalPosition: 'top',
+      panelClass: ['snackbar-success'],
+    });
+  }
+
+  showSnackbarError(message: string): void {
     this.snackBar.open(message, 'Close', {
       duration: AppConstants.SNACKBAR_DURATION,
       verticalPosition: 'top',

@@ -1,0 +1,336 @@
+<div class="profile-card">
+  <div class="card-header">
+    <div class="header-accent"></div>
+    <div class="header-content">
+      <h2 class="card-title">Organization Information</h2>
+      <p class="card-description">
+        The information in this section is used on many of the standard NJ State
+        and additional forms used by local government organizations in New
+        Jersey.
+      </p>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="state-container" *ngIf="isLoading">
+    <mat-spinner diameter="36"></mat-spinner>
+    <p class="loading-text">Loading organization details...</p>
+  </div>
+
+  <form
+    *ngIf="!isLoading"
+    [formGroup]="organizationForm"
+    (ngSubmit)="onSave()"
+    novalidate
+    class="card-form"
+  >
+    <!-- Organization Name -->
+    <div>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Organization Name</mat-label>
+        <input
+          matInput
+          formControlName="organizationName"
+          placeholder="Company Name"
+          maxlength="200"
+          (blur)="titleCaseField('organizationName')"
+        />
+        <mat-icon matSuffix class="field-icon">business</mat-icon>
+        <mat-error *ngIf="isFieldInvalid('organizationName')">
+          <ng-container
+            *ngIf="
+              organizationForm.get('organizationName')?.hasError('required') ||
+              organizationForm.get('organizationName')?.hasError('whitespace')
+            "
+          >
+            Organization name is required.
+          </ng-container>
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <!-- Address Section -->
+    <div class="form-section">
+      <div class="subsection-label-group">
+        <span class="subsection-label">Organization Address</span>
+      </div>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Street Address Line 1</mat-label>
+        <input
+          matInput
+          formControlName="address"
+          placeholder="Street Address Line 1"
+          maxlength="150"
+          (blur)="titleCaseField('address')"
+        />
+        <mat-error *ngIf="isFieldInvalid('address')">
+          <ng-container
+            *ngIf="
+              organizationForm.get('address')?.hasError('required') ||
+              organizationForm.get('address')?.hasError('whitespace')
+            "
+          >
+            Street address is required.
+          </ng-container>
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Street Address Line 2</mat-label>
+        <input
+          matInput
+          formControlName="address2"
+          placeholder="Suite, floor, unit (optional)"
+          maxlength="100"
+          (blur)="titleCaseField('address2')"
+        />
+      </mat-form-field>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Country</mat-label>
+          <input matInput value="United States" readonly />
+          <mat-icon matSuffix class="field-icon">public</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>City</mat-label>
+          <input
+            matInput
+            formControlName="city"
+            placeholder="City"
+            maxlength="100"
+            (blur)="titleCaseField('city')"
+          />
+          <mat-error *ngIf="isFieldInvalid('city')">
+            <ng-container
+              *ngIf="
+                organizationForm.get('city')?.hasError('required') ||
+                organizationForm.get('city')?.hasError('whitespace')
+              "
+            >
+              City is required.
+            </ng-container>
+            <ng-container
+              *ngIf="organizationForm.get('city')?.hasError('pattern')"
+            >
+              City may contain letters, spaces, hyphens, and periods only.
+            </ng-container>
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>State</mat-label>
+          <input
+            matInput
+            [formControl]="stateFilter"
+            [matAutocomplete]="stateAuto"
+            placeholder="Search states..."
+            (blur)="onStateBlur()"
+            required
+          />
+          <mat-autocomplete
+            #stateAuto="matAutocomplete"
+            [displayWith]="stateDisplayFn"
+            (optionSelected)="onStateSelected($event.option.value)"
+          >
+            <mat-option *ngFor="let s of filteredStates$ | async" [value]="s">
+              {{ s.codeDesc }} ({{ s.codeName }})
+            </mat-option>
+          </mat-autocomplete>
+          <mat-error
+            *ngIf="
+              isFieldInvalid('stateId') || stateFilter.hasError('required')
+            "
+          >
+            State is required.
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Zip Code</mat-label>
+          <input
+            matInput
+            formControlName="zipCode"
+            placeholder="12345 or 12345-6789"
+            maxlength="10"
+            (input)="onZipInput($any($event.target).value)"
+            (keydown)="onZipKeydown($event)"
+          />
+          <mat-error *ngIf="isFieldInvalid('zipCode')">
+            {{
+              organizationForm.get("zipCode")?.hasError("required")
+                ? "Zip code is required."
+                : "Enter a valid zip code (e.g. 12345 or 12345-6789)."
+            }}
+          </mat-error>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- Business Info Section -->
+    <div class="form-section">
+      <span class="subsection-label">Business Details</span>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>When did you incorporate?</mat-label>
+          <input
+            matInput
+            [matDatepicker]="dateOfIncorporationPicker"
+            formControlName="dateOfIncorporation"
+            placeholder="MM/DD/YYYY"
+            [max]="maxDate"
+            readonly
+            (keydown)="onDateKeydown($event)"
+            (input)="onDateInput($any($event.target).value)"
+          />
+          <mat-datepicker-toggle matSuffix [for]="dateOfIncorporationPicker">
+          </mat-datepicker-toggle>
+          <mat-datepicker
+            #dateOfIncorporationPicker
+            (closed)="onDatepickerClosed()"
+          ></mat-datepicker>
+          <mat-error *ngIf="isFieldInvalid('dateOfIncorporation')">
+            <ng-container
+              *ngIf="
+                organizationForm
+                  .get('dateOfIncorporation')
+                  ?.hasError('matDatepickerMax')
+              "
+            >
+              Date cannot be in the future.
+            </ng-container>
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>What type of entity is this?</mat-label>
+          <mat-select formControlName="organizationSubTypeId">
+            <mat-option *ngFor="let t of entityTypes" [value]="t.codeId">
+              {{ t.codeDesc }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="half-width">
+          <mat-label>Length of time at current address (Years)</mat-label>
+          <input
+            matInput
+            formControlName="yearsAtCurrentAddress"
+            placeholder="Enter values 0–99"
+            type="text"
+            inputmode="numeric"
+            (input)="onYearsAtAddressInput($any($event.target).value)"
+            (keydown)="onYearsAtAddressKeydown($event)"
+          />
+          <mat-error *ngIf="isFieldInvalid('yearsAtCurrentAddress')">
+            Years must be between 0 and 99.
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="half-width">
+          <mat-label>Length of time at current address (Months)</mat-label>
+          <input
+            matInput
+            formControlName="monthsAtCurrentAddress"
+            placeholder="Enter values 0–11"
+            type="text"
+            inputmode="numeric"
+            (input)="onMonthsAtAddressInput($any($event.target).value)"
+            (keydown)="onMonthsAtAddressKeydown($event)"
+          />
+          <mat-error *ngIf="isFieldInvalid('monthsAtCurrentAddress')">
+            Months must be between 0 and 11.
+          </mat-error>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- Tax & Contact Section -->
+    <div class="form-section">
+      <span class="subsection-label">Tax &amp; Contact</span>
+
+      <p class="subsection-hint">
+        To acquire a Federal Tax ID Number, please visit the IRS website at
+        <a
+          href="https://www.irs.gov/businesses/small-businesses-self-employed/get-an-employer-identification-number"
+          target="_blank"
+          class="inline-link"
+          >irs.gov</a
+        >
+        and click on "Apply for an EIN".
+      </p>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Tax ID Number (FEIN)</mat-label>
+        <input
+          matInput
+          formControlName="taxId"
+          placeholder="XX-XXXXXXX"
+          maxlength="10"
+          (input)="onTaxIdInput($any($event.target).value)"
+          (keydown)="onTaxIdKeydown($event)"
+        />
+        <mat-icon matSuffix class="field-icon">tag</mat-icon>
+        <mat-error *ngIf="isFieldInvalid('taxId')">
+          Enter a valid FEIN (e.g. 12-3456789).
+        </mat-error>
+      </mat-form-field>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Phone Number</mat-label>
+          <input
+            matInput
+            formControlName="phone"
+            placeholder="(xxx) xxx-xxxx"
+            (input)="onPhoneInput($any($event.target).value)"
+            (keydown)="onPhoneKeydown($event)"
+          />
+          <mat-icon matSuffix class="field-icon">phone</mat-icon>
+          <mat-error *ngIf="isFieldInvalid('phone')">
+            {{
+              organizationForm.get("phone")?.hasError("required")
+                ? "Phone number is required."
+                : "Enter a valid 10-digit phone number."
+            }}
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Fax Number</mat-label>
+          <input
+            matInput
+            formControlName="fax"
+            placeholder="(xxx) xxx-xxxx"
+            (input)="onFaxInput($any($event.target).value)"
+            (keydown)="onPhoneKeydown($event)"
+          />
+          <mat-icon matSuffix class="field-icon">fax</mat-icon>
+          <mat-error *ngIf="isFieldInvalid('fax')">
+            Enter a valid 10-digit fax number.
+          </mat-error>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <div class="card-footer">
+      <button
+        mat-flat-button
+        color="primary"
+        type="submit"
+        class="save-btn"
+        [disabled]="isSaving || organizationForm.pristine"
+      >
+        <mat-icon *ngIf="!isSaving">save</mat-icon>
+        {{ isSaving ? "Saving..." : "Save Changes" }}
+      </button>
+    </div>
+  </form>
+</div>

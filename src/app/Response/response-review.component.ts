@@ -5,6 +5,8 @@ import {
   OnDestroy,
   Output,
   EventEmitter,
+  AfterViewInit,
+  ViewChild,
 } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import {
@@ -21,7 +23,7 @@ import { RequestService } from '../Request/services/request.service';
 import { StateService } from '../Request/services/state.service';
 import { CategoryNode } from '../shared/model/category-tree.model';
 import { CategoryHierarchyService } from '../Request/services/category-hierarchy.service';
-import { MatTableModule } from '@angular/material/table';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DocumentService } from '../shared/service/document.service';
@@ -29,8 +31,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { SubmitConfirmationDialogComponent } from './SubmitConfirmationDialog/submit-confirmation-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
 // import { TooltipDirective } from '../shared/directive/tooltip.directive';
-import { OfferorProfileService } from '../shared/service/offeror-profile.service';
+import { OfferorProfileService } from './services/offeror-profile.service';
 import { LoggingService } from '../exceptionhandling/logging.service';
+import { LoadingService } from '../shared/LoadingSpinner/loading.service';
+import { MatSort, MatSortModule } from '@angular/material/sort';
 
 interface FlattenedCategoryNode {
   categoryId: string;
@@ -54,15 +58,22 @@ interface FlattenedCategoryNode {
     MatTooltipModule,
     MatButtonModule,
     // TooltipDirective,
+    MatSortModule,
   ],
 })
-export class ResponseReviewComponent implements OnInit, OnDestroy {
+export class ResponseReviewComponent
+  implements OnInit, OnDestroy, AfterViewInit
+{
   @Output() documentsValidityChange = new EventEmitter<boolean>();
   allRequiredDocumentsUploaded = false;
   hasOfferorDocuments = false;
 
   @Input() sourceIdParam?: string | null | undefined;
   @Input() responseIdParam?: string | null | undefined;
+
+  @ViewChild('agencyTableSort') agencyTableSort!: MatSort;
+  @ViewChild('offerorTableSort') offerorTableSort!: MatSort;
+
   responseIdFromStateService = this.stateService.getRequestId();
   private destroy$ = new Subject<void>();
   flattenedCategories: FlattenedCategoryNode[] = [];
@@ -75,7 +86,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
   docs: any;
   hierarchicalCategories: CategoryNode[] = [];
 
-  requiredDocumentsDatasource: any[] = [];
+  requiredDocumentsDatasource = new MatTableDataSource<any>([]);
   agencyDocumentsColumns: string[] = [
     'formName',
     'notarizationRequired',
@@ -83,9 +94,9 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
     'documentInstanceStatus',
   ];
 
-  offerorDocumentsDatasource: any[] = [];
+  offerorDocumentsDatasource = new MatTableDataSource<any>([]);
   offerorDocumentsColumns: string[] = ['formName', 'download'];
-  authorizingOfficialId: number | null = null;
+  offerorAuthorizingOfficialId: number | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -95,8 +106,32 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
     private documentService: DocumentService,
     public dialog: MatDialog,
     private offerorProfileService: OfferorProfileService,
-    private loggingService: LoggingService
+    private loggingService: LoggingService,
+    private loadingService: LoadingService,
   ) {}
+
+  ngAfterViewInit(): void {
+    this.requiredDocumentsDatasource.sort = this.agencyTableSort;
+    this.offerorDocumentsDatasource.sort = this.offerorTableSort;
+
+    this.configureSortingAccessor(this.requiredDocumentsDatasource);
+    this.configureSortingAccessor(this.offerorDocumentsDatasource);
+  }
+
+  private configureSortingAccessor(datasource: MatTableDataSource<any>): void {
+    datasource.sortingDataAccessor = (item: any, sortHeaderId: string) => {
+      switch (sortHeaderId) {
+        case 'formName':
+          return (item.documentName ?? item.formName ?? '').toLowerCase();
+        case 'notarizationRequired':
+          return item.requiresNotarization ? 'yes' : 'no';
+        case 'documentInstanceStatus':
+          return (item.documentInstanceStatus ?? '').toLowerCase();
+        default:
+          return '';
+      }
+    };
+  }
 
   onConfirmSubmission() {
     this.openSubmitConfirmationDialog();
@@ -142,7 +177,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
 
     const isIncompleteOrNull =
       !documentInstanceStatus || documentInstanceStatus === 'Incomplete';
-
+    this.loadingService.show('Downloading...');
     if (isIncompleteOrNull) {
       if (derived) {
         if (!organizationDocumentId || !agencyOrganizationId) {
@@ -151,14 +186,14 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
         this.requestService
           .GetAgencySpecificDocumentContent(
             organizationDocumentId,
-            agencyOrganizationId
+            agencyOrganizationId,
           )
           .subscribe({
             next: (response) => {
               const blob = response.body;
               if (!blob) return;
               const contentDisposition = response.headers.get(
-                'Content-Disposition'
+                'Content-Disposition',
               );
               let fileName = 'document';
               if (contentDisposition) {
@@ -175,8 +210,10 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
               a.click();
               document.body.removeChild(a);
               URL.revokeObjectURL(blobUrl);
+              this.loadingService.hide();
             },
             error: (error) => {
+              this.loadingService.hide();
               const correlationId = error?.error?.correlationId;
 
               this.loggingService.logException(
@@ -192,7 +229,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
                   className: 'ResponseReviewComponent',
                   operation: 'GetAgencySpecificDocumentContent',
                   userId: this.stateService.getUserId(),
-                }
+                },
               );
             },
           });
@@ -203,7 +240,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
             if (!blob) return;
 
             const contentDisposition = response.headers.get(
-              'Content-Disposition'
+              'Content-Disposition',
             );
             let fileName = 'download';
             if (contentDisposition) {
@@ -221,8 +258,10 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(blobUrl);
+            this.loadingService.hide();
           },
           error: (error) => {
+            this.loadingService.hide();
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(
@@ -237,7 +276,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
                 className: 'ResponseReviewComponent',
                 operation: 'GetStateDocumentContent',
                 userId: this.stateService.getUserId(),
-              }
+              },
             );
           },
         });
@@ -249,7 +288,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
           if (!blob) return;
 
           const contentDisposition = response.headers.get(
-            'Content-Disposition'
+            'Content-Disposition',
           );
           let fileName = 'document';
           if (contentDisposition) {
@@ -267,8 +306,10 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
           a.click();
           document.body.removeChild(a);
           URL.revokeObjectURL(blobUrl);
+          this.loadingService.hide();
         },
         error: (error) => {
+          this.loadingService.hide();
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -283,7 +324,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
               className: 'ResponseReviewComponent',
               operation: 'GetDocumentInstance',
               userId: this.stateService.getUserId(),
-            }
+            },
           );
         },
       });
@@ -295,7 +336,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
     if (!requestDocumentId) {
       return;
     }
-
+    this.loadingService.show('Downloading...');
     this.requestService.GetOfferorDocumentContent(requestDocumentId).subscribe({
       next: (response) => {
         const contentDisposition = response.headers.get('content-disposition');
@@ -303,7 +344,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
 
         if (contentDisposition) {
           const fileNameMatch = contentDisposition.match(
-            /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+            /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/,
           );
           if (fileNameMatch && fileNameMatch[1]) {
             fileName = fileNameMatch[1].replace(/['"]/g, '');
@@ -321,8 +362,10 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
           document.body.removeChild(link);
           URL.revokeObjectURL(blobUrl);
         }
+        this.loadingService.hide();
       },
       error: (error: any) => {
+        this.loadingService.hide();
         const correlationId = error?.error?.correlationId;
 
         this.loggingService.logException(
@@ -337,7 +380,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
             className: 'ResponseReviewComponent',
             operation: 'GetOfferorDocumentContent',
             userId: this.stateService.getUserId(),
-          }
+          },
         );
       },
     });
@@ -345,7 +388,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
 
   private flattenCategories(
     categories: CategoryNode[],
-    parentId: string | null = null
+    parentId: string | null = null,
   ): FlattenedCategoryNode[] {
     const flattened: FlattenedCategoryNode[] = [];
 
@@ -360,8 +403,8 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
         flattened.push(
           ...this.flattenCategories(
             category.children,
-            category.categoryId || category.id?.toString() || ''
-          )
+            category.categoryId || category.id?.toString() || '',
+          ),
         );
       }
     }
@@ -376,7 +419,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
 
     const searchValue = value.toString();
     const match = this.flattenedCategories.find(
-      (cat) => cat.categoryId === searchValue
+      (cat) => cat.categoryId === searchValue,
     );
     if (match) {
       return this.buildBreadcrumbPath(match);
@@ -391,7 +434,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
 
     while (currentParentId) {
       const parentNode = this.flattenedCategories.find(
-        (cat) => cat.categoryId === currentParentId
+        (cat) => cat.categoryId === currentParentId,
       );
       if (parentNode) {
         path.unshift(parentNode.name);
@@ -405,6 +448,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.loadingService.show();
     this.categoryHierarchyService
       .GetCategoryHierarchy()
       .pipe(takeUntil(this.destroy$))
@@ -413,7 +457,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
           this.hierarchicalCategories =
             this.prepareCategoriesForTreeRendering(categories);
           this.flattenedCategories = this.flattenCategories(
-            this.hierarchicalCategories
+            this.hierarchicalCategories,
           );
 
           if (this.responseIdParam) {
@@ -440,6 +484,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
             });
         },
         error: (error: any) => {
+          this.loadingService.hide();
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -453,7 +498,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
               className: 'ResponseBasicsComponent',
               operation: 'GetCategoryHierarchy',
               userId: this.stateService.getUserId(),
-            }
+            },
           );
         },
       });
@@ -489,14 +534,14 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
           const documents = response.documents || [];
 
           const requiredDocs = documents.filter(
-            (doc: any) => doc.sourceRequestDocumentId !== null
+            (doc: any) => doc.sourceRequestDocumentId !== null,
           );
           const offerorDocs = documents.filter(
-            (doc: any) => doc.sourceRequestDocumentId === null
+            (doc: any) => doc.sourceRequestDocumentId === null,
           );
 
-          this.requiredDocumentsDatasource = requiredDocs;
-          this.offerorDocumentsDatasource = offerorDocs;
+          this.requiredDocumentsDatasource.data = requiredDocs;
+          this.offerorDocumentsDatasource.data = offerorDocs;
 
           this.checkRequiredDocumentsStatus();
         },
@@ -514,7 +559,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
               className: 'ResponseReviewComponent',
               operation: 'GetRequestRequiredDocumentsById',
               userId: this.stateService.getUserId(),
-            }
+            },
           );
 
           if (error.status === 422) {
@@ -525,13 +570,14 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
   }
 
   private checkRequiredDocumentsStatus(): void {
-    this.allRequiredDocumentsUploaded = this.requiredDocumentsDatasource.every(
-      (doc: any) =>
-        doc.documentInstanceStatus &&
-        doc.documentInstanceStatus !== 'Incomplete'
-    );
+    this.allRequiredDocumentsUploaded =
+      this.requiredDocumentsDatasource.data.every(
+        (doc: any) =>
+          doc.documentInstanceStatus &&
+          doc.documentInstanceStatus !== 'Incomplete',
+      );
 
-    this.hasOfferorDocuments = this.offerorDocumentsDatasource.length > 0;
+    this.hasOfferorDocuments = this.offerorDocumentsDatasource.data.length > 0;
 
     const isValid =
       this.allRequiredDocumentsUploaded && this.hasOfferorDocuments;
@@ -551,18 +597,17 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
     const request$ = this.requestService.GetRequestDetailsById(responseId);
     const authorizingOfficials$ =
       this.offerorProfileService.GetOfferorAuthorizingOfficials(
-        Number(this.organizationId)
+        Number(this.organizationId),
       );
 
     forkJoin([request$, authorizingOfficials$])
       .pipe(takeUntil(this.destroy$))
       .subscribe(
         ([response, authorizingOfficials]) => {
-          // Find the matching authorizing official by ID
           const authorizingOfficial = authorizingOfficials.find(
-            (official: { vendorAuthorizingOfficialId: number }) =>
-              official.vendorAuthorizingOfficialId ===
-              response.authorizingOfficialId
+            (official: { offerorAuthorizingOfficialId: number }) =>
+              official.offerorAuthorizingOfficialId ===
+              response.offerorAuthorizingOfficialId,
           );
 
           this.offerorFinalReviewDetailsForm.patchValue({
@@ -578,14 +623,18 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
         },
         (error: any) => {
           const correlationId = error?.error?.correlationId;
-
-          let operation = 'UnknownOperation';
           const errorUrl = error?.url?.toLowerCase?.() || '';
-          // request is response in this case
-          if (errorUrl.includes('requestdetails'))
-            operation = 'GetRequestDetailsById';
-          else if (errorUrl.includes('authorizingofficials'))
-            operation = 'GetOfferorAuthorizingOfficials';
+
+          const operationMap: Record<string, string> = {
+            // request is response in this case
+            requestdetails: 'GetRequestDetailsById',
+            authorizingofficials: 'GetOfferorAuthorizingOfficials',
+          };
+
+          const operation =
+            Object.entries(operationMap).find(([key]) =>
+              errorUrl.includes(key),
+            )?.[1] ?? 'UnknownOperation';
 
           this.loggingService.logException(
             new Error(`HTTP Error ${error.status}: ${error.statusText}`),
@@ -598,13 +647,13 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
               className: 'ResponseReviewComponent',
               operation: operation,
               userId: this.stateService.getUserId(),
-            }
+            },
           );
 
           if (error.status === 422) {
             return;
           }
-        }
+        },
       );
   }
 
@@ -617,16 +666,16 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
       .subscribe(
         ([request, requestTypes]) => {
           const categoryBreadcrumb = this.displayCategoryName(
-            request.categoryId
+            request.categoryId,
           );
 
           const requestType = requestTypes.find(
             (r: { requestTypeId: number }) =>
-              r.requestTypeId === request.requestTypeId
+              r.requestTypeId === request.requestTypeId,
           );
 
           const { date: contractStart } = this.splitDateTime(
-            request.contractStart
+            request.contractStart,
           );
           const { date: contractEnd } = this.splitDateTime(request.contractEnd);
 
@@ -646,16 +695,22 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
             contractStart: contractStart,
             contractEnd: contractEnd,
           });
+          this.loadingService.hide();
         },
         (error) => {
+          this.loadingService.hide();
           const correlationId = error?.error?.correlationId;
-          let operation = 'UnknownOperation';
           const errorUrl = error?.url?.toLowerCase?.() || '';
 
-          if (errorUrl.includes('requestdetails'))
-            operation = 'GetRequestDetailsById';
-          else if (errorUrl.includes('requesttypes'))
-            operation = 'GetRequestTypes';
+          const operationMap: Record<string, string> = {
+            requestdetails: 'GetRequestDetailsById',
+            requesttypes: 'GetRequestTypes',
+          };
+
+          const operation =
+            Object.entries(operationMap).find(([key]) =>
+              errorUrl.includes(key),
+            )?.[1] ?? 'UnknownOperation';
 
           this.loggingService.logException(
             new Error(`HTTP Error ${error.status}: ${error.statusText}`),
@@ -668,13 +723,13 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
               className: 'ResponseReviewComponent',
               operation: operation,
               userId: this.stateService.getUserId(),
-            }
+            },
           );
 
           if (error.status === 422) {
             return;
           }
-        }
+        },
       );
   }
 
@@ -682,7 +737,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
     if (!dateString) return '';
 
     const date = new Date(
-      dateString.includes('Z') ? dateString : dateString + 'Z'
+      dateString.includes('Z') ? dateString : dateString + 'Z',
     );
 
     if (isNaN(date.getTime())) return '';
@@ -728,7 +783,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
 
   prepareCategoriesForTreeRendering(
     categories: CategoryNode[],
-    level: number = 0
+    level: number = 0,
   ): CategoryNode[] {
     return categories
       .filter((cat) => !cat.deleted)
@@ -763,7 +818,7 @@ export class ResponseReviewComponent implements OnInit, OnDestroy {
 
   populateArrayFormControls(controlName: string, items: any[]) {
     const controlArray = this.requestFinalReviewDetailsForm.get(
-      controlName
+      controlName,
     ) as FormArray;
     controlArray.clear();
     items?.forEach((item) => {

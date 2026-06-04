@@ -6,13 +6,16 @@ import { BehaviorSubject } from 'rxjs';
 })
 export class LoadingService {
   private loadingSubject = new BehaviorSubject<boolean>(false);
+  private messageSubject = new BehaviorSubject<string>('Loading...');
   private activeRequests = 0;
 
   public loading$ = this.loadingSubject.asObservable();
+  public message$ = this.messageSubject.asObservable();
 
-  show(): void {
+  show(message: string = 'Loading...'): void {
     this.activeRequests++;
     if (this.activeRequests === 1) {
+      this.messageSubject.next(message);
       this.loadingSubject.next(true);
     }
   }
@@ -22,12 +25,13 @@ export class LoadingService {
     if (this.activeRequests <= 0) {
       this.activeRequests = 0;
       this.loadingSubject.next(false);
+      this.messageSubject.next('Loading...');
     }
   }
 
-  // Force hide (useful for error scenarios)
   forceHide(): void {
     this.activeRequests = 0;
     this.loadingSubject.next(false);
+    this.messageSubject.next('Loading...');
   }
 }

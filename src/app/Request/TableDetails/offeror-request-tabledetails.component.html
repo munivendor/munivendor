@@ -96,47 +96,79 @@
 
         <div class="field-container">
           <div class="inline-field">
-            <div class="checkbox-group">
-              <strong>Solicitation Status</strong>
-              <mat-checkbox color="primary" formControlName="live"
-                >Live</mat-checkbox
-              >
-              <mat-checkbox color="primary" formControlName="closed"
-                >Closed</mat-checkbox
-              >
-              <mat-checkbox color="primary" formControlName="opened"
-                >Opened</mat-checkbox
-              >
-              <mat-checkbox color="primary" formControlName="cancelled"
-                >Cancelled</mat-checkbox
-              >
-            </div>
-            <div class="checkbox-group">
-              <strong>Offeror Status</strong>
-              <mat-checkbox color="primary" formControlName="inProgress"
-                >In Progress</mat-checkbox
-              >
-              <mat-checkbox color="primary" formControlName="submitted"
-                >Submitted</mat-checkbox
-              >
-              <mat-checkbox color="primary" formControlName="none"
-                >None</mat-checkbox
-              >
-            </div>
-            <div class="checkbox-group">
-              <strong>Type</strong>
-              <mat-checkbox color="primary" formControlName="rfq"
-                >RFQ</mat-checkbox
-              >
-              <mat-checkbox color="primary" formControlName="rfp"
-                >RFP</mat-checkbox
-              >
-              <mat-checkbox color="primary" formControlName="rfi"
-                >RFI</mat-checkbox
-              >
-              <mat-checkbox color="primary" formControlName="bid"
-                >BID</mat-checkbox
-              >
+            <div class="checkbox-section">
+              <div class="checkbox-group">
+                <strong>Solicitation Status</strong>
+                <div class="checkbox-items status-items">
+                  <mat-checkbox color="primary" formControlName="live"
+                    >Live</mat-checkbox
+                  >
+                  <mat-checkbox color="primary" formControlName="closed"
+                    >Closed</mat-checkbox
+                  >
+                  <mat-checkbox color="primary" formControlName="opened"
+                    >Opened</mat-checkbox
+                  >
+                  <mat-checkbox color="primary" formControlName="cancelled"
+                    >Cancelled</mat-checkbox
+                  >
+                </div>
+              </div>
+
+              <div class="checkbox-group">
+                <strong>Offeror Status</strong>
+                <div class="checkbox-items status-items">
+                  <mat-checkbox color="primary" formControlName="inProgress"
+                    >In Progress</mat-checkbox
+                  >
+                  <mat-checkbox color="primary" formControlName="submitted"
+                    >Submitted</mat-checkbox
+                  >
+                  <mat-checkbox color="primary" formControlName="none"
+                    >None</mat-checkbox
+                  >
+                </div>
+              </div>
+
+              <div class="checkbox-group">
+                <strong>Type</strong>
+                <div class="checkbox-items type-items">
+                  <mat-checkbox
+                    color="primary"
+                    formControlName="competitiveContracting"
+                    >Competitive Contracting</mat-checkbox
+                  >
+                  <mat-checkbox color="primary" formControlName="rfq"
+                    >Fair & Open RFQ (Professional Services)</mat-checkbox
+                  >
+                  <mat-checkbox color="primary" formControlName="rfp"
+                    >Fair & Open RFP (Professional Services)</mat-checkbox
+                  >
+                  <mat-checkbox color="primary" formControlName="bidPublicWorks"
+                    >Public Bid - Public Works</mat-checkbox
+                  >
+                  <mat-checkbox
+                    color="primary"
+                    formControlName="bidGoodsServices"
+                    >Public Bid - Goods/Services</mat-checkbox
+                  >
+                  <mat-checkbox
+                    color="primary"
+                    formControlName="nonFairOpenProfessionalServices"
+                    >Non-Fair & Open Professional Services</mat-checkbox
+                  >
+                  <mat-checkbox
+                    color="primary"
+                    formControlName="extraordinaryUnspecifiableServices"
+                    >Extraordinary Unspecifiable Services (EUS)</mat-checkbox
+                  >
+                  <mat-checkbox
+                    color="primary"
+                    formControlName="quotationsUnderThreshold"
+                    >Quotations Under Threshold</mat-checkbox
+                  >
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -160,15 +192,13 @@
   <div class="mat-elevation-z8" *ngIf="hasLoadedData">
     <table mat-table [dataSource]="dataSource" matSort>
       <ng-container matColumnDef="requestName">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>
-          Solicitation Name
-        </th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
         <td mat-cell *matCellDef="let row">{{ row.requestName }}</td>
       </ng-container>
 
       <ng-container matColumnDef="agencyOrganizationName">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>
-          Agency Organization Name
+          Agency Organization
         </th>
         <td mat-cell *matCellDef="let row">
           {{ row.agencyOrganizationName ?? "Example Name" }}
@@ -176,49 +206,53 @@
       </ng-container>
 
       <ng-container matColumnDef="requestId">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>
-          Solicitation ID
-        </th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>ID</th>
         <td mat-cell *matCellDef="let row">{{ row.requestId }}</td>
       </ng-container>
 
       <ng-container matColumnDef="requestType">
-        <th mat-header-cell *matHeaderCellDef>Type</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Type</th>
         <td mat-cell *matCellDef="let row">
           {{ row.requestType?.requestTypeDesc }}
         </td>
       </ng-container>
 
       <ng-container matColumnDef="category">
-        <th mat-header-cell *matHeaderCellDef>Category</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Category</th>
         <td mat-cell *matCellDef="let row">
-          {{ displayCategoryName(row.categoryId) }}
+          {{ displayCategoryName(row.categoryId, row.categoryFullPath) }}
         </td>
       </ng-container>
 
       <ng-container matColumnDef="publishDate">
-        <th mat-header-cell *matHeaderCellDef>Publish Date & Time</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>
+          Publish Date & Time
+        </th>
         <td mat-cell *matCellDef="let row">
-          {{ row.publishDate | date : "MM/dd/yyyy, h:mm a" }}
+          {{ row.publishDate | date: "MM/dd/yyyy, h:mm a" }}
         </td>
       </ng-container>
 
       <ng-container matColumnDef="closeDateAndTime">
-        <th mat-header-cell *matHeaderCellDef>Close Date & Time</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>
+          Close Date & Time
+        </th>
         <td mat-cell *matCellDef="let row">
-          {{ row.closeDate | date : "MM/dd/yyyy, h:mm a" }}
+          {{ row.closeDate | date: "MM/dd/yyyy, h:mm a" }}
         </td>
       </ng-container>
 
       <ng-container matColumnDef="offerorRequestStatus">
-        <th mat-header-cell *matHeaderCellDef>Offeror Status</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>
+          Offeror Status
+        </th>
         <td mat-cell *matCellDef="let row">
           {{ row.offerorRequestStatus?.requestStatusDesc ?? "None" }}
         </td>
       </ng-container>
 
       <ng-container matColumnDef="agencyRequestStatus">
-        <th mat-header-cell *matHeaderCellDef>Agency Status</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Agency Status</th>
         <td mat-cell *matCellDef="let row">
           {{ row.agencyRequestStatus?.requestStatusDesc ?? "Draft" }}
         </td>
@@ -253,6 +287,21 @@
                 </button>
               </ng-container>
             </mat-menu>
+          </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="downloadPDF">
+        <th mat-header-cell *matHeaderCellDef>Download as PDF</th>
+        <td mat-cell *matCellDef="let request">
+          <div class="action-button-container" style="align-items: center">
+            <button
+              mat-icon-button
+              color="primary"
+              (click)="downloadSolicitation(request)"
+            >
+              <mat-icon>download</mat-icon>
+            </button>
           </div>
         </td>
       </ng-container>

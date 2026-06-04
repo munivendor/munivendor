@@ -1,32 +1,13 @@
-<!-- legend for document status 'uploaded, not uploaded...' -->
-<!-- <div style="display: flex; justify-content: end">
-  <div></div>
-  <mat-card style="width: 180px; background-color: rgb(255, 243, 207)">
-    <mat-card-content>
-      <div style="display: flex">
-        <mat-icon color="primary">upload</mat-icon>
-        <div>: No File Uploaded</div>
-      </div>
-      <div style="display: flex">
-        <mat-icon style="color: green">upload</mat-icon>
-        <div>: File Uploaded</div>
-      </div>
-
-      <div style="display: flex">
-      <mat-icon style="color: gray">upload</mat-icon>
-      <div>: Upload Disabled (MV Autofill Selected)</div>
-    </div>
-    </mat-card-content>
-  </mat-card>
-</div> -->
 <h2>Agency Required Forms & Documents</h2>
 <table
   mat-table
   [dataSource]="requiredDocumentsDatasource"
   class="mat-elevation-z8"
+  matSort
+  #requiredSort="matSort"
 >
   <ng-container matColumnDef="formName">
-    <th mat-header-cell *matHeaderCellDef>
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>
       Form Name
       <mat-icon
         style="font-size: medium; color: #0b74fd; cursor: pointer"
@@ -35,7 +16,7 @@
           body: 'This column indicates the name of the Agency form that you, the offeror are required to complete before submitting your offer.',
           width: 'auto',
           showCloseButton: false,
-          showActionButton: false
+          showActionButton: false,
         }"
       >
         info_outline
@@ -61,7 +42,7 @@
           body: 'Clicking on each download button will download a copy of the Agency required form. Clicking on each upload button will enable you to upload your completed document. Only PDF and JPG/JPEG files are allowed.',
           width: '500px',
           showCloseButton: false,
-          showActionButton: false
+          showActionButton: false,
         }"
       >
         info_outline
@@ -71,16 +52,15 @@
       <button
         style="margin-left: -12px"
         mat-icon-button
-        color="primary"
         (click)="onDownloadRequiredAgencyDocuments(row)"
       >
-        <mat-icon>download</mat-icon>
+        <mat-icon style="color: gray">download</mat-icon>
       </button>
       <button
         mat-icon-button
         (click)="onUploadClick(row, 'notarizationNotRequired')"
       >
-        <mat-icon>upload</mat-icon>
+        <mat-icon [style.color]="getUploadIconColor(row)">upload</mat-icon>
       </button>
     </td>
   </ng-container>
@@ -120,7 +100,7 @@
   </ng-container> -->
 
   <ng-container matColumnDef="documentInstanceStatus">
-    <th mat-header-cell *matHeaderCellDef>
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>
       Status
       <mat-icon
         style="font-size: medium; color: #0b74fd; cursor: pointer"
@@ -130,7 +110,7 @@
           width: '500px',
           showCloseButton: false,
           showActionButton: false,
-          transformStyle: 'translate(-103%, -48%)'
+          transformStyle: 'translate(-103%, -48%)',
         }"
       >
         info_outline
@@ -155,20 +135,19 @@
 </table>
 <br />
 
-<h2>Agency Required Forms & Documents (Notarization Required)</h2>
-<div
-  *ngIf="
-    notarizationRequiredDocumentsDatasource.length > 0;
-    else noRequiredNotarizationDocuments
-  "
->
+<h2 [hidden]="notarizationRequiredDocumentsDatasource.data.length === 0">
+  Agency Required Forms & Documents (Notarization Required)
+</h2>
+<div [hidden]="notarizationRequiredDocumentsDatasource.data.length === 0">
   <table
     mat-table
     [dataSource]="notarizationRequiredDocumentsDatasource"
     class="mat-elevation-z8"
+    matSort
+    #notarizationSort="matSort"
   >
     <ng-container matColumnDef="formName">
-      <th mat-header-cell *matHeaderCellDef>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>
         Form Name
         <mat-icon
           style="font-size: medium; color: #0b74fd; cursor: pointer"
@@ -177,7 +156,7 @@
             body: 'This column indicates the name of the Agency form you, the offeror are required to complete before submitting your offer. Notarization for each of these forms is required.',
             width: 'auto',
             showCloseButton: false,
-            showActionButton: false
+            showActionButton: false,
           }"
         >
           info_outline
@@ -200,7 +179,7 @@
             body: 'Clicking on each download button will download a copy of the Agency required form. Clicking on each upload button will enable you to upload your completed document. Only PDF and JPG/JPEG files are allowed.',
             width: '500px',
             showCloseButton: false,
-            showActionButton: false
+            showActionButton: false,
           }"
         >
           info_outline
@@ -210,22 +189,21 @@
         <button
           style="margin-left: -12px"
           mat-icon-button
-          color="primary"
           (click)="onDownloadRequiredAgencyDocuments(row)"
         >
-          <mat-icon>download</mat-icon>
+          <mat-icon style="color: gray">download</mat-icon>
         </button>
         <button
           mat-icon-button
           (click)="onUploadClick(row, 'notarizationRequired')"
         >
-          <mat-icon>upload</mat-icon>
+          <mat-icon [style.color]="getUploadIconColor(row)">upload</mat-icon>
         </button>
       </td>
     </ng-container>
 
     <ng-container matColumnDef="documentInstanceStatus">
-      <th mat-header-cell *matHeaderCellDef>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>
         Status
         <mat-icon
           style="font-size: medium; color: #0b74fd; cursor: pointer"
@@ -234,7 +212,7 @@
             body: 'This column indicates the current status of the respective required Agency form. Incomplete means that you have not yet uploaded your manually completed form. Complete means that you successfully uploaded the respective form. You, the offeror, must make certain that you completed the forms as per the Agency\'s instructions.',
             width: '500px',
             showCloseButton: false,
-            showActionButton: false
+            showActionButton: false,
           }"
         >
           info_outline
@@ -274,18 +252,25 @@
   >
 </h2>
 <form [formGroup]="responseDocumentsFormGroup">
-  <div
-    *ngIf="offerorOptionalDocuments.length > 0; else noOfferorOptionalDocuments"
-  >
+  <div [hidden]="offerorOptionalDocuments.length === 0">
     <table
       mat-table
       [dataSource]="offerorDocumentsDatasource"
       class="mat-elevation-z8"
+      matSort
+      #offerorSort="matSort"
     >
       <ng-container matColumnDef="formName">
-        <th mat-header-cell *matHeaderCellDef>Form Name</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Form Name</th>
         <td mat-cell *matCellDef="let row">
           {{ row.documentName }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="source">
+        <th mat-header-cell *matHeaderCellDef>Source</th>
+        <td mat-cell *matCellDef="let row">
+          {{ row.documentSource | splitCamelCase }}
         </td>
       </ng-container>
 

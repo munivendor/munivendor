@@ -1,5 +1,9 @@
 import { Routes } from '@angular/router';
-import { AuthGuard, GuestGuard } from './authorization/auth.guard';
+import {
+  AuthGuard,
+  GuestGuard,
+  AgencySignupGuard,
+} from './authorization/auth.guard';
 
 // Non-authorized pages
 import { SignupComponent } from './Signup/signup.component';
@@ -15,7 +19,8 @@ import { OrganizationDetailsComponent } from './Organization/Details/organizatio
 import { UserSignUpDetails } from './Signup/UserSignUpDetails/user-signup-details.component';
 // import { DesignationSelectionComponent } from './Organization/UserDesignationSelection/organization.user-designation-selection.component';
 // import { PaymentPlanConfirmationComponent } from './Signup/PaymentInformation/paymentplanconfirmation.component';
-// import { BillingProfileComponent } from './Signup/PaymentInformation/paymentinformation.component';
+import { BillingInformationComponent } from './Response/BillingInformation/billing-information.component';
+import { PurchasingHistoryComponent } from './Response/PurchasingHistory/purchasing-history.component';
 
 // import { DashboardComponent } from './dashboard/dashboard.component';
 import { AgencyTableDetailsComponent } from './Request/TableDetails/request-tabledetails.component';
@@ -23,21 +28,38 @@ import { OfferorTableDetailsComponent } from './Request/TableDetails/offeror-req
 import { CreateRequestStepper } from './Request/CreateRequestStepper/create-request-stepper.component';
 import { CategoryTreeComponent } from './CategoryTree/category-tree.component';
 import { DefinitionsComponent } from './DefinitionsPage/definitions.component';
-import { UserGuideComponent } from './Response/ReadMePage/read-me.component';
+import { UserGuideComponent } from './Response/UserGuidePage/user-guide.component';
 
 import { OfferorProfilePageComponent } from './Response/OfferorProfilePage/offeror-profile-page.component';
+import { AgencyProfilePageComponent } from './Request/AgencyProfilePage/agency-profile-page.component';
 
 import { ResponseStepper } from './Response/ResponseStepper/response-stepper.component';
 import { FlowCompletionGuard } from './authorization/auth.guard';
+import { SubmissionCreditsComponent } from './Response/SubmissionCredits/submission-credits.component';
+
+import { FAQComponent } from './FAQ/faq.component';
+import { PrivacyPolicyComponent } from './PrivacyPolicy/privacy-policy.component';
+import { TermsOfServiceComponent } from './TermsOfService/terms-of-service.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   // Guest-only routes (authenticated users will be redirected)
   {
     path: 'signup',
+    redirectTo: '/offeror/signup',
+    pathMatch: 'full',
+  },
+  {
+    path: 'offeror/signup',
     component: SignupComponent,
     canActivate: [GuestGuard],
-    data: { showSidenav: false },
+    data: { showSidenav: false, signupMode: 'offeror' },
+  },
+  {
+    path: 'agency/signup',
+    component: SignupComponent,
+    canActivate: [AgencySignupGuard, GuestGuard],
+    data: { showSidenav: false, signupMode: 'agency' },
   },
   {
     path: 'login',
@@ -90,16 +112,6 @@ export const routes: Routes = [
   // {
   //   path: 'user-designation',
   //   component: DesignationSelectionComponent,
-  //   canActivate: [AuthGuard],
-  // },
-  // {
-  //   path: 'payment-plan-confirmation',
-  //   component: PaymentPlanConfirmationComponent,
-  //   canActivate: [AuthGuard],
-  // },
-  // {
-  //   path: 'billing-profile',
-  //   component: BillingProfileComponent,
   //   canActivate: [AuthGuard],
   // },
 
@@ -159,8 +171,50 @@ export const routes: Routes = [
     data: { showSidenav: true },
   },
   {
+    path: 'agency-profile-page',
+    component: AgencyProfilePageComponent,
+    canActivate: [AuthGuard],
+    data: { showSidenav: true },
+  },
+  {
     path: 'user-guide',
     component: UserGuideComponent,
+    canActivate: [AuthGuard],
+    data: { showSidenav: true },
+  },
+  {
+    path: 'purchasing-history',
+    component: PurchasingHistoryComponent,
+    canActivate: [AuthGuard],
+    data: { showSidenav: true },
+  },
+  {
+    path: 'billing-profile',
+    component: BillingInformationComponent,
+    canActivate: [AuthGuard],
+    data: { showSidenav: true },
+  },
+  {
+    path: 'submission-credits',
+    component: SubmissionCreditsComponent,
+    canActivate: [AuthGuard],
+    data: { showSidenav: true },
+  },
+  {
+    path: 'faq',
+    component: FAQComponent,
+    canActivate: [AuthGuard],
+    data: { showSidenav: true },
+  },
+  {
+    path: 'privacy-policy',
+    component: PrivacyPolicyComponent,
+    canActivate: [AuthGuard],
+    data: { showSidenav: true },
+  },
+  {
+    path: 'terms-of-service',
+    component: TermsOfServiceComponent,
     canActivate: [AuthGuard],
     data: { showSidenav: true },
   },

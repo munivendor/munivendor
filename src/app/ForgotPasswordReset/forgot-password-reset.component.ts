@@ -167,7 +167,9 @@ export class ForgotPasswordResetComponent implements OnInit, OnDestroy {
             }
           );
 
-          this.snackbarNotificationService.showSnackbarError(correlationId);
+          this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
+            correlationId
+          );
         },
       });
     }

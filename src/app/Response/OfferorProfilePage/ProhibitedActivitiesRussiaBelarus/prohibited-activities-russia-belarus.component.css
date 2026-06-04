@@ -1,0 +1,130 @@
+/* ── Card shell ──────────────────────────────────── */
+.profile-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+/* ── Header ──────────────────────────────────────── */
+.card-header {
+  position: relative;
+  border-bottom: 1px solid #f3f4f6;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.header-accent {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #2563eb;
+  border-radius: 0;
+}
+
+.header-content {
+  flex: 1;
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.01em;
+}
+
+.card-description {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+/* ── Form body ───────────────────────────────────── */
+.prohibited-form {
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Form sections ───────────────────────────────── */
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+/* ── Section labels & questions ──────────────────── */
+.section-label {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #1e40af;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.required-badge {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #dc2626;
+}
+
+.section-question {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #374151;
+  line-height: 1.55;
+}
+
+/* ── Upload section ──────────────────────────────── */
+.upload-doc-description {
+  margin: 0 0 4px;
+  font-size: 0.84rem;
+  color: #6b7280;
+  line-height: 1.55;
+}
+
+.file-input-hidden {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Hint text ───────────────────────────────────── */
+.upload-hint {
+  font-size: 0.78rem;
+  color: #9ca3af;
+  margin-top: 2px;
+  display: block;
+}
+
+/* ── Spinner ─────────────────────────────────────── */
+.btn-spinner {
+  color: #3b82f6;
+}

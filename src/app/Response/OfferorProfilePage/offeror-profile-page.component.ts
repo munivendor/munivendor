@@ -1,314 +1,120 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  FormBuilder,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatTableModule } from '@angular/material/table';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
-import { MatCardModule } from '@angular/material/card';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { OrganizationService } from '../../Organization/Details/services/organization.service';
-import { Organization } from '../../Organization/Details/model/organization.model';
+import { forkJoin } from 'rxjs';
+import { AuthorizingOfficialsComponent } from './AuthorizingOfficials/authorizing-officials.component';
+import { OfferorOrganizationDetailsComponent } from './OfferorDetails/offeror-details.component';
+import { LegalInformationComponent } from './LegalInformation/legal-information.component';
+import { StockholderInformationComponent } from './StockholderInformation/stockholder-information.component';
+import { OfferorProfileService } from '../services/offeror-profile.service';
+import { State } from '../../shared/model/state.model';
+import { ComplianceDocumentsComponent } from './RequiredComplianceForms/required-compliance-forms.component';
+import { RequiredFilesComponent } from './RequiredFiles/required-files.component';
+import { ProhibitedActivitiesRussiaBelarusComponent } from './ProhibitedActivitiesRussiaBelarus/prohibited-activities-russia-belarus.component';
+import { ProhibitedActivitiesIranComponent } from './ProhibitedActivitiesIran/prohibited-activities-iran.component';
+import { OrganizationDocument } from '../model/organization-document.model';
+import { DocumentType } from '../model/document-type.model';
 import { StateService } from '../../Request/services/state.service';
-import { OfferorProfileService } from '../../shared/service/offeror-profile.service';
-import { LoggingService } from '../../exceptionhandling/logging.service';
-
-interface AuthorizingOfficial {
-  vendorAuthorizingOfficialId?: number;
-  organizationId: number;
-  firstName: string;
-  lastName: string;
-  title: string;
-  email: string;
-  phone?: string;
-}
 
 @Component({
   selector: 'offeror-profile-page',
   templateUrl: './offeror-profile-page.component.html',
   styleUrls: ['./offeror-profile-page.component.css'],
+  encapsulation: ViewEncapsulation.None,
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatTableModule,
-    MatIconModule,
-    MatSnackBarModule,
-    MatCardModule,
-    MatTooltipModule,
+    AuthorizingOfficialsComponent,
+    OfferorOrganizationDetailsComponent,
+    LegalInformationComponent,
+    StockholderInformationComponent,
+    ComplianceDocumentsComponent,
+    RequiredFilesComponent,
+    ProhibitedActivitiesRussiaBelarusComponent,
+    ProhibitedActivitiesIranComponent,
   ],
 })
 export class OfferorProfilePageComponent implements OnInit {
-  organizationForm!: FormGroup;
-  authorizingOfficialForm!: FormGroup;
+  states: State[] = [];
+  countries: State[] = [];
+  counties: State[] = [];
+  referenceDataLoaded = false;
 
-  authorizingOfficials: AuthorizingOfficial[] = [];
-  displayedColumns: string[] = [
-    'firstName',
-    'lastName',
-    'title',
-    'email',
-    'phone',
-    'actions',
-  ];
+  organizationId: number | null = null;
+  organizationDocuments: OrganizationDocument[] = [];
+  documentTypes: DocumentType[] = [];
 
-  isAddingNew = false;
-  editingOfficialId: number | null = null;
-
-  private phonePattern =
-    /^(\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})$/;
+  offerProfileDetails: {
+    offerorProfileId: number;
+    formTypeId: number;
+    details: string;
+  }[] = [];
 
   constructor(
-    private fb: FormBuilder,
-    private organizationService: OrganizationService,
-    private stateService: StateService,
     private offerorProfileService: OfferorProfileService,
-    private snackBar: MatSnackBar,
-    private loggingService: LoggingService
+    private stateService: StateService,
   ) {}
 
   ngOnInit(): void {
-    this.initializeForms();
+    this.organizationId = this.stateService.getOrganizationId();
 
-    const organizationId = this.stateService.getOrganizationId();
-    if (organizationId) {
-      this.loadOrganization(organizationId);
-      this.loadAuthorizingOfficials(organizationId);
-    }
-  }
-
-  private initializeForms(): void {
-    this.organizationForm = this.fb.group({
-      organizationName: [''],
-      address: [''],
-      address2: [''],
-      city: [''],
-      state: [''],
-      zipCode: [''],
-    });
-
-    this.authorizingOfficialForm = this.fb.group({
-      firstName: ['', [Validators.required, Validators.maxLength(50)]],
-      lastName: ['', [Validators.required, Validators.maxLength(50)]],
-      title: ['', [Validators.required, Validators.maxLength(100)]],
-      email: [
-        '',
-        [Validators.required, Validators.email, Validators.maxLength(255)],
-      ],
-      phone: [
-        '',
-        [Validators.maxLength(20), Validators.pattern(this.phonePattern)],
-      ],
-    });
-  }
-
-  private loadOrganization(organizationId: number): void {
-    this.organizationService.getOrganization(organizationId).subscribe({
-      next: (org: Organization) => {
-        this.organizationForm.patchValue({
-          organizationName: org.organizationName,
-          address: org.address,
-          address2: org.address2,
-          city: org.city,
-          state: org.state,
-          zipCode: org.zipCode,
-        });
+    forkJoin({
+      states: this.offerorProfileService.GetStates(),
+      countries: this.offerorProfileService.GetCountries(),
+      counties: this.offerorProfileService.GetCounties(),
+      documentTypes: this.offerorProfileService.GetDocumentTypes(),
+      documents: this.offerorProfileService.GetOrganizationDocuments(
+        this.organizationId!,
+      ),
+      profileDetails:
+        this.offerorProfileService.GetOfferorProfileDiscloserDetails(
+          this.organizationId!,
+        ),
+    }).subscribe({
+      next: ({
+        states,
+        countries,
+        counties,
+        documentTypes,
+        documents,
+        profileDetails,
+      }) => {
+        this.states = states;
+        this.countries = countries;
+        this.counties = counties;
+        this.documentTypes = documentTypes;
+        this.organizationDocuments = documents;
+        this.offerProfileDetails = profileDetails;
+        this.referenceDataLoaded = true;
       },
-      error: (error) => {
-        const correlationId = error?.error?.correlationId;
-
-        this.loggingService.logException(
-          new Error(`HTTP Error ${error.status}: ${error.statusText}`),
-          3,
-          {
-            organizationId: this.stateService.getOrganizationId(),
-            correlationId: correlationId,
-            methodName: 'loadOrganization',
-            className: 'OfferorProfilePageComponent',
-            operation: 'getOrganization',
-            userId: this.stateService.getUserId(),
-          }
-        );
+      error: () => {
+        this.referenceDataLoaded = true;
       },
     });
   }
 
-  private loadAuthorizingOfficials(organizationId: number): void {
+  loadDocuments(): void {
+    if (!this.organizationId) return;
     this.offerorProfileService
-      .GetOfferorAuthorizingOfficials(organizationId)
+      .GetOrganizationDocuments(this.organizationId)
       .subscribe({
-        next: (officials: AuthorizingOfficial[]) => {
-          this.authorizingOfficials = officials;
+        next: (docs) => {
+          this.organizationDocuments = docs;
         },
-        error: (error) => {
-          const correlationId = error?.error?.correlationId;
-
-          this.loggingService.logException(
-            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
-            3,
-            {
-              organizationId: this.stateService.getOrganizationId(),
-              correlationId: correlationId,
-              methodName: 'loadAuthorizingOfficials',
-              className: 'OfferorProfilePageComponent',
-              operation: 'GetOfferorAuthorizingOfficials',
-              userId: this.stateService.getUserId(),
-            }
-          );
-        },
+        error: () => {},
       });
   }
 
-  startAddingNew(): void {
-    this.isAddingNew = true;
-    this.editingOfficialId = null;
-    this.authorizingOfficialForm.reset();
-  }
-
-  editOfficial(official: AuthorizingOfficial): void {
-    this.isAddingNew = false;
-    this.editingOfficialId = official.vendorAuthorizingOfficialId || null;
-    this.authorizingOfficialForm.patchValue({
-      firstName: official.firstName,
-      lastName: official.lastName,
-      title: official.title,
-      email: official.email,
-      phone: official.phone || '',
-    });
-  }
-
-  cancelEdit(): void {
-    this.isAddingNew = false;
-    this.editingOfficialId = null;
-    this.authorizingOfficialForm.reset();
-  }
-
-  onSubmit(): void {
-    if (this.authorizingOfficialForm.valid) {
-      const organizationId = this.stateService.getOrganizationId();
-      if (!organizationId) return;
-
-      const authorizingOfficial: AuthorizingOfficial = {
-        organizationId: organizationId,
-        firstName: this.authorizingOfficialForm.value.firstName,
-        lastName: this.authorizingOfficialForm.value.lastName,
-        title: this.authorizingOfficialForm.value.title,
-        email: this.authorizingOfficialForm.value.email,
-        phone: this.authorizingOfficialForm.value.phone,
-      };
-
-      if (this.editingOfficialId) {
-        authorizingOfficial.vendorAuthorizingOfficialId =
-          this.editingOfficialId;
-        this.updateAuthorizingOfficial(authorizingOfficial);
-      } else {
-        this.addAuthorizingOfficial(authorizingOfficial);
-      }
-    }
-  }
-
-  private addAuthorizingOfficial(official: AuthorizingOfficial): void {
+  onDocumentUploaded(): void {
+    if (!this.organizationId) return;
     this.offerorProfileService
-      .SaveOfferorAuthorizingOfficial(official)
-      .subscribe({
-        next: (response) => {
-          this.showSnackBar('Authorizing Official added successfully');
-          this.cancelEdit();
-          this.loadAuthorizingOfficials(official.organizationId);
-        },
-        error: (error) => {
-          const correlationId = error?.error?.correlationId;
-
-          this.loggingService.logException(
-            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
-            3,
-            {
-              organizationId: this.stateService.getOrganizationId(),
-              correlationId: correlationId,
-              methodName: 'addAuthorizingOfficial',
-              className: 'OfferorProfilePageComponent',
-              operation: 'SaveOfferorAuthorizingOfficial',
-              userId: this.stateService.getUserId(),
-            }
-          );
-        },
-      });
+      .GetOrganizationDocuments(this.organizationId)
+      .subscribe({ next: (docs) => (this.organizationDocuments = docs) });
   }
 
-  private updateAuthorizingOfficial(official: AuthorizingOfficial): void {
+  onProfileDetailsSaved(): void {
+    if (!this.organizationId) return;
     this.offerorProfileService
-      .UpdateOfferorAuthorizingOfficial(
-        official.vendorAuthorizingOfficialId!,
-        official
-      )
-      .subscribe({
-        next: (response) => {
-          this.showSnackBar('Authorizing Official updated successfully');
-          this.cancelEdit();
-          this.loadAuthorizingOfficials(official.organizationId);
-        },
-        error: (error) => {
-          const correlationId = error?.error?.correlationId;
-
-          this.loggingService.logException(
-            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
-            3,
-            {
-              organizationId: this.stateService.getOrganizationId(),
-              correlationId: correlationId,
-              methodName: 'updateAuthorizingOfficial',
-              className: 'OfferorProfilePageComponent',
-              operation: 'UpdateOfferorAuthorizingOfficial',
-              userId: this.stateService.getUserId(),
-            }
-          );
-        },
-      });
-  }
-
-  hasError(fieldName: string, errorType: string): boolean {
-    return (
-      (this.authorizingOfficialForm.get(fieldName)?.hasError(errorType) &&
-        this.authorizingOfficialForm.get(fieldName)?.touched) ||
-      false
-    );
-  }
-
-  getMaxLength(fieldName: string): number {
-    const maxLengths: { [key: string]: number } = {
-      firstName: 50,
-      lastName: 50,
-      title: 100,
-      email: 255,
-      phone: 20,
-    };
-    return maxLengths[fieldName] || 0;
-  }
-
-  private showSnackBar(message: string): void {
-    this.snackBar.open(message, 'Close', {
-      verticalPosition: 'top',
-      duration: 15000,
-    });
-  }
-
-  get isFormVisible(): boolean {
-    return this.isAddingNew || this.editingOfficialId !== null;
-  }
-
-  get submitButtonText(): string {
-    return this.editingOfficialId
-      ? 'Update Authorizing Official'
-      : 'Add Authorizing Official';
+      .GetOfferorProfileDiscloserDetails(this.organizationId)
+      .subscribe({ next: (details) => (this.offerProfileDetails = details) });
   }
 }

@@ -1,21 +1,26 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { ConfigService } from '../../core/services/config.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class NotarizationAppointmentService {
-  private url = environment.apiUrl;
+  private get url(): string {
+    return this.config.apiUrl;
+  }
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private config: ConfigService,
+  ) {}
 
   GetOpenTimeSlots(
-    date: string, // e.g., "2025-07-10"
-    interval?: number, // e.g., 15
-    workDayStart?: string, // e.g., "09:00:00"
-    workDayEnd?: string // e.g., "17:00:00"
+    date: string,
+    interval?: number,
+    workDayStart?: string,
+    workDayEnd?: string,
   ): Observable<string[]> {
     let params = new HttpParams();
 
@@ -30,10 +35,11 @@ export class NotarizationAppointmentService {
     }
 
     return this.http
-      .get<{ timeSlots: string[] }>(
-        `${this.url}NotarizationAppointments/OpenTimeSlots/${date}`,
-        { params }
-      )
+      .get<{
+        timeSlots: string[];
+      }>(`${this.url}NotarizationAppointments/OpenTimeSlots/${date}`, {
+        params,
+      })
       .pipe(map((response) => response.timeSlots));
   }
 
@@ -42,7 +48,7 @@ export class NotarizationAppointmentService {
     endDate: string,
     notaryId?: number,
     workDayStart?: string,
-    workDayEnd?: string
+    workDayEnd?: string,
   ): Observable<string[]> {
     let params = new HttpParams()
       .set('startDate', startDate)
@@ -61,10 +67,9 @@ export class NotarizationAppointmentService {
     }
 
     return this.http
-      .get<{ bookedDates: string[] }>(
-        `${this.url}NotarizationAppointments/BlockedDates`,
-        { params }
-      )
+      .get<{
+        bookedDates: string[];
+      }>(`${this.url}NotarizationAppointments/BlockedDates`, { params })
       .pipe(
         map((response) => {
           const processedDates = response.bookedDates.map((dateStr) => {
@@ -72,14 +77,14 @@ export class NotarizationAppointmentService {
             return processed;
           });
           return processedDates;
-        })
+        }),
       );
   }
 
   SaveNotarizationAppointment(
     date: string,
     startTime: string,
-    endTime: string
+    endTime: string,
   ): Observable<{ isSuccess: boolean; appointmentId: number }> {
     const params = new HttpParams()
       .set('date', date)
@@ -89,7 +94,7 @@ export class NotarizationAppointmentService {
     return this.http.post<{ isSuccess: boolean; appointmentId: number }>(
       `${this.url}NotarizationAppointments`,
       null, // no body
-      { params }
+      { params },
     );
   }
 }

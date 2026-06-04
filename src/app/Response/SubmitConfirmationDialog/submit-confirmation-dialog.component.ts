@@ -1,16 +1,17 @@
 import { Component, inject, Inject, OnDestroy } from '@angular/core';
 import {
   MatDialogRef,
+  MatDialog,
   MatDialogModule,
   MAT_DIALOG_DATA,
 } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { Subject, takeUntil } from 'rxjs';
-import { RequestService } from '../../Request/services/request.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
-import { LoggingService } from '../../exceptionhandling/logging.service';
 import { StateService } from '../../Request/services/state.service';
+import { CreditPurchaseDialogComponent } from '../CreditPurchaseDialog/credit-purchase-dialog.component';
+import { PaymentInfoService } from '../BillingInformation/services/payment-info.service';
+import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
 
 @Component({
   selector: 'submit-confirmation-dialog',
@@ -20,15 +21,16 @@ import { StateService } from '../../Request/services/state.service';
 })
 export class SubmitConfirmationDialogComponent implements OnDestroy {
   private destroy$ = new Subject<void>();
+  private dialog = inject(MatDialog);
+  organizationId = this.stateService.getOrganizationId();
 
   constructor(
-    private requestService: RequestService,
+    private paymentInfoService: PaymentInfoService,
     private router: Router,
     private stateService: StateService,
-    private _snackBar: MatSnackBar,
-    private loggingService: LoggingService,
     private dialogRef: MatDialogRef<SubmitConfirmationDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { responseId: string }
+    private snackbarNotificationService: SnackbarNotificationService,
+    @Inject(MAT_DIALOG_DATA) public data: { responseId: string },
   ) {}
 
   cancel(): void {
@@ -42,56 +44,70 @@ export class SubmitConfirmationDialogComponent implements OnDestroy {
 
   confirm(): void {
     const requestId = +this.data.responseId;
+    this.attemptSubmitOffer(requestId);
+  }
 
-    this.requestService
-      .UpdateRequestStatus(requestId, 9)
+  private attemptSubmitOffer(requestId: number): void {
+    this.paymentInfoService
+      .submitOffer(this.organizationId ?? 0, requestId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response: any) => {
-          const correlationId = response?.correlationId;
-          sessionStorage.removeItem('currentResponseId');
-          sessionStorage.removeItem('response_in_creation_mode');
-
-          this.loggingService.logEvent('RequestStatusUpdated', {
-            responseId: requestId,
-            correlationId: correlationId,
-            newRequestStatusId: 9,
-            methodName: 'confirm',
-            className: 'SubmitConfirmationDialogComponent',
-            operation: 'UpdateRequestStatus',
-            userId: this.stateService.getUserId(),
-            organizationId: this.stateService.getOrganizationId(),
-          });
-
-          this._snackBar.open('Offer successfully submitted!', 'Close', {
-            verticalPosition: 'top',
-          });
-
-          this.router.navigate(['/offeror-requests-view']);
-          this.dialogRef.close(true);
+        next: (response) => {
+          this.cleanupSessionAndNavigate();
         },
-        error: (error: any) => {
-          const correlationId = error?.error?.correlationId;
-
-          this.loggingService.logException(
-            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
-            3,
-            {
-              responseId: requestId,
-              correlationId: correlationId,
-              newRequestStatusId: 9,
-              organizationId: this.stateService.getOrganizationId(),
-              methodName: 'confirm',
-              className: 'SubmitConfirmationDialogComponent',
-              operation: 'UpdateRequestStatus',
-              userId: this.stateService.getUserId(),
-            }
-          );
-
-          if (error.status === 422) {
-            return;
-          }
+        error: (error) => {
+          this.handleSubmissionError(requestId, error);
         },
       });
+  }
+
+  private cleanupSessionAndNavigate(): void {
+    sessionStorage.removeItem('currentResponseId');
+    sessionStorage.removeItem('response_in_creation_mode');
+
+    this.snackbarNotificationService.showSnackbarSuccess(
+      'Offer submitted successfully.',
+    );
+
+    this.router.navigate(['/offeror-requests-view']);
+    this.dialogRef.close(true);
+  }
+
+  private handleSubmissionError(requestId: number, error: any): void {
+    // no submission credits (conflicts)
+    if (
+      error.status === 402 &&
+      error.error?.detail === 'NO_SUBMISSION_CREDITS_LEFT'
+    ) {
+      this.dialogRef.close(false);
+      this.showCreditPurchaseFlow(requestId);
+      return;
+    }
+
+    this.dialogRef.close(false);
+  }
+
+  private showCreditPurchaseFlow(requestId: number): void {
+    this.dialogRef.close(false);
+
+    const creditDialogRef = this.dialog.open(CreditPurchaseDialogComponent, {
+      width: '800px',
+      maxHeight: '90vh',
+      disableClose: true,
+      data: {
+        organizationId: this.organizationId,
+        requestId: requestId,
+        showCreditSelection: true,
+        isForSubmission: true,
+        contextMessage:
+          'You need to purchase submission credits to submit this offer.',
+      },
+    });
+
+    creditDialogRef.afterClosed().subscribe((result) => {
+      if (result?.success && result?.submitted) {
+        this.cleanupSessionAndNavigate();
+      }
+    });
   }
 }

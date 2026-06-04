@@ -14,7 +14,6 @@ import { Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../../authorization/auth.service';
 import { FlowProgressService } from '../../shared/service/flow-progress.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
 
 @Component({
@@ -47,8 +46,8 @@ export class UserSignUpDetails implements OnInit {
     private router: Router,
     private authService: AuthService,
     private flowProgressService: FlowProgressService,
-    private _snackBar: MatSnackBar,
-    private loggingService: LoggingService
+    private snackbarNotificationService: SnackbarNotificationService,
+    private loggingService: LoggingService,
   ) {
     this.userSignupDetailForm = this.fb.group({
       email: [{ value: '', disabled: true }, [Validators.required]],
@@ -102,7 +101,7 @@ export class UserSignUpDetails implements OnInit {
             methodName: 'getUserDetails',
             className: 'UserSignUpDetails',
             operation: 'getUser',
-          }
+          },
         );
       },
     });
@@ -123,7 +122,7 @@ export class UserSignUpDetails implements OnInit {
             methodName: 'updateUser',
             className: 'UserSignUpDetails',
             operation: 'updateUser',
-          }
+          },
         );
       },
     });
@@ -173,15 +172,13 @@ export class UserSignUpDetails implements OnInit {
                 methodName: 'onSubmit',
                 className: 'UserSignUpDetails',
                 operation: 'saveFlowProgress',
-              }
+              },
             );
           },
         });
     } else {
-      this._snackBar.open(
+      this.snackbarNotificationService.showSnackbarError(
         'Form is invalid or user data is not loaded yet. Please complete all required fields.',
-        'Close',
-        { verticalPosition: 'top', duration: 5000 }
       );
     }
   }

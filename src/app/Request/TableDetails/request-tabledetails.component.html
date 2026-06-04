@@ -96,41 +96,70 @@
 
         <div class="field-container">
           <div class="inline-field">
-            <div class="checkbox-group">
-              <strong>Solicitation Status</strong>
-              <mat-checkbox color="primary" formControlName="draft"
-                >Draft</mat-checkbox
-              >
-              <mat-checkbox color="primary" formControlName="scheduled"
-                >Scheduled</mat-checkbox
-              >
-              <mat-checkbox color="primary" formControlName="live"
-                >Live</mat-checkbox
-              >
-              <mat-checkbox color="primary" formControlName="closed"
-                >Closed</mat-checkbox
-              >
-              <mat-checkbox color="primary" formControlName="opened"
-                >Opened</mat-checkbox
-              >
-              <mat-checkbox color="primary" formControlName="cancelled"
-                >Cancelled</mat-checkbox
-              >
-            </div>
-            <div class="checkbox-group">
-              <strong>Type</strong>
-              <mat-checkbox color="primary" formControlName="rfq"
-                >RFQ</mat-checkbox
-              >
-              <mat-checkbox color="primary" formControlName="rfp"
-                >RFP</mat-checkbox
-              >
-              <mat-checkbox color="primary" formControlName="rfi"
-                >RFI</mat-checkbox
-              >
-              <mat-checkbox color="primary" formControlName="bid"
-                >BID</mat-checkbox
-              >
+            <div class="checkbox-section">
+              <div class="checkbox-group">
+                <strong>Solicitation Status</strong>
+                <div class="status-checkbox-items">
+                  <mat-checkbox color="primary" formControlName="draft"
+                    >Draft</mat-checkbox
+                  >
+                  <mat-checkbox color="primary" formControlName="scheduled"
+                    >Scheduled</mat-checkbox
+                  >
+                  <mat-checkbox color="primary" formControlName="live"
+                    >Live</mat-checkbox
+                  >
+                  <mat-checkbox color="primary" formControlName="closed"
+                    >Closed</mat-checkbox
+                  >
+                  <mat-checkbox color="primary" formControlName="opened"
+                    >Opened</mat-checkbox
+                  >
+                  <mat-checkbox color="primary" formControlName="cancelled"
+                    >Cancelled</mat-checkbox
+                  >
+                </div>
+              </div>
+
+              <div class="checkbox-group">
+                <strong>Type</strong>
+                <div class="types-checkbox-items">
+                  <mat-checkbox
+                    color="primary"
+                    formControlName="competitiveContracting"
+                    >Competitive Contracting</mat-checkbox
+                  >
+                  <mat-checkbox color="primary" formControlName="rfq"
+                    >Fair & Open RFQ (Professional Services)</mat-checkbox
+                  >
+                  <mat-checkbox color="primary" formControlName="rfp"
+                    >Fair & Open RFP (Professional Services)</mat-checkbox
+                  >
+                  <mat-checkbox color="primary" formControlName="bidPublicWorks"
+                    >Public Bid - Public Works</mat-checkbox
+                  >
+                  <mat-checkbox
+                    color="primary"
+                    formControlName="bidGoodsServices"
+                    >Public Bid - Goods/Services</mat-checkbox
+                  >
+                  <mat-checkbox
+                    color="primary"
+                    formControlName="nonFairOpenProfessionalServices"
+                    >Non-Fair & Open Professional Services</mat-checkbox
+                  >
+                  <mat-checkbox
+                    color="primary"
+                    formControlName="extraordinaryUnspecifiableServices"
+                    >Extraordinary Unspecifiable Services (EUS)</mat-checkbox
+                  >
+                  <mat-checkbox
+                    color="primary"
+                    formControlName="quotationsUnderThreshold"
+                    >Quotations Under Threshold</mat-checkbox
+                  >
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -168,42 +197,56 @@
       </ng-container>
 
       <ng-container matColumnDef="requestType">
-        <th mat-header-cell *matHeaderCellDef>Type</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Type</th>
         <td mat-cell *matCellDef="let request">
           {{ request.requestType?.requestTypeDesc }}
         </td>
       </ng-container>
 
       <ng-container matColumnDef="category">
-        <th mat-header-cell *matHeaderCellDef>Category</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Category</th>
         <td mat-cell *matCellDef="let request">
-          {{ displayCategoryName(request.categoryId) }}
+          {{
+            displayCategoryName(request.categoryId, request.categoryFullPath)
+          }}
         </td>
       </ng-container>
 
       <ng-container matColumnDef="publishDate">
-        <th mat-header-cell *matHeaderCellDef>Publish Date & Time</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>
+          Publish Date & Time
+        </th>
         <td mat-cell *matCellDef="let request">
-          {{ request.publishDate | date : "MM/dd/yyyy, h:mm a" }}
+          {{
+            request.publishDate
+              ? (request.publishDate | date: "MM/dd/yyyy, h:mm a")
+              : "—"
+          }}
         </td>
       </ng-container>
 
       <ng-container matColumnDef="closeDateAndTime">
-        <th mat-header-cell *matHeaderCellDef>Close Date & Time</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>
+          Close Date & Time
+        </th>
         <td mat-cell *matCellDef="let request">
-          {{ request.closeDate | date : "MM/dd/yyyy, h:mm a" }}
+          {{
+            request.closeDate
+              ? (request.closeDate | date: "MM/dd/yyyy, h:mm a")
+              : "—"
+          }}
         </td>
       </ng-container>
 
       <ng-container matColumnDef="requestStatus">
-        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
         <td mat-cell *matCellDef="let request">
           {{ request.agencyRequestStatus?.requestStatusDesc ?? "Draft" }}
         </td>
       </ng-container>
 
       <ng-container matColumnDef="numberOfOffers">
-        <th mat-header-cell *matHeaderCellDef>Offers</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Offers</th>
         <td mat-cell *matCellDef="let request">
           <span
             *ngIf="request.submittedOffersCount > 0"
@@ -231,13 +274,12 @@
               [disabled]="getAvailableActions(request).length === 0"
               aria-label="Actions menu"
             >
-              {{ getAvailableActions(request).length > 0 ? "Select" : "None" }}
+              Select
             </button>
 
             <mat-menu #menu="matMenu">
               <ng-container *ngFor="let action of getAvailableActions(request)">
                 <button
-                  *ngIf="action !== 'noneDisabled'"
                   mat-menu-item
                   (click)="openConfirmationDialog(action, request)"
                 >
@@ -245,6 +287,36 @@
                 </button>
               </ng-container>
             </mat-menu>
+          </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="downloadPDF">
+        <th mat-header-cell *matHeaderCellDef>
+          Download as PDF<mat-icon
+            style="font-size: medium; color: #0b74fd; cursor: pointer"
+            [appTooltip]="{
+              header: '',
+              body: 'Download unavailable for Draft.',
+              width: 'auto',
+              showCloseButton: false,
+              showActionButton: false,
+              transformStyle: 'translate(-75%, -103%)',
+            }"
+          >
+            info_outline
+          </mat-icon>
+        </th>
+        <td mat-cell *matCellDef="let request">
+          <div class="action-button-container" style="align-items: center">
+            <button
+              mat-icon-button
+              color="primary"
+              (click)="downloadSolicitation(request)"
+              [disabled]="!canDownloadPDF(request)"
+            >
+              <mat-icon>download</mat-icon>
+            </button>
           </div>
         </td>
       </ng-container>
@@ -289,7 +361,7 @@
           <tbody>
             <tr *ngFor="let offer of data.offers">
               <td>{{ offer.offerorName }}</td>
-              <td>{{ offer.submittedDate | date : "MM/dd/yyyy, h:mm a" }}</td>
+              <td>{{ offer.submittedDate | date: "MM/dd/yyyy, h:mm a" }}</td>
             </tr>
           </tbody>
         </table>

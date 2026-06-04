@@ -1,0 +1,212 @@
+/* ── Card shell ──────────────────────────────────── */
+.profile-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+/* ── Header ──────────────────────────────────────── */
+.card-header {
+  position: relative;
+  border-bottom: 1px solid #f3f4f6;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.header-accent {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #2563eb;
+  border-radius: 0;
+}
+
+.header-content {
+  flex: 1;
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.01em;
+}
+
+.card-description {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+/* ── Form body ───────────────────────────────────── */
+.required-files-form {
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* ── Labels ──────────────────────────────────────── */
+.upload-doc-label {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #1e40af;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.required-badge {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #dc2626;
+}
+
+.upload-doc-description {
+  margin: 0 0 4px;
+  font-size: 0.84rem;
+  color: #6b7280;
+  line-height: 1.55;
+}
+
+/* ── Upload button ───────────────────────────────── */
+.upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 18px;
+  height: 38px;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+  margin-bottom: 8px;
+}
+
+.upload-btn:hover:not(.disabled) {
+  background: #1d4ed8;
+}
+
+.upload-btn.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.upload-btn mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+/* ── Hidden file input ───────────────────────────── */
+.file-input-hidden {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Hint text ───────────────────────────────────── */
+.upload-hint {
+  font-size: 0.78rem;
+  color: #9ca3af;
+  margin-top: 2px;
+  display: block;
+}
+
+/* ── Spinner ─────────────────────────────────────── */
+.btn-spinner {
+  color: #ffffff;
+}
+
+/* ── Uploaded file rows ──────────────────────────── */
+.uploaded-file-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 42px;
+  padding: 0 14px 0 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 0.85rem;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.uploaded-file-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+.uploaded-file-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #374151;
+}
+
+.delete-btn,
+.download-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  padding: 4px;
+  border-radius: 4px;
+  transition:
+    color 0.15s,
+    background 0.15s;
+  flex-shrink: 0;
+}
+
+.delete-btn:hover:not([disabled]) {
+  color: #ef4444;
+  background: #fef2f2;
+}
+
+.download-btn:hover:not([disabled]) {
+  color: #2563eb;
+  background: #e0e7ff;
+}
+
+.delete-btn mat-icon,
+.download-btn mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}

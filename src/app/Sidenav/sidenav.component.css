@@ -86,6 +86,11 @@
 
 .sidenav-bottom {
   margin-top: auto;
+  border-top: 1px solid #cdcdcd;
+}
+
+.bottom-nav-item {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .logout-item {
@@ -99,6 +104,7 @@
   padding: 12px 0;
   cursor: pointer;
   color: #666;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .toggle-button.float-right {

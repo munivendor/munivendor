@@ -21,14 +21,14 @@ import {
   HttpErrorResponse,
   HttpParams,
 } from '@angular/common/http';
-import { environment } from '../../environments/environment';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { FlowNavigationService } from '../shared/service/flow-navigation.service';
 import { UserService } from '../shared/service/user.service';
 import { User } from '../shared/model/user.model';
 import { StateService } from '../Request/services/state.service';
 import { LoggingService } from '../exceptionhandling/logging.service';
 import { SnackbarNotificationService } from '../shared/service/snackbar-notification.service';
+import { ConfigService } from '../core/services/config.service';
+import { FilterStateService } from '../shared/service/filter-state.service';
 
 export interface ForgotPasswordResponse {
   message?: string;
@@ -49,7 +49,9 @@ export class AuthService {
   setSignupInProgress(inProgress: boolean): void {
     this.signupInProgressSubject.next(inProgress);
   }
-  private url = environment.apiUrl;
+  private get url(): string {
+    return this.config.apiUrl;
+  }
   private userSubject = new BehaviorSubject<number | null>(null);
 
   user$: Observable<number | null> = this.userSubject.asObservable();
@@ -72,6 +74,8 @@ export class AuthService {
     '/',
     '/login',
     '/signup',
+    '/offeror/signup',
+    '/agency/signup',
     '/forgot-password',
     '/email-verification',
     '/validateuser',
@@ -86,9 +90,10 @@ export class AuthService {
     private userService: UserService,
     private stateService: StateService,
     private loggingService: LoggingService,
-    private _snackBar: MatSnackBar,
     private snackbarNotificationService: SnackbarNotificationService,
-    @Inject(PLATFORM_ID) private platformId: Object
+    private config: ConfigService,
+    private filterStateService: FilterStateService,
+    @Inject(PLATFORM_ID) private platformId: Object,
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     if (this.isBrowser) {
@@ -123,7 +128,6 @@ export class AuthService {
         this.forceLogoutThisTab();
       }
     } catch (error) {
-      console.error('Error parsing session data:', error);
       this.forceLogoutThisTab();
     }
   }
@@ -159,7 +163,7 @@ export class AuthService {
       catchError((error) => {
         this.appInitialized.next(true);
         return of(null);
-      })
+      }),
     );
   }
 
@@ -180,7 +184,7 @@ export class AuthService {
               }
               if (user.organizationTypeId !== undefined) {
                 this.stateService.setOrganizationTypeId(
-                  user.organizationTypeId
+                  user.organizationTypeId,
                 );
               }
               if (user.organizationId !== undefined) {
@@ -188,9 +192,8 @@ export class AuthService {
               }
             }),
             catchError((userError) => {
-              console.error('Error fetching user data during init:', userError);
               return of(null);
-            })
+            }),
           );
         }),
         catchError((err) => {
@@ -201,9 +204,8 @@ export class AuthService {
           ) {
             this.router.navigate(['/login']);
           }
-          // Return of(null) instead of throwError to prevent error propagation
           return of(null);
-        })
+        }),
       );
   }
 
@@ -217,8 +219,10 @@ export class AuthService {
             !!user &&
             !skipNext &&
             !signupInProgress &&
-            this.router.url !== '/signup'
-        )
+            this.router.url !== '/signup',
+          this.router.url !== '/offeror/signup' &&
+            this.router.url !== '/agency/signup',
+        ),
       )
       .subscribe({
         next: ([user, _skip, _signup]) => {
@@ -231,10 +235,9 @@ export class AuthService {
             next: (userId) => this.completeLoginProcess(userId, user.email),
             error: () => {
               this.safeResetAuthState();
-              this._snackBar.open(
+
+              this.snackbarNotificationService.showSnackbarError(
                 'Login failed. Please check your credentials and try again.',
-                'Close',
-                { verticalPosition: 'top' }
               );
             },
           });
@@ -260,7 +263,7 @@ export class AuthService {
                 }
                 if (user.organizationTypeId !== undefined) {
                   this.stateService.setOrganizationTypeId(
-                    user.organizationTypeId
+                    user.organizationTypeId,
                   );
                 }
                 if (user.userId !== undefined) {
@@ -275,21 +278,21 @@ export class AuthService {
               },
               (error) => {
                 console.error('Error fetching user data:', error);
-              }
+              },
             );
           }
         }),
         catchError((error: HttpErrorResponse) => {
           this.isLoggingIn.next(false);
           return throwError(() => error);
-        })
+        }),
       );
   }
 
   logout(): void {
     if (!this.authState.value) {
       this.clearCurrentSession();
-      console.warn('User is already logged out, skipping redundant logout.');
+
       return;
     }
 
@@ -298,19 +301,18 @@ export class AuthService {
       .subscribe({
         next: async () => {
           this.clearCurrentSession();
+          this.filterStateService.clear();
           try {
             if (this.userSubject.value) {
               await this.socialAuthService.signOut();
             }
             this.userLoggedOut$.next();
           } catch (error) {
-            console.error('Google Sign-Out Error:', error);
           } finally {
             this.safeResetAuthState();
           }
         },
         error: (error) => {
-          console.error('Logout Error:', error);
           this.safeResetAuthState();
         },
       });
@@ -318,7 +320,6 @@ export class AuthService {
 
   private safeResetAuthState(): void {
     if (!this.authState.value) {
-      console.warn('Auth state is already reset. Skipping duplicate reset.');
       return;
     }
 
@@ -366,7 +367,7 @@ export class AuthService {
         }),
         switchMap(() => {
           return this.flowNavigationService.navigateAfterLogin(userId, email);
-        })
+        }),
       )
       .subscribe({
         next: () => {
@@ -384,12 +385,14 @@ export class AuthService {
               methodName: 'completeLoginProcess',
               className: 'AuthService',
               operation: 'getUser',
-            }
+            },
           );
 
           this.setAuthenticated(false, undefined);
 
-          this.snackbarNotificationService.showSnackbarError(correlationId);
+          this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
+            correlationId,
+          );
         },
       });
   }
@@ -411,9 +414,8 @@ export class AuthService {
         }
       }),
       catchError((error) => {
-        console.error('Error manually restoring organization ID:', error);
         return of(null);
-      })
+      }),
     );
   }
 
@@ -425,7 +427,7 @@ export class AuthService {
         headers: {
           'Content-Type': 'application/json',
         },
-      }
+      },
     );
   }
 

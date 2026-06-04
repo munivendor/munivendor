@@ -1,20 +1,12 @@
 import { CommonModule } from '@angular/common';
-import {
-  Component,
-  inject,
-  Input,
-  OnDestroy,
-  OnInit,
-  ViewChild,
-} from '@angular/core';
-import { finalize, forkJoin, Subject, takeUntil } from 'rxjs';
+import { Component, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { finalize, Subject, takeUntil } from 'rxjs';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { RequestService } from '../services/request.service';
-import { CategoryHierarchyService } from '../services/category-hierarchy.service';
 import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -25,7 +17,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
-import { ConfirmationDialog } from '../RequestConfirmationDialog/confirmation-dialog.component';
+import { RequestConfirmationDialog } from '../RequestConfirmationDialog/request-confirmation-dialog.component';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CustomCategoryDropdownComponent } from '../../shared/CustomCategoryDropdown/custom-category-dropdown.component';
 import { StateService } from '../services/state.service';
@@ -33,7 +25,9 @@ import { CategoryNode } from '../../shared/model/category-tree.model';
 import { ChangeDetectorRef } from '@angular/core';
 import { LoadingService } from '../../shared/LoadingSpinner/loading.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { HttpClient } from '@angular/common/http';
+import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
+import { FilterStateService } from '../../shared/service/filter-state.service';
 
 interface FlattenedCategoryNode {
   categoryId: string;
@@ -72,20 +66,26 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   @Input() categoryControl!: FormControl<number | null>;
   organizationId!: number | null;
-  private _snackBar = inject(MatSnackBar);
   hierarchicalCategories: CategoryNode[] = [];
   flattenedCategories: FlattenedCategoryNode[] = [];
 
   readonly AVAILABLE_ACTIONS = ['respond', 'delete', 'continue'] as const;
 
-  displayCategoryName = (categoryId: string | number | null): string => {
+  displayCategoryName = (
+    categoryId: string | number | null,
+    categoryFullPath?: string,
+  ): string => {
+    if (categoryFullPath) {
+      return categoryFullPath;
+    }
+
     if (categoryId == null) {
       return '';
     }
 
     const searchValue = categoryId.toString();
     const match = this.flattenedCategories.find(
-      (cat) => cat.categoryId === searchValue
+      (cat) => cat.categoryId === searchValue,
     );
     if (match) {
       return this.buildBreadcrumbPath(match);
@@ -100,7 +100,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
 
     while (currentParentId) {
       const parentNode = this.flattenedCategories.find(
-        (cat) => cat.categoryId === currentParentId
+        (cat) => cat.categoryId === currentParentId,
       );
       if (parentNode) {
         path.unshift(parentNode.name);
@@ -113,35 +113,9 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
     return path.join(' > ');
   }
 
-  private flattenCategories(
-    categories: CategoryNode[],
-    parentId: string | null = null
-  ): FlattenedCategoryNode[] {
-    const flattened: FlattenedCategoryNode[] = [];
-
-    for (const category of categories) {
-      flattened.push({
-        categoryId: category.categoryId || category.id?.toString() || '',
-        name: category.name || '',
-        parentId: parentId,
-      });
-
-      if (category.children && category.children.length > 0) {
-        flattened.push(
-          ...this.flattenCategories(
-            category.children,
-            category.categoryId || category.id?.toString() || ''
-          )
-        );
-      }
-    }
-
-    return flattened;
-  }
-
   prepareCategoriesForTreeRendering(
     categories: CategoryNode[],
-    level: number = 0
+    level: number = 0,
   ): CategoryNode[] {
     return categories
       .filter((cat) => !cat.deleted)
@@ -181,7 +155,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
   }
 
   openConfirmationDialog(action: string, request: any): void {
-    const dialogRef = this.dialog.open(ConfirmationDialog, {
+    const dialogRef = this.dialog.open(RequestConfirmationDialog, {
       width: '600px',
       data: { action, request },
     });
@@ -202,9 +176,9 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this._snackBar.open(`Offer successfully deleted.`, 'Close', {
-            verticalPosition: 'top',
-          });
+          this.snackbarNotificationService.showSnackbarSuccess(
+            'Offer deleted successfully.',
+          );
           this.loadAndJoinRequestData();
         },
         error: (error) => {
@@ -222,10 +196,92 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
               className: 'OfferorTableDetailsComponent',
               operation: 'DeleteRequest',
               userId: this.stateService.getUserId(),
-            }
+            },
           );
         },
       });
+  }
+
+  downloadSolicitation(request: any): void {
+    const filename = this.generateSolicitationFilename(request);
+    this.loadingService.show('Downloading...');
+
+    this.http
+      .post(
+        '/api/generate-pdf/' + request.requestId,
+        { html: '' },
+        { responseType: 'blob' },
+      )
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          const blob = new Blob([response], { type: 'application/pdf' });
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          a.click();
+          window.URL.revokeObjectURL(url);
+          this.loadingService.hide();
+          this.snackbarNotificationService.showSnackbarSuccess(
+            'Solicitation downloaded successfully.',
+          );
+        },
+        error: (error) => {
+          this.loadingService.hide();
+
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              requestId: request.requestId,
+              organizationId: this.organizationId,
+              correlationId: correlationId,
+              methodName: 'downloadSolicitation',
+              className: 'OfferorTableDetailsComponent',
+              operation: 'GeneratePDF',
+              userId: this.stateService.getUserId(),
+            },
+          );
+        },
+      });
+  }
+
+  private generateSolicitationFilename(request: any): string {
+    const sanitize = (str: string): string => {
+      return str
+        .replace(/[^a-zA-Z0-9\s-_]/g, '')
+        .replace(/\s+/g, '_')
+        .trim();
+    };
+
+    const formatDate = (date: Date | string): string => {
+      let utcDate: Date;
+
+      if (typeof date === 'string') {
+        utcDate = new Date(date + 'Z');
+      } else {
+        utcDate = date;
+      }
+
+      const month = String(utcDate.getMonth() + 1).padStart(2, '0');
+      const day = String(utcDate.getDate()).padStart(2, '0');
+      const year = utcDate.getFullYear();
+
+      return `${month}-${day}-${year}`;
+    };
+
+    if (request) {
+      const solicitationName = request.requestName || 'Unknown';
+      const closeDate = request.closeDate
+        ? formatDate(request.closeDate)
+        : 'NoDate';
+      return `Solicitation_${sanitize(solicitationName)}_${closeDate}.pdf`;
+    }
+
+    return 'Solicitation.pdf';
   }
 
   filterForm = this.fb.group({
@@ -243,10 +299,14 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
     inProgress: [false],
     submitted: [false],
     none: [false],
+    competitiveContracting: [false],
     rfq: [false],
     rfp: [false],
-    rfi: [false],
-    bid: [false],
+    bidPublicWorks: [false],
+    bidGoodsServices: [false],
+    nonFairOpenProfessionalServices: [false],
+    extraordinaryUnspecifiableServices: [false],
+    quotationsUnderThreshold: [false],
   });
 
   displayedColumns: string[] = [
@@ -260,6 +320,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
     'offerorRequestStatus',
     'agencyRequestStatus',
     'actions',
+    'downloadPDF',
   ];
 
   joinedRequestData: Request[] = [];
@@ -272,22 +333,28 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
 
   constructor(
     private requestService: RequestService,
-    private categoryHierarchyService: CategoryHierarchyService,
     private fb: FormBuilder,
     public dialog: MatDialog,
     private stateService: StateService,
     private cdr: ChangeDetectorRef,
     private loadingService: LoadingService,
-    private loggingService: LoggingService
+    private loggingService: LoggingService,
+    private http: HttpClient,
+    private snackbarNotificationService: SnackbarNotificationService,
+    private filterStateService: FilterStateService,
   ) {
     this.organizationId = this.stateService.getOrganizationId();
   }
 
   readonly requestTypeMap = {
-    rfi: 1,
+    competitiveContracting: 1,
     rfq: 2,
     rfp: 3,
-    bid: 4,
+    bidPublicWorks: 4,
+    bidGoodsServices: 5,
+    nonFairOpenProfessionalServices: 6,
+    extraordinaryUnspecifiableServices: 7,
+    quotationsUnderThreshold: 8,
   };
 
   readonly agencyRequestStatusMap = {
@@ -304,15 +371,37 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
   };
 
   ngOnInit(): void {
+    const saved = this.filterStateService.load();
+    this.filterForm.patchValue(saved ?? { live: true });
+
+    this.filterForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(
+        ({
+          requestName,
+          category,
+          requestId,
+          publishDateFrom,
+          publishDateTo,
+          closeDateFrom,
+          closeDateTo,
+          ...checkboxes
+        }) => {
+          this.filterStateService.save(checkboxes);
+        },
+      );
+
+    this.triggerInitialSearch();
+  }
+
+  private triggerInitialSearch(): void {
     if (!this.organizationId) {
       setTimeout(() => {
         this.organizationId = this.stateService.getOrganizationId() ?? 0;
-        if (this.organizationId) {
-          this.loadAndJoinRequestData();
-        }
+        if (this.organizationId) this.onSearch();
       }, 100);
     } else {
-      this.loadAndJoinRequestData();
+      this.onSearch();
     }
   }
 
@@ -324,13 +413,13 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
       .map(([, value]) => value);
 
     const selectedAgencyRequestStatusIds = Object.entries(
-      this.agencyRequestStatusMap
+      this.agencyRequestStatusMap,
     )
       .filter(([key]) => this.filterForm.get(key)?.value)
       .map(([, value]) => value);
 
     const selectedOfferorRequestStatusIds = Object.entries(
-      this.offerorRequestStatusMap
+      this.offerorRequestStatusMap,
     )
       .filter(([key]) => this.filterForm.get(key)?.value)
       .map(([, value]) => value);
@@ -351,7 +440,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
 
     if (formValues.publishDateFrom) {
       params.startPublishDate = new Date(
-        formValues.publishDateFrom
+        formValues.publishDateFrom,
       ).toISOString();
     }
 
@@ -400,46 +489,34 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
 
       this.loadingService.show();
 
-      forkJoin([
-        this.requestService.GetRequestsOfferorView(requestParams || {}),
-        this.categoryHierarchyService.GetCategoryHierarchy(),
-        this.requestService.GetRequestTypes(),
-        this.requestService.GetRequestStatuses(),
-      ])
+      this.requestService
+        .GetRequestsOfferorView(requestParams || {})
         .pipe(
           takeUntil(this.destroy$),
-          finalize(() => this.loadingService.hide())
+          finalize(() => this.loadingService.hide()),
         )
         .subscribe({
-          next: ([requests, categories, requestTypes, requestStatuses]) => {
+          next: (requests) => {
             const requestsData = requests?.requests || [];
             this.hasLoadedData = requestsData.length > 0;
 
-            if (categories && categories.length > 0) {
-              this.hierarchicalCategories =
-                this.prepareCategoriesForTreeRendering(categories);
-              this.flattenedCategories = this.flattenCategories(
-                this.hierarchicalCategories
-              );
-            }
-
             requestsData.forEach((request: any) => {
-              const category = this.findCategoryById(
-                categories,
-                request.categoryId
-              );
-              const requestType = requestTypes.find(
-                (r) => r.requestTypeId === request.requestTypeId
-              );
-              const agencyRequestStatus = requestStatuses.find(
-                (rs: { requestStatusId: any }) =>
-                  rs.requestStatusId === request.agencyRequestStatusId
-              );
+              const requestType = {
+                requestTypeId: request.requestTypeId,
+                requestTypeDesc: request.agencyRequestTypeName,
+              };
 
-              const offerorRequestStatus = requestStatuses.find(
-                (rs: { requestStatusId: any }) =>
-                  rs.requestStatusId === request.offerorRequestStatusId
-              );
+              const agencyRequestStatus = {
+                requestStatusId: request.agencyRequestStatusId,
+                requestStatusDesc: request.agencyRequestStatusName,
+              };
+
+              const offerorRequestStatus = request.offerorRequestStatusId
+                ? {
+                    requestStatusId: request.offerorRequestStatusId,
+                    requestStatusDesc: request.offerorRequestStatusName,
+                  }
+                : null;
 
               request.publishDate = request.publishDate
                 ? new Date(request.publishDate + 'Z')
@@ -451,7 +528,6 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
 
               combinedData.push({
                 ...request,
-                category,
                 requestType,
                 agencyRequestStatus,
                 offerorRequestStatus,
@@ -459,6 +535,44 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
             });
 
             this.dataSource = new MatTableDataSource(combinedData);
+
+            this.dataSource.sortingDataAccessor = (
+              item: any,
+              property: string,
+            ) => {
+              switch (property) {
+                case 'requestName':
+                  return item.requestName?.toLowerCase() ?? '';
+                case 'agencyOrganizationName':
+                  return item.agencyOrganizationName?.toLowerCase() ?? '';
+                case 'requestId':
+                  return item.requestId ?? 0;
+                case 'requestType':
+                  return item.requestType?.requestTypeDesc?.toLowerCase() ?? '';
+                case 'category':
+                  return item.categoryFullPath?.toLowerCase() ?? '';
+                case 'publishDate':
+                  return item.publishDate
+                    ? new Date(item.publishDate).getTime()
+                    : -1;
+                case 'closeDateAndTime':
+                  return item.closeDate
+                    ? new Date(item.closeDate).getTime()
+                    : -1;
+                case 'offerorRequestStatus':
+                  return (
+                    item.offerorRequestStatus?.requestStatusDesc?.toLowerCase() ??
+                    ''
+                  );
+                case 'agencyRequestStatus':
+                  return (
+                    item.agencyRequestStatus?.requestStatusDesc?.toLowerCase() ??
+                    ''
+                  );
+                default:
+                  return '';
+              }
+            };
 
             this.cdr.detectChanges();
 
@@ -475,21 +589,6 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
           error: (error: any) => {
             const correlationId = error?.error?.correlationId;
 
-            let operation = 'UnknownOperation';
-            const errorUrl = error?.url?.toLowerCase?.() || '';
-
-            if (
-              errorUrl.includes('requestsofferorview') ||
-              errorUrl.includes('requests')
-            )
-              operation = 'GetRequestsOfferorView';
-            else if (errorUrl.includes('categoryhierarchy'))
-              operation = 'GetCategoryHierarchy';
-            else if (errorUrl.includes('requesttypes'))
-              operation = 'GetRequestTypes';
-            else if (errorUrl.includes('requeststatuses'))
-              operation = 'GetRequestStatuses';
-
             this.loggingService.logException(
               new Error(`HTTP Error ${error.status}: ${error.statusText}`),
               3,
@@ -498,9 +597,9 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
                 correlationId: correlationId,
                 methodName: 'loadAndJoinRequestData',
                 className: 'OfferorRequestTableDetailsComponent',
-                operation: operation,
+                operation: 'GetRequestsOfferorView',
                 userId: this.stateService.getUserId(),
-              }
+              },
             );
 
             this.dataSource = new MatTableDataSource<any>([]);
@@ -510,20 +609,6 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
     } catch (error: any) {
       this.dataSource = new MatTableDataSource<any>([]);
     }
-  }
-
-  private findCategoryById(categories: any[], targetId: number): any {
-    for (const category of categories) {
-      if (category.id === targetId) {
-        return category;
-      }
-
-      if (category.children && category.children.length > 0) {
-        const found = this.findCategoryById(category.children, targetId);
-        if (found) return found;
-      }
-    }
-    return null;
   }
 
   // future for dynamic filtering of solicitation name

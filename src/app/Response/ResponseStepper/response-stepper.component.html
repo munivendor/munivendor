@@ -1,11 +1,22 @@
 <mat-stepper [linear]="true" #stepper (selectionChange)="onStepChange($event)">
-  <mat-step label="Basics">
+  <mat-step label="Setup & Governance">
     <ng-template matStepContent>
+      <button
+        mat-raised-button
+        matStepperNext
+        (click)="saveResponse()"
+        [disabled]="!isStepValid"
+        color="primary"
+        style="float: right"
+      >
+        Next
+      </button>
       <response-basic
         #step1
         [sourceIdParam]="sourceIdParam"
         [responseIdParam]="responseIdParam"
         (formValidityChange)="onFormValidityChange($event)"
+        (isSavingChange)="onSavingChange($event)"
       ></response-basic>
       <div>
         <button
@@ -22,7 +33,7 @@
     </ng-template>
   </mat-step>
 
-  <mat-step label="Details">
+  <mat-step label="Scope, Administrative & Technical Requirements">
     <ng-template matStepContent>
       <div class="response-stepper-button-container">
         <button
@@ -33,7 +44,14 @@
         >
           Back
         </button>
-        <button mat-raised-button matStepperNext color="primary">Next</button>
+        <button
+          mat-raised-button
+          matStepperNext
+          color="primary"
+          [disabled]="isSaving"
+        >
+          Next
+        </button>
       </div>
       <response-details
         #step2
@@ -53,14 +71,24 @@
         <!-- <button mat-raised-button matStepperNext [disabled]="!isAutoFillComplete" color="primary">
           Next
         </button> -->
-        <button mat-raised-button matStepperNext color="primary">Next</button>
+        <button
+          mat-raised-button
+          matStepperNext
+          color="primary"
+          [disabled]="isSaving"
+        >
+          Next
+        </button>
       </div>
     </ng-template>
   </mat-step>
 
-  <mat-step label="Documents">
+  <mat-step label="Required Forms & Documents">
     <ng-template matStepContent>
-      <div class="response-stepper-button-container">
+      <div
+        class="response-stepper-button-container"
+        style="margin-bottom: 12px"
+      >
         <button
           mat-raised-button
           matStepperPrevious
@@ -71,9 +99,32 @@
         </button>
         <button mat-raised-button matStepperNext color="primary">Next</button>
       </div>
-      <response-documents
-        [responseIdParam]="responseIdParam"
-      ></response-documents>
+
+      <div class="documents-legend">
+        <mat-card>
+          <mat-card-content>
+            <div style="display: flex; align-items: center; gap: 8px">
+              <mat-icon style="color: gray">upload</mat-icon>
+              <span>User has not uploaded form</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px">
+              <mat-icon style="color: green">upload</mat-icon>
+              <span>User has successfully uploaded form</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px">
+              <mat-icon color="primary">upload</mat-icon>
+              <span>Form has been uploaded from Offeror Profile</span>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <div>
+        <response-documents
+          [responseIdParam]="responseIdParam"
+        ></response-documents>
+      </div>
+
       <div class="response-stepper-button-container">
         <button
           mat-raised-button
@@ -101,7 +152,7 @@
     </ng-template>
   </mat-step> -->
 
-  <mat-step label="Review">
+  <mat-step label="Final Review">
     <ng-template matStepContent>
       <div style="display: flex" class="response-stepper-button-container">
         <button
@@ -131,7 +182,7 @@
               width: '350px',
               transformStyle: 'translate(-103%, -25%)',
               showCloseButton: false,
-              showActionButton: false
+              showActionButton: false,
             }"
           >
             info_outline
@@ -171,7 +222,7 @@
               width: '350px',
               transformStyle: 'translate(-103%, -75%)',
               showCloseButton: false,
-              showActionButton: false
+              showActionButton: false,
             }"
           >
             info_outline

@@ -1,6 +1,6 @@
 <mat-card>
   <mat-stepper [linear]="true" #stepper style="border-radius: 8px">
-    <mat-step label="Basics">
+    <mat-step label="Setup & Governance">
       <ng-template matStepContent>
         <request-basic
           #step1
@@ -13,9 +13,9 @@
             mat-raised-button
             (click)="saveRequest()"
             matStepperNext
-            [disabled]="!isStepValid"
             color="primary"
             style="float: right"
+            [disabled]="!isStepValid"
           >
             Next
           </button>
@@ -23,7 +23,7 @@
       </ng-template>
     </mat-step>
 
-    <mat-step label="Proposals">
+    <mat-step label="Scope, Administrative & Technical Requirements">
       <ng-template matStepContent>
         <div class="request-stepper-button-container">
           <button
@@ -38,20 +38,11 @@
             mat-raised-button
             matStepperNext
             (click)="saveSections()"
-            [disabled]="!isStepValid"
             color="primary"
+            [disabled]="!isStepValid"
           >
             Next
           </button>
-          <!-- not disabled for testing purposes -->
-          <!-- <button
-            mat-raised-button
-            matStepperNext
-            (click)="saveSections()"
-            color="primary"
-          >
-            Next
-          </button> -->
         </div>
         <request-overview
           #step2
@@ -80,7 +71,7 @@
       </ng-template>
     </mat-step>
 
-    <mat-step label="Documents">
+    <mat-step label="Required Forms & Documents">
       <ng-template matStepContent>
         <div class="request-stepper-button-container">
           <button
@@ -124,7 +115,7 @@
       </ng-template>
     </mat-step>
 
-    <mat-step label="Review">
+    <mat-step label="Final Review">
       <ng-template matStepContent>
         <div class="request-stepper-button-container">
           <button

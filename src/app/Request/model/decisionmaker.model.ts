@@ -1,8 +1,9 @@
-export class DecisionMaker {
-    decisionMakerId!: number;
-    decisionMakerName!: number;
-    Address!: string
-    Address2!: string
-    State!: string
-    ZipCode!: number
-  }
+export interface DecisionMaker {
+  decisionMakerId: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  title: string | null;
+  phoneNumber: string | null;
+  emailSolicitations: boolean | null;
+}

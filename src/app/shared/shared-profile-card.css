@@ -1,0 +1,391 @@
+/* ═══════════════════════════════════════════════════
+   shared-profile-card.css
+   Import this in every offeror/agency profile component.
+   Only put component-specific overrides in the local .css file.
+   ═══════════════════════════════════════════════════ */
+
+/* ── CSS Variables ───────────────────────────────── */
+/* Declared on :root so they are available to all
+   components that import this file.                  */
+:root {
+  --primary: #1d4ed8;
+  --primary-light: #eff6ff;
+  --primary-mid: #bfdbfe;
+  --accent: #3b82f6;
+  --text-dark: #0f172a;
+  --text-mid: #475569;
+  --text-soft: #94a3b8;
+  --border: #e2e8f0;
+  --bg-card: #ffffff;
+  --bg-subtle: #f8fafc;
+  --error: #dc2626;
+  --success: #16a34a;
+  --radius-card: 14px;
+  --radius-field: 8px;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+/* ── Card Shell ──────────────────────────────────── */
+.profile-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+/* ── Card Header ─────────────────────────────────── */
+.card-header {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-subtle);
+}
+
+.header-accent {
+  width: 5px;
+  background: linear-gradient(180deg, var(--primary) 0%, var(--accent) 100%);
+  flex-shrink: 0;
+  border-radius: var(--radius-card) 0 0 0;
+}
+
+.header-content {
+  padding: 1.25rem 1.75rem;
+  flex: 1;
+}
+
+/* Header with action button (tables: officials, decision makers) */
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.card-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 0 0 0.4rem;
+  letter-spacing: -0.01em;
+}
+
+/* Use this variant when a header-top / header-left is NOT present
+   (plain header: title + description only, no action button)      */
+.card-title--plain {
+  margin: 0 0 0.4rem;
+}
+
+.card-description {
+  font-size: 0.84rem;
+  color: var(--text-mid);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ── Record Count Badge ──────────────────────────── */
+.record-count {
+  font-size: 0.75rem;
+  color: var(--text-mid);
+  background: var(--border);
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+/* ── Add / Action Button (header CTA) ────────────── */
+.add-btn {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem;
+  height: 38px;
+}
+
+/* ── Card Form Body ──────────────────────────────── */
+.card-form {
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* ── Form Sections (within a form card) ──────────── */
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.form-section:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+/* ── Subsection Labels ───────────────────────────── */
+.subsection-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--primary);
+  margin-bottom: 0.25rem;
+}
+
+.subsection-label-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-bottom: 0.25rem;
+}
+
+.subsection-hint {
+  font-size: 0.82rem;
+  color: var(--text-mid);
+  margin: 0 0 0.25rem;
+  line-height: 1.6;
+}
+
+.inline-link {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ── Form Layout Helpers ─────────────────────────── */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-row--narrow {
+  grid-template-columns: 1fr 1fr;
+}
+
+.row-spacer {
+  flex: 1;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.full-width.mat-mdc-form-field {
+  font-size: 0.9rem;
+}
+
+/* ── Field Icon (mat suffix) ─────────────────────── */
+.field-icon {
+  font-size: 18px;
+  color: var(--text-soft);
+}
+
+/* ── Card Footer (Save button row) ──────────────── */
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 140px;
+  justify-content: center;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em;
+  height: 42px;
+}
+
+/* ── Table Wrapper ───────────────────────────────── */
+.table-wrapper {
+  overflow: hidden;
+}
+
+/* ── Data Table ──────────────────────────────────── */
+.data-table {
+  width: 100%;
+  font-size: 0.875rem;
+}
+
+.data-table ::ng-deep th.mat-mdc-header-cell {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-soft);
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border);
+  padding: 0.75rem 1rem;
+}
+
+.data-table ::ng-deep td.mat-mdc-cell {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--bg-subtle);
+  color: var(--text-mid);
+  vertical-align: middle;
+}
+
+.data-table ::ng-deep tr.mat-mdc-row:last-child td.mat-mdc-cell {
+  border-bottom: none;
+}
+
+.data-table ::ng-deep tr.mat-mdc-row:hover td.mat-mdc-cell {
+  background: var(--primary-light);
+}
+
+/* ── Name Cell ───────────────────────────────────── */
+.name-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.full-name {
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+/* ── Email text ──────────────────────────────────── */
+.email-text {
+  color: var(--primary);
+  font-size: 0.85rem;
+}
+
+/* ── Yes / No Badge ──────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge--yes {
+  background: #dcfce7;
+  color: var(--success);
+}
+
+.badge--no {
+  background: #fee2e2;
+  color: var(--error);
+}
+
+/* ── Empty / null value ──────────────────────────── */
+.empty-value {
+  color: var(--text-soft);
+}
+
+/* ── Action column + buttons ─────────────────────── */
+.actions-col {
+  width: 110px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.btn-edit.mat-mdc-icon-button {
+  color: var(--primary);
+}
+
+.btn-edit.mat-mdc-icon-button:hover {
+  background: var(--primary-light);
+}
+
+.btn-delete.mat-mdc-icon-button {
+  color: var(--error);
+}
+
+.btn-delete.mat-mdc-icon-button:hover {
+  background: #fee2e2;
+}
+
+/* ── Paginator ───────────────────────────────────── */
+.data-table + mat-paginator,
+mat-paginator {
+  border-top: 1px solid var(--border);
+  background: var(--bg-subtle);
+}
+
+/* ── Loading & Empty States ──────────────────────── */
+.state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3.5rem 1.75rem;
+  gap: 0.75rem;
+}
+
+.loading-text {
+  font-size: 0.875rem;
+  color: var(--text-soft);
+  margin: 0;
+}
+
+.empty-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.25rem;
+}
+
+.empty-mat-icon {
+  font-size: 28px;
+  color: var(--primary);
+}
+
+.empty-title {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-dark);
+  margin: 0;
+}
+
+.empty-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-mid);
+  margin: 0 0 0.5rem;
+}
+
+/* ── Responsive ──────────────────────────────────── */
+@media (max-width: 640px) {
+  .header-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .form-row,
+  .form-row--narrow {
+    grid-template-columns: 1fr;
+  }
+
+  .card-footer {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.75rem;
+  }
+}

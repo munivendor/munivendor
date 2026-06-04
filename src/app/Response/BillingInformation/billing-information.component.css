@@ -1,0 +1,382 @@
+.billing-profile-container {
+  background-color: white;
+  padding: 40px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header-banner {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 30px;
+  border-radius: 8px 8px 0 0;
+  margin: -40px -40px 30px -40px;
+  text-align: center;
+}
+
+.header-banner h1 {
+  color: white;
+  margin: 0;
+}
+
+.success-icon {
+  color: #4caf50;
+}
+
+.card-brand-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 8px;
+  height: 26px;
+}
+
+.card-brand-icon svg {
+  display: block;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+/* will need for edit */
+/* .billing-profile-container p {
+  font-size: 14px;
+  color: #666666;
+  line-height: 1.6;
+  margin: 0 0 24px 0;
+  padding: 12px 16px;
+  background-color: #f5f5f5;
+  border-left: 4px solid #667eea;
+  border-radius: 4px;
+} */
+
+.payment-methods-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.payment-method-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  background-color: #fafafa;
+  transition: all 0.2s ease;
+}
+
+.payment-method-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-color: #667eea;
+}
+
+.payment-method-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.payment-type-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.payment-type-info mat-icon {
+  color: #667eea;
+  font-size: 28px;
+  width: 28px;
+  height: 28px;
+}
+
+.payment-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.payment-type {
+  font-weight: 600;
+}
+
+.payment-last-four {
+  font-size: 16px;
+  color: #666;
+  font-family: monospace;
+}
+
+.account-type {
+  font-size: 12px;
+  color: #999;
+}
+
+.default-badge {
+  background-color: #4caf50;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.payment-method-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.payment-method-actions button {
+  font-size: 13px;
+  padding: 0 12px;
+  height: 36px;
+}
+
+.payment-method-actions mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  margin-right: 4px;
+}
+
+.add-payment-btn {
+  width: 100%;
+  max-width: 300px;
+  height: 48px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.form-header h2 {
+  font-weight: 600;
+
+  margin: 0;
+}
+
+.payment-limit-message {
+  display: flex;
+  gap: 8px;
+  background-color: #fff3cd;
+  border-left: 4px solid #ffc107;
+  padding: 12px 16px;
+  border-radius: 4px;
+}
+
+.payment-limit-message mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  color: #ffc107;
+}
+
+.billing-profile-container form {
+  margin-top: 24px;
+}
+
+.billing-profile-container mat-tab-group {
+  margin-bottom: 32px;
+}
+
+.billing-profile-container ::ng-deep .mat-mdc-tab-labels {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.billing-profile-container ::ng-deep .mat-mdc-tab {
+  min-width: 140px;
+  height: 56px;
+}
+
+.billing-profile-container ::ng-deep .mat-mdc-tab-label-content {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.billing-profile-container ::ng-deep .mat-mdc-tab-body-wrapper {
+  overflow: visible;
+}
+
+.billing-profile-container ::ng-deep .mat-mdc-tab-body {
+  overflow: visible;
+}
+
+.billing-profile-container ::ng-deep .mat-mdc-tab-body-content {
+  overflow: visible;
+}
+
+mat-form-field {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.inline-field {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.inline-field mat-form-field {
+  flex: 1;
+  min-width: 200px;
+}
+
+.billing-profile-container .address-section {
+  padding-top: 24px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.billing-profile-container .address-section::before {
+  content: "Billing Address";
+  display: block;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 16px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.tab-icon {
+  margin-right: 8px;
+}
+
+::ng-deep .mat-mdc-tab {
+  width: 50% !important;
+  max-width: 50% !important;
+  flex: 1 1 50% !important;
+}
+
+/* for edit view */
+/* .security-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #fff3cd;
+  border-left: 4px solid #ffc107;
+  padding: 12px 16px;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #856404;
+  margin: 16px 0;
+}
+
+.security-note mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  color: #ffc107;
+} */
+
+/* .edit-payment-type-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background-color: #f5f5f5;
+  border-left: 4px solid #667eea;
+  border-radius: 4px;
+  margin-bottom: 24px;
+}
+
+.edit-payment-type-header mat-icon {
+  color: #667eea;
+  font-size: 28px;
+  width: 28px;
+  height: 28px;
+}
+
+.edit-payment-type-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+} */
+
+@media (max-width: 768px) {
+  .billing-profile-container {
+    padding: 20px;
+  }
+
+  .header-banner {
+    margin: -20px -20px 20px -20px;
+    padding: 20px;
+  }
+
+  .header-banner h2 {
+    font-size: 24px;
+  }
+
+  .payment-methods-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .payment-method-actions {
+    flex-direction: column;
+  }
+
+  .payment-method-actions button {
+    width: 100%;
+  }
+
+  .inline-field {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .inline-field mat-form-field {
+    width: 100%;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .form-actions button {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  button[type="submit"] {
+    max-width: 100%;
+  }
+
+  .add-payment-btn {
+    max-width: 100%;
+    margin-bottom: 8px;
+  }
+}
+
+.billing-profile-container
+  ::ng-deep
+  .mat-mdc-form-field.mat-form-field-invalid {
+  .mat-mdc-text-field-wrapper {
+    background-color: #fff5f5;
+  }
+}
+
+.billing-profile-container.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.payment-method-card.disabled {
+  opacity: 0.6;
+}
+
+.payment-method-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

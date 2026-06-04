@@ -1,0 +1,114 @@
+<div class="profile-card">
+  <div class="card-header">
+    <div class="header-accent"></div>
+    <div class="header-content">
+      <h2 class="card-title">Legal</h2>
+    </div>
+  </div>
+
+  <form [formGroup]="legalForm" (ngSubmit)="onSaveLegal()" class="card-form">
+    <!-- Contract Failure -->
+    <div>
+      <div class="subsection-label-group">
+        <span class="subsection-label">Contract Failure</span>
+        <span class="subsection-hint">
+          Within the last five years has the business or any officer/partner
+          failed to complete a contract awarded to them?
+        </span>
+      </div>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Select One</mat-label>
+        <mat-select formControlName="contractFailure">
+          <mat-option [value]="true">Yes</mat-option>
+          <mat-option [value]="false">No</mat-option>
+        </mat-select>
+        <mat-error *ngIf="isFieldInvalid('contractFailure')">
+          This field is required.
+        </mat-error>
+      </mat-form-field>
+
+      <ng-container *ngIf="legalForm.get('contractFailure')?.value === true">
+        <div class="conditional-field">
+          <div class="subsection-label-group">
+            <span class="subsection-label">Contract Failure Details</span>
+            <span class="subsection-hint">
+              Please provide the details pertaining to the failure(s) to
+              complete a contract awarded.
+            </span>
+          </div>
+          <mat-form-field appearance="outline" class="full-width">
+            <textarea
+              matInput
+              formControlName="contractFailureDetails"
+              rows="4"
+            ></textarea>
+
+            <mat-error *ngIf="isFieldInvalid('contractFailureDetails')">
+              Please provide details for the contract failure.
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </ng-container>
+    </div>
+
+    <!-- Liens and/or Lawsuits -->
+    <div class="form-section">
+      <div class="subsection-label-group">
+        <span class="subsection-label">Liens and/or Lawsuits</span>
+        <span class="subsection-hint">
+          Have any liens and lawsuits been filed against the company in the past
+          five years?
+        </span>
+      </div>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Select One</mat-label>
+        <mat-select formControlName="liensLawsuits">
+          <mat-option [value]="true">Yes</mat-option>
+          <mat-option [value]="false">No</mat-option>
+        </mat-select>
+        <mat-error *ngIf="isFieldInvalid('liensLawsuits')">
+          This field is required.
+        </mat-error>
+      </mat-form-field>
+
+      <ng-container *ngIf="legalForm.get('liensLawsuits')?.value === true">
+        <div class="conditional-field">
+          <div class="subsection-label-group">
+            <span class="subsection-label">Lien & Lawsuit Details</span>
+            <span class="subsection-hint">
+              Please provide the details pertaining to the liens and/or lawsuits
+              filed against your organization.
+            </span>
+          </div>
+          <mat-form-field appearance="outline" class="full-width">
+            <textarea
+              matInput
+              formControlName="liensLawsuitsDetails"
+              rows="4"
+            ></textarea>
+
+            <mat-error *ngIf="isFieldInvalid('liensLawsuitsDetails')">
+              Please provide details for the liens and/or lawsuits.
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </ng-container>
+    </div>
+
+    <div class="card-footer">
+      <button
+        mat-flat-button
+        color="primary"
+        type="submit"
+        class="save-btn"
+        [disabled]="isSavingLegal || legalForm.pristine"
+      >
+        <mat-icon *ngIf="!isSavingLegal">save</mat-icon>
+
+        {{ isSavingLegal ? "Saving..." : "Save Changes" }}
+      </button>
+    </div>
+  </form>
+</div>

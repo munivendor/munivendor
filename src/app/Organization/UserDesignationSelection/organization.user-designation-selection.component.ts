@@ -115,43 +115,53 @@ export class DesignationSelectionComponent implements OnInit, OnDestroy {
 
   onSubmit(): void {
     if (this.designeeSelectionForm.valid) {
-
-      const selectedDesignationIds = (this.designeeSelectionForm.get('selectedDesignees') as FormArray).controls
-        .map((control, i) => (control.value ? this.designations[i].designationId : null))
-        .filter(value => value !== null) as number[];
-      this.authService.user$.pipe(
-        filter(user => !!user),
-        takeUntil(this.destroy$)
-      ).subscribe({
-        next: currentUser => {
-          const user: User = {
-           userId: currentUser ?? undefined,  
-            DesignationIds: selectedDesignationIds
-          };
-          this.userService.updateUser(user)
-            .pipe(takeUntil(this.destroy$))
-            .subscribe({
-              next: response => {
-                console.log('Designation saved successfully:', response);
-                this.flowProgressService.saveFlowProgress(Number(currentUser), 1, this.framePageNumber).subscribe({
-                  next: () => {
-                    this.router.navigate(['/payment-plan-confirmation']);
-                  },
-                  error: (err) => {
-                    console.error('Error saving flow progress:', err);
-                  }  
-                }); 
-
-              },
-              error: error => {
-                console.error('Error updating user:', error);
-              }
-            });
-        },
-        error: error => {
-          console.error('Error getting current user:', error);
-        }
-      });
+      const selectedDesignationIds = (
+        this.designeeSelectionForm.get('selectedDesignees') as FormArray
+      ).controls
+        .map((control, i) =>
+          control.value ? this.designations[i].designationId : null
+        )
+        .filter((value) => value !== null) as number[];
+      this.authService.user$
+        .pipe(
+          filter((user) => !!user),
+          takeUntil(this.destroy$)
+        )
+        .subscribe({
+          next: (currentUser) => {
+            const user: User = {
+              userId: currentUser ?? undefined,
+              DesignationIds: selectedDesignationIds,
+            };
+            this.userService
+              .updateUser(user)
+              .pipe(takeUntil(this.destroy$))
+              .subscribe({
+                next: (response) => {
+                  this.flowProgressService
+                    .saveFlowProgress(
+                      Number(currentUser),
+                      1,
+                      this.framePageNumber
+                    )
+                    .subscribe({
+                      next: () => {
+                        this.router.navigate(['/payment-plan-confirmation']);
+                      },
+                      error: (err) => {
+                        console.error('Error saving flow progress:', err);
+                      },
+                    });
+                },
+                error: (error) => {
+                  console.error('Error updating user:', error);
+                },
+              });
+          },
+          error: (error) => {
+            console.error('Error getting current user:', error);
+          },
+        });
     }
   }
 

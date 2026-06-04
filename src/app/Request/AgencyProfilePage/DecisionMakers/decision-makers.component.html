@@ -1,0 +1,152 @@
+<div class="profile-card">
+  <!-- Card Header -->
+  <div class="card-header">
+    <div class="header-accent"></div>
+    <div class="header-content">
+      <div class="header-top">
+        <div class="header-left">
+          <h2 class="card-title">Decision Makers</h2>
+          <span class="record-count" *ngIf="!isLoading">
+            {{ totalRecords }} {{ totalRecords === 1 ? "record" : "records" }}
+          </span>
+        </div>
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          class="add-btn"
+          (click)="openAddDecisionMakerDialog()"
+        >
+          <mat-icon>add</mat-icon> Add Decision Maker
+        </button>
+      </div>
+      <p class="card-description">
+        Decision Makers are people who are in charge of determining contract
+        awards. In this section, please enter the names, email addresses and the
+        corresponding offer categories that each decision maker oversees.
+      </p>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="state-container" *ngIf="isLoading">
+    <mat-spinner diameter="36"></mat-spinner>
+    <p class="loading-text">Loading decision makers...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div
+    class="state-container empty-state"
+    *ngIf="!isLoading && totalRecords === 0"
+  >
+    <div class="empty-icon">
+      <mat-icon class="empty-mat-icon">group</mat-icon>
+    </div>
+    <p class="empty-title">No Decision Makers Found</p>
+    <p class="empty-subtitle">Add a decision maker to get started.</p>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrapper" *ngIf="!isLoading && totalRecords > 0">
+    <table mat-table [dataSource]="dataSource" matSort class="data-table">
+      <!-- Name Column -->
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+        <td mat-cell *matCellDef="let dm">
+          <div class="name-cell">
+            <span class="full-name">{{ dm.firstName }} {{ dm.lastName }}</span>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Title Column -->
+      <ng-container matColumnDef="title">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Title</th>
+        <td mat-cell *matCellDef="let dm">
+          <span *ngIf="dm.title; else noTitle">{{ dm.title }}</span>
+          <ng-template #noTitle><span class="empty-value">—</span></ng-template>
+        </td>
+      </ng-container>
+
+      <!-- Email Column -->
+      <ng-container matColumnDef="email">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Email</th>
+        <td mat-cell *matCellDef="let dm">
+          <span class="email-text">{{ dm.email }}</span>
+        </td>
+      </ng-container>
+
+      <!-- Phone Column -->
+      <ng-container matColumnDef="phone">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Phone</th>
+        <td mat-cell *matCellDef="let dm">{{ dm.phoneNumber | phone }}</td>
+      </ng-container>
+
+      <!-- Email Solicitations Column -->
+      <ng-container matColumnDef="emailSolicitations">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>
+          Email Solicitations
+        </th>
+        <td mat-cell *matCellDef="let dm">
+          <span
+            *ngIf="
+              dm.emailSolicitations !== null &&
+                dm.emailSolicitations !== undefined;
+              else noSolicitation
+            "
+            class="badge"
+            [class.badge--yes]="dm.emailSolicitations"
+            [class.badge--no]="!dm.emailSolicitations"
+          >
+            {{ dm.emailSolicitations ? "Yes" : "No" }}
+          </span>
+          <ng-template #noSolicitation>
+            <span class="empty-value">—</span>
+          </ng-template>
+        </td>
+      </ng-container>
+
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef class="actions-col">Actions</th>
+        <td mat-cell *matCellDef="let dm" class="actions-col">
+          <div class="action-buttons">
+            <button
+              mat-icon-button
+              type="button"
+              class="btn-edit"
+              matTooltip="Edit"
+              (click)="openEditDecisionMakerDialog(dm)"
+            >
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              type="button"
+              class="btn-delete"
+              matTooltip="Remove"
+              (click)="
+                organizationId !== null &&
+                  onDeleteAgencyDecisionMaker(
+                    dm.decisionMakerId,
+                    organizationId,
+                    $event
+                  )
+              "
+            >
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+          </div>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+    </table>
+
+    <mat-paginator
+      [pageSizeOptions]="[5, 10, 25]"
+      showFirstLastButtons
+    ></mat-paginator>
+  </div>
+</div>

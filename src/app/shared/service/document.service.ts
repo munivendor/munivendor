@@ -1,46 +1,50 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { ConfigService } from '../../core/services/config.service';
 import { DocumentInstance } from '../../Request/model/documentinstance.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class DocumentService {
-  url = environment.apiUrl;
+  private get url(): string {
+    return this.config.apiUrl;
+  }
 
-  constructor(private http: HttpClient) {}
-
+  constructor(
+    private http: HttpClient,
+    private config: ConfigService,
+  ) {}
   GetStateDocumentContent(documentId: number): Observable<HttpResponse<Blob>> {
     return this.http.get(
       `${this.url}Documents/DocumentContent/StateDocument/${documentId}`,
       {
         observe: 'response',
         responseType: 'blob',
-      }
+      },
     );
   }
 
   GetDocumentInstance(
-    requestDocumentId: number
+    requestDocumentId: number,
   ): Observable<HttpResponse<Blob>> {
     return this.http.get(
       `${this.url}DocumentInstances/DocumentContent/${requestDocumentId}`,
-      { observe: 'response', responseType: 'blob' }
+      { observe: 'response', responseType: 'blob' },
     );
   }
 
   UploadDocumentInstance(
     responseRequestId: number,
     sourceRequestDocumentId: number,
-    file: File
+    file: File,
   ): Observable<{ isSuccess: boolean }> {
     const formData = new FormData();
     formData.append('file', file);
     return this.http.post<{ isSuccess: boolean }>(
       `${this.url}DocumentInstances/DocumentContent/${responseRequestId}/${sourceRequestDocumentId}`,
-      formData
+      formData,
     );
   }
 
@@ -49,12 +53,12 @@ export class DocumentService {
       `${this.url}DocumentInstances`,
       {
         params: new HttpParams().set('requestId', requestId),
-      }
+      },
     );
   }
 
   GetAutoFillStatus(
-    requestId: number
+    requestId: number,
   ): Observable<{ isAutoFillComplete: boolean; pollFrequency: number }> {
     return this.http.get<{
       isAutoFillComplete: boolean;
@@ -64,7 +68,7 @@ export class DocumentService {
 
   GetCombinedDocumentsContent(
     requestId: number,
-    active?: boolean
+    active?: boolean,
   ): Observable<Blob> {
     let params = new HttpParams();
     if (active !== undefined) {
@@ -83,7 +87,7 @@ export class DocumentService {
     requestStatusId?: number,
     organizationId?: number,
     limit?: number,
-    offset?: number
+    offset?: number,
   ): Observable<Blob> {
     let params = new HttpParams();
 
@@ -108,7 +112,7 @@ export class DocumentService {
       {
         params,
         responseType: 'blob',
-      }
+      },
     );
   }
 }

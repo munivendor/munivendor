@@ -1,18 +1,22 @@
+/* ── Layout ─────────────────────────────────────── */
 .offeror-profile-container {
-  max-width: 1200px;
-  margin: 0 auto;
+  font-family: "Segoe UI", sans-serif;
+  color: #1a1a2e;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
-.organization-section,
-.authorizing-officials-section {
-  margin-bottom: 24px;
+/* ── Organization Card ───────────────────────────── */
+.organization-section {
+  border-radius: 10px;
 }
 
 .form-row {
   display: flex;
-  gap: 16px;
-  margin-bottom: 16px;
-  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .full-width {
@@ -20,69 +24,197 @@
 }
 
 .half-width {
-  width: calc(50% - 8px);
+  flex: 2;
 }
 
 .quarter-width {
-  width: calc(25% - 12px);
+  flex: 1;
 }
 
-.officials-table {
-  width: 100%;
-  margin-bottom: 20px;
+/* ── Authorizing Officials Section ───────────────── */
+.authorizing-officials-container {
+  font-family: "Segoe UI", sans-serif;
+  color: #1a1a2e;
 }
 
-.add-button-container {
-  margin: 20px 0;
-}
-
-.official-form {
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  padding: 20px;
-  margin-top: 20px;
-  background-color: #fafafa;
-}
-
-.official-form h3 {
-  margin-top: 0;
-  margin-bottom: 20px;
-  color: #1976d2;
-}
-
-.form-actions {
+/* ── Header ─────────────────────────────────────── */
+.section-header {
   display: flex;
-  gap: 12px;
-  margin-top: 20px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
-.cancel-button {
-  margin-left: 8px;
+.header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
 }
 
-.no-officials {
-  text-align: center;
-  padding: 40px;
-  color: #666;
-}
-
-.no-officials p {
-  font-size: 16px;
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 700;
   margin: 0;
+  color: #1a1a2e;
 }
 
-/* Responsive design */
-@media (max-width: 768px) {
-  .form-row {
-    flex-direction: column;
-  }
+.record-count {
+  font-size: 0.8rem;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-weight: 500;
+}
 
-  .half-width,
-  .quarter-width {
-    width: 100%;
-  }
+/* ── Buttons ─────────────────────────────────────── */
+.btn {
+  cursor: pointer;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  transition:
+    background 0.15s,
+    opacity 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
 
-  .officials-table {
-    font-size: 14px;
+.btn-edit {
+  background: transparent;
+  color: #1d4ed8;
+  border: 1px solid #1d4ed8;
+  border-radius: 50%;
+}
+
+.btn-edit:hover {
+  background: #eff6ff;
+}
+
+.btn-delete {
+  background: transparent;
+  color: #dc2626;
+  border: 1px solid #dc2626;
+  border-radius: 50%;
+}
+
+.btn-delete:hover {
+  background: #fef2f2;
+}
+
+.btn-sm {
+  font-size: 0.8rem;
+  padding: 0.3rem 0.7rem;
+}
+
+/* ── Table ───────────────────────────────────────── */
+.table-wrapper {
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.data-table thead {
+  background: #f9fafb;
+}
+
+.data-table th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.data-table td {
+  padding: 8px 12px;
+  border-bottom: 2px solid #f3f4f6;
+  vertical-align: middle;
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+/* ── Name Cell ───────────────────────────────────── */
+.name-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.full-name {
+  font-weight: 600;
+  color: #111827;
+}
+
+/* ── Misc ────────────────────────────────────────── */
+.empty-value {
+  color: #9ca3af;
+}
+
+.actions-col {
+  width: 120px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.4rem;
+}
+
+/* ── States ──────────────────────────────────────── */
+.state-container {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6b7280;
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #1d4ed8;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
+}
+
+.empty-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.empty-title {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #374151;
+  margin: 0 0 0.25rem;
+}
+
+.empty-subtitle {
+  font-size: 0.875rem;
+  margin: 0;
 }

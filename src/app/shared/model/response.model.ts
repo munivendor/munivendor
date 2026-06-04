@@ -1,7 +1,7 @@
 export class Response {
-  requestName!: string
+  requestName!: string;
   requestTypeId!: null | number;
   sourceRequestId?: null | number;
-  authorizingOfficialId!: null | number;
+  offerorAuthorizingOfficialId!: null | number;
   organizationId!: null | number;
 }

@@ -1,264 +1,38 @@
-<div class="offeror-profile-container">
-  <h1>Offeror Profile Page</h1>
+<h1 class="page-title">Offeror Profile</h1>
 
-  <mat-card class="organization-section">
-    <mat-card-header>
-      <mat-card-title>Organization Information</mat-card-title>
-      <mat-card-subtitle style="margin-bottom: 8px">
-        The information in this section is used on many of the standard NJ State
-        and additional forms used by local government organizations in New
-        Jersey.
-      </mat-card-subtitle>
-    </mat-card-header>
-
-    <mat-card-content>
-      <form [formGroup]="organizationForm">
-        <div class="form-row">
-          <mat-form-field class="full-width">
-            <mat-label>Organization Name</mat-label>
-            <input
-              matInput
-              readonly
-              formControlName="organizationName"
-              type="text"
-            />
-          </mat-form-field>
-        </div>
-
-        <div class="form-row">
-          <mat-form-field class="full-width">
-            <mat-label>Address</mat-label>
-            <input matInput readonly formControlName="address" />
-          </mat-form-field>
-        </div>
-
-        <div class="form-row">
-          <mat-form-field class="full-width">
-            <mat-label>Address 2</mat-label>
-            <input matInput readonly formControlName="address2" />
-          </mat-form-field>
-        </div>
-
-        <div class="form-row">
-          <mat-form-field class="half-width">
-            <mat-label>City</mat-label>
-            <input matInput readonly formControlName="city" />
-          </mat-form-field>
-
-          <mat-form-field class="quarter-width">
-            <mat-label>State</mat-label>
-            <input matInput readonly formControlName="state" />
-          </mat-form-field>
-
-          <mat-form-field class="quarter-width">
-            <mat-label>Zip Code</mat-label>
-            <input matInput readonly formControlName="zipCode" />
-          </mat-form-field>
-        </div>
-      </form>
-    </mat-card-content>
-  </mat-card>
-
-  <mat-card class="authorizing-officials-section">
-    <mat-card-header>
-      <mat-card-title>Authorizing Officials</mat-card-title>
-      <mat-card-subtitle>
-        Manage your organization's authorized representatives.
-      </mat-card-subtitle>
-    </mat-card-header>
-
-    <mat-card-content>
-      <div
-        class="officials-list"
-        *ngIf="authorizingOfficials.length > 0; else noOfficials"
-      >
-        <h3>Current Authorizing Officials</h3>
-        <table
-          mat-table
-          [dataSource]="authorizingOfficials"
-          class="officials-table"
-        >
-          <ng-container matColumnDef="firstName">
-            <th mat-header-cell *matHeaderCellDef>First Name</th>
-            <td mat-cell *matCellDef="let official">
-              {{ official.firstName }}
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="lastName">
-            <th mat-header-cell *matHeaderCellDef>Last Name</th>
-            <td mat-cell *matCellDef="let official">{{ official.lastName }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="title">
-            <th mat-header-cell *matHeaderCellDef>Title</th>
-            <td mat-cell *matCellDef="let official">{{ official.title }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="email">
-            <th mat-header-cell *matHeaderCellDef>Email</th>
-            <td mat-cell *matCellDef="let official">{{ official.email }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="phone">
-            <th mat-header-cell *matHeaderCellDef>Phone Number</th>
-            <td mat-cell *matCellDef="let official">
-              {{ official.phone || "-" }}
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let official">
-              <button
-                mat-icon-button
-                (click)="editOfficial(official)"
-                [disabled]="isFormVisible"
-                matTooltip="Edit Official"
-                type="button"
-              >
-                <mat-icon>edit</mat-icon>
-              </button>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-        </table>
-      </div>
-
-      <ng-template #noOfficials>
-        <div class="no-officials">
-          <p>No authorizing officials have been added yet.</p>
-        </div>
-      </ng-template>
-
-      <div class="add-button-container" *ngIf="!isFormVisible">
-        <button mat-raised-button color="primary" (click)="startAddingNew()">
-          <mat-icon>add</mat-icon>
-          Add Authorizing Official
-        </button>
-      </div>
-
-      <div class="official-form" *ngIf="isFormVisible">
-        <h3>
-          {{ editingOfficialId ? "Edit" : "Add New" }} Authorizing Official
-        </h3>
-
-        <form [formGroup]="authorizingOfficialForm" (ngSubmit)="onSubmit()">
-          <div class="form-row">
-            <mat-form-field class="half-width">
-              <mat-label>First Name</mat-label>
-              <input
-                matInput
-                formControlName="firstName"
-                required
-                maxlength="50"
-              />
-              <mat-error *ngIf="hasError('firstName', 'required')">
-                First Name is required
-              </mat-error>
-              <mat-error *ngIf="hasError('firstName', 'maxlength')">
-                First Name cannot exceed 50 characters
-              </mat-error>
-            </mat-form-field>
-
-            <mat-form-field class="half-width">
-              <mat-label>Last Name</mat-label>
-              <input
-                matInput
-                formControlName="lastName"
-                required
-                maxlength="50"
-              />
-              <mat-error *ngIf="hasError('lastName', 'required')">
-                Last Name is required
-              </mat-error>
-              <mat-error *ngIf="hasError('lastName', 'maxlength')">
-                Last Name cannot exceed 50 characters
-              </mat-error>
-            </mat-form-field>
-          </div>
-
-          <div class="form-row">
-            <mat-form-field class="full-width">
-              <mat-label>Title</mat-label>
-              <input
-                matInput
-                formControlName="title"
-                required
-                maxlength="100"
-              />
-              <mat-error *ngIf="hasError('title', 'required')">
-                Title is required
-              </mat-error>
-              <mat-error *ngIf="hasError('title', 'maxlength')">
-                Title cannot exceed 100 characters
-              </mat-error>
-            </mat-form-field>
-          </div>
-
-          <div class="form-row">
-            <mat-form-field class="full-width">
-              <mat-label>Email</mat-label>
-              <input
-                matInput
-                formControlName="email"
-                type="email"
-                required
-                maxlength="255"
-              />
-              <mat-error *ngIf="hasError('email', 'required')">
-                Email is required
-              </mat-error>
-              <mat-error *ngIf="hasError('email', 'email')">
-                Please enter a valid email address
-              </mat-error>
-              <mat-error *ngIf="hasError('email', 'maxlength')">
-                Email cannot exceed 255 characters
-              </mat-error>
-            </mat-form-field>
-          </div>
-
-          <div class="form-row">
-            <mat-form-field class="full-width">
-              <mat-label>Phone Number (Optional)</mat-label>
-              <input
-                matInput
-                formControlName="phone"
-                type="tel"
-                maxlength="20"
-              />
-              <mat-error *ngIf="hasError('phone', 'maxlength')">
-                Phone Number cannot exceed 20 characters
-              </mat-error>
-              <mat-error *ngIf="hasError('phone', 'pattern')">
-                Please enter a valid phone number
-              </mat-error>
-            </mat-form-field>
-          </div>
-
-          <div class="form-actions">
-            <button
-              type="submit"
-              [disabled]="authorizingOfficialForm.invalid"
-              mat-raised-button
-              color="primary"
-            >
-              {{ submitButtonText }}
-            </button>
-
-            <button
-              type="button"
-              mat-button
-              (click)="cancelEdit()"
-              class="cancel-button"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      </div>
-    </mat-card-content>
-  </mat-card>
-</div>
+<ng-container *ngIf="referenceDataLoaded">
+  <app-offeror-details [states]="states" [countries]="countries" />
+  <app-legal-information />
+  <app-stockholder-information [states]="states" [countries]="countries" />
+  <app-authorizing-officials [states]="states" [counties]="counties" />
+  <app-required-compliance-forms
+    [uploadedDocuments]="organizationDocuments"
+    [documentTypes]="documentTypes"
+    (documentUploaded)="loadDocuments()"
+    (documentDeleted)="loadDocuments()"
+  />
+  <app-required-files
+    [uploadedDocuments]="organizationDocuments"
+    [documentTypes]="documentTypes"
+    (documentUploaded)="loadDocuments()"
+    (documentDeleted)="loadDocuments()"
+  />
+  <app-prohibited-activities-russia-belarus
+    [uploadedDocuments]="organizationDocuments"
+    [documentTypes]="documentTypes"
+    [profileDetails]="offerProfileDetails"
+    (documentUploaded)="onDocumentUploaded()"
+    (documentDeleted)="onDocumentUploaded()"
+    (detailsSaved)="onProfileDetailsSaved()"
+    (detailsDeleted)="onProfileDetailsSaved()"
+  />
+  <app-prohibited-activities-iran
+    [uploadedDocuments]="organizationDocuments"
+    [documentTypes]="documentTypes"
+    [profileDetails]="offerProfileDetails"
+    (documentUploaded)="onDocumentUploaded()"
+    (documentDeleted)="onDocumentUploaded()"
+    (detailsSaved)="onProfileDetailsSaved()"
+    (detailsDeleted)="onProfileDetailsSaved()"
+  />
+</ng-container>

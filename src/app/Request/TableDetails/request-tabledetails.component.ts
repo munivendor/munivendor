@@ -6,13 +6,12 @@ import {
   TemplateRef,
   Input,
 } from '@angular/core';
-import { finalize, forkJoin, Subject, takeUntil } from 'rxjs';
+import { finalize, Subject, takeUntil } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { ConfirmationDialog } from '../RequestConfirmationDialog/confirmation-dialog.component';
+import { RequestConfirmationDialog } from '../RequestConfirmationDialog/request-confirmation-dialog.component';
 import { RequestService } from '../services/request.service';
 import { Request } from '../model/request.model';
-import { CategoryHierarchyService } from '../services/category-hierarchy.service';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatButtonModule } from '@angular/material/button';
@@ -34,6 +33,10 @@ import { CategoryNode } from '../../shared/model/category-tree.model';
 import { ChangeDetectorRef } from '@angular/core';
 import { LoadingService } from '../../shared/LoadingSpinner/loading.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
+import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
+import { HttpClient } from '@angular/common/http';
+import { TooltipDirective } from '../../shared/directive/tooltip.directive';
+import { FilterStateService } from '../../shared/service/filter-state.service';
 
 interface FlattenedCategoryNode {
   categoryId: string;
@@ -47,16 +50,16 @@ const ACTION_PERMISSIONS: {
     delete?: boolean;
     cancel?: boolean;
     open?: boolean;
-    noneDisabled?: boolean;
     redownload?: boolean;
+    duplicate?: boolean;
   };
 } = {
-  Draft: { edit: true, delete: true },
-  Scheduled: { edit: true, delete: true },
-  Live: { cancel: true },
-  Closed: { open: true },
-  Cancelled: { noneDisabled: true },
-  Opened: { redownload: true },
+  Draft: { edit: true, delete: true, duplicate: true },
+  Scheduled: { edit: true, delete: true, duplicate: true },
+  Live: { cancel: true, duplicate: true },
+  Closed: { open: true, duplicate: true },
+  Cancelled: { duplicate: true },
+  Opened: { redownload: true, duplicate: true },
 };
 
 @Component({
@@ -83,6 +86,7 @@ const ACTION_PERMISSIONS: {
     MatMenuModule,
     MatIconModule,
     CustomCategoryDropdownComponent,
+    TooltipDirective,
   ],
 })
 export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
@@ -95,10 +99,16 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
 
   canPerformAction(
     request: any,
-    action: 'edit' | 'delete' | 'cancel' | 'open' | 'redownload'
+    action: 'edit' | 'delete' | 'cancel' | 'open' | 'redownload' | 'duplicate',
   ): boolean {
     const status = request.agencyRequestStatus?.requestStatusDesc;
     return !!ACTION_PERMISSIONS[status]?.[action];
+  }
+
+  canDownloadPDF(request: any): boolean {
+    const nonDownloadableStatuses = new Set(['Draft']);
+    const status = request.agencyRequestStatus?.requestStatusDesc;
+    return !nonDownloadableStatuses.has(status);
   }
 
   filterForm = this.fb.group({
@@ -118,10 +128,14 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     inProgress: [false],
     submitted: [false],
     none: [false],
+    competitiveContracting: [false],
     rfq: [false],
     rfp: [false],
-    rfi: [false],
-    bid: [false],
+    bidPublicWorks: [false],
+    bidGoodsServices: [false],
+    nonFairOpenProfessionalServices: [false],
+    extraordinaryUnspecifiableServices: [false],
+    quotationsUnderThreshold: [false],
   });
 
   displayedColumns: string[] = [
@@ -134,6 +148,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     'requestStatus',
     'numberOfOffers',
     'actions',
+    'downloadPDF',
   ];
 
   joinedRequestData: Request[] = [];
@@ -149,19 +164,25 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
   constructor(
     public dialog: MatDialog,
     private requestService: RequestService,
-    private categoryHierarchyService: CategoryHierarchyService,
     private fb: FormBuilder,
     private stateService: StateService,
     private cdr: ChangeDetectorRef,
     private loadingService: LoadingService,
-    private loggingService: LoggingService
+    private loggingService: LoggingService,
+    private snackbarNotificationService: SnackbarNotificationService,
+    private http: HttpClient,
+    private filterStateService: FilterStateService,
   ) {}
 
   readonly requestTypeMap = {
-    rfi: 1,
+    competitiveContracting: 1,
     rfq: 2,
     rfp: 3,
-    bid: 4,
+    bidPublicWorks: 4,
+    bidGoodsServices: 5,
+    nonFairOpenProfessionalServices: 6,
+    extraordinaryUnspecifiableServices: 7,
+    quotationsUnderThreshold: 8,
   };
 
   readonly requestStatusMap = {
@@ -179,16 +200,26 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     'cancel',
     'open',
     'redownload',
+    'duplicate',
   ] as const;
 
-  displayCategoryName = (categoryId: string | number | null): string => {
+  displayCategoryName = (
+    categoryId: string | number | null,
+    categoryFullPath?: string,
+  ): string => {
+    // If categoryFullPath is provided, use it directly
+    if (categoryFullPath) {
+      return categoryFullPath;
+    }
+
+    // Fallback to old logic for backwards compatibility
     if (categoryId == null) {
       return '';
     }
 
     const searchValue = categoryId.toString();
     const match = this.flattenedCategories.find(
-      (cat) => cat.categoryId === searchValue
+      (cat) => cat.categoryId === searchValue,
     );
     if (match) {
       return this.buildBreadcrumbPath(match);
@@ -203,7 +234,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
 
     while (currentParentId) {
       const parentNode = this.flattenedCategories.find(
-        (cat) => cat.categoryId === currentParentId
+        (cat) => cat.categoryId === currentParentId,
       );
       if (parentNode) {
         path.unshift(parentNode.name);
@@ -216,35 +247,9 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     return path.join(' > ');
   }
 
-  private flattenCategories(
-    categories: CategoryNode[],
-    parentId: string | null = null
-  ): FlattenedCategoryNode[] {
-    const flattened: FlattenedCategoryNode[] = [];
-
-    for (const category of categories) {
-      flattened.push({
-        categoryId: category.categoryId || category.id?.toString() || '',
-        name: category.name || '',
-        parentId: parentId,
-      });
-
-      if (category.children && category.children.length > 0) {
-        flattened.push(
-          ...this.flattenCategories(
-            category.children,
-            category.categoryId || category.id?.toString() || ''
-          )
-        );
-      }
-    }
-
-    return flattened;
-  }
-
   prepareCategoriesForTreeRendering(
     categories: CategoryNode[],
-    level: number = 0
+    level: number = 0,
   ): CategoryNode[] {
     return categories
       .filter((cat) => !cat.deleted)
@@ -266,15 +271,20 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    const saved = this.filterStateService.load();
+    this.filterForm.patchValue(saved ?? {});
+
+    this.filterForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((values) => this.filterStateService.save(values));
+
     if (!this.organizationId) {
       setTimeout(() => {
         this.organizationId = this.stateService.getOrganizationId() ?? 0;
-        if (this.organizationId) {
-          this.loadAndJoinRequestData();
-        }
+        if (this.organizationId) this.onSearch();
       }, 100);
     } else {
-      this.loadAndJoinRequestData();
+      this.onSearch();
     }
   }
 
@@ -305,7 +315,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
 
     if (formValues.publishDateFrom) {
       params.startPublishDate = new Date(
-        formValues.publishDateFrom
+        formValues.publishDateFrom,
       ).toISOString();
     }
 
@@ -339,104 +349,98 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
         this.hasLoadedData = false;
         return;
       }
-
       const requestParams = {
         organizationId: this.organizationId,
         ...(params || {}),
       };
 
-      const combinedData: any[] = [];
-
       this.loadingService.show();
 
-      forkJoin([
-        this.requestService.GetRequestsAgencyView(requestParams),
-        this.categoryHierarchyService.GetCategoryHierarchy(),
-        this.requestService.GetRequestTypes(),
-        this.requestService.GetRequestStatuses(),
-      ])
+      this.requestService
+        .GetRequestsAgencyView(requestParams)
         .pipe(
           takeUntil(this.destroy$),
-          finalize(() => this.loadingService.hide())
+          finalize(() => this.loadingService.hide()),
         )
         .subscribe({
-          next: ([requests, categories, requestTypes, requestStatuses]) => {
+          next: (requests) => {
             const requestsData = requests?.requests || [];
             this.hasLoadedData = requestsData.length > 0;
 
-            if (categories && categories.length > 0) {
-              this.hierarchicalCategories =
-                this.prepareCategoriesForTreeRendering(categories);
-              this.flattenedCategories = this.flattenCategories(
-                this.hierarchicalCategories
-              );
-            }
-
-            requestsData.forEach((request: any) => {
-              const category = this.findCategoryById(
-                categories || [],
-                request.categoryId
-              );
-              const requestType = (requestTypes || []).find(
-                (r) => r.requestTypeId === request.requestTypeId
-              );
-
-              const agencyRequestStatus = (requestStatuses || []).find(
-                (rs: { requestStatusId: any }) =>
-                  rs.requestStatusId === request.agencyRequestStatusId
-              );
-
-              const submittedOffersCount = (request.responses || []).filter(
-                (r: any) => r.offerorRequestStatusId === 9
-              ).length;
-
-              request.publishDate = request.publishDate
+            const mappedData = requestsData.map((request: any) => ({
+              ...request,
+              publishDate: request.publishDate
                 ? new Date(request.publishDate + 'Z')
-                : null;
-
-              request.closeDate = request.closeDate
+                : null,
+              closeDate: request.closeDate
                 ? new Date(request.closeDate + 'Z')
-                : null;
+                : null,
+              requestType: {
+                requestTypeId: request.requestTypeId,
+                requestTypeDesc: request.requestTypeName,
+              },
+              agencyRequestStatus: {
+                requestStatusId: request.agencyRequestStatusId,
+                requestStatusDesc: request.agencyRequestStatusName,
+              },
+              submittedOffersCount: (request.responses || []).filter(
+                (r: any) => r.offerorRequestStatusId === 9,
+              ).length,
+            }));
 
-              combinedData.push({
-                ...request,
-                category,
-                requestType,
-                agencyRequestStatus,
-                submittedOffersCount,
-              });
-            });
-
-            this.dataSource = new MatTableDataSource(combinedData);
+            this.dataSource.data = mappedData;
             this.cdr.detectChanges();
 
             setTimeout(() => {
-              if (this.paginator) {
+              if (this.paginator && !this.dataSource.paginator) {
                 this.dataSource.paginator = this.paginator;
-                this.paginator.firstPage();
               }
-              if (this.sort) {
+              if (this.sort && !this.dataSource.sort) {
+                this.dataSource.sortingDataAccessor = (
+                  item: any,
+                  property: string,
+                ) => {
+                  switch (property) {
+                    case 'requestName':
+                      return item.requestName?.toLowerCase() ?? '';
+                    case 'requestId':
+                      return item.requestId ?? '';
+                    case 'requestType':
+                      return (
+                        item.requestType?.requestTypeDesc?.toLowerCase() ?? ''
+                      );
+                    case 'category':
+                      return item.categoryFullPath?.toLowerCase() ?? '';
+                    case 'publishDate':
+                      return item.publishDate
+                        ? new Date(item.publishDate).getTime()
+                        : 0;
+                    case 'closeDateAndTime':
+                      return item.closeDate
+                        ? new Date(item.closeDate).getTime()
+                        : 0;
+                    case 'requestStatus':
+                      return (
+                        item.agencyRequestStatus?.requestStatusDesc?.toLowerCase() ??
+                        'draft'
+                      );
+                    case 'numberOfOffers':
+                      return item.submittedOffersCount ?? 0;
+                    default:
+                      return '';
+                  }
+                };
+
                 this.dataSource.sort = this.sort;
               }
-            }, 0);
+
+              if (this.paginator) {
+                this.paginator.firstPage();
+              }
+            }, 500);
           },
           error: (error: any) => {
             const correlationId = error?.error?.correlationId;
-
-            let operation = 'UnknownOperation';
-            const errorUrl = error?.url?.toLowerCase?.() || '';
-
-            if (
-              errorUrl.includes('requestsagencyview') ||
-              errorUrl.includes('requests')
-            )
-              operation = 'GetRequestsAgencyView';
-            else if (errorUrl.includes('categoryhierarchy'))
-              operation = 'GetCategoryHierarchy';
-            else if (errorUrl.includes('requesttypes'))
-              operation = 'GetRequestTypes';
-            else if (errorUrl.includes('requeststatuses'))
-              operation = 'GetRequestStatuses';
 
             this.loggingService.logException(
               new Error(`HTTP Error ${error.status}: ${error.statusText}`),
@@ -445,34 +449,24 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
                 organizationId: this.organizationId,
                 correlationId: correlationId,
                 methodName: 'loadAndJoinRequestData',
-                className: 'AgencyRequestTableDetailsComponent',
-                operation: operation,
+                className: 'AgencyTableDetailsComponent',
+                operation: 'GetRequestsAgencyView',
                 userId: this.stateService.getUserId(),
-              }
+              },
             );
 
-            this.dataSource = new MatTableDataSource<any>([]);
+            this.dataSource.data = [];
             this.hasLoadedData = false;
           },
         });
     } catch (error: any) {
-      this.dataSource = new MatTableDataSource<any>([]);
+      this.dataSource.data = [];
     }
   }
 
-  // future for dynamic filtering of solicitation name
-  // applyFilter(event: Event) {
-  //   const filterValue = (event.target as HTMLInputElement).value;
-  //   this.dataSource.filter = filterValue.trim().toLowerCase();
-
-  //   if (this.dataSource.paginator) {
-  //     this.dataSource.paginator.firstPage();
-  //   }
-  // }
-
   openOffersDialog(request: any): void {
     const submittedOffers = (request.responses || []).filter(
-      (r: any) => r.offerorRequestStatusId === 9
+      (r: any) => r.offerorRequestStatusId === 9,
     );
 
     const formattedOffers = submittedOffers.map((offer: any) => ({
@@ -495,22 +489,8 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private findCategoryById(categories: any[], targetId: number): any {
-    for (const category of categories) {
-      if (category.id === targetId) {
-        return category;
-      }
-
-      if (category.children && category.children.length > 0) {
-        const found = this.findCategoryById(category.children, targetId);
-        if (found) return found;
-      }
-    }
-    return null;
-  }
-
   openConfirmationDialog(action: string, request: any): void {
-    const dialogRef = this.dialog.open(ConfirmationDialog, {
+    const dialogRef = this.dialog.open(RequestConfirmationDialog, {
       width: '600px',
       data: { action, request },
     });
@@ -525,7 +505,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
           this.updateRequestStatusInTable(
             updateData.requestId,
             updateData.newStatusId,
-            updateData.newStatusDesc
+            updateData.newStatusDesc,
           );
         },
       });
@@ -537,11 +517,11 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
           this.onCancelUpdateRequestCancelReason(
             cancelData.request,
             cancelData.reasonId,
-            cancelData.reasonNote
+            cancelData.reasonNote,
           );
           this.onCancelUpdateRequestStatus(
             cancelData.request,
-            cancelData.action
+            cancelData.action,
           );
         },
       });
@@ -553,13 +533,16 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
         if (result && action === 'delete') {
           this.deleteRequest(request);
         }
+        if (result && action === 'duplicate') {
+          this.loadAndJoinRequestData();
+        }
       });
   }
 
   private updateRequestStatusInTable(
     requestId: number,
     newStatusId: number,
-    newStatusDesc: string
+    newStatusDesc: string,
   ): void {
     const currentData = this.dataSource.data;
     const updatedData = currentData.map((item: any) => {
@@ -595,12 +578,95 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
             organizationId: this.organizationId,
             correlationId: correlationId,
             methodName: 'deleteRequest',
-            className: 'AgencyRequestTableDetailsComponent',
+            className: 'AgencyTableDetailsComponent',
             operation: 'DeleteRequest',
             userId: this.stateService.getUserId(),
           });
         },
       });
+  }
+
+  downloadSolicitation(request: any): void {
+    const filename = this.generateSolicitationFilename(request);
+    this.loadingService.show('Downloading...');
+
+    this.http
+      .post(
+        '/api/generate-pdf/' + request.requestId,
+        { html: '' },
+        { responseType: 'blob' },
+      )
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          const blob = new Blob([response], { type: 'application/pdf' });
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          a.click();
+          window.URL.revokeObjectURL(url);
+          this.loadingService.hide();
+          this.snackbarNotificationService.showSnackbarSuccess(
+            'Solicitation downloaded successfully.',
+          );
+        },
+        error: (error) => {
+          this.loadingService.hide();
+
+          const correlationId = error?.error?.correlationId;
+
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              requestId: request.requestId,
+              organizationId: this.organizationId,
+              correlationId: correlationId,
+              methodName: 'downloadSolicitation',
+              className: 'AgencyTableDetailsComponent',
+              operation: 'GeneratePDF',
+              userId: this.stateService.getUserId(),
+            },
+          );
+        },
+      });
+  }
+
+  private generateSolicitationFilename(request: any): string {
+    const sanitize = (str: string): string => {
+      return str
+        .replace(/[^a-zA-Z0-9\s-_]/g, '')
+        .replace(/\s+/g, '_')
+        .trim();
+    };
+
+    const formatDate = (date: Date | string): string => {
+      let utcDate: Date;
+
+      if (typeof date === 'string') {
+        utcDate = new Date(date + 'Z');
+      } else {
+        utcDate = date;
+      }
+
+      const month = String(utcDate.getMonth() + 1).padStart(2, '0');
+      const day = String(utcDate.getDate()).padStart(2, '0');
+      const year = utcDate.getFullYear();
+
+      return `${month}-${day}-${year}`;
+    };
+
+    if (request) {
+      const solicitationName = request.requestName || 'Unknown';
+
+      const closeDate = request.closeDate
+        ? formatDate(request.closeDate)
+        : 'NoDate';
+      return `Solicitation_${sanitize(solicitationName)}_${closeDate}.pdf`;
+    }
+
+    return 'Solicitation.pdf';
   }
 
   onCancelUpdateRequestStatus(request: any, action: string): void {
@@ -656,7 +722,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
                 methodName: 'onCancelUpdateRequestStatus',
                 className: 'AgencyTableDetailsComponent',
                 operation: 'UpdateRequestStatus',
-              }
+              },
             );
           },
         });
@@ -666,7 +732,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
   onCancelUpdateRequestCancelReason(
     request: any,
     reasonId: number,
-    reasonNote: string
+    reasonNote: string,
   ): void {
     this.requestService
       .UpdateRequestCancelReason(request.requestId, reasonId, reasonNote)
@@ -687,7 +753,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
               methodName: 'onCancelUpdateRequestCancelReason',
               className: 'AgencyTableDetailsComponent',
               operation: 'UpdateRequestCancelReason',
-            }
+            },
           );
         },
       });

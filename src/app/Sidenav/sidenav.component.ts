@@ -49,13 +49,17 @@ export class Sidenav implements OnInit, AfterViewInit {
   user$: Observable<number | null>;
   private subscription = new Subscription();
 
-  // profiles are commented out for MVP
   agencyMenuItems = [
-    // { icon: 'person', label: 'Agency Profile', route: '/profile' },
+    {
+      id: 'agency-profile',
+      icon: 'person',
+      label: 'Agency Profile',
+      route: '/agency-profile-page',
+    },
     {
       id: 'create-solicitations',
       icon: 'add_box',
-      label: 'Create Solicitations',
+      label: 'Create A New Solicitation',
       route: '/create-request-view',
     },
     {
@@ -80,6 +84,12 @@ export class Sidenav implements OnInit, AfterViewInit {
       route: '/offeror-profile-page',
     },
     {
+      id: 'faq',
+      icon: 'question_answer',
+      label: 'FAQ',
+      route: '/faq',
+    },
+    {
       id: 'definitions',
       icon: 'help',
       label: 'Definitions',
@@ -91,6 +101,39 @@ export class Sidenav implements OnInit, AfterViewInit {
       label: 'User Guide',
       route: '/user-guide',
     },
+    {
+      id: 'purchasing-history',
+      icon: 'shopping_cart',
+      label: 'Purchasing/History',
+      route: '/purchasing-history',
+    },
+    {
+      id: 'billing-information',
+      icon: 'credit_card',
+      label: 'Billing Profile',
+      route: '/billing-profile',
+    },
+    {
+      id: 'submission-credits',
+      icon: 'history',
+      label: 'Submission Credit History',
+      route: '/submission-credits',
+    },
+  ];
+
+  bottomMenuItems = [
+    {
+      id: 'terms-of-service',
+      icon: 'description',
+      label: 'Terms of Service',
+      route: '/terms-of-service',
+    },
+    {
+      id: 'privacy-policy',
+      icon: 'privacy_tip',
+      label: 'Privacy Policy',
+      route: '/privacy-policy',
+    },
   ];
 
   constructor(
@@ -98,7 +141,7 @@ export class Sidenav implements OnInit, AfterViewInit {
     private authService: AuthService,
     private userService: UserService,
     @Inject(PLATFORM_ID) private platformId: Object,
-    private stateService: StateService
+    private stateService: StateService,
   ) {
     this.user$ = this.authService.user$;
     this.organizationTypeId = this.stateService.getOrganizationTypeId();
@@ -110,13 +153,13 @@ export class Sidenav implements OnInit, AfterViewInit {
         .pipe(
           filter(
             (event: Event): event is NavigationEnd =>
-              event instanceof NavigationEnd
-          )
+              event instanceof NavigationEnd,
+          ),
         )
         .subscribe((event: NavigationEnd) => {
           this.activeRoute = event.urlAfterRedirects;
           this.forceLayoutRecalculation();
-        })
+        }),
     );
 
     this.subscription.add(
@@ -124,7 +167,7 @@ export class Sidenav implements OnInit, AfterViewInit {
         if (user && this.organizationTypeId === null) {
           try {
             const userData = await firstValueFrom(
-              this.userService.getUser(user)
+              this.userService.getUser(user),
             );
             this.organizationTypeId = userData.organizationTypeId ?? null;
             this.forceLayoutRecalculation();
@@ -134,7 +177,7 @@ export class Sidenav implements OnInit, AfterViewInit {
         } else if (!user) {
           this.organizationTypeId = null;
         }
-      })
+      }),
     );
 
     if (isPlatformBrowser(this.platformId)) {

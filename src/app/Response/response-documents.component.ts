@@ -6,9 +6,11 @@ import {
   ElementRef,
   Output,
   EventEmitter,
+  AfterViewInit,
+  OnDestroy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatTableModule } from '@angular/material/table';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -26,14 +28,13 @@ import {
 } from '@angular/forms';
 import { StateService } from '../Request/services/state.service';
 import { DocumentService } from '../shared/service/document.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { TooltipDirective } from '../shared/directive/tooltip.directive';
 import { Router } from '@angular/router';
-// import { DocumentInstance } from '../Request/model/documentinstance.model';
-// import { BidProposalFormDialogComponent } from '../BidProposalForm/bid-proposal-form.component';
 import { LoggingService } from '../exceptionhandling/logging.service';
-import { AuthService } from '../authorization/auth.service';
+import { LoadingService } from '../shared/LoadingSpinner/loading.service';
 import { SnackbarNotificationService } from '../shared/service/snackbar-notification.service';
+import { MatSort, MatSortModule } from '@angular/material/sort';
+import { SplitCamelCasePipe } from '../shared/pipes/split-camel-case.pipe';
 
 @Component({
   selector: 'response-documents',
@@ -48,14 +49,21 @@ import { SnackbarNotificationService } from '../shared/service/snackbar-notifica
     RouterModule,
     ReactiveFormsModule,
     TooltipDirective,
+    MatSortModule,
+    SplitCamelCasePipe,
   ],
   templateUrl: './response-documents.component.html',
   styleUrls: ['./response-documents.component.css'],
 })
-export class ResponseDocumentsComponent implements OnInit {
+export class ResponseDocumentsComponent
+  implements OnInit, AfterViewInit, OnDestroy
+{
   @Output() autoFillStatusChange = new EventEmitter<boolean>();
   @Input() responseIdParam?: string | null | undefined;
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('requiredSort') requiredSort!: MatSort;
+  @ViewChild('notarizationSort') notarizationSort!: MatSort;
+  @ViewChild('offerorSort') offerorSort!: MatSort;
   authorizingOfficialTooltip: any;
 
   agencyDocumentsColumns: string[] = [
@@ -70,13 +78,19 @@ export class ResponseDocumentsComponent implements OnInit {
     'documentInstanceStatus',
   ];
 
-  offerorDocumentsColumns: string[] = ['formName', 'download', 'delete'];
+  offerorDocumentsColumns: string[] = [
+    'formName',
+    'source',
+    'download',
+    'delete',
+  ];
 
-  requiredDocumentsDatasource: any[] = [];
-  notarizationRequiredDocumentsDatasource: any[] = [];
-  offerorDocumentsDatasource: any[] = [];
-  offerorDocuments: any[] = [];
+  requiredDocumentsDatasource = new MatTableDataSource<any>([]);
+  notarizationRequiredDocumentsDatasource = new MatTableDataSource<any>([]);
+  offerorDocumentsDatasource = new MatTableDataSource<any>([]);
   offerorOptionalDocuments: any[] = [];
+
+  offerorDocuments: any[] = [];
   requestId?: number;
   responseDocumentsFormGroup!: FormGroup;
   responseIdFromStateService = this.stateService.getRequestId();
@@ -91,13 +105,15 @@ export class ResponseDocumentsComponent implements OnInit {
     private fb: FormBuilder,
     private stateService: StateService,
     private documentService: DocumentService,
-    private _snackBar: MatSnackBar,
     private router: Router,
-    private loggingService: LoggingService
+    private loggingService: LoggingService,
+    private loadingService: LoadingService,
+    private snackbarNotificationService: SnackbarNotificationService,
   ) {}
 
   ngOnInit(): void {
     this.initializeFormGroup();
+    this.loadingService.show();
     this.initializeDocuments();
 
     this.authorizingOfficialTooltip = {
@@ -107,6 +123,29 @@ export class ResponseDocumentsComponent implements OnInit {
       showActionButton: false,
       width: 'auto',
       transformStyle: 'translate(-103%, -48%)',
+    };
+  }
+
+  ngAfterViewInit(): void {
+    this.requiredDocumentsDatasource.sort = this.requiredSort;
+    this.notarizationRequiredDocumentsDatasource.sort = this.notarizationSort;
+    this.offerorDocumentsDatasource.sort = this.offerorSort;
+
+    this.configureSortingAccessor(this.requiredDocumentsDatasource);
+    this.configureSortingAccessor(this.notarizationRequiredDocumentsDatasource);
+    this.configureSortingAccessor(this.offerorDocumentsDatasource);
+  }
+
+  private configureSortingAccessor(datasource: MatTableDataSource<any>): void {
+    datasource.sortingDataAccessor = (item: any, sortHeaderId: string) => {
+      switch (sortHeaderId) {
+        case 'formName':
+          return (item.documentName ?? item.formName ?? '').toLowerCase();
+        case 'documentInstanceStatus':
+          return (item.documentInstanceStatus ?? '').toLowerCase();
+        default:
+          return '';
+      }
     };
   }
 
@@ -121,32 +160,29 @@ export class ResponseDocumentsComponent implements OnInit {
         next: (response) => {
           const documents = response.documents || [];
 
-          // Split documents by presence of sourceRequestDocumentId
           const requiredDocs = documents.filter(
-            (doc: any) => doc.sourceRequestDocumentId !== null
+            (doc: any) => doc.sourceRequestDocumentId !== null,
           );
           const offerorDocs = documents.filter(
-            (doc: any) => doc.sourceRequestDocumentId === null
+            (doc: any) => doc.sourceRequestDocumentId === null,
           );
 
-          // Populate requiredDocumentsDatasource (notarized & non-notarized)
           const requiresNotarizationDocs = requiredDocs.filter(
-            (doc: any) => doc.requiresNotarization
+            (doc: any) => doc.requiresNotarization,
           );
           const notRequiredNotarizationDocs = requiredDocs.filter(
-            (doc: any) => !doc.requiresNotarization
+            (doc: any) => !doc.requiresNotarization,
           );
 
-          this.requiredDocumentsDatasource = notRequiredNotarizationDocs.map(
-            (doc: any) => ({
+          this.requiredDocumentsDatasource.data =
+            notRequiredNotarizationDocs.map((doc: any) => ({
               ...doc,
               formName: doc.documentName,
               documentInstanceStatus:
                 doc.documentInstanceStatus ?? 'Incomplete',
-            })
-          );
+            }));
 
-          this.notarizationRequiredDocumentsDatasource =
+          this.notarizationRequiredDocumentsDatasource.data =
             requiresNotarizationDocs.map((doc: any) => ({
               ...doc,
               formName: doc.documentName,
@@ -158,12 +194,12 @@ export class ResponseDocumentsComponent implements OnInit {
           this.offerorDocuments = offerorDocs.map((doc: any) => ({ ...doc }));
           this.initializeFormArrayFromApiDocuments();
           this.updateCombinedDatasource();
+          this.loadingService.hide();
         },
         error: (error) => {
-          console.error('Error initializing documents:', error);
+          this.loadingService.hide();
 
           const correlationId = error?.error?.correlationId;
-
           this.loggingService.logException(
             new Error(`HTTP Error ${error.status}: ${error.statusText}`),
             3,
@@ -175,7 +211,7 @@ export class ResponseDocumentsComponent implements OnInit {
               className: 'ResponseDocumentsComponent',
               operation: 'GetRequestRequiredDocumentsById',
               userId: this.stateService.getUserId(),
-            }
+            },
           );
 
           if (error.status === 422) {
@@ -186,10 +222,8 @@ export class ResponseDocumentsComponent implements OnInit {
   }
 
   initializeFormGroup(): void {
-    const optionalOfferorDocuments = this.fb.array([]);
-
     this.responseDocumentsFormGroup = this.fb.group({
-      optionalOfferorDocuments: optionalOfferorDocuments,
+      optionalOfferorDocuments: this.fb.array([]),
       responseDocuments: this.fb.array([]),
     });
   }
@@ -204,6 +238,7 @@ export class ResponseDocumentsComponent implements OnInit {
         documentId: [doc.documentId || doc.requestDocumentId],
         requestDocumentId: [doc.requestDocumentId ?? null],
         documentName: [doc.documentName],
+        documentSource: [doc.documentSource],
         documentRequired: [doc.documentRequired],
         selected: [doc.selected],
         requiresNotarization: [
@@ -216,7 +251,7 @@ export class ResponseDocumentsComponent implements OnInit {
 
   onUploadClick(
     row: any,
-    source: 'notarizationNotRequired' | 'notarizationRequired'
+    source: 'notarizationNotRequired' | 'notarizationRequired',
   ): void {
     this.currentRow = row;
     this.currentSource = source;
@@ -231,7 +266,6 @@ export class ResponseDocumentsComponent implements OnInit {
       : this.responseIdFromStateService;
 
     if (file && this.currentRow) {
-      // Validate file type
       const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg'];
       const allowedExtensions = ['.pdf', '.jpg', '.jpeg'];
       const fileExtension = file.name
@@ -242,50 +276,51 @@ export class ResponseDocumentsComponent implements OnInit {
         !allowedTypes.includes(file.type) &&
         !allowedExtensions.includes(fileExtension)
       ) {
-        this._snackBar.open(
+        this.snackbarNotificationService.showSnackbarError(
           'Invalid file type. Only PDF and JPG/JPEG files are allowed.',
-          'Close',
-          {
-            duration: 5000,
-            verticalPosition: 'top',
-          }
         );
         input.value = '';
         return;
       }
+
+      this.loadingService.show('Uploading...');
+
       this.documentService
         .UploadDocumentInstance(
           Number(requestId),
           this.currentRow.requestDocumentId,
-          file
+          file,
         )
         .subscribe({
           next: (response) => {
+            this.loadingService.hide();
             if (response.isSuccess && this.currentRow?.requestDocumentId) {
-              let dataSourceToUpdate =
-                this.currentSource === 'notarizationNotRequired'
-                  ? this.requiredDocumentsDatasource
-                  : this.notarizationRequiredDocumentsDatasource;
+              const isNotarization =
+                this.currentSource === 'notarizationRequired';
+              const datasource = isNotarization
+                ? this.notarizationRequiredDocumentsDatasource
+                : this.requiredDocumentsDatasource;
 
-              const rowToUpdate = dataSourceToUpdate.find(
-                (doc: any) =>
-                  doc.requestDocumentId === this.currentRow.requestDocumentId
+              // Reassign array so Angular detects the change
+              datasource.data = datasource.data.map((doc: any) =>
+                doc.requestDocumentId === this.currentRow.requestDocumentId
+                  ? {
+                      ...doc,
+                      documentInstanceStatus: 'Complete',
+                      documentSourceId: 2,
+                      derived: false,
+                    }
+                  : doc,
               );
-              if (rowToUpdate) {
-                rowToUpdate.documentInstanceStatus = 'Complete';
-              }
 
-              this._snackBar.open('Document uploaded successfully!', '', {
-                duration: 5000,
-                verticalPosition: 'top',
-              });
+              this.snackbarNotificationService.showSnackbarSuccess(
+                'Document uploaded successfully.',
+              );
             }
-
-            // Clear the input value to allow same file selection again
             input.value = '';
           },
           error: (error) => {
-            console.error('Upload failed:', error);
+            this.loadingService.hide();
 
             const correlationId = error?.error?.correlationId;
             this.loggingService.logException(
@@ -301,15 +336,12 @@ export class ResponseDocumentsComponent implements OnInit {
                 operation: 'UploadDocumentInstance',
                 userId: this.stateService.getUserId(),
                 fileSize: file.size,
-              }
+              },
             );
-
-            // Clear the input value even on error to allow retry with same file
             input.value = '';
           },
         });
     } else {
-      // Clear the input value if no file is selected or currentRow is null
       input.value = '';
     }
   }
@@ -327,7 +359,7 @@ export class ResponseDocumentsComponent implements OnInit {
 
   get optionalOfferorDocuments(): FormArray {
     return this.responseDocumentsFormGroup.get(
-      'optionalOfferorDocuments'
+      'optionalOfferorDocuments',
     ) as FormArray;
   }
 
@@ -362,33 +394,36 @@ export class ResponseDocumentsComponent implements OnInit {
     const isIncompleteOrNull =
       !documentInstanceStatus || documentInstanceStatus === 'Incomplete';
 
+    this.loadingService.show('Downloading...');
+
     if (isIncompleteOrNull) {
       if (derived) {
         if (!organizationDocumentId || !agencyOrganizationId) {
           console.error('organizationDocumentId is required but missing.');
+          this.loadingService.hide();
           return;
         }
 
         this.requestService
           .GetAgencySpecificDocumentContent(
             organizationDocumentId,
-            agencyOrganizationId
+            agencyOrganizationId,
           )
           .subscribe({
             next: (response) => {
               const blob = response.body;
-              if (!blob) return;
-              // Extract filename from Content-Disposition
-              const contentDisposition = response.headers.get(
-                'Content-Disposition'
-              );
-              let fileName = 'document';
-              if (contentDisposition) {
-                const match = contentDisposition.match(/filename="?([^"]+)"?/);
-                if (match && match[1]) {
-                  fileName = match[1];
-                }
+              if (!blob) {
+                this.loadingService.hide();
+                return;
               }
+
+              const contentDisposition = response.headers.get(
+                'Content-Disposition',
+              );
+              const fileName = this.parseContentDispositionFileName(
+                contentDisposition,
+                'download',
+              );
 
               const a = document.createElement('a');
               const blobUrl = URL.createObjectURL(blob);
@@ -398,8 +433,10 @@ export class ResponseDocumentsComponent implements OnInit {
               a.click();
               document.body.removeChild(a);
               URL.revokeObjectURL(blobUrl);
+              this.loadingService.hide();
             },
             error: (error) => {
+              this.loadingService.hide();
               const correlationId = error?.error?.correlationId;
 
               this.loggingService.logException(
@@ -415,30 +452,27 @@ export class ResponseDocumentsComponent implements OnInit {
                   className: 'ResponseDocumentsComponent',
                   operation: 'GetAgencySpecificDocumentContent',
                   userId: this.stateService.getUserId(),
-                }
+                },
               );
             },
           });
       } else {
-        // Handle HttpResponse<Blob> with headers - force download with correct filename
         this.documentService.GetStateDocumentContent(documentId).subscribe({
           next: (response) => {
             const blob = response.body;
-            if (!blob) return;
-
-            // Extract filename from Content-Disposition
-            const contentDisposition = response.headers.get(
-              'Content-Disposition'
-            );
-            let fileName = 'download';
-            if (contentDisposition) {
-              const match = contentDisposition.match(/filename="?([^"]+)"?/);
-              if (match && match[1]) {
-                fileName = match[1];
-              }
+            if (!blob) {
+              this.loadingService.hide();
+              return;
             }
 
-            // Force download with correct filename
+            const contentDisposition = response.headers.get(
+              'Content-Disposition',
+            );
+            const fileName = this.parseContentDispositionFileName(
+              contentDisposition,
+              'download',
+            );
+
             const a = document.createElement('a');
             const blobUrl = URL.createObjectURL(blob);
             a.href = blobUrl;
@@ -447,10 +481,9 @@ export class ResponseDocumentsComponent implements OnInit {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(blobUrl);
+            this.loadingService.hide();
           },
           error: (error) => {
-            console.error('Failed to fetch document:', error);
-
             const correlationId = error?.error?.correlationId;
 
             this.loggingService.logException(
@@ -465,7 +498,7 @@ export class ResponseDocumentsComponent implements OnInit {
                 className: 'ResponseDocumentsComponent',
                 operation: 'GetStateDocumentContent',
                 userId: this.stateService.getUserId(),
-              }
+              },
             );
           },
         });
@@ -476,26 +509,13 @@ export class ResponseDocumentsComponent implements OnInit {
           const blob = response.body;
           if (!blob) return;
 
-          // Extract filename from Content-Disposition
           const contentDisposition = response.headers.get(
-            'Content-Disposition'
+            'Content-Disposition',
           );
-          let fileName = 'document';
-
-          if (contentDisposition) {
-            // Extract only the standard filename parameter (not filename*)
-            const standardMatch =
-              contentDisposition.match(/filename="([^"]+)"/);
-            if (standardMatch && standardMatch[1]) {
-              fileName = standardMatch[1];
-            } else {
-              const noQuotesMatch =
-                contentDisposition.match(/filename=([^;]+)/);
-              if (noQuotesMatch && noQuotesMatch[1]) {
-                fileName = noQuotesMatch[1].trim();
-              }
-            }
-          }
+          const fileName = this.parseContentDispositionFileName(
+            contentDisposition,
+            'download',
+          );
 
           const a = document.createElement('a');
           const blobUrl = URL.createObjectURL(blob);
@@ -505,8 +525,10 @@ export class ResponseDocumentsComponent implements OnInit {
           a.click();
           document.body.removeChild(a);
           URL.revokeObjectURL(blobUrl);
+          this.loadingService.hide();
         },
         error: (error) => {
+          this.loadingService.hide();
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -521,7 +543,7 @@ export class ResponseDocumentsComponent implements OnInit {
               className: 'ResponseDocumentsComponent',
               operation: 'GetDocumentInstance',
               userId: this.stateService.getUserId(),
-            }
+            },
           );
         },
       });
@@ -545,11 +567,10 @@ export class ResponseDocumentsComponent implements OnInit {
         if (newDocument) {
           const existingDoc = this.optionalOfferorDocuments.controls.find(
             (control) =>
-              control.get('documentId')?.value === newDocument.documentId
+              control.get('documentId')?.value === newDocument.documentId,
           );
 
           if (existingDoc) {
-            console.log('Document already exists!', newDocument.documentId);
             return;
           }
 
@@ -557,6 +578,7 @@ export class ResponseDocumentsComponent implements OnInit {
             documentId: [newDocument.documentId],
             requestDocumentId: [newDocument.requestDocumentId ?? null],
             documentName: [newDocument.documentName],
+            documentSource: [newDocument.documentSource ?? 'UserUpload'],
           });
           this.optionalOfferorDocuments.push(formGroup);
           this.updateCombinedDatasource();
@@ -565,9 +587,10 @@ export class ResponseDocumentsComponent implements OnInit {
   }
 
   updateCombinedDatasource(): void {
-    this.offerorDocumentsDatasource =
+    this.offerorDocumentsDatasource.data =
       this.optionalOfferorDocuments.controls.map((control) => control.value);
-    this.offerorOptionalDocuments = [...this.offerorDocumentsDatasource];
+
+    this.offerorOptionalDocuments = [...this.offerorDocumentsDatasource.data];
   }
 
   onDownloadOfferorDocument(row: { requestDocumentId: number }): void {
@@ -577,22 +600,16 @@ export class ResponseDocumentsComponent implements OnInit {
       return;
     }
 
+    this.loadingService.show('Downloading...');
+
     this.requestService.GetOfferorDocumentContent(requestDocumentId).subscribe({
       next: (response) => {
-        // Extract filename from Content-Disposition header
-        const contentDisposition = response.headers.get('content-disposition');
-        let fileName = 'download';
+        const contentDisposition = response.headers.get('Content-Disposition');
+        const fileName = this.parseContentDispositionFileName(
+          contentDisposition,
+          'download',
+        );
 
-        if (contentDisposition) {
-          const fileNameMatch = contentDisposition.match(
-            /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
-          );
-          if (fileNameMatch && fileNameMatch[1]) {
-            fileName = fileNameMatch[1].replace(/['"]/g, '');
-          }
-        }
-
-        // Create blob URL and trigger download
         const blob = response.body;
         if (blob) {
           const blobUrl = URL.createObjectURL(blob);
@@ -604,12 +621,13 @@ export class ResponseDocumentsComponent implements OnInit {
           document.body.removeChild(link);
           URL.revokeObjectURL(blobUrl);
         }
+
+        this.loadingService.hide();
       },
       error: (error: any) => {
-        console.error('Failed to fetch document:', error);
+        this.loadingService.hide();
 
         const correlationId = error?.error?.correlationId;
-
         this.loggingService.logException(
           new Error(`HTTP Error ${error.status}: ${error.statusText}`),
           3,
@@ -622,10 +640,33 @@ export class ResponseDocumentsComponent implements OnInit {
             className: 'ResponseDocumentsComponent',
             operation: 'GetOfferorDocumentContent',
             userId: this.stateService.getUserId(),
-          }
+          },
         );
       },
     });
+  }
+
+  private parseContentDispositionFileName(
+    contentDisposition: string | null,
+    fallback: string = 'document',
+  ): string {
+    if (!contentDisposition) return fallback;
+
+    // Prefer RFC 5987 filename* (UTF-8 encoded)
+    const rfcMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+    if (rfcMatch?.[1]) {
+      return decodeURIComponent(rfcMatch[1].trim());
+    }
+
+    // Quoted filename
+    const quotedMatch = contentDisposition.match(/filename="([^"]+)"/);
+    if (quotedMatch?.[1]) return quotedMatch[1];
+
+    // Unquoted filename
+    const unquotedMatch = contentDisposition.match(/filename=([^;]+)/);
+    if (unquotedMatch?.[1]) return unquotedMatch[1].trim();
+
+    return fallback;
   }
 
   deleteForm(requestDocumentId: number, documentId: number): void {
@@ -637,27 +678,26 @@ export class ResponseDocumentsComponent implements OnInit {
     const requestDocId = +requestDocumentId;
 
     this.requestService
-      .deleteRequestDocument(requestId, requestDocId)
+      .DeleteRequestDocument(requestId, requestDocId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
           if (response.isSuccess) {
             const optionalIndex =
               this.optionalOfferorDocuments.controls.findIndex(
-                (control) => control.get('documentId')?.value === documentId
+                (control) => control.get('documentId')?.value === documentId,
               );
 
             if (optionalIndex > -1) {
               this.optionalOfferorDocuments.removeAt(optionalIndex);
               this.updateCombinedDatasource();
             }
-          } else {
-            console.error('Failed to delete document');
+            this.snackbarNotificationService.showSnackbarSuccess(
+              'Document deleted successfully.',
+            );
           }
         },
         error: (error) => {
-          console.error('Error deleting document:', error);
-
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -670,9 +710,9 @@ export class ResponseDocumentsComponent implements OnInit {
               correlationId: correlationId,
               methodName: 'deleteForm',
               className: 'ResponseDocumentsComponent',
-              operation: 'deleteRequestDocument',
+              operation: 'DeleteRequestDocument',
               userId: this.stateService.getUserId(),
-            }
+            },
           );
         },
       });
@@ -681,16 +721,23 @@ export class ResponseDocumentsComponent implements OnInit {
   goToOfferorProfilePage() {
     this.router.navigate(['/offeror-profile-page']);
   }
+  // documentSourceId
+  // 1 = AUTOFILL
+  // 2 = user upload = manual upload
+  // 3 - offeror profile upload
+
+  getUploadIconColor(row: any): string {
+    if (row.documentSourceId === 3) {
+      return '#3f51b5'; // blue = uploaded from Offeror Profile
+    }
+    if (row.documentSourceId === 2) {
+      return 'green'; // green = user uploaded
+    }
+    return 'gray'; // gray = not yet uploaded
+  }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
-
-  // openBidProposalDialog(): void {
-  //     this.dialog.open(BidProposalFormDialogComponent, {
-  //         width: '600px',
-  //         disableClose: true,
-  //     });
-  // }
 }

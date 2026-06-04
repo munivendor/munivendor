@@ -10,3 +10,15 @@
 .response-stepper-button-container {
   float: right;
 }
+
+.documents-legend {
+  display: flex;
+  justify-content: flex-end;
+  clear: both;
+  margin-bottom: 16px;
+}
+
+.documents-legend mat-card {
+  width: 365px;
+  background-color: rgb(255, 243, 207);
+}

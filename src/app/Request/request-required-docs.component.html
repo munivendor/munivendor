@@ -1,16 +1,13 @@
 <form [formGroup]="requestDocumentsFormGroup">
   <h2>State of New Jersey Required Forms</h2>
-  <div
-    *ngIf="
-      requiredStateDocumentsDatasource.length > 0;
-      else noRequiredStateDocuments
-    "
-  >
+  <div [hidden]="requiredStateDocumentsDatasource.data.length === 0">
     <table
       mat-table
       [dataSource]="requiredStateDocumentsDatasource"
       class="mat-elevation-z8"
       formArrayName="requiredStateDocuments"
+      matSort
+      #requiredSort="matSort"
     >
       <ng-container matColumnDef="select">
         <th mat-header-cell *matHeaderCellDef></th>
@@ -26,13 +23,13 @@
         </td>
       </ng-container>
       <ng-container matColumnDef="formName">
-        <th mat-header-cell *matHeaderCellDef>Form Name</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Form Name</th>
         <td mat-cell *matCellDef="let row" [formGroup]="row">
           {{ row.get("documentName")?.value }}
         </td>
       </ng-container>
       <ng-container matColumnDef="notarization">
-        <th mat-header-cell *matHeaderCellDef>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>
           Notarization<mat-icon
             matTooltip="Digital Notarization: Offerors will notarize their documents digitally through MuniVendor. All notarized documents are submitted in the offeror’s digital submission packet."
             color="primary"
@@ -91,17 +88,14 @@
   <br />
 
   <h2>State of New Jersey Optional Forms</h2>
-  <div
-    *ngIf="
-      optionalStateDocumentsDatasource.length > 0;
-      else noOptionalStateDocuments
-    "
-  >
+  <div [hidden]="optionalStateDocumentsDatasource.data.length === 0">
     <table
       mat-table
       [dataSource]="optionalStateDocumentsDatasource"
       class="mat-elevation-z8"
       formArrayName="optionalStateDocuments"
+      matSort
+      #optionalStateSort="matSort"
     >
       <ng-container matColumnDef="select">
         <th mat-header-cell *matHeaderCellDef></th>
@@ -118,13 +112,13 @@
         </td>
       </ng-container>
       <ng-container matColumnDef="formName">
-        <th mat-header-cell *matHeaderCellDef>Form Name</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Form Name</th>
         <td mat-cell *matCellDef="let row" [formGroup]="row">
           {{ row.get("documentName")?.value }}
         </td>
       </ng-container>
       <ng-container matColumnDef="notarization">
-        <th mat-header-cell *matHeaderCellDef>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>
           Notarization<mat-icon
             matTooltip="Digital Notarization: Offerors will notarize their documents digitally through MuniVendor. All notarized documents are submitted in the offeror’s digital submission packet."
             color="primary"
@@ -184,17 +178,14 @@
   <br />
 
   <h2>Agency (Municipality) Specific Forms</h2>
-  <div
-    *ngIf="
-      optionalMunicipalityDocuments.length > 0;
-      else noOptionalMunicipalityDocuments
-    "
-  >
+  <div [hidden]="optionalMunicipalityDocumentsDatasource.data.length === 0">
     <table
       mat-table
       [dataSource]="optionalMunicipalityDocumentsDatasource"
       class="mat-elevation-z8"
       formArrayName="optionalMunicipalityDocuments"
+      matSort
+      #municipalitySort="matSort"
     >
       <ng-container matColumnDef="select">
         <th mat-header-cell *matHeaderCellDef></th>
@@ -211,13 +202,13 @@
         </td>
       </ng-container>
       <ng-container matColumnDef="formName">
-        <th mat-header-cell *matHeaderCellDef>Form Name</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Form Name</th>
         <td mat-cell *matCellDef="let row" [formGroup]="row">
           {{ row.get("documentName")?.value }}
         </td>
       </ng-container>
       <ng-container matColumnDef="notarization">
-        <th mat-header-cell *matHeaderCellDef>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>
           Notarization<mat-icon
             matTooltip="Digital Notarization: Offerors will notarize their documents digitally through MuniVendor. All notarized documents are submitted in the offeror’s digital submission packet."
             color="primary"
@@ -258,7 +249,7 @@
           <button
             mat-icon-button
             color="primary"
-            (click)="deleteOrganizationDocument(row.get('documentId')?.value)"
+            (click)="deleteAgencySpecificDocument(row.get('documentId')?.value)"
             color="warn"
           >
             <mat-icon>delete</mat-icon>

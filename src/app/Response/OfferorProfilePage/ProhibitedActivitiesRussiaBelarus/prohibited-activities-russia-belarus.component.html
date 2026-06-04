@@ -1,0 +1,202 @@
+<div class="profile-card">
+  <div class="card-header">
+    <div class="header-accent"></div>
+
+    <div class="header-content">
+      <div class="header-top">
+        <div class="header-left">
+          <h2 class="card-title">
+            Prohibited Activities in Russia and/or Belarus
+          </h2>
+        </div>
+      </div>
+      <p class="card-description">
+        The information filled out below is used to auto-fill the NJ State form
+        titled "Certification of Non-Involvement in Prohibited Activities in
+        Russia or Belarus".
+      </p>
+    </div>
+  </div>
+
+  <form [formGroup]="prohibitedForm" class="prohibited-form">
+    <!-- OFAC Identification -->
+    <div>
+      <p class="section-label">
+        <strong>OFAC Identification</strong>
+      </p>
+      <p class="section-question">
+        Is your organization identified on the OFAC Specially Designated
+        Nationals and Blocked Persons list on account of activity related to
+        Russia and/or Belarus?
+      </p>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-select
+          formControlName="ofacIdentification"
+          placeholder="Select One"
+        >
+          <mat-option
+            *ngFor="let option of ofacIdentificationOptions"
+            [value]="option.value"
+          >
+            {{ option.label }}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="isFieldInvalid('ofacIdentification')">
+          Please select an option.
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <!-- Conditional fields — only shown when OFAC answer is 'yes' -->
+    <ng-container *ngIf="showConditionalFields">
+      <!-- OFAC Additional -->
+      <div>
+        <p class="section-label">
+          <strong>OFAC Identification Additional</strong>
+          <span class="required-badge">(Required)</span>
+        </p>
+        <p class="section-question">
+          Is the work or activity in which your organization is engaged in
+          Russia and/or Belarus consistent with federal law, regulation, license
+          or exemption?
+        </p>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-select formControlName="ofacAdditional" placeholder="Select One">
+            <mat-option
+              *ngFor="let option of ofacAdditionalOptions"
+              [value]="option.value"
+            >
+              {{ option.label }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="isFieldInvalid('ofacAdditional')">
+            Please select an option.
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <!-- OFAC File Upload -->
+      <div>
+        <p class="section-label">
+          <strong>OFAC - File Upload</strong>
+        </p>
+        <p class="upload-doc-description">
+          Please upload any documentation related to the work your organization
+          is performing in Russia and/or Belarus to show that it is consistent
+          with federal law, regulation license or exemption. This file will be
+          included in your submissions.
+        </p>
+
+        <input
+          #fileInput
+          type="file"
+          accept=".jpg,.jpeg,.png,.pdf"
+          class="file-input-hidden"
+          (change)="onFileSelected($event)"
+        />
+        <button
+          type="button"
+          class="upload-btn"
+          [class.disabled]="
+            isUploading || !!getUploadedDoc(OFAC_DOCUMENT_CODE_NAME[0])
+          "
+          [disabled]="
+            isUploading || !!getUploadedDoc(OFAC_DOCUMENT_CODE_NAME[0])
+          "
+          [matTooltip]="
+            getUploadedDoc(OFAC_DOCUMENT_CODE_NAME[0])
+              ? 'Please remove the existing file before uploading a new one.'
+              : ''
+          "
+          matTooltipPosition="above"
+          (click)="fileInput.click()"
+        >
+          <mat-spinner
+            *ngIf="isUploading"
+            diameter="16"
+            class="btn-spinner"
+          ></mat-spinner>
+          <mat-icon *ngIf="!isUploading">upload</mat-icon>
+          <span>{{ isUploading ? "Uploading…" : "Upload File" }}</span>
+        </button>
+
+        <div
+          class="uploaded-file-row"
+          *ngIf="getUploadedDoc(OFAC_DOCUMENT_CODE_NAME[0]) as doc"
+        >
+          <mat-icon class="uploaded-file-icon">insert_drive_file</mat-icon>
+          <span class="uploaded-file-name">{{ doc.fileName }}</span>
+          <button
+            type="button"
+            class="download-btn"
+            [disabled]="isDownloading(doc)"
+            (click)="downloadDocument(doc)"
+            title="Download"
+          >
+            <mat-spinner
+              *ngIf="isDownloading(doc)"
+              diameter="14"
+              class="btn-spinner"
+            ></mat-spinner>
+            <mat-icon *ngIf="!isDownloading(doc)">download</mat-icon>
+          </button>
+          <button
+            type="button"
+            class="delete-btn"
+            [disabled]="isDeleting(doc)"
+            (click)="deleteOfferorProfileDocument(doc)"
+            title="Delete"
+          >
+            <mat-spinner
+              *ngIf="isDeleting(doc)"
+              diameter="14"
+              class="btn-spinner"
+            ></mat-spinner>
+            <mat-icon *ngIf="!isDeleting(doc)">delete</mat-icon>
+          </button>
+        </div>
+
+        <span class="upload-hint">
+          Accepted file types: jpg, png, pdf. Max. file size: 20 MB.
+        </span>
+      </div>
+
+      <!-- Conditional description textarea — shown when ofacAdditional is 'yes' -->
+      <div *ngIf="showDescriptionField">
+        <p class="upload-doc-description">
+          Please write a detailed description of how your organization's
+          activity related to Russia and/or Belarus is consistent with federal
+          law.
+        </p>
+        <mat-form-field appearance="outline" class="full-width">
+          <textarea
+            matInput
+            formControlName="ofacDescription"
+            rows="7"
+            placeholder=""
+            maxlength="1000"
+          ></textarea>
+          <mat-error *ngIf="isFieldInvalid('ofacDescription')">
+            Please provide a description.
+          </mat-error>
+        </mat-form-field>
+      </div>
+    </ng-container>
+
+    <!-- Save Changes -->
+    <div class="card-footer">
+      <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        class="save-btn"
+        (click)="onSubmit()"
+      >
+        <mat-icon>save</mat-icon>
+        Save Changes
+      </button>
+    </div>
+  </form>
+</div>

@@ -22,7 +22,6 @@ import {
 import { Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../authorization/auth.service';
 import { LoggingService } from '../exceptionhandling/logging.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { SnackbarNotificationService } from '../shared/service/snackbar-notification.service';
 
 @Component({
@@ -60,7 +59,7 @@ export class ResendPasswordResetDialog {
     private loggingService: LoggingService,
     @Inject(MAT_DIALOG_DATA) public data: any,
     private authService: AuthService,
-    private snackbarNotificationService: SnackbarNotificationService
+    private snackbarNotificationService: SnackbarNotificationService,
   ) {
     this.email = data?.email || '';
   }
@@ -86,10 +85,12 @@ export class ResendPasswordResetDialog {
             methodName: 'onResendClick',
             className: 'ResendPasswordResetDialog',
             operation: 'sendPasswordReset',
-          }
+          },
         );
 
-        this.snackbarNotificationService.showSnackbarError(correlationId);
+        this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
+          correlationId,
+        );
       },
     });
   }
@@ -126,7 +127,7 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
     public dialog: MatDialog,
     private authService: AuthService,
     private loggingService: LoggingService,
-    private snackbarNotificationService: SnackbarNotificationService
+    private snackbarNotificationService: SnackbarNotificationService,
   ) {}
 
   onSubmit() {
@@ -156,10 +157,12 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
               methodName: 'onSubmit',
               className: 'ForgotPasswordComponent',
               operation: 'sendPasswordReset',
-            }
+            },
           );
 
-          this.snackbarNotificationService.showSnackbarError(correlationId);
+          this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
+            correlationId,
+          );
         },
       });
     }
@@ -190,10 +193,12 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
             methodName: 'onResendClick',
             className: 'ForgotPasswordComponent',
             operation: 'sendPasswordReset',
-          }
+          },
         );
 
-        this.snackbarNotificationService.showSnackbarError(correlationId);
+        this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
+          correlationId,
+        );
       },
     });
   }
@@ -219,7 +224,7 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
           Validators.required,
           Validators.email,
           Validators.pattern(
-            /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+            /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
           ),
         ],
       ],

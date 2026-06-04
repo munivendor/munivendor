@@ -27,8 +27,6 @@ import { CategoryNode } from '../../shared/model/category-tree.model';
 import { MatButtonModule } from '@angular/material/button';
 import { StateService } from '../../Request/services/state.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
-import { AuthService } from '../../authorization/auth.service';
-import { SnackbarNotificationService } from '../service/snackbar-notification.service';
 
 interface FlattenedCategoryNode {
   name: string;
@@ -69,7 +67,7 @@ export class CustomCategoryDropdownComponent implements OnInit, OnDestroy {
             this.updateFilteredCategoriesWithToggle();
           } else {
             this.applyCategoryFilter(
-              typeof value === 'number' ? value.toString() : value
+              typeof value === 'number' ? value.toString() : value,
             );
           }
         });
@@ -93,7 +91,7 @@ export class CustomCategoryDropdownComponent implements OnInit, OnDestroy {
           this.updateFilteredCategoriesWithToggle();
         } else {
           this.applyCategoryFilter(
-            typeof value === 'number' ? value.toString() : value
+            typeof value === 'number' ? value.toString() : value,
           );
         }
       });
@@ -115,7 +113,7 @@ export class CustomCategoryDropdownComponent implements OnInit, OnDestroy {
     private categoryHierarchyService: CategoryHierarchyService,
     public dialog: MatDialog,
     private stateService: StateService,
-    private loggingService: LoggingService
+    private loggingService: LoggingService,
   ) {
     this.flattenCategories();
   }
@@ -137,7 +135,7 @@ export class CustomCategoryDropdownComponent implements OnInit, OnDestroy {
   private processCategoryLevel(
     categories: CategoryNode[],
     level = 0,
-    parentId: string | null = null
+    parentId: string | null = null,
   ): void {
     categories.forEach((category) => {
       const catId = category.categoryId ?? '';
@@ -168,8 +166,6 @@ export class CustomCategoryDropdownComponent implements OnInit, OnDestroy {
           this.flattenCategories();
         },
         error: (error) => {
-          console.error('Error fetching categories:', error);
-
           const correlationId = error?.error?.correlationId;
 
           this.loggingService.logException(
@@ -182,7 +178,7 @@ export class CustomCategoryDropdownComponent implements OnInit, OnDestroy {
               className: 'CustomCategoryDropdownComponent',
               operation: 'GetCategoryHierarchy',
               userId: this.stateService.getUserId(),
-            }
+            },
           );
         },
       });
@@ -190,7 +186,7 @@ export class CustomCategoryDropdownComponent implements OnInit, OnDestroy {
 
   prepareCategoriesForTreeRendering(
     categories: CategoryNode[],
-    level: number = 0
+    level: number = 0,
   ): CategoryNode[] {
     return categories
       .filter((cat) => !cat.deleted)
@@ -217,7 +213,7 @@ export class CustomCategoryDropdownComponent implements OnInit, OnDestroy {
     }
 
     const match = this.flattenedCategories.find(
-      (cat) => cat.categoryId === value
+      (cat) => cat.categoryId === value,
     );
     if (match) {
       return this.buildBreadcrumbPath(match);
@@ -232,7 +228,7 @@ export class CustomCategoryDropdownComponent implements OnInit, OnDestroy {
 
     while (currentParentId) {
       const parentNode = this.flattenedCategories.find(
-        (cat) => cat.categoryId === currentParentId
+        (cat) => cat.categoryId === currentParentId,
       );
       if (parentNode) {
         path.unshift(parentNode.name);
@@ -281,7 +277,7 @@ export class CustomCategoryDropdownComponent implements OnInit, OnDestroy {
         return false;
       }
       const parent = this.flattenedCategories.find(
-        (cat) => cat.categoryId === parentId
+        (cat) => cat.categoryId === parentId,
       );
       parentId = parent?.parentId;
     }
@@ -300,7 +296,7 @@ export class CustomCategoryDropdownComponent implements OnInit, OnDestroy {
 
   private collectAllDescendants(
     parentId: number,
-    result: Set<FlattenedCategoryNode>
+    result: Set<FlattenedCategoryNode>,
   ) {
     for (const node of this.flattenedCategories) {
       if (node.parentId === parentId.toString()) {
@@ -312,7 +308,7 @@ export class CustomCategoryDropdownComponent implements OnInit, OnDestroy {
 
   private addParentsOfFilteredNodes(
     filtered: FlattenedCategoryNode[],
-    result: Set<FlattenedCategoryNode>
+    result: Set<FlattenedCategoryNode>,
   ): void {
     const parentsToAdd: Set<string> = new Set();
     // Collect all parent IDs that need to be visible
@@ -321,7 +317,7 @@ export class CustomCategoryDropdownComponent implements OnInit, OnDestroy {
       while (currentParentId) {
         parentsToAdd.add(currentParentId);
         const parentNode = this.flattenedCategories.find(
-          (cat) => cat.categoryId === currentParentId
+          (cat) => cat.categoryId === currentParentId,
         );
         currentParentId = parentNode?.parentId;
       }
@@ -329,7 +325,7 @@ export class CustomCategoryDropdownComponent implements OnInit, OnDestroy {
     // Add parent nodes to result set
     for (const parentId of parentsToAdd) {
       const parentNode = this.flattenedCategories.find(
-        (cat) => cat.categoryId === parentId
+        (cat) => cat.categoryId === parentId,
       );
       if (parentNode) {
         result.add(parentNode);
@@ -339,7 +335,7 @@ export class CustomCategoryDropdownComponent implements OnInit, OnDestroy {
 
   private isParentOfMatchedNodes(
     node: FlattenedCategoryNode,
-    matched: FlattenedCategoryNode[]
+    matched: FlattenedCategoryNode[],
   ): boolean {
     return matched.some((matchedNode) => {
       let parentId = matchedNode.parentId;
@@ -348,7 +344,7 @@ export class CustomCategoryDropdownComponent implements OnInit, OnDestroy {
           return true;
         }
         const parent = this.flattenedCategories.find(
-          (cat) => cat.categoryId === parentId
+          (cat) => cat.categoryId === parentId,
         );
         parentId = parent?.parentId;
       }
@@ -358,7 +354,7 @@ export class CustomCategoryDropdownComponent implements OnInit, OnDestroy {
 
   private isNodeVisibleInFilterMode(
     node: FlattenedCategoryNode,
-    relevantNodes: Set<FlattenedCategoryNode>
+    relevantNodes: Set<FlattenedCategoryNode>,
   ): boolean {
     if (node.level === 0) return true;
 
@@ -368,7 +364,7 @@ export class CustomCategoryDropdownComponent implements OnInit, OnDestroy {
         return false;
       }
       const parent = this.flattenedCategories.find(
-        (cat) => cat.categoryId === parentId
+        (cat) => cat.categoryId === parentId,
       );
       parentId = parent?.parentId;
     }
@@ -394,7 +390,7 @@ export class CustomCategoryDropdownComponent implements OnInit, OnDestroy {
 
     // Show matching nodes + parents, but respect toggles for visibility
     const matched = this.flattenedCategories.filter((cat) =>
-      cat.name.toLowerCase().includes(filterValue)
+      cat.name.toLowerCase().includes(filterValue),
     );
 
     const relevantNodes = new Set<FlattenedCategoryNode>();
@@ -419,10 +415,10 @@ export class CustomCategoryDropdownComponent implements OnInit, OnDestroy {
 
     finalFiltered.sort((a, b) => {
       const indexA = this.flattenedCategories.findIndex(
-        (cat) => cat.categoryId === a.categoryId
+        (cat) => cat.categoryId === a.categoryId,
       );
       const indexB = this.flattenedCategories.findIndex(
-        (cat) => cat.categoryId === b.categoryId
+        (cat) => cat.categoryId === b.categoryId,
       );
       return indexA - indexB;
     });

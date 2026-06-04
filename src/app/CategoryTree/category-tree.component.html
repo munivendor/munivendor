@@ -1,127 +1,35 @@
-<div>
-  <button
-    mat-button
-    color="primary"
-    (click)="addRootCategory()"
-    [disabled]="isAnyNodeEditing()"
+<div class="categories-container">
+  <div class="header-banner">
+    <h1>Categories</h1>
+  </div>
+  <mat-tree
+    [dataSource]="dataSource"
+    [treeControl]="treeControl"
+    class="clean-tree"
   >
-    <mat-icon>add</mat-icon> Add Root Category
-  </button>
-</div>
+    <!-- Leaf nodes (no children) -->
+    <mat-tree-node *matTreeNodeDef="let node" #treeNode>
+      <button mat-icon-button disabled></button>
+      <span>{{ node.name }}</span>
+    </mat-tree-node>
 
-<mat-tree
-  [dataSource]="dataSource"
-  [treeControl]="treeControl"
-  class="clean-tree"
->
-  <mat-tree-node *matTreeNodeDef="let node">
-    <button mat-icon-button disabled></button>
-    <div
-      [ngStyle]="{
-        'padding-left.px': getNodeIndent(node.level),
-        opacity: node.deleted ? 0.5 : 1
-      }"
-      class="mat-tree-node"
-    >
-      <span *ngIf="!node.isEditing">{{ node.name }}</span>
-      <input
-        *ngIf="node.isEditing"
-        [(ngModel)]="node.tempName"
-        class="edit-input"
-        (blur)="saveNodeEdit(node)"
-        id="parentNode"
-      />
-      <span class="badge" *ngIf="node.deleted">Deleted</span>
-      <span class="node-actions" *ngIf="!node.deleted">
+    <!-- Parent nodes (with children) -->
+    <mat-nested-tree-node *matTreeNodeDef="let node; when: hasChild" #treeNode>
+      <div class="mat-tree-node">
         <button
           mat-icon-button
-          (click)="node.isEditing ? saveNodeEdit(node) : editNode(node)"
-          [disabled]="!node.isEditing && isAnyNodeEditing()"
+          matTreeNodeToggle
+          [attr.aria-label]="'Toggle ' + node.name"
         >
-          <mat-icon>{{ node.isEditing ? "check" : "edit" }}</mat-icon>
+          <mat-icon class="mat-icon-rtl-mirror">
+            {{ treeControl.isExpanded(node) ? "expand_more" : "chevron_right" }}
+          </mat-icon>
         </button>
-        <button
-          mat-icon-button
-          (click)="deleteNode(node)"
-          [disabled]="isAnyNodeEditing()"
-        >
-          <mat-icon>delete</mat-icon>
-        </button>
-        <button
-          mat-icon-button
-          (click)="addChild(node)"
-          [disabled]="isAnyNodeEditing()"
-        >
-          <mat-icon>add</mat-icon>
-        </button>
-      </span>
-    </div>
-  </mat-tree-node>
-
-  <mat-nested-tree-node *matTreeNodeDef="let node; when: hasChild">
-    <div
-      class="mat-tree-node"
-      [ngStyle]="{
-        'padding-left.px': getNodeIndent(node.level),
-        opacity: node.deleted ? 0.5 : 1
-      }"
-    >
-      <button
-        mat-icon-button
-        matTreeNodeToggle
-        [attr.aria-label]="'Toggle ' + node.name"
-      >
-        <mat-icon class="mat-icon-rtl-mirror">
-          {{ treeControl.isExpanded(node) ? "expand_more" : "chevron_right" }}
-        </mat-icon>
-      </button>
-      <span *ngIf="!node.isEditing">{{ node.name }}</span>
-      <input
-        *ngIf="node.isEditing"
-        [(ngModel)]="node.tempName"
-        class="edit-input"
-        (blur)="saveNodeEdit(node)"
-        id="childNode"
-      />
-      <span class="badge" *ngIf="node.deleted">Deleted</span>
-      <span class="node-actions" *ngIf="!node.deleted">
-        <button
-          mat-icon-button
-          (click)="node.isEditing ? saveNodeEdit(node) : editNode(node)"
-          [disabled]="!node.isEditing && isAnyNodeEditing()"
-        >
-          <mat-icon>{{ node.isEditing ? "check" : "edit" }}</mat-icon>
-        </button>
-        <button
-          mat-icon-button
-          (click)="deleteNode(node)"
-          [disabled]="isAnyNodeEditing()"
-        >
-          <mat-icon>delete</mat-icon>
-        </button>
-        <button
-          mat-icon-button
-          (click)="addChild(node)"
-          [disabled]="isAnyNodeEditing()"
-        >
-          <mat-icon>add</mat-icon>
-        </button>
-      </span>
-    </div>
-    <div [class.tree-invisible]="!treeControl.isExpanded(node)" role="group">
-      <ng-container matTreeNodeOutlet></ng-container>
-    </div>
-  </mat-nested-tree-node>
-</mat-tree>
-
-<div>
-  <button
-    mat-raised-button
-    color="primary"
-    (click)="saveCategoryHierarchy()"
-    [disabled]="isAnyNodeEditing()"
-    style="margin-top: 8px"
-  >
-    <mat-icon>save</mat-icon> Save Changes
-  </button>
+        <span>{{ node.name }}</span>
+      </div>
+      <div [class.tree-invisible]="!treeControl.isExpanded(node)" role="group">
+        <ng-container matTreeNodeOutlet></ng-container>
+      </div>
+    </mat-nested-tree-node>
+  </mat-tree>
 </div>

@@ -14,7 +14,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatCardModule } from '@angular/material/card';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { UserService } from '../shared/service/user.service';
 import { User } from '../shared/model/user.model';
 import { UserLogin } from '../shared/model/user-login.model';
@@ -44,7 +44,6 @@ import {
   MatDialogContent,
   MatDialogTitle,
 } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { StateService } from '../Request/services/state.service';
 import { MatIconModule } from '@angular/material/icon';
 import { LoggingService } from '../exceptionhandling/logging.service';
@@ -95,18 +94,14 @@ export class DialogElementsExampleDialog {}
   styleUrls: ['./signup.component.css'],
 })
 export class SignupComponent implements OnInit, OnDestroy {
+  signupMode: 'offeror' | 'agency' = 'offeror';
   signupFormEmail!: FormGroup;
   signupFormGoogle!: FormGroup;
-  userId!: number;
-  isLGA: boolean = false;
   organizationTypes: OrganizationType[] = [];
-  private userSelectedOrgTypeIdEmail: number | null = null;
-  private userSelectedOrgTypeIdGoogle: number | null = null;
   private userCreationInProgress = false;
   private destroy$ = new Subject<void>();
   hidePassword = true;
   hideConfirmPassword = true;
-
   buttonWidth = 400;
 
   constructor(
@@ -120,8 +115,8 @@ export class SignupComponent implements OnInit, OnDestroy {
     public dialog: MatDialog,
     private stateService: StateService,
     private loggingService: LoggingService,
-    private _snackBar: MatSnackBar,
-    private snackbarNotificationService: SnackbarNotificationService
+    private snackbarNotificationService: SnackbarNotificationService,
+    private route: ActivatedRoute,
   ) {}
 
   togglePasswordVisibility(): void {
@@ -132,18 +127,25 @@ export class SignupComponent implements OnInit, OnDestroy {
     this.hideConfirmPassword = !this.hideConfirmPassword;
   }
 
-  openDialog() {
-    this.dialog.open(DialogElementsExampleDialog, {
-      width: '575px',
-    });
-  }
-
   prepareGoogleSignIn(): void {
     this.authService.setSkipNextAuthState(true);
     this.authService.setSignupInProgress(true);
   }
 
+  private detectSignupMode(): void {
+    this.signupMode = this.route.snapshot.data['signupMode'] ?? 'offeror';
+  }
+
+  private setOrgTypeByMode(): void {
+    const value = this.signupMode === 'offeror' ? 2 : 1;
+    this.signupFormEmail.get('organizationTypeId')?.setValue(value);
+    this.signupFormEmail.get('organizationTypeId')?.disable();
+    this.signupFormGoogle.get('organizationTypeId')?.setValue(value);
+    this.signupFormGoogle.get('organizationTypeId')?.disable();
+  }
+
   ngOnInit(): void {
+    this.detectSignupMode();
     this.initForm();
     this.setupGoogleAuthListener();
 
@@ -156,7 +158,6 @@ export class SignupComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           const correlationId = error?.error?.correlationId;
-
           this.loggingService.logException(
             new Error(`HTTP Error ${error.status}: ${error.statusText}`),
             3,
@@ -165,59 +166,18 @@ export class SignupComponent implements OnInit, OnDestroy {
               methodName: 'ngOnInit',
               className: 'SignupComponent',
               operation: 'getOrganizationTypes',
-            }
+            },
           );
-
-          this.snackbarNotificationService.showSnackbarError(correlationId);
+          this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
+            correlationId,
+          );
         },
-      });
-
-    this.signupFormGoogle
-      .get('organizationTypeId')
-      ?.valueChanges.pipe(takeUntil(this.destroy$))
-      .subscribe((value) => {
-        if (!this.isLGA) {
-          this.userSelectedOrgTypeIdGoogle = value;
-        }
-      });
-
-    this.signupFormEmail
-      .get('organizationTypeId')
-      ?.valueChanges.pipe(takeUntil(this.destroy$))
-      .subscribe((value) => {
-        if (!this.isLGA) {
-          this.userSelectedOrgTypeIdEmail = value;
-        }
-      });
-
-    this.signupFormEmail
-      .get('email')
-      ?.valueChanges.pipe(takeUntil(this.destroy$))
-      .subscribe((email) => {
-        const orgControl = this.signupFormEmail.get('organizationTypeId');
-        if (email && email.endsWith('.gov')) {
-          // only open dialog if organizationTypeId is 2 (Offeror)
-          if (orgControl && orgControl.value === 2) {
-            this.openDialog();
-          }
-          this.isLGA = true;
-          orgControl?.setValue(1);
-          orgControl?.disable();
-        } else {
-          this.isLGA = false;
-          orgControl?.enable();
-          if (this.userSelectedOrgTypeIdEmail !== null) {
-            orgControl?.setValue(this.userSelectedOrgTypeIdEmail);
-          } else {
-            orgControl?.reset();
-          }
-        }
       });
   }
 
   private initForm(): void {
     this.signupFormGoogle = this.fb.group({
-      organizationTypeId: ['', [Validators.required]],
+      organizationTypeId: [''],
     });
 
     this.signupFormEmail = this.fb.group(
@@ -242,7 +202,7 @@ export class SignupComponent implements OnInit, OnDestroy {
             Validators.required,
             Validators.email,
             Validators.pattern(
-              /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+              /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
             ),
           ],
         ],
@@ -254,7 +214,7 @@ export class SignupComponent implements OnInit, OnDestroy {
             Validators.minLength(8),
             Validators.maxLength(64),
             Validators.pattern(
-              /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,64}$/
+              /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,64}$/,
             ),
           ],
         ],
@@ -265,8 +225,10 @@ export class SignupComponent implements OnInit, OnDestroy {
       },
       {
         validators: this.passwordMatchValidator,
-      }
+      },
     );
+
+    this.setOrgTypeByMode();
   }
 
   passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
@@ -287,23 +249,18 @@ export class SignupComponent implements OnInit, OnDestroy {
     if (passwordControl?.hasError('required')) {
       return 'Password is required.';
     }
-
     if (passwordControl?.hasError('minlength')) {
       return 'Password must be at least 8 characters long.';
     }
-
     if (passwordControl?.hasError('maxlength')) {
       return 'Password cannot exceed 64 characters.';
     }
-
     if (passwordControl?.hasError('pattern')) {
       return 'Password must include uppercase, lowercase, number, and special character.';
     }
-
     return '';
   }
 
-  // Form utility method
   markFormGroupTouched(formGroup: FormGroup) {
     Object.values(formGroup.controls).forEach((control) => {
       control.markAsTouched();
@@ -315,22 +272,22 @@ export class SignupComponent implements OnInit, OnDestroy {
 
   onSubmitByEmail() {
     if (this.signupFormEmail.valid) {
-      const organizationTypeId =
-        this.signupFormEmail.controls['organizationTypeId'].value;
+      const rawValues = this.signupFormEmail.getRawValue();
 
       const organization: Organization = {
-        organizationTypeId: organizationTypeId,
+        organizationTypeId: rawValues.organizationTypeId,
       };
 
-      this.organizationService.saveOrganization(organization).subscribe({
+      this.organizationService.initializeOrganization(organization).subscribe({
         next: (response: any) => {
           const organizationUser: User = {
-            firstName: this.signupFormEmail.controls['firstname'].value,
-            lastName: this.signupFormEmail.controls['lastname'].value,
-            workEmail: this.signupFormEmail.controls['email'].value,
+            firstName: rawValues.firstname,
+            lastName: rawValues.lastname,
+            workEmail: rawValues.email,
             organizationId: response.organizationId,
-            username: this.signupFormEmail.controls['email'].value,
-            password: this.signupFormEmail.controls['password'].value,
+            organizationTypeId: rawValues.organizationTypeId, // ← fix: was missing
+            username: rawValues.email,
+            password: rawValues.password,
             identityTypeId: 1,
           };
 
@@ -339,7 +296,6 @@ export class SignupComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           const correlationId = error?.error?.correlationId;
-
           this.loggingService.logException(
             new Error(`HTTP Error ${error.status}: ${error.statusText}`),
             3,
@@ -347,11 +303,12 @@ export class SignupComponent implements OnInit, OnDestroy {
               correlationId: correlationId,
               methodName: 'onSubmitByEmail',
               className: 'SignupComponent',
-              operation: 'saveOrganization',
-            }
+              operation: 'initializeOrganization',
+            },
           );
-
-          this.snackbarNotificationService.showSnackbarError(correlationId);
+          this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
+            correlationId,
+          );
         },
       });
     } else {
@@ -363,26 +320,21 @@ export class SignupComponent implements OnInit, OnDestroy {
     this.socialAuthService.authState
       .pipe(
         takeUntil(this.destroy$),
-        // Filter out null/undefined users and when already processing
-        filter((user) => !!user && !this.userCreationInProgress),
-        // Filter to only process when form is valid
-        filter(() => this.signupFormGoogle.valid),
+        filter((user) => {
+          return !!user && !this.userCreationInProgress;
+        }),
+
         switchMap((user) => {
           this.userCreationInProgress = true;
-          let selectedOrganizationTypeId =
-            this.signupFormGoogle.get('organizationTypeId')?.value;
-
-          const isGovEmail = user.email && user.email.endsWith('.gov');
-          if (isGovEmail) {
-            selectedOrganizationTypeId = 1;
-          }
+          const selectedOrganizationTypeId =
+            this.signupFormGoogle.getRawValue().organizationTypeId;
 
           const organizationData: Organization = {
             organizationTypeId: selectedOrganizationTypeId,
           };
 
           return this.organizationService
-            .saveOrganization(organizationData)
+            .initializeOrganization(organizationData)
             .pipe(
               switchMap((orgResponse) => {
                 const userData: User = {
@@ -393,33 +345,29 @@ export class SignupComponent implements OnInit, OnDestroy {
                   userIdentity: user.id,
                   identityTypeId: 2,
                   organizationId: orgResponse.organizationId,
+                  organizationTypeId: selectedOrganizationTypeId, // ← fix: was missing
                 };
                 this.stateService.setOrganizationTypeId(
-                  selectedOrganizationTypeId
+                  selectedOrganizationTypeId,
                 );
                 this.stateService.setOrganizationId(orgResponse.organizationId);
                 return this.createOrLoginGoogleUser(userData);
               }),
-
               catchError((error) => {
                 this.userCreationInProgress = false;
                 this.authService.setSignupInProgress(false);
                 this.authService.setSkipNextAuthState(false);
-
-                this._snackBar.open(
-                  `Sign up failed. This email may already exist or an error occurred.`,
-                  'Close',
-                  { verticalPosition: 'top', duration: 15000 }
+                this.snackbarNotificationService.showSnackbarError(
+                  'Sign up failed. This email may already exist or an error occurred.',
                 );
-
                 return of(null);
               }),
               finalize(() => {
                 this.userCreationInProgress = false;
                 this.authService.setSignupInProgress(false);
-              })
+              }),
             );
-        })
+        }),
       )
       .subscribe((result) => {
         if (result) {
@@ -437,9 +385,7 @@ export class SignupComponent implements OnInit, OnDestroy {
         if (error.status === 409) {
           return of(null);
         }
-
         const correlationId = error?.error?.correlationId;
-
         this.loggingService.logException(
           new Error(`HTTP Error ${error.status}: ${error.statusText}`),
           3,
@@ -448,11 +394,11 @@ export class SignupComponent implements OnInit, OnDestroy {
             methodName: 'createOrLoginGoogleUser',
             className: 'SignupComponent',
             operation: 'createUser',
-          }
+          },
         );
-
-        this.snackbarNotificationService.showSnackbarError(correlationId);
-
+        this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
+          correlationId,
+        );
         return throwError(() => error);
       }),
       switchMap(() => {
@@ -464,13 +410,10 @@ export class SignupComponent implements OnInit, OnDestroy {
           tap(() => this.authService.setSkipNextAuthState(false)),
           catchError((loginError) => {
             this.authService.setSkipNextAuthState(false);
-
-            // Add logging for login error
             const correlationId = loginError?.error?.correlationId;
-
             this.loggingService.logException(
               new Error(
-                `HTTP Error ${loginError.status}: ${loginError.statusText}`
+                `HTTP Error ${loginError.status}: ${loginError.statusText}`,
               ),
               3,
               {
@@ -478,14 +421,15 @@ export class SignupComponent implements OnInit, OnDestroy {
                 methodName: 'createOrLoginGoogleUser',
                 className: 'SignupComponent',
                 operation: 'login',
-              }
+              },
             );
-
-            this.snackbarNotificationService.showSnackbarError(correlationId);
+            this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
+              correlationId,
+            );
             return throwError(() => loginError);
-          })
+          }),
         );
-      })
+      }),
     );
   }
 
@@ -505,7 +449,6 @@ export class SignupComponent implements OnInit, OnDestroy {
             }),
             catchError((error) => {
               const correlationId = error?.error?.correlationId;
-
               this.loggingService.logException(
                 new Error(`HTTP Error ${error.status}: ${error.statusText}`),
                 3,
@@ -514,20 +457,19 @@ export class SignupComponent implements OnInit, OnDestroy {
                   methodName: 'createUserByEmail',
                   className: 'SignupComponent',
                   operation: 'SendUserVerificationEmail',
-                }
+                },
               );
-
-              this.snackbarNotificationService.showSnackbarError(correlationId);
-
+              this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
+                correlationId,
+              );
               return throwError(() => error);
-            })
-          )
-        )
+            }),
+          ),
+        ),
       )
       .subscribe({
         error: (error) => {
           const correlationId = error?.error?.correlationId;
-
           this.loggingService.logException(
             new Error(`HTTP Error ${error.status}: ${error.statusText}`),
             3,
@@ -536,10 +478,11 @@ export class SignupComponent implements OnInit, OnDestroy {
               methodName: 'createUserByEmail',
               className: 'SignupComponent',
               operation: 'createUser',
-            }
+            },
           );
-
-          this.snackbarNotificationService.showSnackbarError(correlationId);
+          this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
+            correlationId,
+          );
         },
       });
   }
