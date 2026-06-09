@@ -6,6 +6,7 @@ import {
   Output,
   ViewEncapsulation,
   OnChanges,
+  SimpleChanges,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -165,8 +166,10 @@ export class ProhibitedActivitiesRussiaBelarusComponent
     this.applyProfileDetails();
   }
 
-  ngOnChanges(): void {
-    this.applyProfileDetails();
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['profileDetails']) {
+      this.applyProfileDetails();
+    }
   }
 
   private buildForm(): void {
