@@ -151,10 +151,9 @@ export class RequestService {
     const url = `${this.url}OrganizationDocuments/${organizationId}`;
     const formData = new FormData();
     formData.append('documentName', municipalityDocument.documentName);
-    formData.append(
-      'documentTypeId',
-      municipalityDocument.mapId?.toString() ?? '',
-    );
+    if (municipalityDocument.mapId != null) {
+      formData.append('documentTypeId', municipalityDocument.mapId.toString());
+    }
     formData.append('file', file);
     return this.http.post<any>(url, formData);
   }
