@@ -30,6 +30,7 @@ import { Subject, switchMap, takeUntil, tap, Observable, finalize } from 'rxjs';
 import { LoadingService } from '../../shared/LoadingSpinner/loading.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { StateService } from '../services/state.service';
 
 export interface DialogData {
   action: string;
@@ -64,6 +65,8 @@ export class RequestConfirmationDialog implements OnDestroy {
     newStatusDesc: string;
   }>();
 
+  organizationId = this.stateService.getOrganizationId();
+
   constructor(
     public dialogRef: MatDialogRef<RequestConfirmationDialog>,
     @Inject(MAT_DIALOG_DATA) public requestObjAndUserAction: DialogData,
@@ -74,16 +77,18 @@ export class RequestConfirmationDialog implements OnDestroy {
     private loggingService: LoggingService,
     private loadingService: LoadingService,
     private snackBar: MatSnackBar,
+    private stateService: StateService,
   ) {}
 
   getConfirmationMessage(): string {
     if (this.requestObjAndUserAction.action === 'cancel') {
-      const statusDesc =
-        this.requestObjAndUserAction.request.requestStatus?.requestStatusDesc ??
-        '';
-      if (statusDesc === 'Scheduled') {
+      const statusId =
+        this.requestObjAndUserAction.request.agencyRequestStatusId ??
+        this.requestObjAndUserAction.request.requestStatus?.requestStatusId;
+
+      if (statusId === 2) {
         return 'This solicitation is scheduled to go live and canceling it will revert it back to a Draft. Are you sure you want to cancel this solicitation?';
-      } else if (statusDesc === 'Live') {
+      } else if (statusId === 3 || statusId === 10) {
         return 'By law, you will need to provide your reasoning for canceling a live solicitation. Are you sure you want to cancel this solicitation?';
       } else {
         return 'Are you sure you want to cancel this solicitation?';
@@ -107,6 +112,10 @@ export class RequestConfirmationDialog implements OnDestroy {
         return 'Are you sure you want to redownload the offeror responses for this solicitation?';
       case 'duplicate':
         return 'Are you sure you want to duplicate this solicitation?';
+      case 'addendum':
+        return 'Are you sure you want to add an addendum to this solicitation?';
+      case 'unsubmit':
+        return 'Are you sure you want to unsubmit your response? Your response will be set back to In Progress.';
       default:
         return `Are you sure you want to ${this.requestObjAndUserAction.action} this solicitation?`;
     }
@@ -114,6 +123,42 @@ export class RequestConfirmationDialog implements OnDestroy {
 
   onNoClick(): void {
     this.dialogRef.close(false);
+  }
+
+  private handleUnsubmit(request: any): void {
+    this.loadingService.show('Unsubmitting...');
+
+    this.requestService
+      .UpdateRequestStatus(
+        request.offerorOrganizationId,
+        request.offerorRequestId,
+        8,
+      )
+      .pipe(finalize(() => this.loadingService.hide()))
+      .subscribe({
+        next: () => {
+          this.statusUpdated.emit({
+            requestId: request.offerorRequestId,
+            newStatusId: 8,
+            newStatusDesc: 'In Progress',
+          });
+          this.dialogRef.close(true);
+        },
+        error: (error) => {
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              offerorRequestId: request.offerorRequestId,
+              methodName: 'handleUnsubmit',
+              className: 'RequestConfirmationDialog',
+              operation: 'UpdateRequestStatus',
+              correlationId: error?.error?.correlationId,
+            },
+          );
+          this.dialogRef.close(false);
+        },
+      });
   }
 
   confirm(action: string, request: any): void {
@@ -150,6 +195,15 @@ export class RequestConfirmationDialog implements OnDestroy {
         this.dialogRef.close(true);
         break;
 
+      case 'addendum':
+        this.router.navigate(['/addendum-view', request.requestId]);
+        this.dialogRef.close(true);
+        break;
+
+      case 'unsubmit':
+        this.handleUnsubmit(request);
+        break;
+
       default:
         this.dialogRef.close(false);
         break;
@@ -157,14 +211,24 @@ export class RequestConfirmationDialog implements OnDestroy {
   }
 
   private handleCancel(request: any, action: string): void {
-    const statusDesc = request.requestStatus?.requestStatusDesc;
+    const statusId =
+      request.agencyRequestStatusId ?? request.requestStatus?.requestStatusId;
 
-    if (statusDesc === 'Live') {
-      this.openCancellationReasonDialog(action, request);
-    } else if (statusDesc === 'Scheduled') {
-      this.onCancelUpdateRequestStatus(request, action);
-    } else {
-      console.warn(`Unexpected status for cancel action: ${statusDesc}`);
+    switch (statusId) {
+      case 3:
+      case 10:
+        this.openCancellationReasonDialog(action, request);
+        break;
+
+      case 2:
+        this.onCancelUpdateRequestStatus(request, action);
+        break;
+
+      default:
+        console.warn(
+          `Unexpected status for cancel action. agencyRequestStatusId=${statusId}`,
+        );
+        break;
     }
 
     this.dialogRef.close(true);
@@ -193,7 +257,11 @@ export class RequestConfirmationDialog implements OnDestroy {
     this.downloadZipDocuments(request)
       .pipe(
         switchMap(() => {
-          return this.requestService.UpdateRequestStatus(request.requestId, 6);
+          return this.requestService.UpdateRequestStatus(
+            request.organizationId,
+            request.requestId,
+            6,
+          );
         }),
         // switchMap(() =>
         //   this.requestService.NotifyOfferorSolicitationOpened(
