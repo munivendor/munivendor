@@ -343,7 +343,6 @@ export class ProhibitedActivitiesRussiaBelarusComponent
     const ofacAdditionalBool =
       ofacAdditional === 'yes' ? true : ofacAdditional === 'no' ? false : null;
 
-    // ADD THIS — gates description on both conditions being met
     const descriptionToSave =
       ofacIdentificationBool && ofacAdditional === 'yes'
         ? ofacDescription
@@ -354,7 +353,7 @@ export class ProhibitedActivitiesRussiaBelarusComponent
           this.organizationId!,
           this.savedOfferorProfileId,
           8,
-          descriptionToSave, // <-- was: ofacIdentificationBool ? ofacDescription : null
+          descriptionToSave,
           ofacIdentificationBool,
           ofacAdditionalBool,
           null,
@@ -362,7 +361,7 @@ export class ProhibitedActivitiesRussiaBelarusComponent
       : this.offerorProfileService.SaveOfferorProfileDetails(
           this.organizationId!,
           8,
-          descriptionToSave, // <-- was: ofacIdentificationBool ? ofacDescription : null
+          descriptionToSave,
           ofacIdentificationBool,
           ofacAdditionalBool,
           null,
