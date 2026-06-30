@@ -77,4 +77,29 @@ export class StateService {
   clearRequestId(): void {
     this.requestIdSource.next(null);
   }
+
+  private agencyNameSource = new BehaviorSubject<string | null>(null);
+  currentAgencyName$ = this.agencyNameSource.asObservable();
+
+  setAgencyName(agencyName: string): void {
+    this.agencyNameSource.next(agencyName);
+  }
+
+  getAgencyName(): string | null {
+    return (
+      this.agencyNameSource.getValue() ??
+      sessionStorage.getItem('agencyOrganizationName')
+    );
+  }
+
+  private addendumCountSource = new BehaviorSubject<number>(0);
+  currentAddendumCount$ = this.addendumCountSource.asObservable();
+
+  setAddendumCount(count: number): void {
+    this.addendumCountSource.next(count);
+  }
+
+  getAddendumCount(): number {
+    return this.addendumCountSource.getValue();
+  }
 }

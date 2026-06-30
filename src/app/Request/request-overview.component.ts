@@ -124,7 +124,7 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
     private requestService: RequestService,
     private cdr: ChangeDetectorRef,
     private stateService: StateService,
-    private loggingService: LoggingService
+    private loggingService: LoggingService,
   ) {
     this.organizationId = this.stateService.getOrganizationId() ?? 0;
   }
@@ -225,13 +225,13 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
         operation: operation,
         userId: this.stateService.getUserId(),
         requestId: this.requestId,
-      }
+      },
     );
   }
 
   get proposalSections(): FormArray {
     return this.proposalsOverviewFormGroup?.get(
-      'proposalSections'
+      'proposalSections',
     ) as FormArray;
   }
 
@@ -285,7 +285,7 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
       const contentControl = section.get('requestSectionContent');
       if (contentControl) {
         const processedContent = this.getProcessedContent(
-          contentControl.value ?? ''
+          contentControl.value ?? '',
         );
         contentControl.setValue(processedContent, { emitEvent: false });
       }
@@ -311,7 +311,7 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
               .trim();
             // Only include sections that have actual content
             return cleanContent && cleanContent.length > 0;
-          }
+          },
         );
 
       // Process only sections with content
@@ -322,13 +322,14 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
             requestSectionTitle: any;
             requestSectionContent: any;
           },
-          idx: number
+          idx: number,
         ) => {
           const payload = {
             requestId: this.requestId,
             requestSectionId: section.requestSectionId,
             requestSectionTitle: section.requestSectionTitle,
             requestSectionContent: section.requestSectionContent,
+            requestSectionTypeId: 1,
           };
 
           this.requestService
@@ -340,14 +341,14 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
                   const index = this.proposalSections.controls.findIndex(
                     (control) =>
                       control.get('requestSectionTitle')?.value ===
-                      section.requestSectionTitle
+                      section.requestSectionTitle,
                   );
 
                   if (index !== -1) {
                     // update original data with request section ids returned from API response
                     // so that database does not duplicate rows
                     const proposalSection = this.proposalSections.at(
-                      index
+                      index,
                     ) as FormGroup;
                     proposalSection.patchValue({
                       requestSectionId: response.requestSectionId,
@@ -372,11 +373,11 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
                     operation: 'SaveRequestSections',
                     userId: this.stateService.getUserId(),
                     requestId: this.requestId,
-                  }
+                  },
                 );
               },
             });
-        }
+        },
       );
     }
   }

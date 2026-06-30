@@ -18,7 +18,8 @@ import {
 import { CommonModule } from '@angular/common';
 import { MatFormField } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { forkJoin, Subject, takeUntil } from 'rxjs';
+import { forkJoin, Observable, of, Subject, takeUntil } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { RequestService } from '../Request/services/request.service';
 import { StateService } from '../Request/services/state.service';
 import { CategoryNode } from '../shared/model/category-tree.model';
@@ -30,11 +31,11 @@ import { DocumentService } from '../shared/service/document.service';
 import { MatButtonModule } from '@angular/material/button';
 import { SubmitConfirmationDialogComponent } from './SubmitConfirmationDialog/submit-confirmation-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
-// import { TooltipDirective } from '../shared/directive/tooltip.directive';
 import { OfferorProfileService } from './services/offeror-profile.service';
 import { LoggingService } from '../exceptionhandling/logging.service';
 import { LoadingService } from '../shared/LoadingSpinner/loading.service';
 import { MatSort, MatSortModule } from '@angular/material/sort';
+import { AddendumAcknowledgmentDialogComponent } from './AddendumAcknowledgmentDialogComponent/addendum-acknowledgment-dialog.component';
 
 interface FlattenedCategoryNode {
   categoryId: string;
@@ -57,7 +58,6 @@ interface FlattenedCategoryNode {
     MatIconModule,
     MatTooltipModule,
     MatButtonModule,
-    // TooltipDirective,
     MatSortModule,
   ],
 })
@@ -98,6 +98,10 @@ export class ResponseReviewComponent
   offerorDocumentsColumns: string[] = ['formName', 'download'];
   offerorAuthorizingOfficialId: number | null = null;
 
+  // --- Deduplication state ---
+  // Caches static RequestTypes lookup so it is only fetched once per component lifetime.
+  private cachedRequestTypes: any[] | null = null;
+
   constructor(
     private fb: FormBuilder,
     private requestService: RequestService,
@@ -133,14 +137,47 @@ export class ResponseReviewComponent
     };
   }
 
-  onConfirmSubmission() {
-    this.openSubmitConfirmationDialog();
+  /**
+   * Returns cached request types if already fetched, otherwise fetches and caches them.
+   */
+  private getRequestTypes$(): Observable<any[]> {
+    if (this.cachedRequestTypes) {
+      return of(this.cachedRequestTypes);
+    }
+    return this.requestService
+      .GetRequestTypes()
+      .pipe(tap((types) => (this.cachedRequestTypes = types)));
   }
 
-  openSubmitConfirmationDialog(): void {
+  onConfirmSubmission(): void {
     const requestId = this.responseIdParam
       ? Number(this.responseIdParam)
       : this.responseIdFromStateService;
+
+    const solicitationId = this.sourceIdParam
+      ? Number(this.sourceIdParam)
+      : this.requestFinalReviewDetails?.sourceRequestId;
+
+    const addendumCount = this.stateService.getAddendumCount();
+
+    if (addendumCount > 0) {
+      this.dialog.open(AddendumAcknowledgmentDialogComponent, {
+        width: '600px',
+        disableClose: true,
+        data: {
+          responseId: requestId,
+          solicitationId: solicitationId,
+          organizationId: this.organizationId,
+          agencyName: this.stateService.getAgencyName() ?? 'the agency',
+          addendumCount: addendumCount,
+        },
+      });
+    } else {
+      this.openSubmitConfirmationDialog(requestId);
+    }
+  }
+
+  private openSubmitConfirmationDialog(requestId: number | null): void {
     this.dialog.open(SubmitConfirmationDialogComponent, {
       width: '600px',
       disableClose: true,
@@ -466,6 +503,8 @@ export class ResponseReviewComponent
             this.loadResponseRequest(this.responseIdFromStateService);
           }
 
+          // Only call getRequestObjDetails here if sourceIdParam is known up front.
+          // loadResponseRequest will handle it otherwise (guarded against double-fire).
           if (this.sourceIdParam) {
             this.getRequestObjDetails(Number(this.sourceIdParam));
           }
@@ -617,7 +656,9 @@ export class ResponseReviewComponent
               : 'Not assigned',
           });
 
-          if (response.sourceRequestId) {
+          // Skip if sourceIdParam was already provided — ngOnInit already fired
+          // getRequestObjDetails for that ID, so we avoid a duplicate fetch.
+          if (response.sourceRequestId && !this.sourceIdParam) {
             this.getRequestObjDetails(response.sourceRequestId);
           }
         },
@@ -626,7 +667,6 @@ export class ResponseReviewComponent
           const errorUrl = error?.url?.toLowerCase?.() || '';
 
           const operationMap: Record<string, string> = {
-            // request is response in this case
             requestdetails: 'GetRequestDetailsById',
             authorizingofficials: 'GetOfferorAuthorizingOfficials',
           };
@@ -659,9 +699,9 @@ export class ResponseReviewComponent
 
   getRequestObjDetails(requestId: number) {
     const request$ = this.requestService.GetRequestDetailsById(requestId);
-    const requestTypes$ = this.requestService.GetRequestTypes();
 
-    forkJoin([request$, requestTypes$])
+    // Uses in-memory cache after the first fetch — RequestTypes is static data.
+    forkJoin([request$, this.getRequestTypes$()])
       .pipe(takeUntil(this.destroy$))
       .subscribe(
         ([request, requestTypes]) => {
@@ -686,6 +726,7 @@ export class ResponseReviewComponent
             contractStart,
             contractEnd,
           };
+
           this.requestFinalReviewDetailsForm.patchValue({
             requestName: request.requestName,
             category: categoryBreadcrumb,

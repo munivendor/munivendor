@@ -43,7 +43,6 @@ const AGENCY_STATUS = {
   CLOSED: 4,
   CANCELLED: 5,
   OPENED: 6,
-  LIVE_WITH_ADDENDUM: 10,
 } as const;
 
 // Offeror request status IDs
@@ -158,31 +157,29 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
       request.agencyRequestStatus?.requestStatusId ?? null;
     const offerorStatusId: number =
       request.offerorRequestStatus?.requestStatusId ?? null;
+    const addendumPending: boolean = request.addendumPending ?? false;
     const actions: string[] = [];
 
-    const isLive = agencyStatusId === AGENCY_STATUS.LIVE;
-    const isLiveWithAddendum =
-      agencyStatusId === AGENCY_STATUS.LIVE_WITH_ADDENDUM;
+    const isLive =
+      agencyStatusId === AGENCY_STATUS.LIVE || agencyStatusId === 10;
     const isClosed = agencyStatusId === AGENCY_STATUS.CLOSED;
     const isCancelledOrOpened =
       agencyStatusId === AGENCY_STATUS.CANCELLED ||
       agencyStatusId === AGENCY_STATUS.OPENED;
 
-    if (isClosed) {
+    if (isClosed) return actions;
+
+    if (offerorStatusId === OFFEROR_STATUS.SUBMITTED && !addendumPending) {
       return actions;
     }
 
-    if (offerorStatusId === OFFEROR_STATUS.SUBMITTED && !isLiveWithAddendum) {
-      return actions;
-    }
-
-    if (isLive || isLiveWithAddendum) {
+    if (isLive) {
       if (offerorStatusId === OFFEROR_STATUS.NONE) {
         actions.push('respond');
       } else if (offerorStatusId === OFFEROR_STATUS.IN_PROGRESS) {
         actions.push('continue', 'delete');
       } else if (
-        isLiveWithAddendum &&
+        addendumPending &&
         offerorStatusId === OFFEROR_STATUS.SUBMITTED
       ) {
         actions.push('unsubmit');
@@ -198,6 +195,11 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
   }
 
   openConfirmationDialog(action: string, request: any): void {
+    if (action === 'continue' || action === 'respond') {
+      const name = request.agencyOrganizationName ?? '';
+      this.stateService.setAgencyName(name);
+      sessionStorage.setItem('agencyOrganizationName', name);
+    }
     const dialogRef = this.dialog.open(RequestConfirmationDialog, {
       width: '600px',
       data: { action, request },
@@ -420,7 +422,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
   };
 
   readonly agencyRequestStatusMap = {
-    live: [3, 10],
+    live: 3,
     closed: 4,
     cancelled: 5,
     opened: 6,
@@ -474,12 +476,11 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
       .filter(([key]) => this.filterForm.get(key)?.value)
       .map(([, value]) => value);
 
-    // Flatten agencyRequestStatusMap since 'live' now maps to an array [3, 10]
     const selectedAgencyRequestStatusIds = Object.entries(
       this.agencyRequestStatusMap,
     )
       .filter(([key]) => this.filterForm.get(key)?.value)
-      .flatMap(([, value]) => (Array.isArray(value) ? value : [value]));
+      .map(([, value]) => value);
 
     const selectedOfferorRequestStatusIds = Object.entries(
       this.offerorRequestStatusMap,
@@ -548,8 +549,8 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
         return 'Cancelled';
       case AGENCY_STATUS.OPENED:
         return 'Opened';
-      case AGENCY_STATUS.LIVE_WITH_ADDENDUM:
-        return 'Live';
+      case 10:
+        return 'Live'; // legacy status ID — treat as Live
       default:
         return '';
     }

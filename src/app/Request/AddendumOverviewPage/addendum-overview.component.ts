@@ -317,6 +317,7 @@ export class AddendumOverviewComponent implements OnInit, OnDestroy {
         requestSectionId: section.requestSectionId,
         requestSectionTitle: section.requestSectionTitle,
         requestSectionContent: section.requestSectionContent,
+        requestSectionTypeId: 2,
       };
 
       return this.requestService
