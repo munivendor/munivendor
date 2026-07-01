@@ -44,23 +44,62 @@ interface FlattenedCategoryNode {
   parentId: string | null;
 }
 
+// Agency request status IDs
+const AGENCY_STATUS = {
+  DRAFT: 1,
+  SCHEDULED: 2,
+  LIVE: 3,
+  CLOSED: 4,
+  CANCELLED: 5,
+  OPENED: 6,
+  LIVE_WITH_ADDENDUM: 10,
+} as const;
+
 const ACTION_PERMISSIONS: {
-  [status: string]: {
+  [statusId: number]: {
     edit?: boolean;
     delete?: boolean;
     cancel?: boolean;
     open?: boolean;
     redownload?: boolean;
     duplicate?: boolean;
+    addendum?: boolean;
   };
 } = {
-  Draft: { edit: true, delete: true, duplicate: true },
-  Scheduled: { edit: true, delete: true, duplicate: true },
-  Live: { cancel: true, duplicate: true },
-  Closed: { open: true, duplicate: true },
-  Cancelled: { duplicate: true },
-  Opened: { redownload: true, duplicate: true },
+  [AGENCY_STATUS.DRAFT]: { edit: true, delete: true, duplicate: true },
+  [AGENCY_STATUS.SCHEDULED]: { edit: true, delete: true, duplicate: true },
+  [AGENCY_STATUS.LIVE]: { cancel: true, duplicate: true, addendum: true },
+  [AGENCY_STATUS.CLOSED]: { open: true, duplicate: true },
+  [AGENCY_STATUS.CANCELLED]: { duplicate: true },
+  [AGENCY_STATUS.OPENED]: { redownload: true, duplicate: true },
+  [AGENCY_STATUS.LIVE_WITH_ADDENDUM]: {
+    cancel: true,
+    duplicate: true,
+    addendum: true,
+  },
 };
+
+// Maps status ID to the display string shown in the UI
+function agencyStatusIdToDesc(statusId: number): string {
+  switch (statusId) {
+    case AGENCY_STATUS.DRAFT:
+      return 'Draft';
+    case AGENCY_STATUS.SCHEDULED:
+      return 'Scheduled';
+    case AGENCY_STATUS.LIVE:
+      return 'Live';
+    case AGENCY_STATUS.CLOSED:
+      return 'Closed';
+    case AGENCY_STATUS.CANCELLED:
+      return 'Cancelled';
+    case AGENCY_STATUS.OPENED:
+      return 'Opened';
+    case AGENCY_STATUS.LIVE_WITH_ADDENDUM:
+      return 'Live';
+    default:
+      return '';
+  }
+}
 
 @Component({
   selector: 'request-tabledetails',
@@ -101,14 +140,13 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     request: any,
     action: 'edit' | 'delete' | 'cancel' | 'open' | 'redownload' | 'duplicate',
   ): boolean {
-    const status = request.agencyRequestStatus?.requestStatusDesc;
-    return !!ACTION_PERMISSIONS[status]?.[action];
+    const statusId = request.agencyRequestStatus?.requestStatusId;
+    return !!ACTION_PERMISSIONS[statusId]?.[action];
   }
 
   canDownloadPDF(request: any): boolean {
-    const nonDownloadableStatuses = new Set(['Draft']);
-    const status = request.agencyRequestStatus?.requestStatusDesc;
-    return !nonDownloadableStatuses.has(status);
+    const statusId = request.agencyRequestStatus?.requestStatusId;
+    return statusId !== AGENCY_STATUS.DRAFT;
   }
 
   filterForm = this.fb.group({
@@ -185,13 +223,14 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     quotationsUnderThreshold: 8,
   };
 
-  readonly requestStatusMap = {
-    draft: 1,
-    scheduled: 2,
-    live: 3,
-    closed: 4,
-    cancelled: 5,
-    opened: 6,
+  // 'live' checkbox sends both IDs 3 and 10 to the backend
+  readonly requestStatusMap: { [key: string]: number | number[] } = {
+    draft: AGENCY_STATUS.DRAFT,
+    scheduled: AGENCY_STATUS.SCHEDULED,
+    live: [AGENCY_STATUS.LIVE, AGENCY_STATUS.LIVE_WITH_ADDENDUM],
+    closed: AGENCY_STATUS.CLOSED,
+    cancelled: AGENCY_STATUS.CANCELLED,
+    opened: AGENCY_STATUS.OPENED,
   };
 
   readonly AVAILABLE_ACTIONS = [
@@ -201,18 +240,17 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
     'open',
     'redownload',
     'duplicate',
+    'addendum',
   ] as const;
 
   displayCategoryName = (
     categoryId: string | number | null,
     categoryFullPath?: string,
   ): string => {
-    // If categoryFullPath is provided, use it directly
     if (categoryFullPath) {
       return categoryFullPath;
     }
 
-    // Fallback to old logic for backwards compatibility
     if (categoryId == null) {
       return '';
     }
@@ -265,8 +303,8 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
   }
 
   getAvailableActions(request: any): string[] {
-    const status = request.agencyRequestStatus?.requestStatusDesc;
-    const actionsForStatus = ACTION_PERMISSIONS[status] || {};
+    const statusId = request.agencyRequestStatus?.requestStatusId;
+    const actionsForStatus = ACTION_PERMISSIONS[statusId] || {};
     return this.AVAILABLE_ACTIONS.filter((action) => actionsForStatus[action]);
   }
 
@@ -276,7 +314,20 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
 
     this.filterForm.valueChanges
       .pipe(takeUntil(this.destroy$))
-      .subscribe((values) => this.filterStateService.save(values));
+      .subscribe(
+        ({
+          requestName,
+          category,
+          requestId,
+          publishDateFrom,
+          publishDateTo,
+          closeDateFrom,
+          closeDateTo,
+          ...checkboxes
+        }) => {
+          this.filterStateService.save(checkboxes);
+        },
+      );
 
     if (!this.organizationId) {
       setTimeout(() => {
@@ -295,9 +346,10 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
       .filter(([key]) => this.filterForm.get(key)?.value)
       .map(([, value]) => value);
 
+    // Flatten since 'live' maps to [3, 10]
     const selectedRequestStatus = Object.entries(this.requestStatusMap)
       .filter(([key]) => this.filterForm.get(key)?.value)
-      .map(([, value]) => value);
+      .flatMap(([, value]) => (Array.isArray(value) ? value : [value]));
 
     const params: any = {};
 
@@ -367,26 +419,29 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
             const requestsData = requests?.requests || [];
             this.hasLoadedData = requestsData.length > 0;
 
-            const mappedData = requestsData.map((request: any) => ({
-              ...request,
-              publishDate: request.publishDate
-                ? new Date(request.publishDate + 'Z')
-                : null,
-              closeDate: request.closeDate
-                ? new Date(request.closeDate + 'Z')
-                : null,
-              requestType: {
-                requestTypeId: request.requestTypeId,
-                requestTypeDesc: request.requestTypeName,
-              },
-              agencyRequestStatus: {
-                requestStatusId: request.agencyRequestStatusId,
-                requestStatusDesc: request.agencyRequestStatusName,
-              },
-              submittedOffersCount: (request.responses || []).filter(
-                (r: any) => r.offerorRequestStatusId === 9,
-              ).length,
-            }));
+            const mappedData = requestsData.map((request: any) => {
+              const agencyStatusId: number = request.agencyRequestStatusId;
+              return {
+                ...request,
+                publishDate: request.publishDate
+                  ? new Date(request.publishDate + 'Z')
+                  : null,
+                closeDate: request.closeDate
+                  ? new Date(request.closeDate + 'Z')
+                  : null,
+                requestType: {
+                  requestTypeId: request.requestTypeId,
+                  requestTypeDesc: request.requestTypeName,
+                },
+                agencyRequestStatus: {
+                  requestStatusId: agencyStatusId,
+                  requestStatusDesc: agencyStatusIdToDesc(agencyStatusId),
+                },
+                submittedOffersCount: (request.responses || []).filter(
+                  (r: any) => r.offerorRequestStatusId === 9,
+                ).length,
+              };
+            });
 
             this.dataSource.data = mappedData;
             this.cdr.detectChanges();
@@ -659,7 +714,6 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
 
     if (request) {
       const solicitationName = request.requestName || 'Unknown';
-
       const closeDate = request.closeDate
         ? formatDate(request.closeDate)
         : 'NoDate';
@@ -670,27 +724,37 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
   }
 
   onCancelUpdateRequestStatus(request: any, action: string): void {
-    const DRAFT_STATUS_ID = 1;
-    const CANCELLED_STATUS_ID = 5;
+    const DRAFT_STATUS_ID = AGENCY_STATUS.DRAFT;
+    const CANCELLED_STATUS_ID = AGENCY_STATUS.CANCELLED;
 
     if (action === 'cancel') {
-      const statusDesc = request.requestStatus.requestStatusDesc;
+      const statusId =
+        request.agencyRequestStatus?.requestStatusId ??
+        request.requestStatus?.requestStatusId;
+
       let newRequestStatusId: number;
       let newRequestStatusDesc: string;
 
-      if (statusDesc === 'Scheduled') {
+      if (statusId === AGENCY_STATUS.SCHEDULED) {
         newRequestStatusId = DRAFT_STATUS_ID;
         newRequestStatusDesc = 'Draft';
-      } else if (statusDesc === 'Live') {
+      } else if (
+        statusId === AGENCY_STATUS.LIVE ||
+        statusId === AGENCY_STATUS.LIVE_WITH_ADDENDUM
+      ) {
         newRequestStatusId = CANCELLED_STATUS_ID;
         newRequestStatusDesc = 'Cancelled';
       } else {
-        console.warn('Unexpected Request status:', statusDesc);
+        console.warn('Unexpected Request status ID:', statusId);
         return;
       }
 
       this.requestService
-        .UpdateRequestStatus(request.requestId, newRequestStatusId)
+        .UpdateRequestStatus(
+          this.organizationId,
+          request.requestId,
+          newRequestStatusId,
+        )
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: () => {
@@ -698,7 +762,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
               if (i.requestId === request.requestId) {
                 return {
                   ...i,
-                  requestStatus: {
+                  agencyRequestStatus: {
                     ...i.requestStatus,
                     requestStatusId: newRequestStatusId,
                     requestStatusDesc: newRequestStatusDesc,
@@ -717,7 +781,7 @@ export class AgencyTableDetailsComponent implements OnInit, OnDestroy {
               3,
               {
                 requestId: request.requestId,
-                newRequestStatusId: newRequestStatusId,
+                newRequestStatusId,
                 correlationId: correlationId,
                 methodName: 'onCancelUpdateRequestStatus',
                 className: 'AgencyTableDetailsComponent',

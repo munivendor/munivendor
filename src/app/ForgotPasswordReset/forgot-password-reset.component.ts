@@ -58,14 +58,25 @@ export class ForgotPasswordResetComponent implements OnInit, OnDestroy {
     private router: Router,
     private authService: AuthService,
     private loggingService: LoggingService,
-    private snackbarNotificationService: SnackbarNotificationService
+    private snackbarNotificationService: SnackbarNotificationService,
   ) {}
 
   ngOnInit() {
     this.route.queryParams
       .pipe(takeUntil(this.destroy$))
       .subscribe((params) => {
-        this.token = params['token'];
+        const encoded = params['d'];
+
+        if (!encoded) {
+          this.isValidatingToken = false;
+          this.isTokenValid = false;
+          this.tokenError =
+            'Invalid reset link. Please request a new password reset.';
+          return;
+        }
+        const parts = new URLSearchParams(encoded);
+        this.token = parts.get('token')?.replace(/ /g, '+') ?? null;
+        this.userId = parts.get('userId');
 
         if (!this.token) {
           this.isValidatingToken = false;
@@ -88,7 +99,7 @@ export class ForgotPasswordResetComponent implements OnInit, OnDestroy {
             Validators.minLength(8),
             Validators.maxLength(64),
             Validators.pattern(
-              /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,64}$/
+              /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,64}$/,
             ),
           ],
         ],
@@ -96,12 +107,12 @@ export class ForgotPasswordResetComponent implements OnInit, OnDestroy {
       },
       {
         validators: this.passwordMatchValidator,
-      }
+      },
     );
   }
 
   private passwordMatchValidator(
-    control: AbstractControl
+    control: AbstractControl,
   ): ValidationErrors | null {
     const newPassword = control.get('newPassword');
     const confirmPassword = control.get('confirmPassword');
@@ -149,8 +160,7 @@ export class ForgotPasswordResetComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           this.isSubmitting = false;
-          this.tokenError =
-            error.error || 'Something went wrong. Please try again later.';
+
           this.isTokenValid = false;
 
           const correlationId = error?.error?.correlationId;
@@ -164,11 +174,11 @@ export class ForgotPasswordResetComponent implements OnInit, OnDestroy {
               className: 'ForgotPasswordResetComponent',
               operation: 'resetPassword',
               token: this.token,
-            }
+            },
           );
 
           this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
-            correlationId
+            correlationId,
           );
         },
       });
