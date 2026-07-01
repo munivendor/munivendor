@@ -119,6 +119,15 @@ export class ResponseStepper implements OnInit, OnDestroy {
       .subscribe((event) => {
         if (!event.url.includes('/response-basic-view')) {
           this.clearCreationSessionStorage();
+          // Only clear agency name when genuinely navigating away, not on reload.
+          // Reload fires NavigationStart too, but performance.navigation.type catches it.
+          const isReload =
+            performance?.navigation?.type === 1 ||
+            (performance as any)?.getEntriesByType?.('navigation')?.[0]
+              ?.type === 'reload';
+          if (!isReload) {
+            sessionStorage.removeItem('agencyOrganizationName');
+          }
         }
       });
   }

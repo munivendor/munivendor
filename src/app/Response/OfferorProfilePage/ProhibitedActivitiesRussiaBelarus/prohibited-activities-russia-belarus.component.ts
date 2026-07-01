@@ -80,7 +80,7 @@ export class ProhibitedActivitiesRussiaBelarusComponent
   @Output() detailsDeleted = new EventEmitter<void>();
 
   readonly OFAC_DOCUMENT_CODE_NAME = [
-    'Disclosure_of_Prohibited_Activites_in_Russia_or_Belarus',
+    'Disclosure_of_Prohibited_Activites_in_Russia_or_Belarus_Supporting',
   ];
 
   getDocumentType(codeName: string): DocumentType | undefined {
@@ -140,9 +140,7 @@ export class ProhibitedActivitiesRussiaBelarusComponent
             ?.setValidators([Validators.required]);
         } else {
           this.prohibitedForm.get('ofacAdditional')?.clearValidators();
-          this.prohibitedForm.get('ofacAdditional')?.reset(null);
           this.prohibitedForm.get('ofacDescription')?.clearValidators();
-          this.prohibitedForm.get('ofacDescription')?.reset(null);
           this.selectedFileName = null;
         }
         this.prohibitedForm.get('ofacAdditional')?.updateValueAndValidity();
@@ -158,7 +156,6 @@ export class ProhibitedActivitiesRussiaBelarusComponent
             ?.setValidators([Validators.required]);
         } else {
           this.prohibitedForm.get('ofacDescription')?.clearValidators();
-          this.prohibitedForm.get('ofacDescription')?.reset(null);
         }
         this.prohibitedForm.get('ofacDescription')?.updateValueAndValidity();
       });
@@ -346,13 +343,17 @@ export class ProhibitedActivitiesRussiaBelarusComponent
     const ofacAdditionalBool =
       ofacAdditional === 'yes' ? true : ofacAdditional === 'no' ? false : null;
 
-    // Always save/update the boolean selections
+    const descriptionToSave =
+      ofacIdentificationBool && ofacAdditional === 'yes'
+        ? ofacDescription
+        : null;
+
     const saveOrUpdate$ = this.savedOfferorProfileId
       ? this.offerorProfileService.UpdateOfferorProfileDetails(
           this.organizationId!,
           this.savedOfferorProfileId,
           8,
-          ofacIdentificationBool ? ofacDescription : null,
+          descriptionToSave,
           ofacIdentificationBool,
           ofacAdditionalBool,
           null,
@@ -360,7 +361,7 @@ export class ProhibitedActivitiesRussiaBelarusComponent
       : this.offerorProfileService.SaveOfferorProfileDetails(
           this.organizationId!,
           8,
-          ofacIdentificationBool ? ofacDescription : null,
+          descriptionToSave,
           ofacIdentificationBool,
           ofacAdditionalBool,
           null,
@@ -385,6 +386,15 @@ export class ProhibitedActivitiesRussiaBelarusComponent
       next: ([saveRes]) => {
         this.savedOfferorProfileId = saveRes.offerorProfileId;
         if (deleteDoc$) this.documentDeleted.emit();
+
+        // Clear dependent fields if user answered 'no' to OFAC identification
+        if (!ofacIdentificationBool) {
+          this.prohibitedForm.get('ofacAdditional')?.reset();
+          this.prohibitedForm.get('ofacDescription')?.reset();
+        } else if (ofacAdditional !== 'yes') {
+          this.prohibitedForm.get('ofacDescription')?.reset();
+        }
+
         this.snackbar.showSnackbarSuccess('Changes saved successfully.');
         this.detailsSaved.emit();
       },

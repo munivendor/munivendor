@@ -26,6 +26,7 @@ import { PurchasingHistoryComponent } from './Response/PurchasingHistory/purchas
 import { AgencyTableDetailsComponent } from './Request/TableDetails/request-tabledetails.component';
 import { OfferorTableDetailsComponent } from './Request/TableDetails/offeror-request-tabledetails.component';
 import { CreateRequestStepper } from './Request/CreateRequestStepper/create-request-stepper.component';
+import { AddendumOverviewComponent } from './Request/AddendumOverviewPage/addendum-overview.component';
 import { CategoryTreeComponent } from './CategoryTree/category-tree.component';
 import { DefinitionsComponent } from './DefinitionsPage/definitions.component';
 import { UserGuideComponent } from './Response/UserGuidePage/user-guide.component';
@@ -136,6 +137,12 @@ export const routes: Routes = [
   {
     path: 'edit-request-view/:requestId',
     component: CreateRequestStepper,
+    canActivate: [AuthGuard],
+    data: { showSidenav: true },
+  },
+  {
+    path: 'addendum-view/:requestId',
+    component: AddendumOverviewComponent,
     canActivate: [AuthGuard],
     data: { showSidenav: true },
   },

@@ -63,12 +63,14 @@ export class RequestService {
   }
 
   UpdateRequestStatus(
+    organizationId: number,
     requestId: number,
     newRequestStatusId: number,
   ): Observable<void> {
     const headers = { 'Content-Type': 'application/json' };
     return this.http.put<void>(
-      `${this.url}RequestStatus/${requestId}/${newRequestStatusId}`,
+      `${this.url}RequestStatus/${organizationId}/${requestId}/${newRequestStatusId}`,
+      null,
       { headers },
     );
   }
