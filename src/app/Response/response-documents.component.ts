@@ -15,6 +15,12 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import {
+  MatSlideToggleModule,
+  MatSlideToggleChange,
+} from '@angular/material/slide-toggle';
 import { RouterModule } from '@angular/router';
 import { RequestService } from '../Request/services/request.service';
 import { takeUntil, Subject } from 'rxjs';
@@ -46,6 +52,9 @@ import { SplitCamelCasePipe } from '../shared/pipes/split-camel-case.pipe';
     MatIconModule,
     MatButtonModule,
     MatTooltipModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatSlideToggleModule,
     RouterModule,
     ReactiveFormsModule,
     TooltipDirective,
@@ -69,12 +78,18 @@ export class ResponseDocumentsComponent
   agencyDocumentsColumns: string[] = [
     'formName',
     'fileActions',
+    'method',
+    'mvAutofillAi',
+    'action',
     'documentInstanceStatus',
   ];
 
   notarizationRequiredColumns: string[] = [
     'formName',
     'fileActions',
+    'method',
+    'mvAutofillAi',
+    'action',
     'documentInstanceStatus',
   ];
 
@@ -180,6 +195,9 @@ export class ResponseDocumentsComponent
               formName: doc.documentName,
               documentInstanceStatus:
                 doc.documentInstanceStatus ?? 'Incomplete',
+              lastUpdated: doc.lastUpdated ?? null,
+              approvalStatus: doc.approved ? 'approve' : 'unapprove',
+              approvalLastUpdated: doc.approvalLastUpdated ?? null,
             }));
 
           this.notarizationRequiredDocumentsDatasource.data =
@@ -189,6 +207,9 @@ export class ResponseDocumentsComponent
               autofillStatus: doc.documentInstanceStatus,
               documentInstanceStatus:
                 doc.documentInstanceStatus ?? 'Incomplete',
+              lastUpdated: doc.lastUpdated ?? null,
+              approvalStatus: doc.approved ? 'approve' : 'unapprove',
+              approvalLastUpdated: doc.approvalLastUpdated ?? null,
             }));
 
           this.offerorDocuments = offerorDocs.map((doc: any) => ({ ...doc }));
@@ -361,6 +382,149 @@ export class ResponseDocumentsComponent
     return this.responseDocumentsFormGroup.get(
       'optionalOfferorDocuments',
     ) as FormArray;
+  }
+
+  onAutofillClick(
+    row: any,
+    source: 'notarizationNotRequired' | 'notarizationRequired',
+  ): void {
+    const offerId = this.responseIdParam
+      ? Number(this.responseIdParam)
+      : this.responseIdFromStateService;
+
+    // IMPORTANT: the API's `sourceRequestDocumentId` param expects this row's
+    // OWN requestDocumentId — not row.sourceRequestDocumentId, which refers
+    // to a different row entirely.
+    const requestDocumentId = row.requestDocumentId;
+    const documentId = row.documentId;
+
+    if (!offerId || !requestDocumentId || !documentId) {
+      console.error('Missing required parameters for autofill.');
+      return;
+    }
+
+    this.loadingService.show('Autofilling...');
+
+    this.documentService
+      .AutofillDocument(Number(offerId), requestDocumentId, documentId)
+      .subscribe({
+        next: () => {
+          this.loadingService.hide();
+
+          const datasource =
+            source === 'notarizationRequired'
+              ? this.notarizationRequiredDocumentsDatasource
+              : this.requiredDocumentsDatasource;
+
+          datasource.data = datasource.data.map((doc: any) =>
+            doc.requestDocumentId === requestDocumentId
+              ? { ...doc, lastUpdated: new Date().toISOString() }
+              : doc,
+          );
+
+          this.snackbarNotificationService.showSnackbarSuccess(
+            'Document autofilled successfully.',
+          );
+        },
+        error: (error) => {
+          this.loadingService.hide();
+
+          const correlationId = error?.error?.correlationId;
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              requestId: offerId,
+              requestDocumentId: requestDocumentId,
+              documentId: documentId,
+              organizationId: this.stateService.getOrganizationId(),
+              correlationId: correlationId,
+              methodName: 'onAutofillClick',
+              className: 'ResponseDocumentsComponent',
+              operation: 'AutofillDocument',
+              userId: this.stateService.getUserId(),
+            },
+          );
+
+          this.snackbarNotificationService.showSnackbarError(
+            'Unable to autofill this document. Please try again.',
+          );
+        },
+      });
+  }
+
+  onApprovalToggleChange(
+    row: any,
+    event: MatSlideToggleChange,
+    source: 'notarizationNotRequired' | 'notarizationRequired',
+  ): void {
+    const approved = event.checked;
+    const requestDocumentId = row.requestDocumentId;
+
+    if (!requestDocumentId) {
+      console.error('Request Document ID is not available.');
+      event.source.checked = !approved; // revert
+      return;
+    }
+
+    this.loadingService.show('Saving...');
+
+    this.documentService
+      .UpdateRequestDocumentApproval(requestDocumentId, approved)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.loadingService.hide();
+
+          if (!response.isSuccess) {
+            event.source.checked = !approved; // revert toggle
+            this.snackbarNotificationService.showSnackbarError(
+              'Unable to update approval status. Please try again.',
+            );
+            return;
+          }
+
+          const datasource =
+            source === 'notarizationRequired'
+              ? this.notarizationRequiredDocumentsDatasource
+              : this.requiredDocumentsDatasource;
+
+          datasource.data = datasource.data.map((doc: any) =>
+            doc.requestDocumentId === requestDocumentId
+              ? {
+                  ...doc,
+                  approvalStatus: approved ? 'approve' : 'unapprove',
+                  approvalLastUpdated: new Date().toISOString(),
+                }
+              : doc,
+          );
+        },
+        error: (error) => {
+          this.loadingService.hide();
+          event.source.checked = !approved; // revert toggle
+
+          const correlationId = error?.error?.correlationId;
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              requestId:
+                this.responseIdParam ?? this.responseIdFromStateService,
+              requestDocumentId: requestDocumentId,
+              organizationId: this.stateService.getOrganizationId(),
+              correlationId: correlationId,
+              methodName: 'onApprovalToggleChange',
+              className: 'ResponseDocumentsComponent',
+              operation: 'UpdateRequestDocumentApproval',
+              userId: this.stateService.getUserId(),
+            },
+          );
+
+          this.snackbarNotificationService.showSnackbarError(
+            'Unable to update approval status. Please try again.',
+          );
+        },
+      });
   }
 
   onDownloadRequiredAgencyDocuments(row: {
