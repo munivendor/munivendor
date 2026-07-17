@@ -2,7 +2,6 @@ import {
   Component,
   ViewChild,
   OnInit,
-  Input,
   AfterViewInit,
   Inject,
   PLATFORM_ID,
@@ -20,6 +19,7 @@ import {
   NavigationEnd,
   RouterModule,
   Event,
+  NavigationSkipped,
 } from '@angular/router';
 import { filter, firstValueFrom, Observable, Subscription } from 'rxjs';
 import { AuthService } from '../authorization/auth.service';
@@ -152,13 +152,17 @@ export class Sidenav implements OnInit, AfterViewInit {
       this.router.events
         .pipe(
           filter(
-            (event: Event): event is NavigationEnd =>
-              event instanceof NavigationEnd,
+            (event: Event): event is NavigationEnd | NavigationSkipped =>
+              event instanceof NavigationEnd ||
+              event instanceof NavigationSkipped,
           ),
         )
-        .subscribe((event: NavigationEnd) => {
-          this.activeRoute = event.urlAfterRedirects;
+        .subscribe((event) => {
+          if (event instanceof NavigationEnd) {
+            this.activeRoute = event.urlAfterRedirects;
+          }
           this.forceLayoutRecalculation();
+          this.resetScrollPosition();
         }),
     );
 
@@ -204,6 +208,19 @@ export class Sidenav implements OnInit, AfterViewInit {
 
   ngOnDestroy() {
     this.subscription.unsubscribe();
+  }
+
+  private resetScrollPosition() {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    const content = document.querySelector<HTMLElement>('.mat-drawer-content');
+    if (!content) return;
+
+    content.scrollTop = 0;
+    // run again after paint + after your 100ms updateContentMargins timer, so nothing scrolls it back
+    // fixes the issue where the scroll position does not reset to the top of the page
+    requestAnimationFrame(() => (content.scrollTop = 0));
+    setTimeout(() => (content.scrollTop = 0), 150);
   }
 
   private forceLayoutRecalculation() {
@@ -258,7 +275,7 @@ export class Sidenav implements OnInit, AfterViewInit {
   }
 
   onMenuClick(item: any) {
-    this.router.navigate([item.route]);
+    this.router.navigate([item.route]).then(() => this.resetScrollPosition());
   }
 
   onLogout() {
