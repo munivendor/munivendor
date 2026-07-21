@@ -1,0 +1,27 @@
+<h2 mat-dialog-title>Addendums</h2>
+
+<mat-dialog-content>
+  <p>
+    As of {{ formattedDate }}, {{ data.agencyName }} released
+    {{ addendumCountText }} ({{ data.addendumCount }}) addendum<ng-container
+      *ngIf="data.addendumCount !== 1"
+      >s</ng-container
+    >
+    for this solicitation. Please confirm that you, the offeror, correctly
+    acknowledged <strong>all</strong> addendums in the Acknowledgement of
+    Receipt of Addenda form that you uploaded in Step 3 &ndash; Required Forms
+    &amp; Documents.
+  </p>
+  <p>
+    Click <strong>I Confirm</strong> to acknowledge as per above. Clicking
+    <strong>Go Back</strong> will dismiss this dialogue without submitting your
+    offer.
+  </p>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="goBack()">Go Back</button>
+  <button mat-raised-button color="primary" (click)="confirm()">
+    I Confirm
+  </button>
+</mat-dialog-actions>

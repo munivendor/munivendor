@@ -526,7 +526,7 @@ export class ResponseBasicComponent implements OnInit {
             }
 
             this.requestService
-              .UpdateRequestStatus(response, 8)
+              .UpdateRequestStatus(Number(this.organizationId), response, 8)
               .pipe(takeUntil(this.destroy$))
               .subscribe(
                 (statusResponse) => {

@@ -1,0 +1,120 @@
+<mat-card
+  style="
+    padding: 24px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  "
+>
+  <h2 style="text-align: center; margin-bottom: 4px">Add Addendum</h2>
+  <p
+    style="text-align: center; color: rgba(0, 0, 0, 0.54); margin-bottom: 24px"
+  >
+    Existing sections are read-only. Add new addendum sections below.
+  </p>
+
+  <div [formGroup]="proposalsOverviewFormGroup">
+    <div formArrayName="proposalSections">
+      <!-- Existing sections block -->
+      <div *ngIf="existingSectionCount > 0" class="sections-group">
+        <div class="sections-group-header">
+          <mat-icon style="font-size: 18px; height: 18px; width: 18px"
+            >lock</mat-icon
+          >
+          <span>Existing Sections (Read-only)</span>
+        </div>
+
+        <div
+          *ngFor="
+            let proposalSection of proposalSections.controls;
+            let i = index
+          "
+          [formGroupName]="i"
+        >
+          <ng-container *ngIf="!isNewSection(i)">
+            <div class="existing-section">
+              <div class="existing-section-header">
+                <span class="existing-section-title">
+                  {{ proposalSection.get("requestSectionTitle")?.value }}
+                </span>
+                <span class="readonly-badge">Read-only</span>
+              </div>
+              <div
+                class="existing-section-content"
+                [innerHTML]="
+                  proposalSection.get('requestSectionContent')?.value
+                "
+              ></div>
+            </div>
+            <!-- Divider between existing sections, not after the last one -->
+            <div
+              *ngIf="i < existingSectionCount - 1"
+              class="existing-section-divider"
+            ></div>
+          </ng-container>
+        </div>
+      </div>
+
+      <!-- Divider between existing and new -->
+      <div *ngIf="existingSectionCount > 0" class="sections-divider">
+        <span class="sections-divider-label">New Addendum Sections</span>
+      </div>
+
+      <!-- New sections -->
+      <div
+        *ngFor="let proposalSection of proposalSections.controls; let i = index"
+        [formGroupName]="i"
+      >
+        <ng-container *ngIf="isNewSection(i)">
+          <div class="new-section">
+            <mat-form-field class="title-width">
+              <span matTextPrefix style="color: rgba(0, 0, 0, 0.54)">
+                {{ proposalSection.get("addendumPrefix")?.value }} -&nbsp;
+              </span>
+
+              <input
+                matInput
+                formControlName="addendumSuffix"
+                placeholder="Additional Title Info (optional)"
+              />
+
+              <input
+                matInput
+                formControlName="requestSectionTitle"
+                style="display: none"
+              />
+            </mat-form-field>
+
+            <editor
+              [init]="editorConfig"
+              formControlName="requestSectionContent"
+              apiKey="co6leh9lntefm0ibuwdpo1ium7xvkzrl7wl2j4msgg5p4z3u"
+            ></editor>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+
+    <div
+      *ngIf="hasAtLeastOneFieldError"
+      style="color: #f44336; font-size: 12px; margin-top: 8px"
+    >
+      At least one addendum must have content filled in.
+    </div>
+  </div>
+
+  <div style="margin-top: 24px">
+    <button mat-stroked-button color="primary" (click)="addSection()">
+      <mat-icon>add</mat-icon>
+      Add Addendum
+    </button>
+  </div>
+
+  <div
+    style="margin-top: 16px; display: flex; justify-content: flex-end; gap: 8px"
+  >
+    <button mat-stroked-button (click)="cancel()">Cancel</button>
+    <button mat-raised-button color="primary" (click)="saveSections()">
+      Save Addendum
+    </button>
+  </div>
+</mat-card>

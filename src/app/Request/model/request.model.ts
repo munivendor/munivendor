@@ -30,4 +30,5 @@ export class Request {
   offerorAuthorizingOfficialId!: null | number;
   organizationId!: number;
   offerorRequestId: any;
+  agencyRequestStatusId!: null | number;
 }

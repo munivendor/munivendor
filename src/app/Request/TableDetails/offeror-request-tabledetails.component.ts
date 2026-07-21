@@ -35,6 +35,23 @@ interface FlattenedCategoryNode {
   parentId: string | null;
 }
 
+// Agency request status IDs
+const AGENCY_STATUS = {
+  DRAFT: 1,
+  SCHEDULED: 2,
+  LIVE: 3,
+  CLOSED: 4,
+  CANCELLED: 5,
+  OPENED: 6,
+} as const;
+
+// Offeror request status IDs
+const OFFEROR_STATUS = {
+  NONE: 7,
+  IN_PROGRESS: 8,
+  SUBMITTED: 9,
+} as const;
+
 @Component({
   selector: 'offeror-request-tabledetails',
   standalone: true,
@@ -69,7 +86,12 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
   hierarchicalCategories: CategoryNode[] = [];
   flattenedCategories: FlattenedCategoryNode[] = [];
 
-  readonly AVAILABLE_ACTIONS = ['respond', 'delete', 'continue'] as const;
+  readonly AVAILABLE_ACTIONS = [
+    'respond',
+    'delete',
+    'continue',
+    'unsubmit',
+  ] as const;
 
   displayCategoryName = (
     categoryId: string | number | null,
@@ -131,41 +153,83 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
   }
 
   getAvailableActions(request: any): string[] {
-    const agencyStatus = request.agencyRequestStatus?.requestStatusDesc ?? '';
-    const offerorStatus = request.offerorRequestStatus?.requestStatusDesc ?? '';
+    const agencyStatusId: number =
+      request.agencyRequestStatus?.requestStatusId ?? null;
+    const offerorStatusId: number =
+      request.offerorRequestStatus?.requestStatusId ?? null;
+    const addendumPending: boolean = request.addendumPending ?? false;
     const actions: string[] = [];
 
-    if (agencyStatus === 'Closed' || offerorStatus === 'Submitted') {
+    const isLive =
+      agencyStatusId === AGENCY_STATUS.LIVE || agencyStatusId === 10;
+    const isClosed = agencyStatusId === AGENCY_STATUS.CLOSED;
+    const isCancelledOrOpened =
+      agencyStatusId === AGENCY_STATUS.CANCELLED ||
+      agencyStatusId === AGENCY_STATUS.OPENED;
+
+    if (isClosed) return actions;
+
+    if (offerorStatusId === OFFEROR_STATUS.SUBMITTED && !addendumPending) {
       return actions;
     }
 
-    if (agencyStatus === 'Live') {
-      if (offerorStatus === 'None') {
+    if (isLive) {
+      if (offerorStatusId === OFFEROR_STATUS.NONE) {
         actions.push('respond');
-      } else if (offerorStatus === 'In Progress') {
+      } else if (offerorStatusId === OFFEROR_STATUS.IN_PROGRESS) {
         actions.push('continue', 'delete');
+      } else if (
+        addendumPending &&
+        offerorStatusId === OFFEROR_STATUS.SUBMITTED
+      ) {
+        actions.push('unsubmit');
       }
     } else if (
-      ['Cancelled', 'Opened'].includes(agencyStatus) &&
-      offerorStatus === 'Submitted'
+      isCancelledOrOpened &&
+      offerorStatusId === OFFEROR_STATUS.SUBMITTED
     ) {
       actions.push('noneDisabled');
     }
+
     return actions;
   }
 
   openConfirmationDialog(action: string, request: any): void {
+    if (action === 'continue' || action === 'respond') {
+      const name = request.agencyOrganizationName ?? '';
+      this.stateService.setAgencyName(name);
+      sessionStorage.setItem('agencyOrganizationName', name);
+    }
     const dialogRef = this.dialog.open(RequestConfirmationDialog, {
       width: '600px',
       data: { action, request },
     });
 
+    // Listen for the statusUpdated event from the dialog
+    dialogRef.componentInstance.statusUpdated
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(({ requestId, newStatusId, newStatusDesc }) => {
+        const data = this.dataSource.data;
+        const row = data.find((r) => r.offerorRequestId === requestId);
+        if (row) {
+          row.offerorRequestStatus = {
+            requestStatusId: newStatusId,
+            requestStatusDesc: newStatusDesc,
+          };
+          row.offerorRequestStatusId = newStatusId;
+          this.dataSource.data = [...data]; // trigger change detection
+        }
+      });
+
     dialogRef
       .afterClosed()
       .pipe(takeUntil(this.destroy$))
       .subscribe((result) => {
-        if (result && action === 'delete') {
-          this.deleteResponse(request);
+        if (result) {
+          if (action === 'delete') {
+            this.deleteResponse(request);
+          }
+          // removed loadAndJoinRequestData() for unsubmit — handled by statusUpdated above
         }
       });
   }
@@ -471,6 +535,40 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
     this.loadAndJoinRequestData(params);
   }
 
+  private agencyStatusIdToDesc(statusId: number): string {
+    switch (statusId) {
+      case AGENCY_STATUS.DRAFT:
+        return 'Draft';
+      case AGENCY_STATUS.SCHEDULED:
+        return 'Scheduled';
+      case AGENCY_STATUS.LIVE:
+        return 'Live';
+      case AGENCY_STATUS.CLOSED:
+        return 'Closed';
+      case AGENCY_STATUS.CANCELLED:
+        return 'Cancelled';
+      case AGENCY_STATUS.OPENED:
+        return 'Opened';
+      case 10:
+        return 'Live'; // legacy status ID — treat as Live
+      default:
+        return '';
+    }
+  }
+
+  private offerorStatusIdToDesc(statusId: number): string {
+    switch (statusId) {
+      case OFFEROR_STATUS.NONE:
+        return 'None';
+      case OFFEROR_STATUS.IN_PROGRESS:
+        return 'In Progress';
+      case OFFEROR_STATUS.SUBMITTED:
+        return 'Submitted';
+      default:
+        return '';
+    }
+  }
+
   private async loadAndJoinRequestData(params?: any): Promise<void> {
     try {
       const organizationId = await this.stateService.getOrganizationId();
@@ -506,15 +604,18 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
                 requestTypeDesc: request.agencyRequestTypeName,
               };
 
+              const agencyStatusId: number = request.agencyRequestStatusId;
               const agencyRequestStatus = {
-                requestStatusId: request.agencyRequestStatusId,
-                requestStatusDesc: request.agencyRequestStatusName,
+                requestStatusId: agencyStatusId,
+                requestStatusDesc: this.agencyStatusIdToDesc(agencyStatusId),
               };
 
-              const offerorRequestStatus = request.offerorRequestStatusId
+              const offerorStatusId: number = request.offerorRequestStatusId;
+              const offerorRequestStatus = offerorStatusId
                 ? {
-                    requestStatusId: request.offerorRequestStatusId,
-                    requestStatusDesc: request.offerorRequestStatusName,
+                    requestStatusId: offerorStatusId,
+                    requestStatusDesc:
+                      this.offerorStatusIdToDesc(offerorStatusId),
                   }
                 : null;
 
@@ -610,16 +711,6 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
       this.dataSource = new MatTableDataSource<any>([]);
     }
   }
-
-  // future for dynamic filtering of solicitation name
-  // applyFilter(event: Event) {
-  //   const filterValue = (event.target as HTMLInputElement).value;
-  //   this.dataSource.filter = filterValue.trim().toLowerCase();
-
-  //   if (this.dataSource.paginator) {
-  //     this.dataSource.paginator.firstPage();
-  //   }
-  // }
 
   ngOnDestroy(): void {
     this.destroy$.next();

@@ -379,7 +379,7 @@ export class RequestReviewComponent implements OnInit, OnDestroy {
 
     // Update the request status to 'Scheduled' once users finalize review
     this.requestService
-      .UpdateRequestStatus(requestIdToUse, 2)
+      .UpdateRequestStatus(Number(this.organizationId), requestIdToUse, 2)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
