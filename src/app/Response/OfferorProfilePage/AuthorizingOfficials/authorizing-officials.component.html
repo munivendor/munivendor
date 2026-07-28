@@ -288,8 +288,8 @@
           (input)="onPhoneInput($event)"
           (keydown)="onPhoneKeydown($event)"
         />
-        <mat-error *ngIf="officialForm.get('phone')?.hasError('pattern')">
-          Please enter a complete 10-digit phone number.
+        <mat-error *ngIf="officialForm.get('phone')?.hasError('invalidPhoneNumber')">
+          Please enter a valid US phone number.
         </mat-error>
       </mat-form-field>
 

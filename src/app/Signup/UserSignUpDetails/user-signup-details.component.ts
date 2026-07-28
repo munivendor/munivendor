@@ -15,6 +15,8 @@ import { AuthService } from '../../authorization/auth.service';
 import { FlowProgressService } from '../../shared/service/flow-progress.service';
 import { LoggingService } from '../../exceptionhandling/logging.service';
 import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
+import { usPhoneValidator } from '../../shared/validators/us-phone.validator';
+import { formatUsPhoneAsYouType } from '../../shared/utils/us-phone.util';
 
 @Component({
   selector: 'app-contact-form',
@@ -54,15 +56,32 @@ export class UserSignUpDetails implements OnInit {
       firstName: [{ value: '', disabled: true }, Validators.required],
       lastName: [{ value: '', disabled: true }, Validators.required],
       title: ['', [Validators.required, Validators.pattern(/^.{1,40}$/)]],
-      workPhoneNumber: [
-        '',
-        [Validators.required, Validators.pattern(/^(1?\d{10})$/)],
-      ],
-      personalPhoneNumber: [
-        '',
-        [Validators.required, Validators.pattern(/^(1?\d{10})$/)],
-      ],
+      workPhoneNumber: ['', [Validators.required, usPhoneValidator()]],
+      personalPhoneNumber: ['', [Validators.required, usPhoneValidator()]],
     });
+  }
+
+  onPhoneInput(controlName: 'workPhoneNumber' | 'personalPhoneNumber', value: string): void {
+    const formatted = formatUsPhoneAsYouType(value);
+    this.userSignupDetailForm
+      .get(controlName)
+      ?.setValue(formatted, { emitEvent: false });
+    this.userSignupDetailForm.get(controlName)?.markAsDirty();
+    this.userSignupDetailForm.get(controlName)?.updateValueAndValidity();
+  }
+
+  onPhoneKeydown(event: KeyboardEvent): void {
+    const controlKeys = [
+      'Backspace',
+      'Delete',
+      'ArrowLeft',
+      'ArrowRight',
+      'Tab',
+      'Home',
+      'End',
+    ];
+    if (controlKeys.includes(event.key)) return;
+    if (!/^\d$/.test(event.key)) event.preventDefault();
   }
 
   ngOnInit(): void {
@@ -130,9 +149,13 @@ export class UserSignUpDetails implements OnInit {
 
   onSubmit(): void {
     if (this.userSignupDetailForm.valid) {
+      const { workPhoneNumber, personalPhoneNumber, ...rest } =
+        this.userSignupDetailForm.value;
       const updatedUser: User = {
         ...this.user,
-        ...this.userSignupDetailForm.value,
+        ...rest,
+        workPhoneNumber: workPhoneNumber.replace(/\D/g, ''),
+        personalPhoneNumber: personalPhoneNumber.replace(/\D/g, ''),
       };
       this.updateUser(updatedUser);
 

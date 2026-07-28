@@ -18,6 +18,8 @@ import { LoggingService } from '../../../exceptionhandling/logging.service';
 import { StateService } from '../../../Request/services/state.service';
 import { State } from '../../../shared/model/state.model';
 import { MatSelectModule } from '@angular/material/select';
+import { usPhoneValidator } from '../../../shared/validators/us-phone.validator';
+import { formatUsPhoneAsYouType } from '../../../shared/utils/us-phone.util';
 
 @Component({
   selector: 'app-agency-details',
@@ -43,7 +45,6 @@ export class AgencyDetailsComponent implements OnInit {
   }
   states: State[] = [];
 
-  readonly phonePattern = '^\\(\\d{3}\\) \\d{3}-\\d{4}$';
   readonly zipPattern = '^\\d{5}(-\\d{4})?$';
 
   form!: FormGroup;
@@ -79,7 +80,7 @@ export class AgencyDetailsComponent implements OnInit {
       city: ['', Validators.required],
       stateId: [null, Validators.required],
       zipCode: ['', [Validators.required, Validators.pattern(this.zipPattern)]],
-      phone: ['', [Validators.required, Validators.pattern(this.phonePattern)]],
+      phone: ['', [Validators.required, usPhoneValidator()]],
     });
   }
 
@@ -140,11 +141,7 @@ export class AgencyDetailsComponent implements OnInit {
   }
 
   formatPhoneDisplay(digits: string): string {
-    const d = digits.replace(/\D/g, '');
-    if (d.length === 0) return '';
-    if (d.length <= 3) return `(${d}`;
-    if (d.length <= 6) return `(${d.slice(0, 3)}) ${d.slice(3)}`;
-    return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6, 10)}`;
+    return formatUsPhoneAsYouType(digits);
   }
 
   onPhoneKeydown(event: KeyboardEvent): void {
