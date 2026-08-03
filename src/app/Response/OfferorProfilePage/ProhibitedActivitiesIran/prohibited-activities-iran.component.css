@@ -100,6 +100,16 @@
   line-height: 1.55;
 }
 
+/* ── Engagement duration ─────────────────────────── */
+.duration-row {
+  display: flex;
+  gap: 16px;
+}
+
+.duration-field {
+  width: 140px;
+}
+
 /* ── Upload section ──────────────────────────────── */
 .upload-doc-description {
   margin: 0 0 4px;

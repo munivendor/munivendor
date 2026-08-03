@@ -49,6 +49,117 @@
 
     <!-- Conditional fields — shown only when user selects 'No' (conducts business in Iran) -->
     <ng-container *ngIf="showConditionalFields">
+      <!-- Entity Engaged in Investment Activities -->
+      <div>
+        <p class="section-label">
+          <strong>Entity Engaged in Investment Activities</strong>
+        </p>
+        <p class="upload-doc-description">
+          Please enter the name of the entity that is currently engaged in
+          investment activities in Iran.
+        </p>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <input
+            matInput
+            formControlName="chapter25EntityName"
+            maxlength="300"
+          />
+          <mat-error *ngIf="isFieldInvalid('chapter25EntityName')">
+            Entity name cannot exceed 300 characters.
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <!-- Relationship to Offeror -->
+      <div>
+        <p class="section-label">
+          <strong>Relationship to Offeror</strong>
+        </p>
+        <p class="upload-doc-description">
+          Enter the relationship between that entity and your organization. For
+          example, "same entity", or "subsidiary", etc.
+        </p>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <input
+            matInput
+            formControlName="chapter25RelationshipToOfferor"
+            maxlength="300"
+          />
+          <mat-error *ngIf="isFieldInvalid('chapter25RelationshipToOfferor')">
+            Relationship cannot exceed 300 characters.
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <!-- Engagement Duration -->
+      <div>
+        <p class="section-label">
+          <strong>Engagement Duration</strong>
+        </p>
+        <p class="upload-doc-description">
+          Enter the duration of this engagement in months and years.
+        </p>
+
+        <div class="duration-row">
+          <mat-form-field appearance="outline" class="duration-field">
+            <mat-label>Years</mat-label>
+            <input
+              matInput
+              type="number"
+              formControlName="chapter25EngagementYears"
+              min="0"
+              max="99"
+            />
+            <mat-error *ngIf="isFieldInvalid('chapter25EngagementYears')">
+              Enter a value from 0-99.
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="duration-field">
+            <mat-label>Months</mat-label>
+            <input
+              matInput
+              type="number"
+              formControlName="chapter25EngagementMonths"
+              min="0"
+              max="11"
+            />
+            <mat-error *ngIf="isFieldInvalid('chapter25EngagementMonths')">
+              Enter a value from 0-11.
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Anticipated Cessation -->
+      <div>
+        <p class="section-label">
+          <strong>Anticipated Cessation</strong>
+        </p>
+        <p class="upload-doc-description">
+          Enter the expected date that this engagement (investment activities)
+          in Iran, will terminate. For example, "January 4, 2025".
+        </p>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <input
+            matInput
+            [matDatepicker]="chapter25AnticipatedCessationPicker"
+            formControlName="chapter25AnticipatedCessation"
+            placeholder="MM/DD/YYYY"
+            readonly
+            (click)="chapter25AnticipatedCessationPicker.open()"
+          />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="chapter25AnticipatedCessationPicker"
+          ></mat-datepicker-toggle>
+          <mat-datepicker #chapter25AnticipatedCessationPicker></mat-datepicker>
+        </mat-form-field>
+      </div>
+
       <!-- Iran File Upload -->
       <div>
         <p class="section-label">
@@ -139,18 +250,21 @@
         <p class="upload-doc-description">
           Please write a detailed description of how your organization's
           activity related to Iran is consistent with federal law is set forth
-          below.
+          below. If you already have a document prepared with your detailed
+          description, then please upload it above. If you upload your
+          explanation, please put in "Please see attachment for detailed
+          explanation." into this Detailed Description section.
         </p>
 
         <mat-form-field appearance="outline" class="full-width">
           <textarea
             matInput
-            formControlName="iranDescription"
+            formControlName="prohibitedDetails"
             rows="7"
             placeholder=""
             maxlength="1000"
           ></textarea>
-          <mat-error *ngIf="isFieldInvalid('iranDescription')">
+          <mat-error *ngIf="isFieldInvalid('prohibitedDetails')">
             Please provide a description.
           </mat-error>
         </mat-form-field>

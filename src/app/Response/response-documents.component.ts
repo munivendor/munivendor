@@ -42,6 +42,9 @@ import { SnackbarNotificationService } from '../shared/service/snackbar-notifica
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { SplitCamelCasePipe } from '../shared/pipes/split-camel-case.pipe';
 
+type ResponseMethod = 'manual' | 'autofill' | null;
+type DocumentSource = 'notarizationNotRequired' | 'notarizationRequired';
+
 @Component({
   selector: 'response-documents',
   standalone: true,
@@ -75,10 +78,20 @@ export class ResponseDocumentsComponent
   @ViewChild('offerorSort') offerorSort!: MatSort;
   authorizingOfficialTooltip: any;
 
+  // Tooltip shown next to the yellow warning triangle when MV Autofill AI
+  // detects that a form still has empty fields.
+  incompleteFieldsTooltip = {
+    header: 'Incomplete Fields in Form',
+    body: "The MV Autofill AI has detected that this form still has empty fields. MuniVendor's Autofill AI Engine automatically copies content from your Offeror Profile and deposits that content into the corresponding fields in these forms. Please complete your Offeror Profile, and then when you continue with this offer/response, click on the MV Autofill AI button again.",
+    width: '500px',
+    showCloseButton: false,
+    showActionButton: false,
+  };
+
   agencyDocumentsColumns: string[] = [
     'formName',
-    'fileActions',
-    'method',
+    'responseMethod',
+    'manualUpload',
     'mvAutofillAi',
     'action',
     'documentInstanceStatus',
@@ -86,9 +99,8 @@ export class ResponseDocumentsComponent
 
   notarizationRequiredColumns: string[] = [
     'formName',
-    'fileActions',
-    'method',
     'mvAutofillAi',
+    'completeUpload',
     'action',
     'documentInstanceStatus',
   ];
@@ -111,8 +123,7 @@ export class ResponseDocumentsComponent
   responseIdFromStateService = this.stateService.getRequestId();
   private destroy$ = new Subject<void>();
   private currentRow: any;
-  currentSource: 'notarizationNotRequired' | 'notarizationRequired' | null =
-    null;
+  currentSource: DocumentSource | null = null;
 
   constructor(
     private requestService: RequestService,
@@ -133,7 +144,7 @@ export class ResponseDocumentsComponent
 
     this.authorizingOfficialTooltip = {
       header: 'Incomplete',
-      body: 'Incomplete means that you have not yet uploaded your manually completed form.',
+      body: 'Incomplete means that you have not yet completed and approved this form.',
       showCloseButton: false,
       showActionButton: false,
       width: 'auto',
@@ -193,9 +204,12 @@ export class ResponseDocumentsComponent
             notRequiredNotarizationDocs.map((doc: any) => ({
               ...doc,
               formName: doc.documentName,
+              responseMethod: (doc.responseMethod ?? null) as ResponseMethod,
+              manualUploadedOn: doc.manualUploadedOn ?? null,
+              lastUpdated: doc.lastUpdated ?? null,
+              hasIncompleteFields: doc.hasIncompleteFields ?? false,
               documentInstanceStatus:
                 doc.documentInstanceStatus ?? 'Incomplete',
-              lastUpdated: doc.lastUpdated ?? null,
               approvalStatus: doc.approved ? 'approve' : 'unapprove',
               approvalLastUpdated: doc.approvalLastUpdated ?? null,
             }));
@@ -204,9 +218,12 @@ export class ResponseDocumentsComponent
             requiresNotarizationDocs.map((doc: any) => ({
               ...doc,
               formName: doc.documentName,
-              autofillStatus: doc.documentInstanceStatus,
+              // lastUpdated: doc.lastUpdated ?? null,
+              hasIncompleteFields: doc.hasIncompleteFields ?? false,
+              completeUploadedOn: doc.completeUploadedOn ?? null,
               documentInstanceStatus:
                 doc.documentInstanceStatus ?? 'Incomplete',
+
               lastUpdated: doc.lastUpdated ?? null,
               approvalStatus: doc.approved ? 'approve' : 'unapprove',
               approvalLastUpdated: doc.approvalLastUpdated ?? null,
@@ -270,10 +287,75 @@ export class ResponseDocumentsComponent
     });
   }
 
-  onUploadClick(
-    row: any,
-    source: 'notarizationNotRequired' | 'notarizationRequired',
-  ): void {
+  // ---------------------------------------------------------------------------
+  // Response Method
+  // ---------------------------------------------------------------------------
+
+  onResponseMethodChange(row: any, method: ResponseMethod): void {
+    if (row.approvalStatus === 'approve') {
+      return; // method is locked once the form has been approved
+    }
+    row.responseMethod = method;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Button / toggle enablement helpers
+  // ---------------------------------------------------------------------------
+
+  /** Standard table: manual upload button is blue/enabled only after Manual is chosen. */
+  isManualUploadEnabled(row: any): boolean {
+    return row.responseMethod === 'manual' && row.approvalStatus !== 'approve';
+  }
+
+  /** Standard table: autofill button is blue/enabled only after MV Autofill AI is chosen. */
+  isStandardAutofillEnabled(row: any): boolean {
+    return (
+      row.responseMethod === 'autofill' && row.approvalStatus !== 'approve'
+    );
+  }
+
+  /** Notarization table: autofill is optional, available until the form is approved. */
+  isNotarizationAutofillEnabled(row: any): boolean {
+    return row.approvalStatus !== 'approve';
+  }
+
+  /** Notarization table: the notarized upload is available until the form is approved. */
+  isNotarizedUploadEnabled(row: any): boolean {
+    return row.approvalStatus !== 'approve';
+  }
+
+  /**
+   * Standard table: approval unlocks only once the chosen path has been
+   * completed. An already-approved row stays enabled so the offeror can
+   * unapprove it and go back to edit / re-upload.
+   */
+  isStandardApprovalEnabled(row: any): boolean {
+    if (row.approvalStatus === 'approve') {
+      return true;
+    }
+    if (row.responseMethod === 'manual') {
+      return !!row.manualUploadedOn;
+    }
+    if (row.responseMethod === 'autofill') {
+      return !!row.lastUpdated;
+    }
+    return false;
+  }
+
+  /**
+   * Notarization table: approval unlocks only once the notarized document is
+   * uploaded. An already-approved row stays enabled so it can be unapproved
+   * and re-uploaded.
+   */
+  isNotarizationApprovalEnabled(row: any): boolean {
+    return row.approvalStatus === 'approve' || !!row.completeUploadedOn;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Upload
+  // ---------------------------------------------------------------------------
+
+  onUploadClick(row: any, source: DocumentSource): void {
     this.currentRow = row;
     this.currentSource = source;
     this.fileInput.nativeElement.click();
@@ -316,23 +398,18 @@ export class ResponseDocumentsComponent
           next: (response) => {
             this.loadingService.hide();
             if (response.isSuccess && this.currentRow?.requestDocumentId) {
-              const isNotarization =
-                this.currentSource === 'notarizationRequired';
-              const datasource = isNotarization
-                ? this.notarizationRequiredDocumentsDatasource
-                : this.requiredDocumentsDatasource;
+              const now = new Date().toISOString();
 
-              // Reassign array so Angular detects the change
-              datasource.data = datasource.data.map((doc: any) =>
-                doc.requestDocumentId === this.currentRow.requestDocumentId
-                  ? {
-                      ...doc,
-                      documentInstanceStatus: 'Complete',
-                      documentSourceId: 2,
-                      derived: false,
-                    }
-                  : doc,
-              );
+              // Record the upload timestamp in the correct column. NOTE:
+              // the Status stays Incomplete here — it only becomes Complete
+              // once the offeror approves the form.
+              if (this.currentSource === 'notarizationRequired') {
+                this.currentRow.completeUploadedOn = now;
+              } else {
+                this.currentRow.manualUploadedOn = now;
+              }
+              this.currentRow.documentSourceId = 2; // user / manual upload
+              this.currentRow.derived = false;
 
               this.snackbarNotificationService.showSnackbarSuccess(
                 'Document uploaded successfully.',
@@ -384,10 +461,11 @@ export class ResponseDocumentsComponent
     ) as FormArray;
   }
 
-  onAutofillClick(
-    row: any,
-    source: 'notarizationNotRequired' | 'notarizationRequired',
-  ): void {
+  // ---------------------------------------------------------------------------
+  // MV Autofill AI
+  // ---------------------------------------------------------------------------
+
+  onAutofillClick(row: any, source: DocumentSource): void {
     const offerId = this.responseIdParam
       ? Number(this.responseIdParam)
       : this.responseIdFromStateService;
@@ -408,19 +486,19 @@ export class ResponseDocumentsComponent
     this.documentService
       .AutofillDocument(Number(offerId), requestDocumentId, documentId)
       .subscribe({
-        next: () => {
+        next: (response: any) => {
           this.loadingService.hide();
 
-          const datasource =
-            source === 'notarizationRequired'
-              ? this.notarizationRequiredDocumentsDatasource
-              : this.requiredDocumentsDatasource;
+          row.lastUpdated = new Date().toISOString();
 
-          datasource.data = datasource.data.map((doc: any) =>
-            doc.requestDocumentId === requestDocumentId
-              ? { ...doc, lastUpdated: new Date().toISOString() }
-              : doc,
-          );
+          // Show the yellow warning triangle when the autofill engine reports
+          // empty fields. Adjust the property names below to match whatever
+          // your AutofillDocument endpoint actually returns.
+          row.hasIncompleteFields =
+            response?.hasIncompleteFields ??
+            (Array.isArray(response?.incompleteFields)
+              ? response.incompleteFields.length > 0
+              : false);
 
           this.snackbarNotificationService.showSnackbarSuccess(
             'Document autofilled successfully.',
@@ -453,10 +531,14 @@ export class ResponseDocumentsComponent
       });
   }
 
+  // ---------------------------------------------------------------------------
+  // Approval  (drives the Status column)
+  // ---------------------------------------------------------------------------
+
   onApprovalToggleChange(
     row: any,
     event: MatSlideToggleChange,
-    source: 'notarizationNotRequired' | 'notarizationRequired',
+    source: DocumentSource,
   ): void {
     const approved = event.checked;
     const requestDocumentId = row.requestDocumentId;
@@ -484,20 +566,12 @@ export class ResponseDocumentsComponent
             return;
           }
 
-          const datasource =
-            source === 'notarizationRequired'
-              ? this.notarizationRequiredDocumentsDatasource
-              : this.requiredDocumentsDatasource;
-
-          datasource.data = datasource.data.map((doc: any) =>
-            doc.requestDocumentId === requestDocumentId
-              ? {
-                  ...doc,
-                  approvalStatus: approved ? 'approve' : 'unapprove',
-                  approvalLastUpdated: new Date().toISOString(),
-                }
-              : doc,
-          );
+          row.approvalStatus = approved ? 'approve' : 'unapprove';
+          // Approving completes the form; unapproving sends it back to Incomplete.
+          row.documentInstanceStatus = approved ? 'Complete' : 'Incomplete';
+          if (approved) {
+            row.approvalLastUpdated = new Date().toISOString();
+          }
         },
         error: (error) => {
           this.loadingService.hide();
@@ -525,6 +599,40 @@ export class ResponseDocumentsComponent
           );
         },
       });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Reset form to its original, unfilled version
+  // ---------------------------------------------------------------------------
+
+  onResetForm(row: any, source: DocumentSource): void {
+    // NOTE: This is currently a UI-ONLY reset. The backend still holds any
+    // uploaded / autofilled document instance, so the cleared state below will
+    // NOT survive a page refresh — initializeDocuments() will repopulate the
+    // row from the API.
+    //
+    // TODO: Call the reset/delete endpoint here and move the local reset below
+    // into its success callback, e.g.:
+    //
+    //   this.documentService
+    //     .ResetDocumentInstance(row.requestDocumentId)
+    //     .pipe(takeUntil(this.destroy$))
+    //     .subscribe({ next: () => { /* local reset */ }, error: (e) => { ... } });
+
+    row.responseMethod = null;
+    row.manualUploadedOn = null;
+    row.completeUploadedOn = null;
+    row.lastUpdated = null;
+    row.hasIncompleteFields = false;
+    row.approvalStatus = 'unapprove';
+    row.approvalLastUpdated = null;
+    row.documentInstanceStatus = 'Incomplete';
+    row.documentSourceId = null;
+    row.derived = false;
+
+    this.snackbarNotificationService.showSnackbarSuccess(
+      'Form reset to its original version.',
+    );
   }
 
   onDownloadRequiredAgencyDocuments(row: {

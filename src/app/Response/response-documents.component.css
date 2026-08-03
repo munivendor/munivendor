@@ -47,6 +47,7 @@ table {
   background-color: #fcfcfd;
 }
 
+/* ----- Column widths: standard table ----- */
 .mat-column-formName {
   width: 20%;
   font-weight: 500;
@@ -76,11 +77,44 @@ table {
 }
 
 .mat-column-documentInstanceStatus {
+  width: 22%;
+  font-weight: 500;
+}
+
+.mat-column-responseMethod {
   width: 14%;
 }
 
-.mat-column-downloadForm,
-.mat-column-uploadForm {
+.mat-column-manualUpload {
+  width: 13%;
+  text-align: center;
+}
+
+.mat-column-mvAutofillAi {
+  width: 17%;
+}
+
+.mat-column-action {
+  width: 20%;
+}
+
+.mat-column-documentInstanceStatus {
+  width: 14%;
+}
+
+/* ----- Column width: notarization table ----- */
+.mat-column-completeUpload {
+  width: 22%;
+  text-align: center;
+}
+
+/* Offeror uploads table */
+.mat-column-source {
+  width: 20%;
+}
+
+.mat-column-download,
+.mat-column-delete {
   width: 10%;
   text-align: center;
 }
@@ -88,7 +122,153 @@ table {
 .mat-column-uploadResponse,
 .mat-column-continue {
   width: 12.5%;
-  text-align: center;
+  font-weight: 500;
+}
+
+.form-name-action {
+  --mdc-icon-button-state-layer-size: 32px;
+  --mdc-icon-button-icon-size: 20px;
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.form-name-action .mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  margin: 0;
+}
+
+/* The ripple / hover state layer lives inside the button, so it needs
+   ::ng-deep to be reached from an encapsulated component stylesheet.
+   Without this it keeps the default 40px box and renders off-centre. */
+::ng-deep .form-name-action .mat-mdc-button-persistent-ripple,
+::ng-deep .form-name-action .mat-mdc-button-ripple {
+  width: 32px;
+  height: 32px;
+  top: 0;
+  left: 0;
+  border-radius: 50%;
+}
+
+::ng-deep .form-name-action .mat-mdc-button-touch-target {
+  width: 32px;
+  height: 32px;
+}
+
+.form-name-action.download .mat-icon {
+  color: #0b74fd; /* blue download */
+}
+
+.form-name-action.reset .mat-icon {
+  color: #2e9e5b; /* green reset */
+}
+
+/* ----- Manual / notarized upload cell ----- */
+.upload-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 0;
+}
+
+.uploaded-on-text {
+  font-size: 11px;
+  color: #888;
+  white-space: nowrap;
+}
+
+/* ----- MV Autofill AI cell ----- */
+.autofill-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 6px 0;
+}
+
+.autofill-button-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.autofill-button {
+  font-size: 12px;
+  line-height: 28px;
+  min-width: 88px;
+}
+
+.warning-icon {
+  color: #f5a623; /* amber warning triangle */
+  cursor: pointer;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.last-updated-text {
+  font-size: 11px;
+  color: #888;
+}
+
+/* ----- Status badge ----- */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.status-badge.incomplete {
+  background-color: #fff4e5;
+  color: #b26a00;
+}
+
+.status-badge.complete {
+  background-color: #e6f4ea;
+  color: #1e7e34;
+}
+
+/* ----- Response method select ----- */
+.method-select-field {
+  width: 100%;
+  max-width: 170px;
+  font-size: 13px;
+}
+
+::ng-deep .method-select-field .mat-mdc-text-field-wrapper {
+  padding: 0 10px;
+  height: 36px;
+}
+
+::ng-deep .method-select-field .mat-mdc-form-field-infix {
+  min-height: 36px;
+  padding: 7px 0;
+}
+
+/* ----- Approval cell ----- */
+.action-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 6px 0;
+}
+
+.approval-toggle {
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .autofill-cell {

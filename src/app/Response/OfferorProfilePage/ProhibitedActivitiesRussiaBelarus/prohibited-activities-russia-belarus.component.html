@@ -168,17 +168,20 @@
         <p class="upload-doc-description">
           Please write a detailed description of how your organization's
           activity related to Russia and/or Belarus is consistent with federal
-          law.
+          law. If you already have a document prepared with your detailed
+          description, then please upload it above. If you upload your
+          explanation, please put in "Please see attachment for detailed
+          explanation." into this Detailed Description section.
         </p>
         <mat-form-field appearance="outline" class="full-width">
           <textarea
             matInput
-            formControlName="ofacDescription"
+            formControlName="prohibitedDetails"
             rows="7"
             placeholder=""
             maxlength="1000"
           ></textarea>
-          <mat-error *ngIf="isFieldInvalid('ofacDescription')">
+          <mat-error *ngIf="isFieldInvalid('prohibitedDetails')">
             Please provide a description.
           </mat-error>
         </mat-form-field>

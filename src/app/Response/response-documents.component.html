@@ -23,46 +23,40 @@
       </mat-icon>
     </th>
     <td mat-cell *matCellDef="let row">
-      <!-- <a *ngIf="row.documentName === 'Bid Proposal Form'" (click)="openBidProposalDialog()" style="cursor: pointer; text-decoration: underline; color: #0B74FD">
-        {{ row.documentName }}
-      </a> -->
-      <span>
-        {{ row.documentName }}
-      </span>
-    </td>
-  </ng-container>
-
-  <ng-container matColumnDef="fileActions">
-    <th mat-header-cell *matHeaderCellDef>
-      File Actions
-      <mat-icon
-        style="font-size: medium; color: #0b74fd; cursor: pointer"
-        [appTooltip]="{
-          header: 'File Actions',
-          body: 'Clicking on each download button will download a copy of the Agency required form. Clicking on each upload button will enable you to upload your completed document. Only PDF and JPG/JPEG files are allowed.',
-          width: '500px',
-          showCloseButton: false,
-          showActionButton: false,
-        }"
-      >
-        info_outline
-      </mat-icon>
-    </th>
-    <td mat-cell *matCellDef="let row">
-      <div class="file-actions-cell">
-        <button
-          style="margin-left: -12px"
-          mat-icon-button
-          (click)="onDownloadRequiredAgencyDocuments(row)"
-        >
-          <mat-icon style="color: gray">download</mat-icon>
-        </button>
-        <button
-          mat-icon-button
-          (click)="onUploadClick(row, 'notarizationNotRequired')"
-        >
-          <mat-icon [style.color]="getUploadIconColor(row)">upload</mat-icon>
-        </button>
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 2px">
+        <span>
+          {{ row.documentName }}
+        </span>
+        <span style="display: flex; align-items: center; flex-shrink: 0">
+          <button
+            mat-icon-button
+            class="form-name-action download"
+            (click)="onDownloadRequiredAgencyDocuments(row)"
+            [appTooltip]="{
+              header: 'Download',
+              body: 'Download a copy of this Agency required form.',
+              width: '400px',
+              showCloseButton: false,
+              showActionButton: false,
+            }"
+          >
+            <mat-icon>download</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            class="form-name-action reset"
+            (click)="onResetForm(row, 'notarizationNotRequired')"
+            [appTooltip]="{
+              header: 'Reset',
+              body: 'Reset this form back to its original, unfilled version.',
+              width: '400px',
+              showCloseButton: false,
+              showActionButton: false,
+            }"
+          >
+            <mat-icon>restart_alt</mat-icon>
+          </button>
+        </span>
       </div>
     </td>
   </ng-container>
@@ -74,14 +68,14 @@
     accept=".pdf,.jpg,.jpeg"
   />
 
-  <ng-container matColumnDef="method">
+  <ng-container matColumnDef="responseMethod">
     <th mat-header-cell *matHeaderCellDef>
-      Method
+      Response Method
       <mat-icon
         style="font-size: medium; color: #0b74fd; cursor: pointer"
         [appTooltip]="{
-          header: 'Method',
-          body: 'Select the method you will use to complete this form.',
+          header: 'Response Method',
+          body: 'Select the method you will use to complete this form: Manual to upload your own completed document, or MV Autofill AI to have MuniVendor complete it for you.',
           width: '400px',
           showCloseButton: false,
           showActionButton: false,
@@ -96,11 +90,97 @@
         class="method-select-field"
         subscriptSizing="dynamic"
       >
-        <mat-select placeholder="Select">
-          <mat-option value="electronicSignature">Autofill</mat-option>
-          <mat-option value="manualUpload">Manual</mat-option>
+        <mat-select
+          placeholder="Select"
+          [value]="row.responseMethod"
+          [disabled]="row.approvalStatus === 'approve'"
+          (selectionChange)="onResponseMethodChange(row, $event.value)"
+        >
+          <mat-option value="manual">Manual</mat-option>
+          <mat-option value="autofill">MV Autofill AI</mat-option>
         </mat-select>
       </mat-form-field>
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="manualUpload">
+    <th mat-header-cell *matHeaderCellDef>
+      Manual Upload
+      <mat-icon
+        style="font-size: medium; color: #0b74fd; cursor: pointer"
+        [appTooltip]="{
+          header: 'Manual Upload',
+          body: 'After selecting Manual as your Response Method, upload your completed document here. Only PDF and JPG/JPEG files are allowed.',
+          width: '500px',
+          showCloseButton: false,
+          showActionButton: false,
+        }"
+      >
+        info_outline
+      </mat-icon>
+    </th>
+    <td mat-cell *matCellDef="let row">
+      <div class="upload-cell">
+        <button
+          mat-icon-button
+          [color]="isManualUploadEnabled(row) ? 'primary' : ''"
+          [disabled]="!isManualUploadEnabled(row)"
+          (click)="onUploadClick(row, 'notarizationNotRequired')"
+        >
+          <mat-icon>upload</mat-icon>
+        </button>
+        <span class="uploaded-on-text">
+          {{
+            row.manualUploadedOn
+              ? "Uploaded " + (row.manualUploadedOn | date: "short")
+              : "Not uploaded"
+          }}
+        </span>
+      </div>
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="mvAutofillAi">
+    <th mat-header-cell *matHeaderCellDef>
+      MV Autofill AI
+      <mat-icon
+        style="font-size: medium; color: #0b74fd; cursor: pointer"
+        [appTooltip]="{
+          header: 'MV Autofill AI',
+          body: 'Click Autofill to have MuniVendor automatically populate this form using your Offeror Profile information.',
+          width: '400px',
+          showCloseButton: false,
+          showActionButton: false,
+        }"
+      >
+        info_outline
+      </mat-icon>
+    </th>
+    <td mat-cell *matCellDef="let row">
+      <div class="autofill-cell">
+        <div class="autofill-button-row">
+          <button
+            mat-stroked-button
+            color="primary"
+            class="autofill-button"
+            [disabled]="!isStandardAutofillEnabled(row)"
+            (click)="onAutofillClick(row, 'notarizationNotRequired')"
+          >
+            Autofill
+          </button>
+          <mat-icon
+            *ngIf="row.hasIncompleteFields"
+            class="warning-icon"
+            [appTooltip]="incompleteFieldsTooltip"
+          >
+            warning
+          </mat-icon>
+        </div>
+        <span class="last-updated-text">
+          Last Updated:
+          {{ row.lastUpdated ? (row.lastUpdated | date: "short") : "N/A" }}
+        </span>
+      </div>
     </td>
   </ng-container>
 
@@ -126,6 +206,7 @@
           class="approval-toggle"
           color="primary"
           [checked]="row.approvalStatus === 'approve'"
+          [disabled]="!isStandardApprovalEnabled(row)"
           (change)="
             onApprovalToggleChange(row, $event, 'notarizationNotRequired')
           "
@@ -139,67 +220,6 @@
               ? (row.approvalLastUpdated | date: "short")
               : "N/A"
           }}
-        </span>
-      </div>
-    </td>
-  </ng-container>
-
-  <!-- <ng-container matColumnDef="autofillStatus">
-    <th mat-header-cell *matHeaderCellDef>Autofill</th>
-    <td mat-cell *matCellDef="let row">
-      <div style="display: flex; align-items: center; gap: 4px">
-        <span>{{ row.autofillStatus }}</span>
-        <mat-icon
-          *ngIf="row.autofillStatus === 'Incomplete'"
-          style="font-size: medium; color: #0b74fd; cursor: pointer"
-          [appTooltip]="{
-            header: 'Incomplete',
-            body: 'To save you time and money, MuniVendor automatically fills out all agency required forms using content from your Offeror Profile Page. MuniVendor also attaches all required documents, such as your BRC, W-9, etc. to your offer (completed response/submission package). Please complete your Offeror Profile Page so that MuniVendor can auto-fill the corresponding government agency documents.',
-            subtext:
-              'Alternatively, you can modify/edit these documents and forms by downloading them, filling them out, and then uploading them to the appropriate location in this section.',
-            subtextTwo:
-              'Please note that MuniVendor is not responsible for any errors and/or omissions in your offer (submission package) resulting from documents manually edited by you.',
-            actionLabel: 'Offeror Profile Page',
-            onAction: goToOfferorProfilePage,
-            width: '500px',
-            transformStyle: 'translate(-103%, -48%)'
-          }"
-        >
-          info_outline
-        </mat-icon>
-      </div>
-    </td>
-  </ng-container> -->
-
-  <ng-container matColumnDef="mvAutofillAi">
-    <th mat-header-cell *matHeaderCellDef>
-      MV Autofill AI
-      <mat-icon
-        style="font-size: medium; color: #0b74fd; cursor: pointer"
-        [appTooltip]="{
-          header: 'MV Autofill AI',
-          body: 'Click Autofill to have MuniVendor automatically populate this form using your Offeror Profile information.',
-          width: '400px',
-          showCloseButton: false,
-          showActionButton: false,
-        }"
-      >
-        info_outline
-      </mat-icon>
-    </th>
-    <td mat-cell *matCellDef="let row">
-      <div class="autofill-cell">
-        <button
-          mat-stroked-button
-          color="primary"
-          class="autofill-button"
-          (click)="onAutofillClick(row, 'notarizationNotRequired')"
-        >
-          Autofill
-        </button>
-        <span class="last-updated-text">
-          Last Updated:
-          {{ row.lastUpdated ? (row.lastUpdated | date: "short") : "N/A" }}
         </span>
       </div>
     </td>
@@ -278,74 +298,41 @@
         </mat-icon>
       </th>
       <td mat-cell *matCellDef="let row">
-        <span>
-          {{ row.documentName }}
-        </span>
-      </td>
-    </ng-container>
-
-    <ng-container matColumnDef="fileActions">
-      <th mat-header-cell *matHeaderCellDef>
-        File Actions
-        <mat-icon
-          style="font-size: medium; color: #0b74fd; cursor: pointer"
-          [appTooltip]="{
-            header: 'File Actions',
-            body: 'Clicking on each download button will download a copy of the Agency required form. Clicking on each upload button will enable you to upload your completed document. Only PDF and JPG/JPEG files are allowed.',
-            width: '500px',
-            showCloseButton: false,
-            showActionButton: false,
-          }"
-        >
-          info_outline
-        </mat-icon>
-      </th>
-      <td mat-cell *matCellDef="let row">
-        <div class="file-actions-cell">
-          <button
-            style="margin-left: -12px"
-            mat-icon-button
-            (click)="onDownloadRequiredAgencyDocuments(row)"
-          >
-            <mat-icon style="color: gray">download</mat-icon>
-          </button>
-          <button
-            mat-icon-button
-            (click)="onUploadClick(row, 'notarizationRequired')"
-          >
-            <mat-icon [style.color]="getUploadIconColor(row)">upload</mat-icon>
-          </button>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 2px">
+          <span>
+            {{ row.documentName }}
+          </span>
+          <span style="display: flex; align-items: center; flex-shrink: 0">
+            <button
+              mat-icon-button
+              class="form-name-action download"
+              (click)="onDownloadRequiredAgencyDocuments(row)"
+              [appTooltip]="{
+                header: 'Download',
+                body: 'Download a copy of this Agency required form.',
+                width: '400px',
+                showCloseButton: false,
+                showActionButton: false,
+              }"
+            >
+              <mat-icon>download</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              class="form-name-action reset"
+              (click)="onResetForm(row, 'notarizationRequired')"
+              [appTooltip]="{
+                header: 'Reset',
+                body: 'Reset this form back to its original, unfilled version.',
+                width: '400px',
+                showCloseButton: false,
+                showActionButton: false,
+              }"
+            >
+              <mat-icon>restart_alt</mat-icon>
+            </button>
+          </span>
         </div>
-      </td>
-    </ng-container>
-
-    <ng-container matColumnDef="method">
-      <th mat-header-cell *matHeaderCellDef>
-        Method
-        <mat-icon
-          style="font-size: medium; color: #0b74fd; cursor: pointer"
-          [appTooltip]="{
-            header: 'Method',
-            body: 'Select the method you will use to complete this form.',
-            width: '400px',
-            showCloseButton: false,
-            showActionButton: false,
-          }"
-        >
-          info_outline
-        </mat-icon>
-      </th>
-      <td mat-cell *matCellDef="let row">
-        <mat-form-field
-          appearance="outline"
-          class="method-select-field"
-          subscriptSizing="dynamic"
-        >
-          <mat-select placeholder="Select">
-            <mat-option value="electronicSignature">Autofill</mat-option>
-            <mat-option value="manualUpload">Manual</mat-option>
-          </mat-select>
-        </mat-form-field>
       </td>
     </ng-container>
 
@@ -367,17 +354,64 @@
       </th>
       <td mat-cell *matCellDef="let row">
         <div class="autofill-cell">
-          <button
-            mat-stroked-button
-            color="primary"
-            class="autofill-button"
-            (click)="onAutofillClick(row, 'notarizationRequired')"
-          >
-            Autofill
-          </button>
+          <div class="autofill-button-row">
+            <button
+              mat-stroked-button
+              color="primary"
+              class="autofill-button"
+              [disabled]="!isNotarizationAutofillEnabled(row)"
+              (click)="onAutofillClick(row, 'notarizationRequired')"
+            >
+              Autofill
+            </button>
+            <mat-icon
+              *ngIf="row.hasIncompleteFields"
+              class="warning-icon"
+              [appTooltip]="incompleteFieldsTooltip"
+            >
+              warning
+            </mat-icon>
+          </div>
           <span class="last-updated-text">
             Last Updated:
             {{ row.lastUpdated ? (row.lastUpdated | date: "short") : "N/A" }}
+          </span>
+        </div>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="completeUpload">
+      <th mat-header-cell *matHeaderCellDef>
+        Notarized Upload
+        <mat-icon
+          style="font-size: medium; color: #0b74fd; cursor: pointer"
+          [appTooltip]="{
+            header: 'Notarized Upload',
+            body: 'Upload your completed, notarized version of this document. Only PDF and JPG/JPEG files are allowed.',
+            width: '500px',
+            showCloseButton: false,
+            showActionButton: false,
+          }"
+        >
+          info_outline
+        </mat-icon>
+      </th>
+      <td mat-cell *matCellDef="let row">
+        <div class="upload-cell">
+          <button
+            mat-icon-button
+            [color]="isNotarizedUploadEnabled(row) ? 'primary' : ''"
+            [disabled]="!isNotarizedUploadEnabled(row)"
+            (click)="onUploadClick(row, 'notarizationRequired')"
+          >
+            <mat-icon>upload</mat-icon>
+          </button>
+          <span class="uploaded-on-text">
+            {{
+              row.completeUploadedOn
+                ? "Uploaded " + (row.completeUploadedOn | date: "short")
+                : "Not uploaded"
+            }}
           </span>
         </div>
       </td>
@@ -405,6 +439,7 @@
             class="approval-toggle"
             color="primary"
             [checked]="row.approvalStatus === 'approve'"
+            [disabled]="!isNotarizationApprovalEnabled(row)"
             (change)="
               onApprovalToggleChange(row, $event, 'notarizationRequired')
             "
