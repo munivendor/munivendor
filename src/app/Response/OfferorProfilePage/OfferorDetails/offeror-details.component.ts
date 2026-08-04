@@ -31,6 +31,8 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { map, Observable, startWith } from 'rxjs';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { usPhoneValidator } from '../../../shared/validators/us-phone.validator';
+import { formatUsPhoneAsYouType } from '../../../shared/utils/us-phone.util';
 
 /** Rejects strings that are blank or whitespace-only. */
 function noWhitespaceValidator(
@@ -40,20 +42,6 @@ function noWhitespaceValidator(
   return val.trim().length === 0 && val.length > 0
     ? { whitespace: true }
     : null;
-}
-
-/**
- * Validates fax only when a value is present.
- * Keeps fax optional but enforces the phone pattern when filled in.
- */
-function conditionalPhoneValidator(pattern: RegExp) {
-  return (control: AbstractControl): ValidationErrors | null => {
-    const val: string = control.value ?? '';
-    if (!val) return null;
-    return pattern.test(val)
-      ? null
-      : { pattern: { requiredPattern: pattern.source, actualValue: val } };
-  };
 }
 
 @Component({
@@ -83,8 +71,6 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
   stateFilter = new FormControl<State | null>(null);
   filteredStates$!: Observable<State[]>;
 
-  readonly phonePattern = /^\(\d{3}\) \d{3}-\d{4}$/;
-  readonly phonePatternStr = '^\\(\\d{3}\\) \\d{3}-\\d{4}$';
   readonly zipPattern = '^\\d{5}(-\\d{4})?$';
   readonly taxIdPattern = '^\\d{2}-\\d{7}$';
   readonly cityPattern = '^[a-zA-Z\\s\\-\\.]+$';
@@ -244,11 +230,8 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
       yearsAtCurrentAddress: [null, [Validators.min(0), Validators.max(99)]],
       monthsAtCurrentAddress: [null, [Validators.min(0), Validators.max(11)]],
       taxId: ['', [Validators.pattern(this.taxIdPattern)]],
-      phone: [
-        '',
-        [Validators.required, Validators.pattern(this.phonePatternStr)],
-      ],
-      fax: ['', [conditionalPhoneValidator(this.phonePattern)]],
+      phone: ['', [Validators.required, usPhoneValidator()]],
+      fax: ['', [usPhoneValidator()]],
     });
   }
 
@@ -321,11 +304,7 @@ export class OfferorOrganizationDetailsComponent implements OnInit {
     this.organizationForm.get('fax')?.markAsDirty();
   }
   formatPhone(digits: string): string {
-    const d = digits.replace(/\D/g, '').slice(0, 10);
-    if (d.length === 0) return '';
-    if (d.length <= 3) return `(${d}`;
-    if (d.length <= 6) return `(${d.slice(0, 3)}) ${d.slice(3)}`;
-    return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6, 10)}`;
+    return formatUsPhoneAsYouType(digits);
   }
 
   onPhoneKeydown(event: KeyboardEvent): void {

@@ -86,8 +86,11 @@
               <input
                 matInput
                 formControlName="workPhoneNumber"
-                placeholder="Enter your work phone number"
+                placeholder="(xxx) xxx-xxxx"
                 id="workPhoneNumber"
+                maxlength="14"
+                (input)="onPhoneInput('workPhoneNumber', $any($event.target).value)"
+                (keydown)="onPhoneKeydown($event)"
               />
               <mat-error
                 *ngIf="
@@ -101,9 +104,9 @@
                 *ngIf="
                   userSignupDetailForm
                     .get('workPhoneNumber')
-                    ?.hasError('pattern')
+                    ?.hasError('invalidPhoneNumber')
                 "
-                >Invalid phone number format.</mat-error
+                >Enter a valid US phone number.</mat-error
               >
             </mat-form-field>
           </div>
@@ -113,8 +116,11 @@
               <input
                 matInput
                 formControlName="personalPhoneNumber"
-                placeholder="Enter your mobile number"
+                placeholder="(xxx) xxx-xxxx"
                 id="personalPhoneNumber"
+                maxlength="14"
+                (input)="onPhoneInput('personalPhoneNumber', $any($event.target).value)"
+                (keydown)="onPhoneKeydown($event)"
               />
               <mat-error
                 *ngIf="
@@ -128,9 +134,9 @@
                 *ngIf="
                   userSignupDetailForm
                     .get('personalPhoneNumber')
-                    ?.hasError('pattern')
+                    ?.hasError('invalidPhoneNumber')
                 "
-                >Invalid phone number format.</mat-error
+                >Enter a valid US phone number.</mat-error
               >
             </mat-form-field>
           </div>

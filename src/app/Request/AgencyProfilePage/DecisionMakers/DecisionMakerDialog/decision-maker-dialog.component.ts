@@ -13,6 +13,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { AgencyProfileService } from '../../../services/agency-profile.service';
 import { DecisionMaker } from '../../../model/decisionmaker.model';
 import { SnackbarNotificationService } from '../../../../shared/service/snackbar-notification.service';
+import { UsPhoneValidatorDirective } from '../../../../shared/directive/us-phone-validator.directive';
+import { formatUsPhoneAsYouType } from '../../../../shared/utils/us-phone.util';
 
 @Component({
   selector: 'app-decision-maker-dialog',
@@ -25,6 +27,7 @@ import { SnackbarNotificationService } from '../../../../shared/service/snackbar
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    UsPhoneValidatorDirective,
   ],
   templateUrl: './decision-maker-dialog.component.html',
   styleUrls: ['./decision-maker-dialog.component.css'],
@@ -36,7 +39,6 @@ export class DecisionMakerDialogComponent {
   displayPhone = '';
   isSaving = false;
 
-  readonly phonePattern = '^\\(\\d{3}\\) \\d{3}-\\d{4}$';
   readonly emailPattern =
     '^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$';
 
@@ -67,11 +69,7 @@ export class DecisionMakerDialogComponent {
   }
 
   formatPhoneDisplay(digits: string): string {
-    const d = digits.replace(/\D/g, '');
-    if (d.length === 0) return '';
-    if (d.length <= 3) return `(${d}`;
-    if (d.length <= 6) return `(${d.slice(0, 3)}) ${d.slice(3)}`;
-    return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6, 10)}`;
+    return formatUsPhoneAsYouType(digits);
   }
 
   titleCaseField(field: 'firstName' | 'lastName'): void {

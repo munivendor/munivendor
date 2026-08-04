@@ -115,4 +115,40 @@ export class DocumentService {
       },
     );
   }
+
+  /**
+   * Calls GET /documents/parameterized to generate an autofilled PDF for the
+   * given offer/document. The backend fills the PDF and uploads it
+   * server-side, returning only `{ correlationId }` as JSON — there is no
+   * file content in the response for the caller to download.
+   *
+   * NOTE: `requestDocumentId` (the row's own instance id) is passed as the
+   * API's `sourceRequestDocumentId` param — NOT the row's `sourceRequestDocumentId`
+   * field, which refers to a different, unrelated row.
+   */
+  AutofillDocument(
+    offerId: number,
+    requestDocumentId: number,
+    documentId: number,
+  ): Observable<{ correlationId: string }> {
+    const params = new HttpParams()
+      .set('offerId', offerId)
+      .set('sourceRequestDocumentId', requestDocumentId)
+      .set('documentId', documentId);
+
+    return this.http.get<{ correlationId: string }>(
+      `${this.url}documents/parameterized`,
+      { params },
+    );
+  }
+
+  UpdateRequestDocumentApproval(
+    requestDocumentId: number,
+    approved: boolean,
+  ): Observable<{ isSuccess: boolean }> {
+    return this.http.put<{ isSuccess: boolean }>(`${this.url}RequestDocument`, {
+      requestDocumentId: requestDocumentId,
+      approved: approved,
+    });
+  }
 }

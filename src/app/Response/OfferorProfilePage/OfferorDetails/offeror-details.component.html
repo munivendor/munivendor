@@ -298,7 +298,7 @@
             {{
               organizationForm.get("phone")?.hasError("required")
                 ? "Phone number is required."
-                : "Enter a valid 10-digit phone number."
+                : "Enter a valid US phone number."
             }}
           </mat-error>
         </mat-form-field>
@@ -314,7 +314,7 @@
           />
           <mat-icon matSuffix class="field-icon">fax</mat-icon>
           <mat-error *ngIf="isFieldInvalid('fax')">
-            Enter a valid 10-digit fax number.
+            Enter a valid US fax number.
           </mat-error>
         </mat-form-field>
       </div>

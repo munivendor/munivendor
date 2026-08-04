@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { Designation } from '../model/designation.model';
 import { ConfigService } from '../../core/services/config.service';
+import { StateService } from '../../Request/services/state.service';
 
 @Injectable({
   providedIn: 'root',
@@ -12,6 +13,7 @@ export class UserService {
   constructor(
     private http: HttpClient,
     private config: ConfigService,
+    private stateService: StateService,
   ) {}
 
   private get userApiUrl(): string {
@@ -45,6 +47,18 @@ export class UserService {
     return this.http.put<number>(`${this.userApiUrl}${user.userId}`, user, {
       headers,
     });
+  }
+
+  updateDesigneeInformation(user: User, userId: number): Observable<number> {
+    const accountUserId = this.stateService.getUserId() ?? user.userId;
+    const headers = { 'Content-Type': 'application/json' };
+    return this.http.put<number>(
+      `${this.userApiUrl}${accountUserId}/dependent-user/${userId}`,
+      user,
+      {
+        headers,
+      },
+    );
   }
 
   getUser(userId: number): Observable<User> {

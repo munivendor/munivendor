@@ -140,11 +140,11 @@ export class ProhibitedActivitiesRussiaBelarusComponent
             ?.setValidators([Validators.required]);
         } else {
           this.prohibitedForm.get('ofacAdditional')?.clearValidators();
-          this.prohibitedForm.get('ofacDescription')?.clearValidators();
+          this.prohibitedForm.get('prohibitedDetails')?.clearValidators();
           this.selectedFileName = null;
         }
         this.prohibitedForm.get('ofacAdditional')?.updateValueAndValidity();
-        this.prohibitedForm.get('ofacDescription')?.updateValueAndValidity();
+        this.prohibitedForm.get('prohibitedDetails')?.updateValueAndValidity();
       });
 
     this.prohibitedForm
@@ -152,12 +152,12 @@ export class ProhibitedActivitiesRussiaBelarusComponent
       ?.valueChanges.subscribe((value) => {
         if (value === 'yes') {
           this.prohibitedForm
-            .get('ofacDescription')
+            .get('prohibitedDetails')
             ?.setValidators([Validators.required]);
         } else {
-          this.prohibitedForm.get('ofacDescription')?.clearValidators();
+          this.prohibitedForm.get('prohibitedDetails')?.clearValidators();
         }
-        this.prohibitedForm.get('ofacDescription')?.updateValueAndValidity();
+        this.prohibitedForm.get('prohibitedDetails')?.updateValueAndValidity();
       });
 
     this.applyProfileDetails();
@@ -173,7 +173,7 @@ export class ProhibitedActivitiesRussiaBelarusComponent
     this.prohibitedForm = this.fb.group({
       ofacIdentification: [null, Validators.required],
       ofacAdditional: [null],
-      ofacDescription: [null],
+      prohibitedDetails: [null],
     });
   }
 
@@ -225,7 +225,7 @@ export class ProhibitedActivitiesRussiaBelarusComponent
 
     if (match.details) {
       setTimeout(() => {
-        this.prohibitedForm.patchValue({ ofacDescription: match.details });
+        this.prohibitedForm.patchValue({ prohibitedDetails: match.details });
       }, 0);
     }
   }
@@ -336,7 +336,7 @@ export class ProhibitedActivitiesRussiaBelarusComponent
       return;
     }
 
-    const { ofacIdentification, ofacAdditional, ofacDescription } =
+    const { ofacIdentification, ofacAdditional, prohibitedDetails } =
       this.prohibitedForm.value;
 
     const ofacIdentificationBool = ofacIdentification === 'yes';
@@ -345,7 +345,7 @@ export class ProhibitedActivitiesRussiaBelarusComponent
 
     const descriptionToSave =
       ofacIdentificationBool && ofacAdditional === 'yes'
-        ? ofacDescription
+        ? prohibitedDetails
         : null;
 
     const saveOrUpdate$ = this.savedOfferorProfileId
@@ -390,9 +390,9 @@ export class ProhibitedActivitiesRussiaBelarusComponent
         // Clear dependent fields if user answered 'no' to OFAC identification
         if (!ofacIdentificationBool) {
           this.prohibitedForm.get('ofacAdditional')?.reset();
-          this.prohibitedForm.get('ofacDescription')?.reset();
+          this.prohibitedForm.get('prohibitedDetails')?.reset();
         } else if (ofacAdditional !== 'yes') {
-          this.prohibitedForm.get('ofacDescription')?.reset();
+          this.prohibitedForm.get('prohibitedDetails')?.reset();
         }
 
         this.snackbar.showSnackbarSuccess('Changes saved successfully.');
