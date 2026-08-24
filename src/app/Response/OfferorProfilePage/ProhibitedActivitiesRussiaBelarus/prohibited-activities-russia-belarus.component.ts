@@ -72,7 +72,7 @@ export class ProhibitedActivitiesRussiaBelarusComponent
   @Input() profileDetails: {
     offerorProfileId: number;
     formTypeId: number;
-    details: string;
+    prohibitedDetails: string;
     ofacIdentification?: boolean | null;
     ofacIdentificationAdditional?: boolean | null;
   }[] = [];
@@ -223,9 +223,11 @@ export class ProhibitedActivitiesRussiaBelarusComponent
       ofacAdditional: ofacAdd,
     });
 
-    if (match.details) {
+    if (match.prohibitedDetails) {
       setTimeout(() => {
-        this.prohibitedForm.patchValue({ prohibitedDetails: match.details });
+        this.prohibitedForm.patchValue({
+          prohibitedDetails: match.prohibitedDetails,
+        });
       }, 0);
     }
   }

@@ -4,6 +4,13 @@ import { Observable } from 'rxjs';
 import { ConfigService } from '../../core/services/config.service';
 import { DocumentInstance } from '../../Request/model/documentinstance.model';
 
+export interface DocumentResponseType {
+  codeId: number;
+  codeName: string;
+  codeDesc: string;
+  mapId: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -108,7 +115,7 @@ export class DocumentService {
     }
 
     return this.http.get(
-      `${this.url}Documents/DocumentContent/Response/Zip/${requestId}`,
+      `${this.url}Documents/DocumentContent/Response/SharedDrive/Zip/${requestId}`,
       {
         params,
         responseType: 'blob',
@@ -150,5 +157,33 @@ export class DocumentService {
       requestDocumentId: requestDocumentId,
       approved: approved,
     });
+  }
+
+  ResetDocumentInstance(
+    requestDocumentId: number,
+  ): Observable<{ isSuccess: boolean; correlationId: string }> {
+    return this.http.post<{ isSuccess: boolean; correlationId: string }>(
+      `${this.url}DocumentInstances/Reset/${requestDocumentId}`,
+      {},
+    );
+  }
+
+  GetDocumentResponseTypes(): Observable<DocumentResponseType[]> {
+    return this.http.get<DocumentResponseType[]>(
+      `${this.url}ListData/DocumentResponseTypes`,
+    );
+  }
+
+  GetLatestUploadedDocument(
+    organizationId: number,
+    requestDocumentId: number,
+  ): Observable<HttpResponse<Blob>> {
+    return this.http.get(
+      `${this.url}documents/LatestUploaded/${organizationId}/${requestDocumentId}`,
+      {
+        observe: 'response',
+        responseType: 'blob',
+      },
+    );
   }
 }

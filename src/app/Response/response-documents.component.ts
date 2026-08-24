@@ -33,7 +33,10 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { StateService } from '../Request/services/state.service';
-import { DocumentService } from '../shared/service/document.service';
+import {
+  DocumentService,
+  DocumentResponseType,
+} from '../shared/service/document.service';
 import { TooltipDirective } from '../shared/directive/tooltip.directive';
 import { Router } from '@angular/router';
 import { LoggingService } from '../exceptionhandling/logging.service';
@@ -112,6 +115,11 @@ export class ResponseDocumentsComponent
     'delete',
   ];
 
+  responseMethodOptions: { value: ResponseMethod; label: string }[] = [
+    { value: 'manual', label: 'Manual' },
+    { value: 'autofill', label: 'Autofill' },
+  ];
+
   requiredDocumentsDatasource = new MatTableDataSource<any>([]);
   notarizationRequiredDocumentsDatasource = new MatTableDataSource<any>([]);
   offerorDocumentsDatasource = new MatTableDataSource<any>([]);
@@ -141,6 +149,7 @@ export class ResponseDocumentsComponent
     this.initializeFormGroup();
     this.loadingService.show();
     this.initializeDocuments();
+    this.loadResponseMethodOptions();
 
     this.authorizingOfficialTooltip = {
       header: 'Incomplete',
@@ -168,11 +177,15 @@ export class ResponseDocumentsComponent
         case 'formName':
           return (item.documentName ?? item.formName ?? '').toLowerCase();
         case 'documentInstanceStatus':
-          return (item.documentInstanceStatus ?? '').toLowerCase();
+          return this.getDocumentInstanceStatus(item).toLowerCase();
         default:
           return '';
       }
     };
+  }
+
+  getDocumentInstanceStatus(row: any): string {
+    return row.approvalStatus === 'approve' ? 'Complete' : 'Incomplete';
   }
 
   initializeDocuments(): void {
@@ -204,29 +217,47 @@ export class ResponseDocumentsComponent
             notRequiredNotarizationDocs.map((doc: any) => ({
               ...doc,
               formName: doc.documentName,
-              responseMethod: (doc.responseMethod ?? null) as ResponseMethod,
-              manualUploadedOn: doc.manualUploadedOn ?? null,
-              lastUpdated: doc.lastUpdated ?? null,
+              responseMethod: (doc.derived
+                ? 'manual'
+                : this.mapDocumentSourceToResponseMethod(
+                    doc.documentSource,
+                  )) as ResponseMethod,
+              manualUploadedOn:
+                doc.documentSource === 'UserUpload'
+                  ? this.toUtcIsoString(
+                      doc.documentInstanceUserUploadLastUpdated,
+                    )
+                  : null,
+              lastUpdated:
+                doc.documentSource === 'Autofill'
+                  ? this.toUtcIsoString(doc.documentInstanceAutoFillLastUpdated)
+                  : null,
               hasIncompleteFields: doc.hasIncompleteFields ?? false,
-              documentInstanceStatus:
-                doc.documentInstanceStatus ?? 'Incomplete',
+              documentInstanceStatus: doc.approved ? 'Complete' : 'Incomplete',
               approvalStatus: doc.approved ? 'approve' : 'unapprove',
-              approvalLastUpdated: doc.approvalLastUpdated ?? null,
+              approvalLastUpdated: doc.approved
+                ? this.toUtcIsoString(doc.lastApprovalChangeDate)
+                : null,
+              documentInstanceId: doc.documentInstanceId ?? null,
             }));
 
           this.notarizationRequiredDocumentsDatasource.data =
             requiresNotarizationDocs.map((doc: any) => ({
               ...doc,
               formName: doc.documentName,
-              // lastUpdated: doc.lastUpdated ?? null,
               hasIncompleteFields: doc.hasIncompleteFields ?? false,
-              completeUploadedOn: doc.completeUploadedOn ?? null,
-              documentInstanceStatus:
-                doc.documentInstanceStatus ?? 'Incomplete',
-
-              lastUpdated: doc.lastUpdated ?? null,
+              completeUploadedOn: this.toUtcIsoString(
+                doc.documentInstanceUserUploadLastUpdated,
+              ),
+              documentInstanceStatus: doc.approved ? 'Complete' : 'Incomplete',
+              lastUpdated: this.toUtcIsoString(
+                doc.documentInstanceAutoFillLastUpdated,
+              ),
               approvalStatus: doc.approved ? 'approve' : 'unapprove',
-              approvalLastUpdated: doc.approvalLastUpdated ?? null,
+              approvalLastUpdated: doc.approved
+                ? this.toUtcIsoString(doc.lastApprovalChangeDate)
+                : null,
+              documentInstanceId: doc.documentInstanceId ?? null,
             }));
 
           this.offerorDocuments = offerorDocs.map((doc: any) => ({ ...doc }));
@@ -287,73 +318,142 @@ export class ResponseDocumentsComponent
     });
   }
 
-  // ---------------------------------------------------------------------------
-  // Response Method
-  // ---------------------------------------------------------------------------
+  private loadResponseMethodOptions(): void {
+    this.documentService.GetDocumentResponseTypes().subscribe({
+      next: (types: DocumentResponseType[]) => {
+        const options = (types || [])
+          .map((type) => ({
+            value: this.mapCodeNameToResponseMethod(type.codeName),
+            label: type.codeName,
+          }))
+          .filter(
+            (
+              option,
+            ): option is { value: 'manual' | 'autofill'; label: string } =>
+              option.value !== null,
+          );
+
+        if (options.length > 0) {
+          this.responseMethodOptions = options;
+        }
+      },
+      error: (error) => {
+        const correlationId = error?.error?.correlationId;
+        this.loggingService.logException(
+          new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+          3,
+          {
+            organizationId: this.stateService.getOrganizationId(),
+            correlationId: correlationId,
+            methodName: 'loadResponseMethodOptions',
+            className: 'ResponseDocumentsComponent',
+            operation: 'GetDocumentResponseTypes',
+            userId: this.stateService.getUserId(),
+          },
+        );
+      },
+    });
+  }
+
+  private toUtcIsoString(dateString: string | null | undefined): string | null {
+    if (!dateString) {
+      return null;
+    }
+    return /[zZ]|[+-]\d{2}:\d{2}$/.test(dateString)
+      ? dateString
+      : `${dateString}Z`;
+  }
+
+  private mapDocumentSourceToResponseMethod(
+    documentSource: string | null | undefined,
+  ): ResponseMethod {
+    switch (documentSource) {
+      case 'UserUpload':
+        return 'manual';
+      case 'Autofill':
+        return 'autofill';
+      default:
+        return null;
+    }
+  }
+
+  private mapCodeNameToResponseMethod(codeName: string): ResponseMethod {
+    switch ((codeName ?? '').trim().toLowerCase()) {
+      case 'manual':
+        return 'manual';
+      case 'autofill':
+        return 'autofill';
+      default:
+        return null;
+    }
+  }
 
   onResponseMethodChange(row: any, method: ResponseMethod): void {
     if (row.approvalStatus === 'approve') {
       return; // method is locked once the form has been approved
     }
+    if (row.derived) {
+      return; // agency specific documents don't support autofill; always Manual
+    }
     row.responseMethod = method;
   }
 
-  // ---------------------------------------------------------------------------
-  // Button / toggle enablement helpers
-  // ---------------------------------------------------------------------------
+  isResponseMethodLocked(row: any): boolean {
+    return row.approvalStatus === 'approve' || !!row.derived;
+  }
 
-  /** Standard table: manual upload button is blue/enabled only after Manual is chosen. */
   isManualUploadEnabled(row: any): boolean {
     return row.responseMethod === 'manual' && row.approvalStatus !== 'approve';
   }
 
-  /** Standard table: autofill button is blue/enabled only after MV Autofill AI is chosen. */
   isStandardAutofillEnabled(row: any): boolean {
     return (
-      row.responseMethod === 'autofill' && row.approvalStatus !== 'approve'
+      row.responseMethod === 'autofill' &&
+      row.approvalStatus !== 'approve' &&
+      !row.derived
     );
   }
 
-  /** Notarization table: autofill is optional, available until the form is approved. */
   isNotarizationAutofillEnabled(row: any): boolean {
-    return row.approvalStatus !== 'approve';
+    return row.approvalStatus !== 'approve' && !row.completeUploadedOn;
   }
 
-  /** Notarization table: the notarized upload is available until the form is approved. */
   isNotarizedUploadEnabled(row: any): boolean {
     return row.approvalStatus !== 'approve';
   }
 
-  /**
-   * Standard table: approval unlocks only once the chosen path has been
-   * completed. An already-approved row stays enabled so the offeror can
-   * unapprove it and go back to edit / re-upload.
-   */
   isStandardApprovalEnabled(row: any): boolean {
     if (row.approvalStatus === 'approve') {
       return true;
     }
-    if (row.responseMethod === 'manual') {
-      return !!row.manualUploadedOn;
-    }
-    if (row.responseMethod === 'autofill') {
-      return !!row.lastUpdated;
-    }
-    return false;
+    return !!(
+      row.documentInstanceId ||
+      row.manualUploadedOn ||
+      row.lastUpdated
+    );
   }
 
-  /**
-   * Notarization table: approval unlocks only once the notarized document is
-   * uploaded. An already-approved row stays enabled so it can be unapproved
-   * and re-uploaded.
-   */
   isNotarizationApprovalEnabled(row: any): boolean {
     return row.approvalStatus === 'approve' || !!row.completeUploadedOn;
   }
 
-  // ---------------------------------------------------------------------------
-  // Upload
-  // ---------------------------------------------------------------------------
+  isResetEnabled(row: any): boolean {
+    return row.approvalStatus !== 'approve' && !!row.documentInstanceId;
+  }
+
+  isNotarizationResetEnabled(row: any): boolean {
+    return (
+      row.approvalStatus !== 'approve' &&
+      !!(row.lastUpdated || row.completeUploadedOn)
+    );
+  }
+
+  private clearStaleInstanceFields(row: any): void {
+    row.hasIncompleteFields = false;
+    row.approvalStatus = 'unapprove';
+    row.documentInstanceStatus = 'Incomplete';
+    row.approvalLastUpdated = null;
+  }
 
   onUploadClick(row: any, source: DocumentSource): void {
     this.currentRow = row;
@@ -395,21 +495,28 @@ export class ResponseDocumentsComponent
           file,
         )
         .subscribe({
-          next: (response) => {
+          next: (response: any) => {
             this.loadingService.hide();
-            if (response.isSuccess && this.currentRow?.requestDocumentId) {
+            if (this.currentRow?.requestDocumentId) {
               const now = new Date().toISOString();
 
-              // Record the upload timestamp in the correct column. NOTE:
-              // the Status stays Incomplete here — it only becomes Complete
-              // once the offeror approves the form.
+              this.clearStaleInstanceFields(this.currentRow);
+
               if (this.currentSource === 'notarizationRequired') {
                 this.currentRow.completeUploadedOn = now;
               } else {
                 this.currentRow.manualUploadedOn = now;
+                this.currentRow.lastUpdated = null;
+                this.currentRow.documentInstanceAutoFillLastUpdated = null;
               }
               this.currentRow.documentSourceId = 2; // user / manual upload
+              this.currentRow.documentSource = 'UserUpload';
+              this.currentRow.documentInstanceUserUploadLastUpdated = now;
               this.currentRow.derived = false;
+              this.currentRow.documentInstanceId =
+                response.documentInstanceId ??
+                this.currentRow.documentInstanceId ??
+                this.currentRow.requestDocumentId;
 
               this.snackbarNotificationService.showSnackbarSuccess(
                 'Document uploaded successfully.',
@@ -461,18 +568,11 @@ export class ResponseDocumentsComponent
     ) as FormArray;
   }
 
-  // ---------------------------------------------------------------------------
-  // MV Autofill AI
-  // ---------------------------------------------------------------------------
-
   onAutofillClick(row: any, source: DocumentSource): void {
     const offerId = this.responseIdParam
       ? Number(this.responseIdParam)
       : this.responseIdFromStateService;
 
-    // IMPORTANT: the API's `sourceRequestDocumentId` param expects this row's
-    // OWN requestDocumentId — not row.sourceRequestDocumentId, which refers
-    // to a different row entirely.
     const requestDocumentId = row.requestDocumentId;
     const documentId = row.documentId;
 
@@ -489,16 +589,29 @@ export class ResponseDocumentsComponent
         next: (response: any) => {
           this.loadingService.hide();
 
-          row.lastUpdated = new Date().toISOString();
+          this.clearStaleInstanceFields(row);
 
+          const now = new Date().toISOString();
+          row.lastUpdated = now;
+          row.documentSourceId = 1; // autofill
+
+          row.documentSource = 'Autofill';
+          row.documentInstanceAutoFillLastUpdated = now;
+          if (source !== 'notarizationRequired') {
+            row.manualUploadedOn = null;
+            row.documentInstanceUserUploadLastUpdated = null;
+          }
           // Show the yellow warning triangle when the autofill engine reports
-          // empty fields. Adjust the property names below to match whatever
-          // your AutofillDocument endpoint actually returns.
+          // empty fields.
           row.hasIncompleteFields =
             response?.hasIncompleteFields ??
             (Array.isArray(response?.incompleteFields)
               ? response.incompleteFields.length > 0
               : false);
+          row.documentInstanceId =
+            response?.documentInstanceId ??
+            row.documentInstanceId ??
+            row.requestDocumentId;
 
           this.snackbarNotificationService.showSnackbarSuccess(
             'Document autofilled successfully.',
@@ -531,10 +644,6 @@ export class ResponseDocumentsComponent
       });
   }
 
-  // ---------------------------------------------------------------------------
-  // Approval  (drives the Status column)
-  // ---------------------------------------------------------------------------
-
   onApprovalToggleChange(
     row: any,
     event: MatSlideToggleChange,
@@ -545,7 +654,7 @@ export class ResponseDocumentsComponent
 
     if (!requestDocumentId) {
       console.error('Request Document ID is not available.');
-      event.source.checked = !approved; // revert
+      event.source.checked = !approved;
       return;
     }
 
@@ -559,7 +668,7 @@ export class ResponseDocumentsComponent
           this.loadingService.hide();
 
           if (!response.isSuccess) {
-            event.source.checked = !approved; // revert toggle
+            event.source.checked = !approved;
             this.snackbarNotificationService.showSnackbarError(
               'Unable to update approval status. Please try again.',
             );
@@ -567,15 +676,12 @@ export class ResponseDocumentsComponent
           }
 
           row.approvalStatus = approved ? 'approve' : 'unapprove';
-          // Approving completes the form; unapproving sends it back to Incomplete.
           row.documentInstanceStatus = approved ? 'Complete' : 'Incomplete';
-          if (approved) {
-            row.approvalLastUpdated = new Date().toISOString();
-          }
+          row.approvalLastUpdated = approved ? new Date().toISOString() : null;
         },
         error: (error) => {
           this.loadingService.hide();
-          event.source.checked = !approved; // revert toggle
+          event.source.checked = !approved;
 
           const correlationId = error?.error?.correlationId;
           this.loggingService.logException(
@@ -601,38 +707,81 @@ export class ResponseDocumentsComponent
       });
   }
 
-  // ---------------------------------------------------------------------------
-  // Reset form to its original, unfilled version
-  // ---------------------------------------------------------------------------
-
   onResetForm(row: any, source: DocumentSource): void {
-    // NOTE: This is currently a UI-ONLY reset. The backend still holds any
-    // uploaded / autofilled document instance, so the cleared state below will
-    // NOT survive a page refresh — initializeDocuments() will repopulate the
-    // row from the API.
-    //
-    // TODO: Call the reset/delete endpoint here and move the local reset below
-    // into its success callback, e.g.:
-    //
-    //   this.documentService
-    //     .ResetDocumentInstance(row.requestDocumentId)
-    //     .pipe(takeUntil(this.destroy$))
-    //     .subscribe({ next: () => { /* local reset */ }, error: (e) => { ... } });
+    const resetEnabled =
+      source === 'notarizationRequired'
+        ? this.isNotarizationResetEnabled(row)
+        : this.isResetEnabled(row);
+    if (!resetEnabled) {
+      return; // guard: approved forms, or forms with nothing to reset, can't be reset
+    }
 
-    row.responseMethod = null;
-    row.manualUploadedOn = null;
-    row.completeUploadedOn = null;
-    row.lastUpdated = null;
-    row.hasIncompleteFields = false;
-    row.approvalStatus = 'unapprove';
-    row.approvalLastUpdated = null;
-    row.documentInstanceStatus = 'Incomplete';
-    row.documentSourceId = null;
-    row.derived = false;
+    const documentInstanceId = row.documentInstanceId;
+    const requestDocumentId = row.requestDocumentId;
+    if (!documentInstanceId) {
+      row.responseMethod = null;
+      row.manualUploadedOn = null;
+      row.completeUploadedOn = null;
+      row.lastUpdated = null;
+      row.hasIncompleteFields = false;
+      row.approvalStatus = 'unapprove';
+      row.approvalLastUpdated = null;
+      return;
+    }
 
-    this.snackbarNotificationService.showSnackbarSuccess(
-      'Form reset to its original version.',
-    );
+    this.loadingService.show('Resetting...');
+
+    this.documentService
+      .ResetDocumentInstance(requestDocumentId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.loadingService.hide();
+          row.responseMethod = null;
+          row.manualUploadedOn = null;
+          row.completeUploadedOn = null;
+          row.lastUpdated = null;
+          row.hasIncompleteFields = false;
+          row.approvalStatus = 'unapprove';
+          row.approvalLastUpdated = null;
+          row.documentInstanceStatus = 'Incomplete';
+          row.documentSourceId = null;
+          row.documentSource = null;
+          row.documentInstanceAutoFillLastUpdated = null;
+          row.documentInstanceUserUploadLastUpdated = null;
+          row.derived = false;
+          row.documentInstanceId = null;
+
+          this.snackbarNotificationService.showSnackbarSuccess(
+            'Form reset to its original version.',
+          );
+        },
+        error: (error) => {
+          console.log('error', error);
+          this.loadingService.hide();
+
+          const correlationId = error?.error?.correlationId;
+          this.loggingService.logException(
+            new Error(`HTTP Error ${error.status}: ${error.statusText}`),
+            3,
+            {
+              requestId:
+                this.responseIdParam ?? this.responseIdFromStateService,
+              requestDocumentId: requestDocumentId,
+              organizationId: this.stateService.getOrganizationId(),
+              correlationId: correlationId,
+              methodName: 'onResetForm',
+              className: 'ResponseDocumentsComponent',
+              operation: 'ResetDocumentInstance',
+              userId: this.stateService.getUserId(),
+            },
+          );
+
+          this.snackbarNotificationService.showSnackbarError(
+            'Unable to reset this form. Please try again.',
+          );
+        },
+      });
   }
 
   onDownloadRequiredAgencyDocuments(row: {
@@ -728,58 +877,20 @@ export class ResponseDocumentsComponent
               );
             },
           });
-      } else {
-        this.documentService.GetStateDocumentContent(documentId).subscribe({
-          next: (response) => {
-            const blob = response.body;
-            if (!blob) {
-              this.loadingService.hide();
-              return;
-            }
-
-            const contentDisposition = response.headers.get(
-              'Content-Disposition',
-            );
-            const fileName = this.parseContentDispositionFileName(
-              contentDisposition,
-              'download',
-            );
-
-            const a = document.createElement('a');
-            const blobUrl = URL.createObjectURL(blob);
-            a.href = blobUrl;
-            a.download = fileName;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(blobUrl);
-            this.loadingService.hide();
-          },
-          error: (error) => {
-            const correlationId = error?.error?.correlationId;
-
-            this.loggingService.logException(
-              new Error(`HTTP Error ${error.status}: ${error.statusText}`),
-              3,
-              {
-                requestId: requestId,
-                organizationId: this.stateService.getOrganizationId(),
-                documentId: documentId,
-                correlationId: correlationId,
-                methodName: 'onDownloadRequiredAgencyDocuments',
-                className: 'ResponseDocumentsComponent',
-                operation: 'GetStateDocumentContent',
-                userId: this.stateService.getUserId(),
-              },
-            );
-          },
-        });
+        return;
       }
-    } else {
-      this.documentService.GetDocumentInstance(requestDocumentId).subscribe({
+    }
+
+    this.documentService
+      .GetLatestUploadedDocument(row.organizationId, requestDocumentId)
+      .subscribe({
         next: (response) => {
+          console.log('response', response);
           const blob = response.body;
-          if (!blob) return;
+          if (!blob) {
+            this.loadingService.hide();
+            return;
+          }
 
           const contentDisposition = response.headers.get(
             'Content-Disposition',
@@ -800,6 +911,7 @@ export class ResponseDocumentsComponent
           this.loadingService.hide();
         },
         error: (error) => {
+          console.log('error', error);
           this.loadingService.hide();
           const correlationId = error?.error?.correlationId;
 
@@ -808,18 +920,17 @@ export class ResponseDocumentsComponent
             3,
             {
               requestId: requestId,
-              organizationId: this.stateService.getOrganizationId(),
+              organizationId: row.organizationId,
               requestDocumentId: requestDocumentId,
               correlationId: correlationId,
               methodName: 'onDownloadRequiredAgencyDocuments',
               className: 'ResponseDocumentsComponent',
-              operation: 'GetDocumentInstance',
+              operation: 'GetLatestUploadedDocument',
               userId: this.stateService.getUserId(),
             },
           );
         },
       });
-    }
   }
 
   openFileUploadDialog(responseId: number): void {
@@ -954,20 +1065,20 @@ export class ResponseDocumentsComponent
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          if (response.isSuccess) {
-            const optionalIndex =
-              this.optionalOfferorDocuments.controls.findIndex(
-                (control) => control.get('documentId')?.value === documentId,
-              );
-
-            if (optionalIndex > -1) {
-              this.optionalOfferorDocuments.removeAt(optionalIndex);
-              this.updateCombinedDatasource();
-            }
-            this.snackbarNotificationService.showSnackbarSuccess(
-              'Document deleted successfully.',
+          // if (response.isSuccess) {
+          const optionalIndex =
+            this.optionalOfferorDocuments.controls.findIndex(
+              (control) => control.get('documentId')?.value === documentId,
             );
+
+          if (optionalIndex > -1) {
+            this.optionalOfferorDocuments.removeAt(optionalIndex);
+            this.updateCombinedDatasource();
           }
+          this.snackbarNotificationService.showSnackbarSuccess(
+            'Document deleted successfully.',
+          );
+          // }
         },
         error: (error) => {
           const correlationId = error?.error?.correlationId;
@@ -992,20 +1103,6 @@ export class ResponseDocumentsComponent
 
   goToOfferorProfilePage() {
     this.router.navigate(['/offeror-profile-page']);
-  }
-  // documentSourceId
-  // 1 = AUTOFILL
-  // 2 = user upload = manual upload
-  // 3 - offeror profile upload
-
-  getUploadIconColor(row: any): string {
-    if (row.documentSourceId === 3) {
-      return '#3f51b5'; // blue = uploaded from Offeror Profile
-    }
-    if (row.documentSourceId === 2) {
-      return 'green'; // green = user uploaded
-    }
-    return 'gray'; // gray = not yet uploaded
   }
 
   ngOnDestroy(): void {
