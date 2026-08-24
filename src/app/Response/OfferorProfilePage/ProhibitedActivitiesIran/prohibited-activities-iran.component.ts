@@ -71,8 +71,13 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
   @Input() profileDetails: {
     offerorProfileId: number;
     formTypeId: number; // mapId
-    details: string;
+    prohibitedDetails: string;
     chapter25Identification?: boolean | null;
+    chapter25EntityName?: string | null;
+    chapter25RelationshipToOfferor?: string | null;
+    chapter25EngagementYears?: number | null;
+    chapter25EngagementMonths?: number | null;
+    chapter25AnticipatedCessation?: string | null;
   }[] = [];
   @Output() detailsSaved = new EventEmitter<void>();
 
@@ -119,8 +124,6 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
         } else {
           this.iranForm.get('prohibitedDetails')?.clearValidators();
           this.selectedFileName = null;
-          // These fields are not yet persisted by the backend; clear them
-          // client-side so stale values don't linger after switching to "yes".
           this.iranForm.patchValue({
             chapter25EntityName: null,
             chapter25RelationshipToOfferor: null,
@@ -144,9 +147,6 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
   private buildForm(): void {
     this.iranForm = this.fb.group({
       chapter25Identification: [null, Validators.required],
-      // Not yet persisted by the backend — see SaveOfferorProfileDetails/
-      // UpdateOfferorProfileDetails in offeror-profile.service.ts, which have
-      // no fields for these. UI only until the API is extended.
       chapter25EntityName: [null, Validators.maxLength(300)],
       chapter25RelationshipToOfferor: [null, Validators.maxLength(300)],
       chapter25EngagementYears: [null, [Validators.min(0), Validators.max(99)]],
@@ -190,11 +190,22 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
           ? 'no'
           : null;
 
-    this.iranForm.patchValue({ chapter25Identification: chapter25 });
+    this.iranForm.patchValue({
+      chapter25Identification: chapter25,
+      chapter25EntityName: match.chapter25EntityName ?? null,
+      chapter25RelationshipToOfferor:
+        match.chapter25RelationshipToOfferor ?? null,
+      chapter25EngagementYears: match.chapter25EngagementYears ?? null,
+      chapter25EngagementMonths: match.chapter25EngagementMonths ?? null,
+      chapter25AnticipatedCessation:
+        match.chapter25AnticipatedCessation ?? null,
+    });
 
-    if (match.details) {
+    if (match.prohibitedDetails) {
       setTimeout(() => {
-        this.iranForm.patchValue({ prohibitedDetails: match.details });
+        this.iranForm.patchValue({
+          prohibitedDetails: match.prohibitedDetails,
+        });
       }, 0);
     }
   }
@@ -223,10 +234,30 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
       return;
     }
 
-    const { chapter25Identification, prohibitedDetails } = this.iranForm.value;
+    const {
+      chapter25Identification,
+      prohibitedDetails,
+      chapter25EntityName,
+      chapter25RelationshipToOfferor,
+      chapter25EngagementYears,
+      chapter25EngagementMonths,
+      chapter25AnticipatedCessation,
+    } = this.iranForm.value;
 
     // 'yes' = does NOT conduct business, 'no' = DOES conduct business
     const chapter25Bool = chapter25Identification === 'yes';
+
+    // Only send the conditional fields when the user certified they DO
+    // conduct business in Iran; otherwise clear them out on save.
+    const entityName = !chapter25Bool ? chapter25EntityName : null;
+    const relationshipToOfferor = !chapter25Bool
+      ? chapter25RelationshipToOfferor
+      : null;
+    const engagementYears = !chapter25Bool ? chapter25EngagementYears : null;
+    const engagementMonths = !chapter25Bool ? chapter25EngagementMonths : null;
+    const anticipatedCessation = !chapter25Bool
+      ? chapter25AnticipatedCessation
+      : null;
 
     const saveOrUpdate$ = this.savedOfferorProfileId
       ? this.offerorProfileService.UpdateOfferorProfileDetails(
@@ -237,6 +268,11 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
           null,
           null,
           chapter25Bool,
+          entityName,
+          relationshipToOfferor,
+          engagementYears,
+          engagementMonths,
+          anticipatedCessation,
         )
       : this.offerorProfileService.SaveOfferorProfileDetails(
           this.organizationId!,
@@ -245,6 +281,11 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
           null,
           null,
           chapter25Bool,
+          entityName,
+          relationshipToOfferor,
+          engagementYears,
+          engagementMonths,
+          anticipatedCessation,
         );
 
     // Delete doc if user certified they do NOT conduct business
@@ -278,7 +319,6 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
             chapter25AnticipatedCessation: null,
           });
         }
-
         this.snackbar.showSnackbarSuccess('Changes saved successfully.');
         this.detailsSaved.emit();
       },

@@ -13,7 +13,7 @@
         style="font-size: medium; color: #0b74fd; cursor: pointer"
         [appTooltip]="{
           header: 'Form Name',
-          body: 'This column indicates the name of the Agency form that you, the offeror are required to complete before submitting your offer.',
+          body: 'Displays the name of the agency-required form or document. Select the download icon to download the agency\'s original blank form.',
           width: 'auto',
           showCloseButton: false,
           showActionButton: false,
@@ -23,7 +23,14 @@
       </mat-icon>
     </th>
     <td mat-cell *matCellDef="let row">
-      <div style="display: flex; align-items: center; justify-content: space-between; gap: 2px">
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 2px;
+        "
+      >
         <span>
           {{ row.documentName }}
         </span>
@@ -45,6 +52,7 @@
           <button
             mat-icon-button
             class="form-name-action reset"
+            [disabled]="!isResetEnabled(row)"
             (click)="onResetForm(row, 'notarizationNotRequired')"
             [appTooltip]="{
               header: 'Reset',
@@ -75,8 +83,8 @@
         style="font-size: medium; color: #0b74fd; cursor: pointer"
         [appTooltip]="{
           header: 'Response Method',
-          body: 'Select the method you will use to complete this form: Manual to upload your own completed document, or MV Autofill AI to have MuniVendor complete it for you.',
-          width: '400px',
+          body: 'Select how you would like to complete this document. Choose Manual to upload your own completed document, or Autofill to have MuniVendor generate the document using information stored in your Offeror Profile. Only one response method may be selected at a time.',
+          width: '500px',
           showCloseButton: false,
           showActionButton: false,
         }"
@@ -93,11 +101,16 @@
         <mat-select
           placeholder="Select"
           [value]="row.responseMethod"
-          [disabled]="row.approvalStatus === 'approve'"
+          [disabled]="isResponseMethodLocked(row)"
           (selectionChange)="onResponseMethodChange(row, $event.value)"
         >
-          <mat-option value="manual">Manual</mat-option>
-          <mat-option value="autofill">MV Autofill AI</mat-option>
+          <ng-container *ngFor="let option of responseMethodOptions">
+            <mat-option
+              *ngIf="option.value !== 'autofill' || !row.derived"
+              [value]="option.value"
+              >{{ option.label }}</mat-option
+            >
+          </ng-container>
         </mat-select>
       </mat-form-field>
     </td>
@@ -110,7 +123,7 @@
         style="font-size: medium; color: #0b74fd; cursor: pointer"
         [appTooltip]="{
           header: 'Manual Upload',
-          body: 'After selecting Manual as your Response Method, upload your completed document here. Only PDF and JPG/JPEG files are allowed.',
+          body: 'Upload a completed version of this document. Uploading a new file replaces the previously uploaded file. The Last Updated date displays the timestamp of the most recent upload. ',
           width: '500px',
           showCloseButton: false,
           showActionButton: false,
@@ -121,20 +134,24 @@
     </th>
     <td mat-cell *matCellDef="let row">
       <div class="upload-cell">
-        <button
-          mat-icon-button
-          [color]="isManualUploadEnabled(row) ? 'primary' : ''"
-          [disabled]="!isManualUploadEnabled(row)"
-          (click)="onUploadClick(row, 'notarizationNotRequired')"
-        >
-          <mat-icon>upload</mat-icon>
-        </button>
+        <div class="control-row">
+          <button
+            mat-icon-button
+            class="upload-icon-button"
+            [color]="isManualUploadEnabled(row) ? 'primary' : ''"
+            [disabled]="!isManualUploadEnabled(row)"
+            (click)="onUploadClick(row, 'notarizationNotRequired')"
+          >
+            <mat-icon class="upload-icon">upload</mat-icon>
+          </button>
+        </div>
         <span class="uploaded-on-text">
-          {{
+          <span class="caption-label">Uploaded On:</span>
+          <span class="caption-value">{{
             row.manualUploadedOn
-              ? "Uploaded " + (row.manualUploadedOn | date: "short")
-              : "Not uploaded"
-          }}
+              ? (row.manualUploadedOn | date: "short")
+              : "N/A"
+          }}</span>
         </span>
       </div>
     </td>
@@ -147,8 +164,8 @@
         style="font-size: medium; color: #0b74fd; cursor: pointer"
         [appTooltip]="{
           header: 'MV Autofill AI',
-          body: 'Click Autofill to have MuniVendor automatically populate this form using your Offeror Profile information.',
-          width: '400px',
+          body: 'Generate this document using the latest information from your Offeror Profile. Selecting Autofill as the Response Method enables this button. Clicking Autofill replaces any previously generated version with a newly generated document. If your Offeror Profile is updated, click Autofill again to regenerate the document with the latest information. If required information is missing from your Offeror Profile, a warning icon will be displayed until the missing information has been completed. ',
+          width: '900px',
           showCloseButton: false,
           showActionButton: false,
         }"
@@ -177,8 +194,10 @@
           </mat-icon>
         </div>
         <span class="last-updated-text">
-          Last Updated:
-          {{ row.lastUpdated ? (row.lastUpdated | date: "short") : "N/A" }}
+          <span class="caption-label">Updated On:</span>
+          <span class="caption-value">{{
+            row.lastUpdated ? (row.lastUpdated | date: "short") : "N/A"
+          }}</span>
         </span>
       </div>
     </td>
@@ -191,8 +210,8 @@
         style="font-size: medium; color: #0b74fd; cursor: pointer"
         [appTooltip]="{
           header: 'Action',
-          body: 'Approve or unapprove this form.',
-          width: '400px',
+          body: 'Review the completed document before changing the Approval toggle to Approved. The Approval toggle becomes available only after a document has been uploaded or generated. Replacing or regenerating a document automatically changes the Approval status back to Unapproved. ',
+          width: '600px',
           showCloseButton: false,
           showActionButton: false,
         }"
@@ -202,24 +221,26 @@
     </th>
     <td mat-cell *matCellDef="let row">
       <div class="action-cell">
-        <mat-slide-toggle
-          class="approval-toggle"
-          color="primary"
-          [checked]="row.approvalStatus === 'approve'"
-          [disabled]="!isStandardApprovalEnabled(row)"
-          (change)="
-            onApprovalToggleChange(row, $event, 'notarizationNotRequired')
-          "
-        >
-          {{ row.approvalStatus === "approve" ? "Approved" : "Unapproved" }}
-        </mat-slide-toggle>
+        <div class="control-row">
+          <mat-slide-toggle
+            class="approval-toggle"
+            color="primary"
+            [checked]="row.approvalStatus === 'approve'"
+            [disabled]="!isStandardApprovalEnabled(row)"
+            (change)="
+              onApprovalToggleChange(row, $event, 'notarizationNotRequired')
+            "
+          >
+            {{ row.approvalStatus === "approve" ? "Approved" : "Unapproved" }}
+          </mat-slide-toggle>
+        </div>
         <span class="last-updated-text">
-          Last Updated:
-          {{
+          <span class="caption-label">Approved On:</span>
+          <span class="caption-value">{{
             row.approvalLastUpdated
               ? (row.approvalLastUpdated | date: "short")
               : "N/A"
-          }}
+          }}</span>
         </span>
       </div>
     </td>
@@ -232,7 +253,7 @@
         style="font-size: medium; color: #0b74fd; cursor: pointer"
         [appTooltip]="{
           header: 'Status',
-          body: 'This column indicates the current status of the respective required Agency form. Incomplete means that you have not yet uploaded your manually completed form. Complete means that you successfully uploaded the respective form. You, the offeror, must make certain that you completed the forms as per the Agency\'s instructions.',
+          body: 'Displays the completion status of this document. A document is Complete only after a valid document has been uploaded or generated and the Approval toggle has been set to Approved.',
           width: '500px',
           showCloseButton: false,
           showActionButton: false,
@@ -243,19 +264,19 @@
       </mat-icon>
     </th>
     <td mat-cell *matCellDef="let row">
-      <div style="display: flex; align-items: center; gap: 4px">
+      <div class="status-cell">
         <span
           class="status-badge"
           [ngClass]="
-            row.documentInstanceStatus === 'Complete'
+            getDocumentInstanceStatus(row) === 'Complete'
               ? 'complete'
               : 'incomplete'
           "
         >
-          {{ row.documentInstanceStatus }}
+          {{ getDocumentInstanceStatus(row) }}
         </span>
         <mat-icon
-          *ngIf="row.documentInstanceStatus === 'Incomplete'"
+          *ngIf="getDocumentInstanceStatus(row) === 'Incomplete'"
           style="font-size: medium; color: #0b74fd; cursor: pointer"
           [appTooltip]="authorizingOfficialTooltip"
         >
@@ -277,7 +298,7 @@
   <table
     mat-table
     [dataSource]="notarizationRequiredDocumentsDatasource"
-    class="mat-elevation-z8"
+    class="mat-elevation-z8 notarization-table"
     matSort
     #notarizationSort="matSort"
   >
@@ -288,7 +309,7 @@
           style="font-size: medium; color: #0b74fd; cursor: pointer"
           [appTooltip]="{
             header: 'Form Name',
-            body: 'This column indicates the name of the Agency form you, the offeror are required to complete before submitting your offer. Notarization for each of these forms is required.',
+            body: 'Displays the name of the required notarized document. Select the download icon to download the document. If MV Autofill AI has generated a version of the document, the downloaded file will contain the autofilled information. Otherwise, the original blank document will be downloaded.',
             width: 'auto',
             showCloseButton: false,
             showActionButton: false,
@@ -298,7 +319,14 @@
         </mat-icon>
       </th>
       <td mat-cell *matCellDef="let row">
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 2px">
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 2px;
+          "
+        >
           <span>
             {{ row.documentName }}
           </span>
@@ -320,6 +348,7 @@
             <button
               mat-icon-button
               class="form-name-action reset"
+              [disabled]="!isNotarizationResetEnabled(row)"
               (click)="onResetForm(row, 'notarizationRequired')"
               [appTooltip]="{
                 header: 'Reset',
@@ -343,7 +372,7 @@
           style="font-size: medium; color: #0b74fd; cursor: pointer"
           [appTooltip]="{
             header: 'MV Autofill AI',
-            body: 'Click Autofill to have MuniVendor automatically populate this form using your Offeror Profile information.',
+            body: 'Optionally generate a pre-populated version of this document using the latest information from your Offeror Profile before obtaining notarization. After generating the document, download it, obtain the required notarization outside of MuniVendor, and upload the completed notarized document. Clicking Autofill again replaces the previously generated version with a newly generated document. If required information is missing from your Offeror Profile, a warning icon will be displayed until the missing information has been completed. ',
             width: '400px',
             showCloseButton: false,
             showActionButton: false,
@@ -373,8 +402,10 @@
             </mat-icon>
           </div>
           <span class="last-updated-text">
-            Last Updated:
-            {{ row.lastUpdated ? (row.lastUpdated | date: "short") : "N/A" }}
+            <span class="caption-label">Updated On:</span>
+            <span class="caption-value">{{
+              row.lastUpdated ? (row.lastUpdated | date: "short") : "N/A"
+            }}</span>
           </span>
         </div>
       </td>
@@ -382,12 +413,17 @@
 
     <ng-container matColumnDef="completeUpload">
       <th mat-header-cell *matHeaderCellDef>
-        Notarized Upload
+        <span>Completed Document Upload<br />(Notarization Required)</span>
         <mat-icon
-          style="font-size: medium; color: #0b74fd; cursor: pointer"
+          style="
+            flex: 0 0 auto;
+            font-size: medium;
+            color: #0b74fd;
+            cursor: pointer;
+          "
           [appTooltip]="{
             header: 'Notarized Upload',
-            body: 'Upload your completed, notarized version of this document. Only PDF and JPG/JPEG files are allowed.',
+            body: 'Upload the completed notarized version of this document. Uploading a new document replaces the previously uploaded file. The Last Updated date displays the timestamp of the most recent upload.',
             width: '500px',
             showCloseButton: false,
             showActionButton: false,
@@ -398,20 +434,24 @@
       </th>
       <td mat-cell *matCellDef="let row">
         <div class="upload-cell">
-          <button
-            mat-icon-button
-            [color]="isNotarizedUploadEnabled(row) ? 'primary' : ''"
-            [disabled]="!isNotarizedUploadEnabled(row)"
-            (click)="onUploadClick(row, 'notarizationRequired')"
-          >
-            <mat-icon>upload</mat-icon>
-          </button>
+          <div class="control-row">
+            <button
+              mat-icon-button
+              class="upload-icon-button"
+              [color]="isNotarizedUploadEnabled(row) ? 'primary' : ''"
+              [disabled]="!isNotarizedUploadEnabled(row)"
+              (click)="onUploadClick(row, 'notarizationRequired')"
+            >
+              <mat-icon class="upload-icon">upload</mat-icon>
+            </button>
+          </div>
           <span class="uploaded-on-text">
-            {{
+            <span class="caption-label">Uploaded On:</span>
+            <span class="caption-value">{{
               row.completeUploadedOn
-                ? "Uploaded " + (row.completeUploadedOn | date: "short")
-                : "Not uploaded"
-            }}
+                ? (row.completeUploadedOn | date: "short")
+                : "N/A"
+            }}</span>
           </span>
         </div>
       </td>
@@ -424,7 +464,7 @@
           style="font-size: medium; color: #0b74fd; cursor: pointer"
           [appTooltip]="{
             header: 'Action',
-            body: 'Approve or unapprove this form.',
+            body: 'Review the uploaded notarized document before changing the Approval toggle to Approved. The Approval toggle becomes available only after a completed notarized document has been uploaded. Uploading a replacement document automatically changes the Approval status back to Unapproved.',
             width: '400px',
             showCloseButton: false,
             showActionButton: false,
@@ -435,24 +475,26 @@
       </th>
       <td mat-cell *matCellDef="let row">
         <div class="action-cell">
-          <mat-slide-toggle
-            class="approval-toggle"
-            color="primary"
-            [checked]="row.approvalStatus === 'approve'"
-            [disabled]="!isNotarizationApprovalEnabled(row)"
-            (change)="
-              onApprovalToggleChange(row, $event, 'notarizationRequired')
-            "
-          >
-            {{ row.approvalStatus === "approve" ? "Approved" : "Unapproved" }}
-          </mat-slide-toggle>
+          <div class="control-row">
+            <mat-slide-toggle
+              class="approval-toggle"
+              color="primary"
+              [checked]="row.approvalStatus === 'approve'"
+              [disabled]="!isNotarizationApprovalEnabled(row)"
+              (change)="
+                onApprovalToggleChange(row, $event, 'notarizationRequired')
+              "
+            >
+              {{ row.approvalStatus === "approve" ? "Approved" : "Unapproved" }}
+            </mat-slide-toggle>
+          </div>
           <span class="last-updated-text">
-            Last Updated:
-            {{
+            <span class="caption-label">Approved On:</span>
+            <span class="caption-value">{{
               row.approvalLastUpdated
                 ? (row.approvalLastUpdated | date: "short")
                 : "N/A"
-            }}
+            }}</span>
           </span>
         </div>
       </td>
@@ -465,8 +507,8 @@
           style="font-size: medium; color: #0b74fd; cursor: pointer"
           [appTooltip]="{
             header: 'Status',
-            body: 'This column indicates the current status of the respective required Agency form. Incomplete means that you have not yet uploaded your manually completed form. Complete means that you successfully uploaded the respective form. You, the offeror, must make certain that you completed the forms as per the Agency\'s instructions.',
-            width: '500px',
+            body: 'Displays the completion status of this document. A document is Complete only after the completed notarized document has been uploaded and the Approval toggle has been set to Approved.',
+            width: '300px',
             showCloseButton: false,
             showActionButton: false,
           }"
@@ -475,7 +517,7 @@
         </mat-icon>
       </th>
       <td mat-cell *matCellDef="let row">
-        <div style="display: flex; align-items: center; gap: 4px">
+        <div class="status-cell">
           <span
             class="status-badge"
             [ngClass]="

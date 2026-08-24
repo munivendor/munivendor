@@ -40,19 +40,25 @@ import {
 } from '@angular/material/dialog';
 import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
 
-function atLeastOneFieldFilledValidator(): ValidatorFn {
+function allNewAddendumsHaveContentValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     if (!(control instanceof FormArray)) return null;
 
-    const hasAtLeastOneContent = (control as FormArray).controls.some(
-      (section) => {
-        const content = section.get('requestSectionContent')?.value;
-        const cleanContent = content?.replace(/<[^>]*>/g, '').trim();
-        return cleanContent && cleanContent.length > 0;
-      },
+    const newSections = (control as FormArray).controls.filter(
+      (section) => !section.get('isExisting')?.value,
     );
 
-    return hasAtLeastOneContent ? null : { atLeastOneFieldRequired: true };
+    if (!newSections.length) {
+      return { noAddendumsAdded: true };
+    }
+
+    const allComplete = newSections.every((section) => {
+      const content = section.get('requestSectionContent')?.value;
+      const cleanContent = content?.replace(/<[^>]*>/g, '').trim();
+      return cleanContent && cleanContent.length > 0;
+    });
+
+    return allComplete ? null : { incompleteAddendum: true };
   };
 }
 
@@ -134,7 +140,10 @@ export class AddendumOverviewComponent implements OnInit, OnDestroy {
 
   private initializeSections(): void {
     this.proposalsOverviewFormGroup = this.fb.group({
-      proposalSections: this.fb.array([], [atLeastOneFieldFilledValidator()]),
+      proposalSections: this.fb.array(
+        [],
+        [allNewAddendumsHaveContentValidator()],
+      ),
     });
 
     this.requestService
@@ -227,10 +236,17 @@ export class AddendumOverviewComponent implements OnInit, OnDestroy {
     ) as FormArray;
   }
 
-  get hasAtLeastOneFieldError(): boolean {
+  get hasIncompleteAddendumError(): boolean {
     return (
-      this.proposalSections.hasError('atLeastOneFieldRequired') &&
+      this.proposalSections.hasError('incompleteAddendum') &&
       this.proposalSections.touched
+    );
+  }
+
+  get isSaveDisabled(): boolean {
+    return (
+      this.proposalSections.controls.filter((s) => !s.get('isExisting')?.value)
+        .length === 0 || this.proposalSections.invalid
     );
   }
 
@@ -283,13 +299,6 @@ export class AddendumOverviewComponent implements OnInit, OnDestroy {
           .trim();
         return cleanContent && cleanContent.length > 0;
       });
-
-    if (!newSections.length) {
-      this.snackbarNotificationService.showSnackbarError(
-        'Please add at least one addendum with content.',
-      );
-      return;
-    }
 
     const dialogRef = this.dialog.open(AddendumConfirmDialog, {
       width: '450px',
@@ -366,7 +375,11 @@ export class AddendumOverviewComponent implements OnInit, OnDestroy {
           this.snackBar.open(
             'Your addendum(s) have been added. Notifications to offerors working on an offer in response to this solicitation have been sent. Notifications to offerors who already submitted an offer in response to this solicitation have also been sent.',
             'Close',
-            { verticalPosition: 'top', panelClass: ['snackbar-success'] },
+            {
+              verticalPosition: 'top',
+              panelClass: ['snackbar-success'],
+              duration: 10000,
+            },
           );
           this.router.navigate(['/requests-view']);
         },

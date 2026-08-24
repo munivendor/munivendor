@@ -176,11 +176,14 @@
         <mat-form-field appearance="outline" class="full-width">
           <textarea
             matInput
+            #prohibitedDetailsInput
             formControlName="prohibitedDetails"
-            rows="7"
-            placeholder=""
+            rows="6"
             maxlength="1000"
           ></textarea>
+          <mat-hint align="end">
+            {{ prohibitedDetailsInput.value?.length || 0 }}/1000
+          </mat-hint>
           <mat-error *ngIf="isFieldInvalid('prohibitedDetails')">
             Please provide a description.
           </mat-error>
