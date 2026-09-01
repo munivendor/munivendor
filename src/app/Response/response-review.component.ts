@@ -582,7 +582,10 @@ export class ResponseReviewComponent
           this.requiredDocumentsDatasource.data = requiredDocs.map(
             (doc: any) => ({
               ...doc,
-              documentInstanceStatus: doc.approved ? 'Complete' : 'Incomplete',
+              documentInstanceStatus:
+                doc.approved && doc.activeDocumentExists
+                  ? 'Complete'
+                  : 'Incomplete',
             }),
           );
           this.offerorDocumentsDatasource.data = offerorDocs;

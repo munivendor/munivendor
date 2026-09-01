@@ -235,7 +235,7 @@ export class RequestService {
     requiresNotarization?: boolean,
     documentCategoryId?: number,
   ): Observable<any> {
-    let url = `${this.url}RequestDocuments/${requestId}`;
+    let url = `${this.url}RequestDocuments/Extended/${requestId}`;
 
     if (requiresNotarization !== undefined && requiresNotarization !== null) {
       url += `/${requiresNotarization}`;

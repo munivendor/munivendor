@@ -48,6 +48,19 @@ import { SplitCamelCasePipe } from '../shared/pipes/split-camel-case.pipe';
 type ResponseMethod = 'manual' | 'autofill' | null;
 type DocumentSource = 'notarizationNotRequired' | 'notarizationRequired';
 
+// Documents that don't support MV Autofill AI (e.g. no autofillable
+// template exists), so the Response Method select and the Autofill button
+// must stay disabled for them regardless of the document's other state.
+const AUTOFILL_DISABLED_DOCUMENT_NAMES = [
+  'Americans with Disabilities Act of 1990',
+  'Non Collusion Affidavit',
+  'Stockholder Disclosure Certification',
+  'Mandatory Affirmative Action Language for Goods and Services - Professional Services Contracts',
+  'Ownership Disclosure Statement',
+  'W-9',
+  'Business Registration Certificate',
+];
+
 @Component({
   selector: 'response-documents',
   standalone: true,
@@ -185,7 +198,19 @@ export class ResponseDocumentsComponent
   }
 
   getDocumentInstanceStatus(row: any): string {
-    return row.approvalStatus === 'approve' ? 'Complete' : 'Incomplete';
+    return row.approvalStatus === 'approve' && row.activeDocumentExists
+      ? 'Complete'
+      : 'Incomplete';
+  }
+
+  getApprovalDateLabel(row: any): string {
+    return row.approvalStatus === 'approve' ? 'Approved On:' : 'Unapproved On:';
+  }
+
+  getApprovalDateValue(row: any): string | null {
+    return row.approvalStatus === 'approve'
+      ? row.lastApprovalDate
+      : row.lastUnApprovalDate;
   }
 
   initializeDocuments(): void {
@@ -217,7 +242,8 @@ export class ResponseDocumentsComponent
             notRequiredNotarizationDocs.map((doc: any) => ({
               ...doc,
               formName: doc.documentName,
-              responseMethod: (doc.derived
+              responseMethod: (doc.derived ||
+              this.isAutofillUnsupportedDocument(doc)
                 ? 'manual'
                 : this.mapDocumentSourceToResponseMethod(
                     doc.documentSource,
@@ -233,12 +259,14 @@ export class ResponseDocumentsComponent
                   ? this.toUtcIsoString(doc.documentInstanceAutoFillLastUpdated)
                   : null,
               hasIncompleteFields: doc.hasIncompleteFields ?? false,
-              documentInstanceStatus: doc.approved ? 'Complete' : 'Incomplete',
               approvalStatus: doc.approved ? 'approve' : 'unapprove',
-              approvalLastUpdated: doc.approved
-                ? this.toUtcIsoString(doc.lastApprovalChangeDate)
+              lastApprovalDate: doc.lastApprovalDate
+                ? this.toUtcIsoString(doc.lastApprovalDate)
                 : null,
-              documentInstanceId: doc.documentInstanceId ?? null,
+              lastUnApprovalDate: doc.lastUnApprovalDate
+                ? this.toUtcIsoString(doc.lastUnApprovalDate)
+                : null,
+              activeDocumentExists: doc.activeDocumentExists ?? false,
             }));
 
           this.notarizationRequiredDocumentsDatasource.data =
@@ -249,15 +277,17 @@ export class ResponseDocumentsComponent
               completeUploadedOn: this.toUtcIsoString(
                 doc.documentInstanceUserUploadLastUpdated,
               ),
-              documentInstanceStatus: doc.approved ? 'Complete' : 'Incomplete',
               lastUpdated: this.toUtcIsoString(
                 doc.documentInstanceAutoFillLastUpdated,
               ),
               approvalStatus: doc.approved ? 'approve' : 'unapprove',
-              approvalLastUpdated: doc.approved
-                ? this.toUtcIsoString(doc.lastApprovalChangeDate)
+              lastApprovalDate: doc.lastApprovalDate
+                ? this.toUtcIsoString(doc.lastApprovalDate)
                 : null,
-              documentInstanceId: doc.documentInstanceId ?? null,
+              lastUnApprovalDate: doc.lastUnApprovalDate
+                ? this.toUtcIsoString(doc.lastUnApprovalDate)
+                : null,
+              activeDocumentExists: doc.activeDocumentExists ?? false,
             }));
 
           this.offerorDocuments = offerorDocs.map((doc: any) => ({ ...doc }));
@@ -398,8 +428,16 @@ export class ResponseDocumentsComponent
     row.responseMethod = method;
   }
 
+  isAutofillUnsupportedDocument(row: any): boolean {
+    return AUTOFILL_DISABLED_DOCUMENT_NAMES.includes(row?.documentName);
+  }
+
   isResponseMethodLocked(row: any): boolean {
-    return row.approvalStatus === 'approve' || !!row.derived;
+    return (
+      row.approvalStatus === 'approve' ||
+      !!row.derived ||
+      this.isAutofillUnsupportedDocument(row)
+    );
   }
 
   isManualUploadEnabled(row: any): boolean {
@@ -410,12 +448,17 @@ export class ResponseDocumentsComponent
     return (
       row.responseMethod === 'autofill' &&
       row.approvalStatus !== 'approve' &&
-      !row.derived
+      !row.derived &&
+      !this.isAutofillUnsupportedDocument(row)
     );
   }
 
   isNotarizationAutofillEnabled(row: any): boolean {
-    return row.approvalStatus !== 'approve' && !row.completeUploadedOn;
+    return (
+      row.approvalStatus !== 'approve' &&
+      !row.completeUploadedOn &&
+      !this.isAutofillUnsupportedDocument(row)
+    );
   }
 
   isNotarizedUploadEnabled(row: any): boolean {
@@ -427,7 +470,7 @@ export class ResponseDocumentsComponent
       return true;
     }
     return !!(
-      row.documentInstanceId ||
+      row.activeDocumentExists ||
       row.manualUploadedOn ||
       row.lastUpdated
     );
@@ -438,7 +481,7 @@ export class ResponseDocumentsComponent
   }
 
   isResetEnabled(row: any): boolean {
-    return row.approvalStatus !== 'approve' && !!row.documentInstanceId;
+    return row.approvalStatus !== 'approve' && !!row.activeDocumentExists;
   }
 
   isNotarizationResetEnabled(row: any): boolean {
@@ -451,8 +494,7 @@ export class ResponseDocumentsComponent
   private clearStaleInstanceFields(row: any): void {
     row.hasIncompleteFields = false;
     row.approvalStatus = 'unapprove';
-    row.documentInstanceStatus = 'Incomplete';
-    row.approvalLastUpdated = null;
+    row.lastApprovalDate = null;
   }
 
   onUploadClick(row: any, source: DocumentSource): void {
@@ -495,7 +537,7 @@ export class ResponseDocumentsComponent
           file,
         )
         .subscribe({
-          next: (response: any) => {
+          next: () => {
             this.loadingService.hide();
             if (this.currentRow?.requestDocumentId) {
               const now = new Date().toISOString();
@@ -513,10 +555,7 @@ export class ResponseDocumentsComponent
               this.currentRow.documentSource = 'UserUpload';
               this.currentRow.documentInstanceUserUploadLastUpdated = now;
               this.currentRow.derived = false;
-              this.currentRow.documentInstanceId =
-                response.documentInstanceId ??
-                this.currentRow.documentInstanceId ??
-                this.currentRow.requestDocumentId;
+              this.currentRow.activeDocumentExists = true;
 
               this.snackbarNotificationService.showSnackbarSuccess(
                 'Document uploaded successfully.',
@@ -615,10 +654,7 @@ export class ResponseDocumentsComponent
               (Array.isArray(response?.incompleteFields)
                 ? response.incompleteFields.length > 0
                 : false));
-          row.documentInstanceId =
-            response?.documentInstanceId ??
-            row.documentInstanceId ??
-            row.requestDocumentId;
+          row.activeDocumentExists = true;
 
           if (isPartial) {
             this.snackbarNotificationService.showSnackbarWarning(
@@ -688,9 +724,13 @@ export class ResponseDocumentsComponent
             return;
           }
 
+          const now = new Date().toISOString();
           row.approvalStatus = approved ? 'approve' : 'unapprove';
-          row.documentInstanceStatus = approved ? 'Complete' : 'Incomplete';
-          row.approvalLastUpdated = approved ? new Date().toISOString() : null;
+          if (approved) {
+            row.lastApprovalDate = now;
+          } else {
+            row.lastUnApprovalDate = now;
+          }
         },
         error: (error) => {
           this.loadingService.hide();
@@ -737,22 +777,22 @@ export class ResponseDocumentsComponent
       .ResetDocumentInstance(requestDocumentId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response) => {
+        next: () => {
           this.loadingService.hide();
-          row.responseMethod = null;
+          row.responseMethod = this.isAutofillUnsupportedDocument(row)
+            ? 'manual'
+            : null;
           row.manualUploadedOn = null;
           row.completeUploadedOn = null;
           row.lastUpdated = null;
           row.hasIncompleteFields = false;
           row.approvalStatus = 'unapprove';
-          row.approvalLastUpdated = null;
-          row.documentInstanceStatus = 'Incomplete';
           row.documentSourceId = null;
           row.documentSource = null;
           row.documentInstanceAutoFillLastUpdated = null;
           row.documentInstanceUserUploadLastUpdated = null;
           row.derived = false;
-          row.documentInstanceId = null;
+          row.activeDocumentExists = false;
 
           this.snackbarNotificationService.showSnackbarSuccess(
             'Form reset to its original version.',
@@ -789,7 +829,8 @@ export class ResponseDocumentsComponent
   onDownloadRequiredAgencyDocuments(row: {
     requestDocumentId: number;
     documentId: number;
-    documentInstanceStatus?: string | null;
+    approvalStatus?: string | null;
+    activeDocumentExists?: boolean | null;
     derived: boolean;
     organizationId: number;
     organizationDocumentId?: number;
@@ -803,7 +844,6 @@ export class ResponseDocumentsComponent
     const {
       requestDocumentId,
       documentId,
-      documentInstanceStatus,
       derived,
       organizationDocumentId,
       agencyOrganizationId,
@@ -815,7 +855,7 @@ export class ResponseDocumentsComponent
     }
 
     const isIncompleteOrNull =
-      !documentInstanceStatus || documentInstanceStatus === 'Incomplete';
+      this.getDocumentInstanceStatus(row) === 'Incomplete';
 
     this.loadingService.show('Downloading...');
 

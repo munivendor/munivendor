@@ -235,10 +235,10 @@
           </mat-slide-toggle>
         </div>
         <span class="last-updated-text">
-          <span class="caption-label">Approved On:</span>
+          <span class="caption-label">{{ getApprovalDateLabel(row) }}</span>
           <span class="caption-value">{{
-            row.approvalLastUpdated
-              ? (row.approvalLastUpdated | date: "short")
+            getApprovalDateValue(row)
+              ? (getApprovalDateValue(row) | date: "short")
               : "N/A"
           }}</span>
         </span>
@@ -489,10 +489,10 @@
             </mat-slide-toggle>
           </div>
           <span class="last-updated-text">
-            <span class="caption-label">Approved On:</span>
+            <span class="caption-label">{{ getApprovalDateLabel(row) }}</span>
             <span class="caption-value">{{
-              row.approvalLastUpdated
-                ? (row.approvalLastUpdated | date: "short")
+              getApprovalDateValue(row)
+                ? (getApprovalDateValue(row) | date: "short")
                 : "N/A"
             }}</span>
           </span>
@@ -521,15 +521,15 @@
           <span
             class="status-badge"
             [ngClass]="
-              row.documentInstanceStatus === 'Complete'
+              getDocumentInstanceStatus(row) === 'Complete'
                 ? 'complete'
                 : 'incomplete'
             "
           >
-            {{ row.documentInstanceStatus }}
+            {{ getDocumentInstanceStatus(row) }}
           </span>
           <mat-icon
-            *ngIf="row.documentInstanceStatus === 'Incomplete'"
+            *ngIf="getDocumentInstanceStatus(row) === 'Incomplete'"
             style="font-size: medium; color: #0b74fd; cursor: pointer"
             [appTooltip]="authorizingOfficialTooltip"
           >
