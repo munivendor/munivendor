@@ -30,4 +30,12 @@ export class SnackbarNotificationService {
       verticalPosition: 'top',
     });
   }
+
+  showSnackbarWarning(message: string): void {
+    this.snackBar.open(message, 'Close', {
+      duration: AppConstants.SNACKBAR_DURATION,
+      verticalPosition: 'top',
+      panelClass: ['snackbar-warning'],
+    });
+  }
 }

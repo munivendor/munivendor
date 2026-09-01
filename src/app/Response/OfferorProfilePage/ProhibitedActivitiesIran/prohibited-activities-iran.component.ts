@@ -114,15 +114,15 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
     this.organizationId = this.stateService.getOrganizationId();
     this.buildForm();
 
+    // Note: the conditional fields below are displayed with a "(Required)"
+    // label whenever the user answers 'no' (i.e. cannot certify — they DO
+    // conduct business in Iran), but they are intentionally NOT enforced
+    // with Validators.required — the section must still be saveable even if
+    // no child field, description, or document has been provided yet.
     this.iranForm
       .get('chapter25Identification')
       ?.valueChanges.subscribe((value) => {
-        if (value === 'no') {
-          this.iranForm
-            .get('prohibitedDetails')
-            ?.setValidators([Validators.required]);
-        } else {
-          this.iranForm.get('prohibitedDetails')?.clearValidators();
+        if (value !== 'no') {
           this.selectedFileName = null;
           this.iranForm.patchValue({
             chapter25EntityName: null,
@@ -132,7 +132,6 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
             chapter25AnticipatedCessation: null,
           });
         }
-        this.iranForm.get('prohibitedDetails')?.updateValueAndValidity();
       });
 
     this.applyProfileDetails();

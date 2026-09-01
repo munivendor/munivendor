@@ -24,3 +24,9 @@ body {
     color: green !important;
   }
 }
+
+.snackbar-warning {
+  .mat-mdc-button.mat-mdc-snack-bar-action {
+    color: #f5a623 !important;
+  }
+}

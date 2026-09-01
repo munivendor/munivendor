@@ -53,6 +53,7 @@
       <div>
         <p class="section-label">
           <strong>Entity Engaged in Investment Activities</strong>
+          <span class="required-badge">(Required)</span>
         </p>
         <p class="upload-doc-description">
           Please enter the name of the entity that is currently engaged in
@@ -79,6 +80,7 @@
       <div>
         <p class="section-label">
           <strong>Relationship to Offeror</strong>
+          <span class="required-badge">(Required)</span>
         </p>
         <p class="upload-doc-description">
           Enter the relationship between that entity and your organization. For
@@ -105,6 +107,7 @@
       <div>
         <p class="section-label">
           <strong>Engagement Duration</strong>
+          <span class="required-badge">(Required)</span>
         </p>
         <p class="upload-doc-description">
           Enter the duration of this engagement in months and years.
@@ -145,6 +148,7 @@
       <div>
         <p class="section-label">
           <strong>Anticipated Cessation</strong>
+          <span class="required-badge">(Required)</span>
         </p>
         <p class="upload-doc-description">
           Enter the expected date that this engagement (investment activities)
@@ -172,6 +176,7 @@
       <div>
         <p class="section-label">
           <strong>Iran - File Upload</strong>
+          <span class="required-badge">(Required)</span>
         </p>
         <p class="upload-doc-description">
           Please upload any documentation related to the work your organization
@@ -270,14 +275,11 @@
             #prohibitedDetailsInput
             formControlName="prohibitedDetails"
             rows="6"
-            maxlength="1000"
+            maxlength="180"
           ></textarea>
           <mat-hint align="end">
-            {{ prohibitedDetailsInput.value?.length || 0 }}/1000
+            {{ prohibitedDetailsInput.value?.length || 0 }}/180
           </mat-hint>
-          <mat-error *ngIf="isFieldInvalid('prohibitedDetails')">
-            Please provide a description.
-          </mat-error>
         </mat-form-field>
       </div>
     </ng-container>

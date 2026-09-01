@@ -137,15 +137,18 @@ export class DocumentService {
     offerId: number,
     requestDocumentId: number,
     documentId: number,
-  ): Observable<{ correlationId: string }> {
+  ): Observable<HttpResponse<{ correlationId: string }>> {
     const params = new HttpParams()
       .set('offerId', offerId)
       .set('sourceRequestDocumentId', requestDocumentId)
       .set('documentId', documentId);
 
+    // observe: 'response' so callers can inspect the HTTP status code —
+    // the backend returns 206 (Partial Content) when the document was
+    // autofilled but some fields could not be filled in.
     return this.http.get<{ correlationId: string }>(
       `${this.url}documents/parameterized`,
-      { params },
+      { params, observe: 'response' },
     );
   }
 

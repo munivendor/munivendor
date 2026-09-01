@@ -579,7 +579,12 @@ export class ResponseReviewComponent
             (doc: any) => doc.sourceRequestDocumentId === null,
           );
 
-          this.requiredDocumentsDatasource.data = requiredDocs;
+          this.requiredDocumentsDatasource.data = requiredDocs.map(
+            (doc: any) => ({
+              ...doc,
+              documentInstanceStatus: doc.approved ? 'Complete' : 'Incomplete',
+            }),
+          );
           this.offerorDocumentsDatasource.data = offerorDocs;
 
           this.checkRequiredDocumentsStatus();

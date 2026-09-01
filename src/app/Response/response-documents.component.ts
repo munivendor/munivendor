@@ -586,10 +586,16 @@ export class ResponseDocumentsComponent
     this.documentService
       .AutofillDocument(Number(offerId), requestDocumentId, documentId)
       .subscribe({
-        next: (response: any) => {
+        next: (httpResponse: any) => {
           this.loadingService.hide();
 
           this.clearStaleInstanceFields(row);
+
+          const response = httpResponse?.body;
+          // 206 Partial Content = the document was autofilled but some
+          // fields could not be filled in (e.g. an incomplete Offeror
+          // Profile), independent of whatever the body reports.
+          const isPartial = httpResponse?.status === 206;
 
           const now = new Date().toISOString();
           row.lastUpdated = now;
@@ -604,18 +610,25 @@ export class ResponseDocumentsComponent
           // Show the yellow warning triangle when the autofill engine reports
           // empty fields.
           row.hasIncompleteFields =
-            response?.hasIncompleteFields ??
-            (Array.isArray(response?.incompleteFields)
-              ? response.incompleteFields.length > 0
-              : false);
+            isPartial ||
+            (response?.hasIncompleteFields ??
+              (Array.isArray(response?.incompleteFields)
+                ? response.incompleteFields.length > 0
+                : false));
           row.documentInstanceId =
             response?.documentInstanceId ??
             row.documentInstanceId ??
             row.requestDocumentId;
 
-          this.snackbarNotificationService.showSnackbarSuccess(
-            'Document autofilled successfully.',
-          );
+          if (isPartial) {
+            this.snackbarNotificationService.showSnackbarWarning(
+              'Document was partially autofilled.',
+            );
+          } else {
+            this.snackbarNotificationService.showSnackbarSuccess(
+              'Document autofilled successfully.',
+            );
+          }
         },
         error: (error) => {
           this.loadingService.hide();
@@ -716,18 +729,7 @@ export class ResponseDocumentsComponent
       return; // guard: approved forms, or forms with nothing to reset, can't be reset
     }
 
-    const documentInstanceId = row.documentInstanceId;
     const requestDocumentId = row.requestDocumentId;
-    if (!documentInstanceId) {
-      row.responseMethod = null;
-      row.manualUploadedOn = null;
-      row.completeUploadedOn = null;
-      row.lastUpdated = null;
-      row.hasIncompleteFields = false;
-      row.approvalStatus = 'unapprove';
-      row.approvalLastUpdated = null;
-      return;
-    }
 
     this.loadingService.show('Resetting...');
 
