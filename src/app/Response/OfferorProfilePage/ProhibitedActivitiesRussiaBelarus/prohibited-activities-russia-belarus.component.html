@@ -71,9 +71,6 @@
               {{ option.label }}
             </mat-option>
           </mat-select>
-          <mat-error *ngIf="isFieldInvalid('ofacAdditional')">
-            Please select an option.
-          </mat-error>
         </mat-form-field>
       </div>
 
@@ -81,6 +78,7 @@
       <div>
         <p class="section-label">
           <strong>OFAC - File Upload</strong>
+          <span class="required-badge">(Required)</span>
         </p>
         <p class="upload-doc-description">
           Please upload any documentation related to the work your organization
@@ -157,7 +155,6 @@
             <mat-icon *ngIf="!isDeleting(doc)">delete</mat-icon>
           </button>
         </div>
-
         <span class="upload-hint">
           Accepted file types: jpg, png, pdf. Max. file size: 20 MB.
         </span>
@@ -165,6 +162,10 @@
 
       <!-- Conditional description textarea — shown when ofacAdditional is 'yes' -->
       <div *ngIf="showDescriptionField">
+        <p class="section-label">
+          <strong>OFAC - Detailed Description</strong>
+          <span class="required-badge">(Required)</span>
+        </p>
         <p class="upload-doc-description">
           Please write a detailed description of how your organization's
           activity related to Russia and/or Belarus is consistent with federal
@@ -179,14 +180,11 @@
             #prohibitedDetailsInput
             formControlName="prohibitedDetails"
             rows="6"
-            maxlength="1000"
+            maxlength="400"
           ></textarea>
           <mat-hint align="end">
-            {{ prohibitedDetailsInput.value?.length || 0 }}/1000
+            {{ prohibitedDetailsInput.value?.length || 0 }}/400
           </mat-hint>
-          <mat-error *ngIf="isFieldInvalid('prohibitedDetails')">
-            Please provide a description.
-          </mat-error>
         </mat-form-field>
       </div>
     </ng-container>

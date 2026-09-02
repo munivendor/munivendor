@@ -118,12 +118,12 @@
 
 .requests-table th.mat-mdc-header-cell:nth-child(1),
 .requests-table td.mat-mdc-cell:nth-child(1) {
-  width: 10%;
+  width: 9%;
 }
 
 .requests-table th.mat-mdc-header-cell:nth-child(2),
 .requests-table td.mat-mdc-cell:nth-child(2) {
-  width: 10%;
+  width: 9%;
 }
 
 .requests-table th.mat-mdc-header-cell:nth-child(3),
@@ -133,7 +133,7 @@
 
 .requests-table th.mat-mdc-header-cell:nth-child(4),
 .requests-table td.mat-mdc-cell:nth-child(4) {
-  width: 11%;
+  width: 10%;
 }
 
 .requests-table th.mat-mdc-header-cell:nth-child(5),
@@ -163,7 +163,8 @@
 
 .requests-table th.mat-mdc-header-cell:nth-child(10),
 .requests-table td.mat-mdc-cell:nth-child(10) {
-  width: 6%;
+  width: 9%;
+  min-width: 90px;
 }
 
 .requests-table th.mat-mdc-header-cell:nth-child(11),

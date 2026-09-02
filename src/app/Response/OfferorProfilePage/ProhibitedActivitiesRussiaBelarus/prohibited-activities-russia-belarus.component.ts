@@ -131,33 +131,17 @@ export class ProhibitedActivitiesRussiaBelarusComponent
     this.organizationId = this.stateService.getOrganizationId();
     this.buildForm();
 
+    // Note: the conditional fields below are displayed with a "(Required)"
+    // label whenever the user answers 'yes' to OFAC identification, but they
+    // are intentionally NOT enforced with Validators.required — the section
+    // must still be saveable even if no child dropdown, description, or
+    // document has been provided yet.
     this.prohibitedForm
       .get('ofacIdentification')
       ?.valueChanges.subscribe((value) => {
-        if (value === 'yes') {
-          this.prohibitedForm
-            .get('ofacAdditional')
-            ?.setValidators([Validators.required]);
-        } else {
-          this.prohibitedForm.get('ofacAdditional')?.clearValidators();
-          this.prohibitedForm.get('prohibitedDetails')?.clearValidators();
+        if (value !== 'yes') {
           this.selectedFileName = null;
         }
-        this.prohibitedForm.get('ofacAdditional')?.updateValueAndValidity();
-        this.prohibitedForm.get('prohibitedDetails')?.updateValueAndValidity();
-      });
-
-    this.prohibitedForm
-      .get('ofacAdditional')
-      ?.valueChanges.subscribe((value) => {
-        if (value === 'yes') {
-          this.prohibitedForm
-            .get('prohibitedDetails')
-            ?.setValidators([Validators.required]);
-        } else {
-          this.prohibitedForm.get('prohibitedDetails')?.clearValidators();
-        }
-        this.prohibitedForm.get('prohibitedDetails')?.updateValueAndValidity();
       });
 
     this.applyProfileDetails();
