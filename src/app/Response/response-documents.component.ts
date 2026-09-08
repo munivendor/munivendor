@@ -42,6 +42,7 @@ import { Router } from '@angular/router';
 import { LoggingService } from '../exceptionhandling/logging.service';
 import { LoadingService } from '../shared/LoadingSpinner/loading.service';
 import { SnackbarNotificationService } from '../shared/service/snackbar-notification.service';
+import { FeatureFlagService } from '../shared/service/feature-flag.service';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { SplitCamelCasePipe } from '../shared/pipes/split-camel-case.pipe';
 
@@ -59,7 +60,19 @@ const AUTOFILL_DISABLED_DOCUMENT_NAMES = [
   'Ownership Disclosure Statement',
   'W-9',
   'Business Registration Certificate',
+  'Bid Document Checklist',
+  'C. 271 Political Contribution Disclosure Form',
+  'Consent of Surety',
+  'Equipment Certification',
+  'Public Works Contractor Registration',
+  'Request for Prevailing Wage Determination',
 ];
+
+// Backend feature flag (Microsoft.FeatureManagement) that kill-switches MV
+// Autofill AI everywhere in the response documents workflow. Flip this on in
+// prod if autofill misbehaves after a staging-only rollout, without needing a
+// redeploy.
+const DISABLE_AUTOFILL_FEATURE_FLAG = 'DisableAutoFill';
 
 @Component({
   selector: 'response-documents',
@@ -104,7 +117,7 @@ export class ResponseDocumentsComponent
     showActionButton: false,
   };
 
-  agencyDocumentsColumns: string[] = [
+  private readonly agencyDocumentsColumnsBase: string[] = [
     'formName',
     'responseMethod',
     'manualUpload',
@@ -113,13 +126,32 @@ export class ResponseDocumentsComponent
     'documentInstanceStatus',
   ];
 
-  notarizationRequiredColumns: string[] = [
+  private readonly notarizationRequiredColumnsBase: string[] = [
     'formName',
     'mvAutofillAi',
     'completeUpload',
     'action',
     'documentInstanceStatus',
   ];
+
+  // While DisableAutoFill is on, the Response Method and MV Autofill AI
+  // columns are dropped from both tables entirely and the workflow falls
+  // back to manual upload only.
+  get agencyDocumentsColumns(): string[] {
+    return this.autofillDisabled
+      ? this.agencyDocumentsColumnsBase.filter(
+          (col) => col !== 'responseMethod' && col !== 'mvAutofillAi',
+        )
+      : this.agencyDocumentsColumnsBase;
+  }
+
+  get notarizationRequiredColumns(): string[] {
+    return this.autofillDisabled
+      ? this.notarizationRequiredColumnsBase.filter(
+          (col) => col !== 'mvAutofillAi',
+        )
+      : this.notarizationRequiredColumnsBase;
+  }
 
   offerorDocumentsColumns: string[] = [
     'formName',
@@ -140,6 +172,10 @@ export class ResponseDocumentsComponent
 
   offerorDocuments: any[] = [];
   requestId?: number;
+  // Set from the DisableAutoFill feature flag before documents are loaded.
+  // While true, Autofill is hidden/disabled everywhere and Manual Upload is
+  // always available.
+  autofillDisabled = false;
   responseDocumentsFormGroup!: FormGroup;
   responseIdFromStateService = this.stateService.getRequestId();
   private destroy$ = new Subject<void>();
@@ -156,13 +192,25 @@ export class ResponseDocumentsComponent
     private loggingService: LoggingService,
     private loadingService: LoadingService,
     private snackbarNotificationService: SnackbarNotificationService,
+    private featureFlagService: FeatureFlagService,
   ) {}
 
   ngOnInit(): void {
     this.initializeFormGroup();
     this.loadingService.show();
-    this.initializeDocuments();
-    this.loadResponseMethodOptions();
+
+    // Resolve the feature flag before loading documents so the initial
+    // responseMethod values (and the columns rendered) already reflect
+    // whether autofill is disabled, instead of flipping after first paint.
+    this.featureFlagService
+      .isEnabled(DISABLE_AUTOFILL_FEATURE_FLAG)
+      .subscribe((disabled) => {
+        this.autofillDisabled = disabled;
+        this.initializeDocuments();
+        if (!disabled) {
+          this.loadResponseMethodOptions();
+        }
+      });
 
     this.authorizingOfficialTooltip = {
       header: 'Incomplete',
@@ -243,6 +291,7 @@ export class ResponseDocumentsComponent
               ...doc,
               formName: doc.documentName,
               responseMethod: (doc.derived ||
+              this.autofillDisabled ||
               this.isAutofillUnsupportedDocument(doc)
                 ? 'manual'
                 : this.mapDocumentSourceToResponseMethod(
@@ -419,6 +468,9 @@ export class ResponseDocumentsComponent
   }
 
   onResponseMethodChange(row: any, method: ResponseMethod): void {
+    if (this.autofillDisabled) {
+      return; // Response Method selection is disabled while autofill is off
+    }
     if (row.approvalStatus === 'approve') {
       return; // method is locked once the form has been approved
     }
@@ -434,6 +486,7 @@ export class ResponseDocumentsComponent
 
   isResponseMethodLocked(row: any): boolean {
     return (
+      this.autofillDisabled ||
       row.approvalStatus === 'approve' ||
       !!row.derived ||
       this.isAutofillUnsupportedDocument(row)
@@ -441,10 +494,19 @@ export class ResponseDocumentsComponent
   }
 
   isManualUploadEnabled(row: any): boolean {
+    if (this.autofillDisabled) {
+      // Manual upload no longer depends on a Response Method selection;
+      // it's the only workflow, so it's available whenever the form isn't
+      // already approved.
+      return row.approvalStatus !== 'approve';
+    }
     return row.responseMethod === 'manual' && row.approvalStatus !== 'approve';
   }
 
   isStandardAutofillEnabled(row: any): boolean {
+    if (this.autofillDisabled) {
+      return false;
+    }
     return (
       row.responseMethod === 'autofill' &&
       row.approvalStatus !== 'approve' &&
@@ -454,6 +516,9 @@ export class ResponseDocumentsComponent
   }
 
   isNotarizationAutofillEnabled(row: any): boolean {
+    if (this.autofillDisabled) {
+      return false;
+    }
     return (
       row.approvalStatus !== 'approve' &&
       !row.completeUploadedOn &&
@@ -608,6 +673,10 @@ export class ResponseDocumentsComponent
   }
 
   onAutofillClick(row: any, source: DocumentSource): void {
+    if (this.autofillDisabled) {
+      return; // defense in depth; the Autofill column is removed from the UI
+    }
+
     const offerId = this.responseIdParam
       ? Number(this.responseIdParam)
       : this.responseIdFromStateService;
@@ -634,7 +703,7 @@ export class ResponseDocumentsComponent
           // 206 Partial Content = the document was autofilled but some
           // fields could not be filled in (e.g. an incomplete Offeror
           // Profile), independent of whatever the body reports.
-          const isPartial = httpResponse?.status === 206;
+          // const isPartial = httpResponse?.status === 206;
 
           const now = new Date().toISOString();
           row.lastUpdated = now;
@@ -648,23 +717,23 @@ export class ResponseDocumentsComponent
           }
           // Show the yellow warning triangle when the autofill engine reports
           // empty fields.
-          row.hasIncompleteFields =
-            isPartial ||
-            (response?.hasIncompleteFields ??
-              (Array.isArray(response?.incompleteFields)
-                ? response.incompleteFields.length > 0
-                : false));
-          row.activeDocumentExists = true;
+          // row.hasIncompleteFields =
+          //   isPartial ||
+          //   (response?.hasIncompleteFields ??
+          //     (Array.isArray(response?.incompleteFields)
+          //       ? response.incompleteFields.length > 0
+          //       : false));
+          // row.activeDocumentExists = true;
 
-          if (isPartial) {
-            this.snackbarNotificationService.showSnackbarWarning(
-              'Document was partially autofilled.',
-            );
-          } else {
-            this.snackbarNotificationService.showSnackbarSuccess(
-              'Document autofilled successfully.',
-            );
-          }
+          // if (isPartial) {
+          //   this.snackbarNotificationService.showSnackbarWarning(
+          //     'Document was partially autofilled.',
+          //   );
+          // } else {
+          this.snackbarNotificationService.showSnackbarSuccess(
+            'Document autofilled successfully.',
+          );
+          // }
         },
         error: (error) => {
           this.loadingService.hide();
@@ -779,9 +848,10 @@ export class ResponseDocumentsComponent
       .subscribe({
         next: () => {
           this.loadingService.hide();
-          row.responseMethod = this.isAutofillUnsupportedDocument(row)
-            ? 'manual'
-            : null;
+          row.responseMethod =
+            this.autofillDisabled || this.isAutofillUnsupportedDocument(row)
+              ? 'manual'
+              : null;
           row.manualUploadedOn = null;
           row.completeUploadedOn = null;
           row.lastUpdated = null;
