@@ -38,4 +38,8 @@ export class SnackbarNotificationService {
       panelClass: ['snackbar-warning'],
     });
   }
+
+  dismissAll(): void {
+    this.snackBar.dismiss();
+  }
 }
