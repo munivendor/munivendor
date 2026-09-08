@@ -123,7 +123,7 @@
         style="font-size: medium; color: #0b74fd; cursor: pointer"
         [appTooltip]="{
           header: 'Manual Upload',
-          body: 'Upload a completed version of this document. Uploading a new file replaces the previously uploaded file. The Last Updated date displays the timestamp of the most recent upload. ',
+          body: 'Upload a completed version of this document. Uploading a new file replaces the previously uploaded file. The Uploaded On date displays the timestamp of the most recent upload.',
           width: '500px',
           showCloseButton: false,
           showActionButton: false,
@@ -164,7 +164,7 @@
         style="font-size: medium; color: #0b74fd; cursor: pointer"
         [appTooltip]="{
           header: 'MV Autofill AI',
-          body: 'Generate this document using the latest information from your Offeror Profile. Selecting Autofill as the Response Method enables this button. Clicking Autofill replaces any previously generated version with a newly generated document. If your Offeror Profile is updated, click Autofill again to regenerate the document with the latest information. If required information is missing from your Offeror Profile, a warning icon will be displayed until the missing information has been completed. ',
+          body: 'Generate this document using the latest information from your Offeror Profile. Selecting Autofill as the Response Method enables this button. Clicking Autofill replaces any previously generated version with a newly generated document. If your Offeror Profile is updated, click Autofill again to regenerate the document with the latest information. If required information is missing from your Offeror Profile, a warning icon will be displayed until the missing information has been completed. The Updated On date displays the timestamp of the most recent update.',
           width: '900px',
           showCloseButton: false,
           showActionButton: false,
@@ -185,13 +185,13 @@
           >
             Autofill
           </button>
-          <mat-icon
+          <!-- <mat-icon
             *ngIf="row.hasIncompleteFields"
             class="warning-icon"
             [appTooltip]="incompleteFieldsTooltip"
           >
             warning
-          </mat-icon>
+          </mat-icon> -->
         </div>
         <span class="last-updated-text">
           <span class="caption-label">Updated On:</span>
@@ -210,7 +210,7 @@
         style="font-size: medium; color: #0b74fd; cursor: pointer"
         [appTooltip]="{
           header: 'Action',
-          body: 'Review the completed document before changing the Approval toggle to Approved. The Approval toggle becomes available only after a document has been uploaded or generated. Replacing or regenerating a document automatically changes the Approval status back to Unapproved. ',
+          body: 'Review the completed document before changing the Approval toggle to Approved. The Approval toggle becomes available only after a document has been uploaded or generated. Replacing or regenerating a document automatically changes the Approval status back to Unapproved. The Approved On/Unapproved On date displays the timestamp of the most recent approval/unapproval.',
           width: '600px',
           showCloseButton: false,
           showActionButton: false,
@@ -372,7 +372,7 @@
           style="font-size: medium; color: #0b74fd; cursor: pointer"
           [appTooltip]="{
             header: 'MV Autofill AI',
-            body: 'Optionally generate a pre-populated version of this document using the latest information from your Offeror Profile before obtaining notarization. After generating the document, download it, obtain the required notarization outside of MuniVendor, and upload the completed notarized document. Clicking Autofill again replaces the previously generated version with a newly generated document. If required information is missing from your Offeror Profile, a warning icon will be displayed until the missing information has been completed. ',
+            body: 'Optionally generate a pre-populated version of this document using the latest information from your Offeror Profile before obtaining notarization. After generating the document, download it, obtain the required notarization outside of MuniVendor, and upload the completed notarized document. Clicking Autofill again replaces the previously generated version with a newly generated document. If required information is missing from your Offeror Profile, a warning icon will be displayed until the missing information has been completed. The Updated On date displays the timestamp of the most recent update. ',
             width: '400px',
             showCloseButton: false,
             showActionButton: false,
@@ -393,13 +393,13 @@
             >
               Autofill
             </button>
-            <mat-icon
+            <!-- <mat-icon
               *ngIf="row.hasIncompleteFields"
               class="warning-icon"
               [appTooltip]="incompleteFieldsTooltip"
             >
               warning
-            </mat-icon>
+            </mat-icon> -->
           </div>
           <span class="last-updated-text">
             <span class="caption-label">Updated On:</span>
@@ -413,7 +413,7 @@
 
     <ng-container matColumnDef="completeUpload">
       <th mat-header-cell *matHeaderCellDef>
-        <span>Completed Document Upload<br />(Notarization Required)</span>
+        <span>Manual Upload</span>
         <mat-icon
           style="
             flex: 0 0 auto;
@@ -423,7 +423,7 @@
           "
           [appTooltip]="{
             header: 'Notarized Upload',
-            body: 'Upload the completed notarized version of this document. Uploading a new document replaces the previously uploaded file. The Last Updated date displays the timestamp of the most recent upload.',
+            body: 'Upload the completed notarized version of this document. Uploading a new document replaces the previously uploaded file. The Uploaded On date displays the timestamp of the most recent upload.',
             width: '500px',
             showCloseButton: false,
             showActionButton: false,
@@ -464,7 +464,7 @@
           style="font-size: medium; color: #0b74fd; cursor: pointer"
           [appTooltip]="{
             header: 'Action',
-            body: 'Review the uploaded notarized document before changing the Approval toggle to Approved. The Approval toggle becomes available only after a completed notarized document has been uploaded. Uploading a replacement document automatically changes the Approval status back to Unapproved.',
+            body: 'Review the uploaded notarized document before changing the Approval toggle to Approved. The Approval toggle becomes available only after a completed notarized document has been uploaded. Uploading a replacement document automatically changes the Approval status back to Unapproved. The Approved On/Unapproved On date displays the timestamp of the most recent approval/unapproval. ',
             width: '400px',
             showCloseButton: false,
             showActionButton: false,

@@ -290,6 +290,8 @@ export class AuthService {
   }
 
   logout(): void {
+    this.snackbarNotificationService.dismissAll();
+
     if (!this.authState.value) {
       this.clearCurrentSession();
 
@@ -322,6 +324,8 @@ export class AuthService {
     if (!this.authState.value) {
       return;
     }
+
+    this.snackbarNotificationService.dismissAll();
 
     this.userSubject.next(null);
     this.authState.next(false);
