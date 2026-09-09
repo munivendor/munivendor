@@ -28,7 +28,7 @@ import {
 } from 'rxjs';
 import { LoggingService } from '../../exceptionhandling/logging.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { LoadingService } from '../../shared/LoadingSpinner/loading.service';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -126,7 +126,6 @@ export class AddendumOverviewComponent implements OnInit, OnDestroy {
     private loadingService: LoadingService,
     private snackbarNotificationService: SnackbarNotificationService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar,
   ) {
     this.organizationId = this.stateService.getOrganizationId() ?? 0;
   }
@@ -372,14 +371,8 @@ export class AddendumOverviewComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.loadingService.hide();
-          this.snackBar.open(
+          this.snackbarNotificationService.showSnackbarSuccess(
             'Your addendum(s) have been added. Notifications to offerors working on an offer in response to this solicitation have been sent. Notifications to offerors who already submitted an offer in response to this solicitation have also been sent.',
-            'Close',
-            {
-              verticalPosition: 'top',
-              panelClass: ['snackbar-success'],
-              duration: 10000,
-            },
           );
           this.router.navigate(['/requests-view']);
         },
