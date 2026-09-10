@@ -723,7 +723,7 @@ export class ResponseDocumentsComponent
           //     (Array.isArray(response?.incompleteFields)
           //       ? response.incompleteFields.length > 0
           //       : false));
-          // row.activeDocumentExists = true;
+          row.activeDocumentExists = true;
 
           // if (isPartial) {
           //   this.snackbarNotificationService.showSnackbarWarning(
