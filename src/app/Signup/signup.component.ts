@@ -357,6 +357,10 @@ export class SignupComponent implements OnInit, OnDestroy {
                 this.userCreationInProgress = false;
                 this.authService.setSignupInProgress(false);
                 this.authService.setSkipNextAuthState(false);
+                // Sign out of the Google SDK session so the failed sign-in
+                // isn't left cached in authState and replayed into this
+                // listener the next time SignupComponent is (re)initialized.
+                this.socialAuthService.signOut().catch(() => {});
                 this.snackbarNotificationService.showSnackbarError(
                   'Sign up failed. This email may already exist or an error occurred.',
                 );
