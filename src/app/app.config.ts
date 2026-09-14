@@ -5,7 +5,7 @@ import {
   PLATFORM_ID,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { provideClientHydration } from '@angular/platform-browser';
 import {
   HTTP_INTERCEPTORS,
@@ -46,7 +46,10 @@ function initializeApp(
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideRouter(routes),
+    provideRouter(
+      routes,
+      withInMemoryScrolling({ scrollPositionRestoration: 'top' }),
+    ),
     provideClientHydration(),
     provideHttpClient(withInterceptorsFromDi(), withFetch()),
     { provide: ErrorHandler, useClass: GlobalErrorHandler },

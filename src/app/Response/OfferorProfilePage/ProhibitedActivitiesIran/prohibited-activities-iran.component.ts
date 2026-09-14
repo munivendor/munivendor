@@ -6,6 +6,7 @@ import {
   Output,
   ViewEncapsulation,
   OnChanges,
+  SimpleChanges,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -71,7 +72,8 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
   }[] = [];
   @Output() detailsSaved = new EventEmitter<void>();
 
-  readonly IRAN_DOCUMENT_CODE_NAME = 'Disclosure_of_Iran_Investments';
+  readonly IRAN_DOCUMENT_CODE_NAME =
+    'Disclosure_of_Iran_Investments_Supporting';
 
   chapter25Options = [
     {
@@ -112,7 +114,6 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
             ?.setValidators([Validators.required]);
         } else {
           this.iranForm.get('iranDescription')?.clearValidators();
-          this.iranForm.get('iranDescription')?.reset(null);
           this.selectedFileName = null;
         }
         this.iranForm.get('iranDescription')?.updateValueAndValidity();
@@ -121,8 +122,10 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
     this.applyProfileDetails();
   }
 
-  ngOnChanges(): void {
-    this.applyProfileDetails();
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['profileDetails']) {
+      this.applyProfileDetails();
+    }
   }
 
   private buildForm(): void {
@@ -239,6 +242,12 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
       next: ([saveRes]) => {
         this.savedOfferorProfileId = saveRes.offerorProfileId;
         if (deleteDoc$) this.documentDeleted.emit();
+
+        // Clear textarea if user certified they do NOT conduct business in Iran
+        if (chapter25Bool) {
+          this.iranForm.get('iranDescription')?.reset();
+        }
+
         this.snackbar.showSnackbarSuccess('Changes saved successfully.');
         this.detailsSaved.emit();
       },
