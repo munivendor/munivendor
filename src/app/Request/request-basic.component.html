@@ -135,6 +135,15 @@
           >
             Publish Date is required.
           </mat-error>
+          <mat-error
+            *ngIf="
+              basicsFormGroup
+                .get('publishDate')
+                ?.hasError('matDatepickerFilter')
+            "
+          >
+            Publish Date is in the past. Please choose a new date.
+          </mat-error>
         </mat-form-field>
       </div>
 
@@ -180,6 +189,13 @@
             *ngIf="basicsFormGroup.get('closeDate')?.hasError('required')"
           >
             Close Date is required.
+          </mat-error>
+          <mat-error
+            *ngIf="
+              basicsFormGroup.get('closeDate')?.hasError('matDatepickerFilter')
+            "
+          >
+            Close Date is in the past. Please choose a new date.
           </mat-error>
         </mat-form-field>
       </div>
@@ -229,6 +245,15 @@
           >
             Contract Start Date is required.
           </mat-error>
+          <mat-error
+            *ngIf="
+              basicsFormGroup
+                .get('contractStartDate')
+                ?.hasError('matDatepickerFilter')
+            "
+          >
+            Contract Start Date is in the past. Please choose a new date.
+          </mat-error>
         </mat-form-field>
       </div>
 
@@ -254,6 +279,15 @@
             *ngIf="basicsFormGroup.get('contractEndDate')?.hasError('required')"
           >
             Contract End Date is required.
+          </mat-error>
+          <mat-error
+            *ngIf="
+              basicsFormGroup
+                .get('contractEndDate')
+                ?.hasError('matDatepickerFilter')
+            "
+          >
+            Contract End Date is in the past. Please choose a new date.
           </mat-error>
         </mat-form-field>
       </div>

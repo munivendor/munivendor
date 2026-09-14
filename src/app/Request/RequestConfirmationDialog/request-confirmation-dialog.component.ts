@@ -31,6 +31,7 @@ import { LoadingService } from '../../shared/LoadingSpinner/loading.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { StateService } from '../services/state.service';
+import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
 
 export interface DialogData {
   action: string;
@@ -78,6 +79,7 @@ export class RequestConfirmationDialog implements OnDestroy {
     private loadingService: LoadingService,
     private snackBar: MatSnackBar,
     private stateService: StateService,
+    private snackbarNotificationService: SnackbarNotificationService,
   ) {}
 
   getConfirmationMessage(): string {
@@ -279,9 +281,9 @@ export class RequestConfirmationDialog implements OnDestroy {
         },
         error: (error) => {
           this.handleOpenError(error, request);
-          this.snackBar.open('Download failed. Please try again.', 'Close', {
-            duration: 5000,
-          });
+          this.snackbarNotificationService.showSnackbarError(
+            'Download failed. Please try again.',
+          );
         },
       });
   }
@@ -338,9 +340,9 @@ export class RequestConfirmationDialog implements OnDestroy {
               correlationId: error?.error?.correlationId,
             },
           );
-          this.snackBar.open('Re-download failed. Please try again.', 'Close', {
-            duration: 5000,
-          });
+          this.snackbarNotificationService.showSnackbarError(
+            'Re-download failed. Please try again.',
+          );
         },
       });
   }
@@ -352,7 +354,12 @@ export class RequestConfirmationDialog implements OnDestroy {
       .DuplicateRequest(request.requestId, request.organizationId)
       .pipe(finalize(() => this.loadingService.hide()))
       .subscribe({
-        next: () => this.dialogRef.close(true),
+        next: () => {
+          this.dialogRef.close(true);
+          this.snackbarNotificationService.showSnackbarSuccess(
+            'Solicitation duplicated successfully.',
+          );
+        },
         error: (error) => {
           this.loggingService.logException(
             new Error(`HTTP Error ${error.status}: ${error.statusText}`),

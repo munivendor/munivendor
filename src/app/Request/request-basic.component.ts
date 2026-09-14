@@ -676,6 +676,25 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
 
           this.initializeForm(formData);
 
+          // Surface stale-date errors immediately on load instead of
+          // waiting for the user to touch the field. mat-error only renders
+          // once a control is touched/dirty, but the matDatepickerFilter
+          // validator can invalidate the control before that happens.
+          setTimeout(() => {
+            [
+              'publishDate',
+              'closeDate',
+              'contractStartDate',
+              'contractEndDate',
+            ].forEach((controlName) => {
+              const control = this.basicsFormGroup.get(controlName);
+              if (control?.invalid) {
+                control.markAsTouched();
+              }
+            });
+            this.cdr.detectChanges();
+          });
+
           if (category) {
             this.basicsFormGroup
               .get('category')

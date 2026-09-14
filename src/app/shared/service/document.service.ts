@@ -4,6 +4,13 @@ import { Observable } from 'rxjs';
 import { ConfigService } from '../../core/services/config.service';
 import { DocumentInstance } from '../../Request/model/documentinstance.model';
 
+export interface DocumentResponseType {
+  codeId: number;
+  codeName: string;
+  codeDesc: string;
+  mapId: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -108,9 +115,76 @@ export class DocumentService {
     }
 
     return this.http.get(
-      `${this.url}Documents/DocumentContent/Response/Zip/${requestId}`,
+      `${this.url}Documents/DocumentContent/Response/SharedDrive/Zip/${requestId}`,
       {
         params,
+        responseType: 'blob',
+      },
+    );
+  }
+
+  /**
+   * Calls GET /documents/parameterized to generate an autofilled PDF for the
+   * given offer/document. The backend fills the PDF and uploads it
+   * server-side, returning only `{ correlationId }` as JSON — there is no
+   * file content in the response for the caller to download.
+   *
+   * NOTE: `requestDocumentId` (the row's own instance id) is passed as the
+   * API's `sourceRequestDocumentId` param — NOT the row's `sourceRequestDocumentId`
+   * field, which refers to a different, unrelated row.
+   */
+  AutofillDocument(
+    offerId: number,
+    requestDocumentId: number,
+    documentId: number,
+  ): Observable<HttpResponse<{ correlationId: string }>> {
+    const params = new HttpParams()
+      .set('offerId', offerId)
+      .set('sourceRequestDocumentId', requestDocumentId)
+      .set('documentId', documentId);
+
+    // observe: 'response' so callers can inspect the HTTP status code —
+    // the backend returns 206 (Partial Content) when the document was
+    // autofilled but some fields could not be filled in.
+    return this.http.get<{ correlationId: string }>(
+      `${this.url}documents/parameterized`,
+      { params, observe: 'response' },
+    );
+  }
+
+  UpdateRequestDocumentApproval(
+    requestDocumentId: number,
+    approved: boolean,
+  ): Observable<{ isSuccess: boolean }> {
+    return this.http.put<{ isSuccess: boolean }>(`${this.url}RequestDocument`, {
+      requestDocumentId: requestDocumentId,
+      approved: approved,
+    });
+  }
+
+  ResetDocumentInstance(
+    requestDocumentId: number,
+  ): Observable<{ isSuccess: boolean; correlationId: string }> {
+    return this.http.post<{ isSuccess: boolean; correlationId: string }>(
+      `${this.url}DocumentInstances/Reset/${requestDocumentId}`,
+      {},
+    );
+  }
+
+  GetDocumentResponseTypes(): Observable<DocumentResponseType[]> {
+    return this.http.get<DocumentResponseType[]>(
+      `${this.url}ListData/DocumentResponseTypes`,
+    );
+  }
+
+  GetLatestUploadedDocument(
+    organizationId: number,
+    requestDocumentId: number,
+  ): Observable<HttpResponse<Blob>> {
+    return this.http.get(
+      `${this.url}documents/LatestUploaded/${organizationId}/${requestDocumentId}`,
+      {
+        observe: 'response',
         responseType: 'blob',
       },
     );

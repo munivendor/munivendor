@@ -72,7 +72,7 @@ export class ProhibitedActivitiesRussiaBelarusComponent
   @Input() profileDetails: {
     offerorProfileId: number;
     formTypeId: number;
-    details: string;
+    prohibitedDetails: string;
     ofacIdentification?: boolean | null;
     ofacIdentificationAdditional?: boolean | null;
   }[] = [];
@@ -131,33 +131,17 @@ export class ProhibitedActivitiesRussiaBelarusComponent
     this.organizationId = this.stateService.getOrganizationId();
     this.buildForm();
 
+    // Note: the conditional fields below are displayed with a "(Required)"
+    // label whenever the user answers 'yes' to OFAC identification, but they
+    // are intentionally NOT enforced with Validators.required — the section
+    // must still be saveable even if no child dropdown, description, or
+    // document has been provided yet.
     this.prohibitedForm
       .get('ofacIdentification')
       ?.valueChanges.subscribe((value) => {
-        if (value === 'yes') {
-          this.prohibitedForm
-            .get('ofacAdditional')
-            ?.setValidators([Validators.required]);
-        } else {
-          this.prohibitedForm.get('ofacAdditional')?.clearValidators();
-          this.prohibitedForm.get('ofacDescription')?.clearValidators();
+        if (value !== 'yes') {
           this.selectedFileName = null;
         }
-        this.prohibitedForm.get('ofacAdditional')?.updateValueAndValidity();
-        this.prohibitedForm.get('ofacDescription')?.updateValueAndValidity();
-      });
-
-    this.prohibitedForm
-      .get('ofacAdditional')
-      ?.valueChanges.subscribe((value) => {
-        if (value === 'yes') {
-          this.prohibitedForm
-            .get('ofacDescription')
-            ?.setValidators([Validators.required]);
-        } else {
-          this.prohibitedForm.get('ofacDescription')?.clearValidators();
-        }
-        this.prohibitedForm.get('ofacDescription')?.updateValueAndValidity();
       });
 
     this.applyProfileDetails();
@@ -173,7 +157,7 @@ export class ProhibitedActivitiesRussiaBelarusComponent
     this.prohibitedForm = this.fb.group({
       ofacIdentification: [null, Validators.required],
       ofacAdditional: [null],
-      ofacDescription: [null],
+      prohibitedDetails: [null],
     });
   }
 
@@ -223,9 +207,11 @@ export class ProhibitedActivitiesRussiaBelarusComponent
       ofacAdditional: ofacAdd,
     });
 
-    if (match.details) {
+    if (match.prohibitedDetails) {
       setTimeout(() => {
-        this.prohibitedForm.patchValue({ ofacDescription: match.details });
+        this.prohibitedForm.patchValue({
+          prohibitedDetails: match.prohibitedDetails,
+        });
       }, 0);
     }
   }
@@ -336,7 +322,7 @@ export class ProhibitedActivitiesRussiaBelarusComponent
       return;
     }
 
-    const { ofacIdentification, ofacAdditional, ofacDescription } =
+    const { ofacIdentification, ofacAdditional, prohibitedDetails } =
       this.prohibitedForm.value;
 
     const ofacIdentificationBool = ofacIdentification === 'yes';
@@ -345,7 +331,7 @@ export class ProhibitedActivitiesRussiaBelarusComponent
 
     const descriptionToSave =
       ofacIdentificationBool && ofacAdditional === 'yes'
-        ? ofacDescription
+        ? prohibitedDetails
         : null;
 
     const saveOrUpdate$ = this.savedOfferorProfileId
@@ -390,9 +376,9 @@ export class ProhibitedActivitiesRussiaBelarusComponent
         // Clear dependent fields if user answered 'no' to OFAC identification
         if (!ofacIdentificationBool) {
           this.prohibitedForm.get('ofacAdditional')?.reset();
-          this.prohibitedForm.get('ofacDescription')?.reset();
+          this.prohibitedForm.get('prohibitedDetails')?.reset();
         } else if (ofacAdditional !== 'yes') {
-          this.prohibitedForm.get('ofacDescription')?.reset();
+          this.prohibitedForm.get('prohibitedDetails')?.reset();
         }
 
         this.snackbar.showSnackbarSuccess('Changes saved successfully.');

@@ -230,8 +230,22 @@ export class RequestService {
     return this.http.get<void>(`${this.url}Requests/${requestId}`);
   }
 
-  GetRequestRequiredDocumentsById(requestId: number): Observable<any> {
-    return this.http.get<any>(`${this.url}RequestDocuments/${requestId}`);
+  GetRequestRequiredDocumentsById(
+    requestId: number,
+    requiresNotarization?: boolean,
+    documentCategoryId?: number,
+  ): Observable<any> {
+    let url = `${this.url}RequestDocuments/Extended/${requestId}`;
+
+    if (requiresNotarization !== undefined && requiresNotarization !== null) {
+      url += `/${requiresNotarization}`;
+
+      if (documentCategoryId !== undefined && documentCategoryId !== null) {
+        url += `/${documentCategoryId}`;
+      }
+    }
+
+    return this.http.get<any>(url);
   }
 
   DeleteDecisionMaker(

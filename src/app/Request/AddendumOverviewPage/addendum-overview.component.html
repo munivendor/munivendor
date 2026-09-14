@@ -95,10 +95,10 @@
     </div>
 
     <div
-      *ngIf="hasAtLeastOneFieldError"
+      *ngIf="hasIncompleteAddendumError"
       style="color: #f44336; font-size: 12px; margin-top: 8px"
     >
-      At least one addendum must have content filled in.
+      Content is required for all newly added addendums.
     </div>
   </div>
 
@@ -113,7 +113,12 @@
     style="margin-top: 16px; display: flex; justify-content: flex-end; gap: 8px"
   >
     <button mat-stroked-button (click)="cancel()">Cancel</button>
-    <button mat-raised-button color="primary" (click)="saveSections()">
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="saveSections()"
+      [disabled]="isSaveDisabled"
+    >
       Save Addendum
     </button>
   </div>

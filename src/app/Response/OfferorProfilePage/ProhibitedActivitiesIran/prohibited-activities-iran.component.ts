@@ -23,6 +23,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
 
 import { StateService } from '../../../Request/services/state.service';
 import { LoggingService } from '../../../exceptionhandling/logging.service';
@@ -49,6 +51,8 @@ import { Observable, forkJoin } from 'rxjs';
     MatIconModule,
     MatButtonModule,
     MatTooltipModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
   ],
 })
 export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
@@ -67,8 +71,13 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
   @Input() profileDetails: {
     offerorProfileId: number;
     formTypeId: number; // mapId
-    details: string;
+    prohibitedDetails: string;
     chapter25Identification?: boolean | null;
+    chapter25EntityName?: string | null;
+    chapter25RelationshipToOfferor?: string | null;
+    chapter25EngagementYears?: number | null;
+    chapter25EngagementMonths?: number | null;
+    chapter25AnticipatedCessation?: string | null;
   }[] = [];
   @Output() detailsSaved = new EventEmitter<void>();
 
@@ -105,18 +114,24 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
     this.organizationId = this.stateService.getOrganizationId();
     this.buildForm();
 
+    // Note: the conditional fields below are displayed with a "(Required)"
+    // label whenever the user answers 'no' (i.e. cannot certify — they DO
+    // conduct business in Iran), but they are intentionally NOT enforced
+    // with Validators.required — the section must still be saveable even if
+    // no child field, description, or document has been provided yet.
     this.iranForm
       .get('chapter25Identification')
       ?.valueChanges.subscribe((value) => {
-        if (value === 'no') {
-          this.iranForm
-            .get('iranDescription')
-            ?.setValidators([Validators.required]);
-        } else {
-          this.iranForm.get('iranDescription')?.clearValidators();
+        if (value !== 'no') {
           this.selectedFileName = null;
+          this.iranForm.patchValue({
+            chapter25EntityName: null,
+            chapter25RelationshipToOfferor: null,
+            chapter25EngagementYears: null,
+            chapter25EngagementMonths: null,
+            chapter25AnticipatedCessation: null,
+          });
         }
-        this.iranForm.get('iranDescription')?.updateValueAndValidity();
       });
 
     this.applyProfileDetails();
@@ -131,7 +146,15 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
   private buildForm(): void {
     this.iranForm = this.fb.group({
       chapter25Identification: [null, Validators.required],
-      iranDescription: [null],
+      chapter25EntityName: [null, Validators.maxLength(300)],
+      chapter25RelationshipToOfferor: [null, Validators.maxLength(300)],
+      chapter25EngagementYears: [null, [Validators.min(0), Validators.max(99)]],
+      chapter25EngagementMonths: [
+        null,
+        [Validators.min(0), Validators.max(11)],
+      ],
+      chapter25AnticipatedCessation: [null],
+      prohibitedDetails: [null],
     });
   }
 
@@ -166,11 +189,22 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
           ? 'no'
           : null;
 
-    this.iranForm.patchValue({ chapter25Identification: chapter25 });
+    this.iranForm.patchValue({
+      chapter25Identification: chapter25,
+      chapter25EntityName: match.chapter25EntityName ?? null,
+      chapter25RelationshipToOfferor:
+        match.chapter25RelationshipToOfferor ?? null,
+      chapter25EngagementYears: match.chapter25EngagementYears ?? null,
+      chapter25EngagementMonths: match.chapter25EngagementMonths ?? null,
+      chapter25AnticipatedCessation:
+        match.chapter25AnticipatedCessation ?? null,
+    });
 
-    if (match.details) {
+    if (match.prohibitedDetails) {
       setTimeout(() => {
-        this.iranForm.patchValue({ iranDescription: match.details });
+        this.iranForm.patchValue({
+          prohibitedDetails: match.prohibitedDetails,
+        });
       }, 0);
     }
   }
@@ -199,28 +233,58 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
       return;
     }
 
-    const { chapter25Identification, iranDescription } = this.iranForm.value;
+    const {
+      chapter25Identification,
+      prohibitedDetails,
+      chapter25EntityName,
+      chapter25RelationshipToOfferor,
+      chapter25EngagementYears,
+      chapter25EngagementMonths,
+      chapter25AnticipatedCessation,
+    } = this.iranForm.value;
 
     // 'yes' = does NOT conduct business, 'no' = DOES conduct business
     const chapter25Bool = chapter25Identification === 'yes';
+
+    // Only send the conditional fields when the user certified they DO
+    // conduct business in Iran; otherwise clear them out on save.
+    const entityName = !chapter25Bool ? chapter25EntityName : null;
+    const relationshipToOfferor = !chapter25Bool
+      ? chapter25RelationshipToOfferor
+      : null;
+    const engagementYears = !chapter25Bool ? chapter25EngagementYears : null;
+    const engagementMonths = !chapter25Bool ? chapter25EngagementMonths : null;
+    const anticipatedCessation = !chapter25Bool
+      ? chapter25AnticipatedCessation
+      : null;
 
     const saveOrUpdate$ = this.savedOfferorProfileId
       ? this.offerorProfileService.UpdateOfferorProfileDetails(
           this.organizationId!,
           this.savedOfferorProfileId,
           7,
-          !chapter25Bool ? iranDescription : null,
+          !chapter25Bool ? prohibitedDetails : null,
           null,
           null,
           chapter25Bool,
+          entityName,
+          relationshipToOfferor,
+          engagementYears,
+          engagementMonths,
+          anticipatedCessation,
         )
       : this.offerorProfileService.SaveOfferorProfileDetails(
           this.organizationId!,
           7,
-          !chapter25Bool ? iranDescription : null,
+          !chapter25Bool ? prohibitedDetails : null,
           null,
           null,
           chapter25Bool,
+          entityName,
+          relationshipToOfferor,
+          engagementYears,
+          engagementMonths,
+          anticipatedCessation,
         );
 
     // Delete doc if user certified they do NOT conduct business
@@ -243,11 +307,17 @@ export class ProhibitedActivitiesIranComponent implements OnInit, OnChanges {
         this.savedOfferorProfileId = saveRes.offerorProfileId;
         if (deleteDoc$) this.documentDeleted.emit();
 
-        // Clear textarea if user certified they do NOT conduct business in Iran
+        // Clear conditional fields if user certified they do NOT conduct business in Iran
         if (chapter25Bool) {
-          this.iranForm.get('iranDescription')?.reset();
+          this.iranForm.patchValue({
+            prohibitedDetails: null,
+            chapter25EntityName: null,
+            chapter25RelationshipToOfferor: null,
+            chapter25EngagementYears: null,
+            chapter25EngagementMonths: null,
+            chapter25AnticipatedCessation: null,
+          });
         }
-
         this.snackbar.showSnackbarSuccess('Changes saved successfully.');
         this.detailsSaved.emit();
       },

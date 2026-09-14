@@ -337,26 +337,24 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
             .pipe(takeUntil(this.destroy$))
             .subscribe({
               next: (response) => {
-                if (response.isSuccess) {
-                  const index = this.proposalSections.controls.findIndex(
-                    (control) =>
-                      control.get('requestSectionTitle')?.value ===
-                      section.requestSectionTitle,
-                  );
+                const index = this.proposalSections.controls.findIndex(
+                  (control) =>
+                    control.get('requestSectionTitle')?.value ===
+                    section.requestSectionTitle,
+                );
 
-                  if (index !== -1) {
-                    // update original data with request section ids returned from API response
-                    // so that database does not duplicate rows
-                    const proposalSection = this.proposalSections.at(
-                      index,
-                    ) as FormGroup;
-                    proposalSection.patchValue({
-                      requestSectionId: response.requestSectionId,
-                    });
-                  }
-
-                  section.requestSectionId = response.requestSectionId;
+                if (index !== -1) {
+                  // update original data with request section ids returned from API response
+                  // so that database does not duplicate rows
+                  const proposalSection = this.proposalSections.at(
+                    index,
+                  ) as FormGroup;
+                  proposalSection.patchValue({
+                    requestSectionId: response.requestSectionId,
+                  });
                 }
+
+                section.requestSectionId = response.requestSectionId;
               },
               error: (error) => {
                 const correlationId = error?.error?.correlationId;

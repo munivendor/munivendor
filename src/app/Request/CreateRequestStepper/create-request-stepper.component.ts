@@ -76,7 +76,7 @@ export class CreateRequestStepper implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private stateService: StateService,
-    @Inject(PLATFORM_ID) private platformId: Object
+    @Inject(PLATFORM_ID) private platformId: Object,
   ) {
     this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       this.idParam = params.get('requestId');
@@ -90,9 +90,9 @@ export class CreateRequestStepper implements OnInit, OnDestroy {
     this.router.events
       .pipe(
         filter(
-          (event): event is NavigationStart => event instanceof NavigationStart
+          (event): event is NavigationStart => event instanceof NavigationStart,
         ),
-        takeUntil(this.destroy$)
+        takeUntil(this.destroy$),
       )
       .subscribe((event) => {
         // Check if navigating away from create-request-view

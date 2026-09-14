@@ -38,6 +38,8 @@ import { State } from '../../../shared/model/state.model';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSortModule, MatSort } from '@angular/material/sort';
 import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
+import { usPhoneValidator } from '../../../shared/validators/us-phone.validator';
+import { formatUsPhoneAsYouType } from '../../../shared/utils/us-phone.util';
 
 // ── Custom validators ──────────────────────────────────────────────────────────
 
@@ -174,7 +176,6 @@ export class AuthorizingOfficialsComponent implements OnInit {
   bestTimeOptions: State[] = [];
 
   readonly emailPattern = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
-  readonly phonePattern = /^\(\d{3}\) \d{3}-\d{4}$/;
 
   constructor(
     private fb: FormBuilder,
@@ -260,7 +261,7 @@ export class AuthorizingOfficialsComponent implements OnInit {
           ],
         ],
         confirmEmail: [null, [Validators.required, noWhitespaceValidator()]],
-        phone: [null, [Validators.pattern(this.phonePattern)]],
+        phone: [null, [usPhoneValidator()]],
         bestTimeToCallId: [null, Validators.required],
         digitalSignatureConsented: [false],
       },
@@ -327,11 +328,7 @@ export class AuthorizingOfficialsComponent implements OnInit {
   }
 
   formatPhoneDisplay(digits: string): string {
-    const d = digits.replace(/\D/g, '');
-    if (d.length === 0) return '';
-    if (d.length <= 3) return `(${d}`;
-    if (d.length <= 6) return `(${d.slice(0, 3)}) ${d.slice(3)}`;
-    return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6, 10)}`;
+    return formatUsPhoneAsYouType(digits);
   }
 
   formatZipCode(event: Event): void {
