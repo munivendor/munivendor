@@ -385,9 +385,9 @@ export class RequestConfirmationDialog implements OnDestroy {
     this.destroy$.complete();
   }
 
-  downloadZipDocuments(request: any): Observable<Blob> {
+  downloadZipDocuments(request: any): Observable<{ correlationId: string }> {
     this.snackBar.open(
-      'Download in Progress — The offers from this solicitation are currently being decrypted and zipped and will be downloaded in the background. You may continue to use the MuniVendor platform during this operation.',
+      'Download in Progress — The offers from this solicitation are currently being decrypted and uploaded to the shared drive that your agency previously designated. This is a background process. You may continue to use the MuniVendor platform during this operation.',
       'Dismiss',
       { duration: 0, verticalPosition: 'top', horizontalPosition: 'center' },
     );
@@ -395,23 +395,11 @@ export class RequestConfirmationDialog implements OnDestroy {
     return this.documentService
       .DownloadOfferorZipDocuments(request.requestId)
       .pipe(
-        tap((zipBlob) => {
+        tap(() => {
           this.snackBar.dismiss();
-
-          const date = new Date(request.publishDate);
-          const month = String(date.getMonth() + 1).padStart(2, '0');
-          const day = String(date.getDate()).padStart(2, '0');
-          const year = date.getFullYear();
-          const formattedDate = `${month}${day}${year}`;
-
-          const fileName = `${request.requestName}_${formattedDate}.zip`;
-
-          const blobUrl = window.URL.createObjectURL(zipBlob);
-          const link = document.createElement('a');
-          link.href = blobUrl;
-          link.download = fileName;
-          link.click();
-          window.URL.revokeObjectURL(blobUrl);
+          this.snackbarNotificationService.showSnackbarSuccess(
+            'The zip file has been uploaded to the shared drive.',
+          );
         }),
       );
   }
