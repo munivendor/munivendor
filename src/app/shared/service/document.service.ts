@@ -88,38 +88,20 @@ export class DocumentService {
     });
   }
 
+  /**
+   * Calls GET /Documents/DocumentContent/Response/SharedDrive2/Upload/{requestId}.
+   * The backend zips the offeror response documents and uploads the zip
+   * directly to the organization's configured shared drive — it no longer
+   * streams the file back in the response. The caller only gets back the
+   * correlationId of the upload; there is no blob to download here.
+   * to be implemented in the future.
+   */
+  // using the older shared drive endpoint for now
   DownloadOfferorZipDocuments(
     requestId: number,
-    requestTypeId?: number,
-    requestStatusId?: number,
-    organizationId?: number,
-    limit?: number,
-    offset?: number,
-  ): Observable<Blob> {
-    let params = new HttpParams();
-
-    if (requestTypeId !== undefined) {
-      params = params.set('requestTypeId', requestTypeId.toString());
-    }
-    if (requestStatusId !== undefined) {
-      params = params.set('requestStatusId', requestStatusId.toString());
-    }
-    if (organizationId !== undefined) {
-      params = params.set('organizationId', organizationId.toString());
-    }
-    if (limit !== undefined) {
-      params = params.set('limit', limit.toString());
-    }
-    if (offset !== undefined) {
-      params = params.set('offset', offset.toString());
-    }
-
-    return this.http.get(
+  ): Observable<{ correlationId: string }> {
+    return this.http.get<{ correlationId: string }>(
       `${this.url}Documents/DocumentContent/Response/SharedDrive/Zip/${requestId}`,
-      {
-        params,
-        responseType: 'blob',
-      },
     );
   }
 

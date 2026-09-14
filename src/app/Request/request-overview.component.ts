@@ -33,6 +33,33 @@ import { StateService } from './services/state.service';
 import { Subject, takeUntil, Observable } from 'rxjs';
 import { LoggingService } from '../exceptionhandling/logging.service';
 
+/**
+ * Reduces TinyMCE's HTML output down to its actually-visible text.
+ *
+ * A "blank" TinyMCE editor never serializes to ''. Depending on browser and
+ * editor state it can come back as "<p>&nbsp;</p>", "<p>&#160;</p>",
+ * "<p><br data-mce-bogus="1"></p>", etc. Regex-stripping tags/entities is
+ * fragile because it has to special-case every representation. Parsing the
+ * markup and reading textContent instead lets the browser decode whichever
+ * entity form shows up, and JS's \s already treats U+00A0 (nbsp) as
+ * whitespace, so a single strip catches all of them uniformly.
+ */
+function getVisibleText(html: string | null | undefined): string {
+  if (!html) {
+    return '';
+  }
+  if (typeof document !== 'undefined') {
+    const container = document.createElement('div');
+    container.innerHTML = html;
+    return (container.textContent ?? '').replace(/\s+/g, '');
+  }
+  // SSR fallback where document isn't available: best-effort strip.
+  return html
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;|&#160;|&#xa0;/gi, '')
+    .replace(/\s+/g, '');
+}
+
 function atLeastOneFieldFilledValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     if (!(control instanceof FormArray)) {
@@ -42,10 +69,8 @@ function atLeastOneFieldFilledValidator(): ValidatorFn {
     const formArray = control as FormArray;
     const hasAtLeastOneContent = formArray.controls.some((section) => {
       const content = section.get('requestSectionContent')?.value;
-      const cleanContent = content?.replace(/<[^>]*>/g, '').trim();
-      return cleanContent && cleanContent.length > 0;
+      return getVisibleText(content).length > 0;
     });
-
     return hasAtLeastOneContent ? null : { atLeastOneFieldRequired: true };
   };
 }
@@ -162,6 +187,7 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
     this.proposalsOverviewFormGroup = this.fb.group({
       proposalSections: this.fb.array([], [atLeastOneFieldFilledValidator()]),
     });
+    this.formValidityChange.emit(this.proposalsOverviewFormGroup.valid);
 
     if (!this.idParam && !this.requestId) {
       this.getRequestSectionDefaultTitle().subscribe({
@@ -305,12 +331,8 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
             requestSectionTitle: any;
             requestSectionContent: any;
           }) => {
-            // Clean the content by removing HTML tags and trim whitespace
-            const cleanContent = section.requestSectionContent
-              ?.replace(/<[^>]*>/g, '')
-              .trim();
-            // Only include sections that have actual content
-            return cleanContent && cleanContent.length > 0;
+            // Only include sections that have actual visible content
+            return getVisibleText(section.requestSectionContent).length > 0;
           },
         );
 

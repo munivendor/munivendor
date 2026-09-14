@@ -6,7 +6,7 @@
           #step1
           [requestId]="requestId"
           [idParam]="idParam"
-          (formValidityChange)="onFormValidityChange($event)"
+          (formValidityChange)="onStep1ValidityChange($event)"
         ></request-basic>
         <div>
           <button
@@ -15,7 +15,7 @@
             matStepperNext
             color="primary"
             style="float: right"
-            [disabled]="!isStepValid"
+            [disabled]="!isStep1Valid"
           >
             Next
           </button>
@@ -39,7 +39,7 @@
             matStepperNext
             (click)="saveSections()"
             color="primary"
-            [disabled]="!isStepValid"
+            [disabled]="!isStep2Valid"
           >
             Next
           </button>
@@ -47,7 +47,7 @@
         <request-overview
           #step2
           [idParam]="idParam"
-          (formValidityChange)="onFormValidityChange($event)"
+          (formValidityChange)="onStep2ValidityChange($event)"
         ></request-overview>
         <div class="request-stepper-button-container-margin-top">
           <button
@@ -62,7 +62,7 @@
             mat-raised-button
             matStepperNext
             (click)="saveSections()"
-            [disabled]="!isStepValid"
+            [disabled]="!isStep2Valid"
             color="primary"
           >
             Next
