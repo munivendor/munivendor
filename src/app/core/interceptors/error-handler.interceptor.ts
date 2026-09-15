@@ -211,11 +211,6 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
     error: HttpErrorResponse,
     httpRequest: HttpRequest<any>,
   ): void {
-    console.log(
-      'handleSnackbarNon401 triggered:',
-      httpRequest.url,
-      error.status,
-    );
     const correlationId = error.error?.correlationId || 'N/A';
     this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
       correlationId,
@@ -227,7 +222,6 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
     error: HttpErrorResponse,
     httpRequest: HttpRequest<any>,
   ): void {
-    console.log('handleError triggered:', httpRequest.url, error.status); //
     const errorDetails = {
       statusCode: error.status,
       statusText: error.statusText,
