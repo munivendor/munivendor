@@ -270,7 +270,10 @@ export class ProhibitedActivitiesRussiaBelarusComponent
     this.downloadingDocumentIds.add(doc.documentId);
 
     this.requestService
-      .GetAgencySpecificDocumentContent(doc.documentId, this.organizationId)
+      .GetAgencySpecificDocumentContent(
+        doc.organizationDocumentId,
+        this.organizationId,
+      )
       .subscribe({
         next: (response) => {
           this.downloadingDocumentIds.delete(doc.documentId);

@@ -64,6 +64,7 @@
   padding: 24px 28px;
   display: flex;
   flex-direction: column;
+  gap: 8px;
 }
 
 /* ── Form sections ───────────────────────────────── */
@@ -107,7 +108,7 @@
 }
 
 .duration-field {
-  width: 140px;
+  width: 200px;
 }
 
 /* ── Upload section ──────────────────────────────── */
