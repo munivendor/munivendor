@@ -576,13 +576,60 @@ export class StockholderInformationComponent implements OnInit {
   private isPatchingForm = false;
 
   editStockholder(index: number): void {
+    const entry = this.savedStockholders[index];
     this.isPatchingForm = true;
-    this.patchFormFromEntry(this.savedStockholders[index]);
+    this.patchFormFromEntry(entry);
+    this.applyValidatorsForEntry(entry);
     this.isPatchingForm = false;
     this.editingIndex = index;
     this.stockholderForm.markAsDirty();
     this.cdr.detectChanges();
     this.scrollToTop();
+  }
+
+  /**
+   * Re-applies the required validators for the entry being edited.
+   * Needed because patchFormFromEntry runs while isPatchingForm is true,
+   * which causes the normal valueChanges-driven validator logic to skip.
+   */
+  private applyValidatorsForEntry(entry: OfferorStockholderInfo): void {
+    this.stockholderForm
+      .get('stockholderTypeId')
+      ?.setValidators([Validators.required]);
+    this.stockholderForm
+      .get('stockholderTypeId')
+      ?.updateValueAndValidity({ emitEvent: false });
+
+    const isPerson = entry.stockholderTypeId === this.STOCKHOLDER_TYPE_PERSON;
+    const isOrg = entry.stockholderTypeId === this.STOCKHOLDER_TYPE_ORG;
+
+    if (isPerson) {
+      this.setPersonValidators();
+    }
+
+    if (isOrg) {
+      this.setOrganizationNameValidator();
+
+      const ctrl = this.stockholderForm.get('publiclyTraded');
+      ctrl?.setValidators([Validators.required]);
+      ctrl?.updateValueAndValidity({ emitEvent: false });
+      ctrl?.markAsUntouched();
+      ctrl?.markAsPristine();
+
+      this.setAddressValidators();
+    }
+
+    if (entry.publiclyTraded === true) {
+      const secCtrl = this.stockholderForm.get('secFilingWebsite');
+      secCtrl?.setValidators([
+        Validators.required,
+        Validators.maxLength(300),
+        urlValidator(),
+      ]);
+      secCtrl?.updateValueAndValidity({ emitEvent: false });
+      secCtrl?.markAsUntouched();
+      secCtrl?.markAsPristine();
+    }
   }
 
   removeStockholder(index: number): void {
