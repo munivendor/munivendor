@@ -195,7 +195,8 @@
               basicsFormGroup.get('closeDate')?.hasError('matDatepickerFilter')
             "
           >
-            Close Date is in the past. Please choose a new date.
+            Close Date must be at least 10 days after the Publish Date, and
+            not in the past.
           </mat-error>
         </mat-form-field>
       </div>
