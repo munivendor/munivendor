@@ -216,6 +216,14 @@
           >
             Close Time is required.
           </mat-error>
+          <mat-error
+            *ngIf="
+              basicsFormGroup.get('closeTime')?.hasError('minCloseDateTime')
+            "
+          >
+            Close Time must be at least 10 days after the Publish Date and
+            Time.
+          </mat-error>
         </mat-form-field>
       </div>
     </div>
