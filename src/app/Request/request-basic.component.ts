@@ -61,34 +61,51 @@ interface FlattenedCategoryNode {
   children?: FlattenedCategoryNode[];
 }
 
-// Non-legally-permissible close dates (hardcoded — update annually or migrate
-// to a backend endpoint when multi-year / multi-agency support is needed).
+// Non-legally-permissible close dates
 
-const RESTRICTED_CLOSE_DATES_2026: ReadonlySet<string> = new Set([
-  '2026-06-18', // Thursday  – Juneteenth observed (day before)
-  '2026-06-19', // Friday    – Juneteenth
-  '2026-07-03', // Friday    – Independence Day observed
+const RESTRICTED_CLOSE_DATES: ReadonlySet<string> = new Set([
+  '2025-10-13', // Monday    – Columbus Day
+  '2025-11-04', // Tuesday   – Election Day
+  '2025-11-11', // Tuesday   – Veterans Day
+  '2025-11-27', // Thursday  – Thanksgiving Day
+  '2025-12-25', // Thursday  – Christmas Day
+  '2026-01-01', // Thursday  – New Year's Day
+  '2026-01-19', // Monday    – Birthday of Martin Luther King, Jr.
+  '2026-02-16', // Monday    – Washington's Birthday
+  '2026-04-03', // Friday    – Good Friday
+  '2026-05-25', // Monday    – Memorial Day
+  '2026-06-19', // Friday    – Juneteenth National Independence Day
+  '2026-07-03', // Friday    – Independence Day
   '2026-09-07', // Monday    – Labor Day
   '2026-10-12', // Monday    – Columbus Day
-  '2026-11-10', // Tuesday   – Veterans Day observed
+  '2026-11-03', // Tuesday   – Election Day
   '2026-11-11', // Wednesday – Veterans Day
-  '2026-11-25', // Wednesday – Day before Thanksgiving
-  '2026-11-26', // Thursday  – Thanksgiving
-  '2026-12-24', // Thursday  – Christmas Eve
+  '2026-11-26', // Thursday  – Thanksgiving Day
   '2026-12-25', // Friday    – Christmas Day
 ]);
 
-/** Returns true when the given date is a restricted close date. */
+function toIsoDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Returns true when the given date is a restricted close date: a holiday
+ * itself, the day immediately following a holiday, or a Monday.
+ */
 function isRestrictedCloseDate(date: Date): boolean {
   // All Mondays are non-permissible
   if (date.getDay() === 1) return true;
 
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const iso = `${year}-${month}-${day}`;
+  const iso = toIsoDate(date);
+  if (RESTRICTED_CLOSE_DATES.has(iso)) return true;
 
-  return RESTRICTED_CLOSE_DATES_2026.has(iso);
+  const previousDay = new Date(date);
+  previousDay.setDate(previousDay.getDate() - 1);
+
+  return RESTRICTED_CLOSE_DATES.has(toIsoDate(previousDay));
 }
 
 @Component({
@@ -186,6 +203,7 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     this.createFormGroup(data);
     this.handleCategoryValueChanges();
     this.handlePublishDateValueChanges();
+    this.handleCloseDateTimeValueChanges();
     this.monitorFormValidity();
 
     this.emitInitialFormValidity();
@@ -479,7 +497,10 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
       publishDate: [data?.publishDate || '', Validators.required],
       publishTime: [data?.publishTime || '', Validators.required],
       closeDate: [data?.closeDate || '', Validators.required],
-      closeTime: [data?.closeTime || '', Validators.required],
+      closeTime: [
+        data?.closeTime || '',
+        [Validators.required, this.closeDateTimeValidator],
+      ],
       contractStartDate: [data?.contractStartDate || '', Validators.required],
       contractEndDate: [data?.contractEndDate || '', Validators.required],
       dropdowns: this.fb.array(
@@ -536,11 +557,64 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.formStatus$))
       .subscribe(() => {
         closeDateControl.updateValueAndValidity();
-        if (closeDateControl.invalid) {
+        if (closeDateControl.invalid && closeDateControl.value) {
           closeDateControl.markAsTouched();
         }
       });
   }
+
+  // Close Time must be at least 10 days after Publish Time when Close Date
+  // falls exactly on the 10-day boundary (e.g. publish 9/15 10:00 AM ->
+  // earliest valid close is 9/25 10:00 AM). Re-validate Close Time whenever
+  // any of the three dependent fields change.
+  private handleCloseDateTimeValueChanges(): void {
+    const closeTimeControl = this.basicsFormGroup.get('closeTime');
+    if (!closeTimeControl) return;
+
+    const triggers = [
+      this.basicsFormGroup.get('publishDate')?.valueChanges,
+      this.basicsFormGroup.get('publishTime')?.valueChanges,
+      this.basicsFormGroup.get('closeDate')?.valueChanges,
+    ].filter(Boolean);
+
+    triggers.forEach((trigger) => {
+      trigger!.pipe(takeUntil(this.formStatus$)).subscribe(() => {
+        closeTimeControl.updateValueAndValidity();
+        if (closeTimeControl.invalid && closeTimeControl.value) {
+          closeTimeControl.markAsTouched();
+        }
+      });
+    });
+  }
+
+  private closeDateTimeValidator = (
+    control: AbstractControl,
+  ): ValidationErrors | null => {
+    if (!this.basicsFormGroup) return null;
+
+    const publishDate = this.basicsFormGroup.get('publishDate')?.value;
+    const publishTime = this.basicsFormGroup.get('publishTime')?.value;
+    const closeDate = this.basicsFormGroup.get('closeDate')?.value;
+    const closeTime = control.value;
+
+    if (!publishDate || !publishTime || !closeDate || !closeTime) return null;
+
+    const publishDateTime = this.combineDateAndTime(
+      new Date(publishDate),
+      publishTime,
+    );
+    const minCloseDateTime = new Date(publishDateTime);
+    minCloseDateTime.setDate(minCloseDateTime.getDate() + 10);
+
+    const closeDateTime = this.combineDateAndTime(
+      new Date(closeDate),
+      closeTime,
+    );
+
+    return closeDateTime >= minCloseDateTime
+      ? null
+      : { minCloseDateTime: true };
+  };
 
   private monitorFormValidity(): void {
     let lastValid = this.basicsFormGroup.valid;
