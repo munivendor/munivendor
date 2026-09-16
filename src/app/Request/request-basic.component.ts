@@ -9,7 +9,7 @@ import {
   PLATFORM_ID,
   Inject,
 } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import {
   FormGroup,
   FormBuilder,
@@ -137,7 +137,6 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
   organizationId: number = this.stateService.getOrganizationId() ?? 0;
   private formStatus$ = new Subject<void>();
   decisionMakerTooltip!: any;
-  router: any;
 
   constructor(
     private fb: FormBuilder,
@@ -146,6 +145,7 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private categoryHierarchyService: CategoryHierarchyService,
     private loggingService: LoggingService,
+    private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object,
   ) {
     this.flattenCategories();
@@ -185,6 +185,7 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
 
     this.createFormGroup(data);
     this.handleCategoryValueChanges();
+    this.handlePublishDateValueChanges();
     this.monitorFormValidity();
 
     this.emitInitialFormValidity();
@@ -518,6 +519,25 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
           this.updateFilteredCategoriesWithToggle();
         } else if (value !== null) {
           this.applyCategoryFilter(value);
+        }
+      });
+  }
+
+  // The Close Date filter depends on Publish Date, but Angular Material only
+  // re-runs matDatepickerFilter when the Close Date control itself changes.
+  // Re-validate Close Date whenever Publish Date changes so a now-invalid
+  // selection is caught immediately instead of silently staying invalid.
+  private handlePublishDateValueChanges(): void {
+    const publishDateControl = this.basicsFormGroup.get('publishDate');
+    const closeDateControl = this.basicsFormGroup.get('closeDate');
+    if (!publishDateControl || !closeDateControl) return;
+
+    publishDateControl.valueChanges
+      .pipe(takeUntil(this.formStatus$))
+      .subscribe(() => {
+        closeDateControl.updateValueAndValidity();
+        if (closeDateControl.invalid) {
+          closeDateControl.markAsTouched();
         }
       });
   }
@@ -1080,6 +1100,7 @@ export class BasicRequestComponent implements OnInit, OnDestroy {
     if (publishDate) {
       const pubDate = new Date(publishDate);
       pubDate.setHours(0, 0, 0, 0);
+      pubDate.setDate(pubDate.getDate() + 10);
       isAfterOrEqualToPublishDate = date >= pubDate;
     }
 

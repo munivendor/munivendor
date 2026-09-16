@@ -869,7 +869,6 @@ export class ResponseDocumentsComponent
           );
         },
         error: (error) => {
-          console.log('error', error);
           this.loadingService.hide();
 
           const correlationId = error?.error?.correlationId;
@@ -997,7 +996,6 @@ export class ResponseDocumentsComponent
       .GetLatestUploadedDocument(row.organizationId, requestDocumentId)
       .subscribe({
         next: (response) => {
-          console.log('response', response);
           const blob = response.body;
           if (!blob) {
             this.loadingService.hide();
@@ -1023,7 +1021,6 @@ export class ResponseDocumentsComponent
           this.loadingService.hide();
         },
         error: (error) => {
-          console.log('error', error);
           this.loadingService.hide();
           const correlationId = error?.error?.correlationId;
 
