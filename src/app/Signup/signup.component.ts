@@ -48,6 +48,7 @@ import { StateService } from '../Request/services/state.service';
 import { MatIconModule } from '@angular/material/icon';
 import { LoggingService } from '../exceptionhandling/logging.service';
 import { SnackbarNotificationService } from '../shared/service/snackbar-notification.service';
+import { FlowNavigationService } from '../shared/service/flow-navigation.service';
 
 @Component({
   selector: 'dialog-elements-example-dialog',
@@ -99,6 +100,7 @@ export class SignupComponent implements OnInit, OnDestroy {
   signupFormGoogle!: FormGroup;
   organizationTypes: OrganizationType[] = [];
   private userCreationInProgress = false;
+  private googleSignupInitiated = false;
   private destroy$ = new Subject<void>();
   hidePassword = true;
   hideConfirmPassword = true;
@@ -117,6 +119,7 @@ export class SignupComponent implements OnInit, OnDestroy {
     private loggingService: LoggingService,
     private snackbarNotificationService: SnackbarNotificationService,
     private route: ActivatedRoute,
+    private flowNavigationService: FlowNavigationService,
   ) {}
 
   togglePasswordVisibility(): void {
@@ -130,6 +133,7 @@ export class SignupComponent implements OnInit, OnDestroy {
   prepareGoogleSignIn(): void {
     this.authService.setSkipNextAuthState(true);
     this.authService.setSignupInProgress(true);
+    this.googleSignupInitiated = true;
   }
 
   private detectSignupMode(): void {
@@ -321,63 +325,82 @@ export class SignupComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         filter((user) => {
-          return !!user && !this.userCreationInProgress;
+          return (
+            !!user && !this.userCreationInProgress && this.googleSignupInitiated
+          );
         }),
 
         switchMap((user) => {
           this.userCreationInProgress = true;
-          const selectedOrganizationTypeId =
-            this.signupFormGoogle.getRawValue().organizationTypeId;
 
-          const organizationData: Organization = {
-            organizationTypeId: selectedOrganizationTypeId,
+          const googleUserLogin: UserLogin = {
+            userIdentity: user.id,
+            username: user.email,
           };
 
-          return this.organizationService
-            .initializeOrganization(organizationData)
-            .pipe(
-              switchMap((orgResponse) => {
-                const userData: User = {
-                  firstName: user.firstName,
-                  lastName: user.lastName,
-                  workEmail: user.email,
-                  username: user.email,
-                  userIdentity: user.id,
-                  identityTypeId: 2,
-                  organizationId: orgResponse.organizationId,
-                  organizationTypeId: selectedOrganizationTypeId, // ← fix: was missing
-                };
-                this.stateService.setOrganizationTypeId(
-                  selectedOrganizationTypeId,
+          // Try logging in with this Google identity first. Only create a
+          // new organization/user if no account exists yet for it — this
+          // prevents a repeat Google signup by an existing account from
+          // spawning an orphaned organization on every attempt.
+          return this.authService.login(googleUserLogin).pipe(
+            tap(() => this.authService.setSkipNextAuthState(false)),
+            switchMap((loginResponse: number) =>
+              this.flowNavigationService.navigateAfterLogin(loginResponse),
+            ),
+            catchError(() => {
+              const selectedOrganizationTypeId =
+                this.signupFormGoogle.getRawValue().organizationTypeId;
+
+              const organizationData: Organization = {
+                organizationTypeId: selectedOrganizationTypeId,
+              };
+
+              return this.organizationService
+                .initializeOrganization(organizationData)
+                .pipe(
+                  switchMap((orgResponse) => {
+                    const userData: User = {
+                      firstName: user.firstName,
+                      lastName: user.lastName,
+                      workEmail: user.email,
+                      username: user.email,
+                      userIdentity: user.id,
+                      identityTypeId: 2,
+                      organizationId: orgResponse.organizationId,
+                      organizationTypeId: selectedOrganizationTypeId,
+                    };
+                    this.stateService.setOrganizationTypeId(
+                      selectedOrganizationTypeId,
+                    );
+                    this.stateService.setOrganizationId(
+                      orgResponse.organizationId,
+                    );
+                    return this.createOrLoginGoogleUser(userData);
+                  }),
+                  catchError((error) => {
+                    this.userCreationInProgress = false;
+                    this.authService.setSignupInProgress(false);
+                    this.authService.setSkipNextAuthState(false);
+                    // Sign out of the Google SDK session so the failed sign-in
+                    // isn't left cached in authState and replayed into this
+                    // listener the next time SignupComponent is (re)initialized.
+                    this.socialAuthService.signOut().catch(() => {});
+                    this.snackbarNotificationService.showSnackbarError(
+                      'Sign up failed. This email may already exist or an error occurred.',
+                    );
+                    return of(null);
+                  }),
                 );
-                this.stateService.setOrganizationId(orgResponse.organizationId);
-                return this.createOrLoginGoogleUser(userData);
-              }),
-              catchError((error) => {
-                this.userCreationInProgress = false;
-                this.authService.setSignupInProgress(false);
-                this.authService.setSkipNextAuthState(false);
-                // Sign out of the Google SDK session so the failed sign-in
-                // isn't left cached in authState and replayed into this
-                // listener the next time SignupComponent is (re)initialized.
-                this.socialAuthService.signOut().catch(() => {});
-                this.snackbarNotificationService.showSnackbarError(
-                  'Sign up failed. This email may already exist or an error occurred.',
-                );
-                return of(null);
-              }),
-              finalize(() => {
-                this.userCreationInProgress = false;
-                this.authService.setSignupInProgress(false);
-              }),
-            );
+            }),
+            finalize(() => {
+              this.userCreationInProgress = false;
+              this.authService.setSignupInProgress(false);
+              this.googleSignupInitiated = false;
+            }),
+          );
         }),
       )
-      .subscribe((result) => {
-        if (result) {
-          this.router.navigate(['/organization-details']);
-        }
-      });
+      .subscribe();
   }
 
   private createOrLoginGoogleUser(user: User): Observable<any> {
@@ -412,6 +435,9 @@ export class SignupComponent implements OnInit, OnDestroy {
         };
         return this.authService.login(googleUserLogin).pipe(
           tap(() => this.authService.setSkipNextAuthState(false)),
+          switchMap((loginResponse: number) =>
+            this.flowNavigationService.navigateAfterLogin(loginResponse),
+          ),
           catchError((loginError) => {
             this.authService.setSkipNextAuthState(false);
             const correlationId = loginError?.error?.correlationId;
@@ -493,6 +519,7 @@ export class SignupComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.authService.setSkipNextAuthState(false);
+    this.googleSignupInitiated = false;
     this.destroy$.next();
     this.destroy$.complete();
   }
