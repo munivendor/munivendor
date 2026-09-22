@@ -1,28 +1,33 @@
-.full-width {
-  width: 100%;
-}
-
 .center-container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
   width: 100vw;
+  padding: 24px;
+  box-sizing: border-box;
+  background-color: #f5f6f8;
 }
 
-mat-card-header {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 1rem;
-}
-
-mat-card-title {
-  text-align: center;
+.details-card {
+  max-width: 480px;
   width: 100%;
+  margin: 0 auto;
+  padding: 32px 32px 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
-mat-card-actions > * {
-  margin-bottom: 10px;
+.details-title {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 16px;
 }
 
 .separator {
@@ -45,4 +50,39 @@ mat-card-actions > * {
   width: 100%;
   display: flex;
   justify-content: center;
+}
+
+.forgot-password-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.submit-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 4px;
+  margin-bottom: 16px;
+  height: 44px;
+  font-size: 15px;
+  letter-spacing: 0.3px;
+}
+
+.footer-text {
+  text-align: center;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.6);
+  margin: 0;
+}
+
+.back-link {
+  color: #1976d2;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover {
+  text-decoration: underline;
 }

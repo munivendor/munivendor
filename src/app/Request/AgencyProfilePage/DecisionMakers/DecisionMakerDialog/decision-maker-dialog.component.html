@@ -94,14 +94,14 @@
           placeholder="(xxx) xxx-xxxx"
           maxlength="14"
           required
-          [pattern]="phonePattern"
+          appUsPhone
           (keydown)="onPhoneKeydown($event)"
         />
         <mat-error *ngIf="phoneNumberField.hasError('required')">
           Phone number is required.
         </mat-error>
-        <mat-error *ngIf="phoneNumberField.hasError('pattern')">
-          Please enter a complete 10-digit phone number.
+        <mat-error *ngIf="phoneNumberField.hasError('invalidPhoneNumber')">
+          Please enter a valid US phone number.
         </mat-error>
       </mat-form-field>
 

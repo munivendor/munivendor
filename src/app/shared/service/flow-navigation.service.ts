@@ -6,21 +6,13 @@ import { UserService } from './user.service';
 import { User } from '../model/user.model';
 import { LoggingService } from '../../exceptionhandling/logging.service';
 import { SnackbarNotificationService } from './snackbar-notification.service';
+import { StateService } from '../../Request/services/state.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class FlowNavigationService {
   private readonly FLOW_ROUTES = {
-    government: {
-      flowId: 1,
-      routes: {
-        0: '/organization-details',
-        1: '/organization-details',
-        2: '/user-details',
-        6: '/requests-view',
-      },
-    },
     agency: {
       flowId: 1,
       routes: {
@@ -47,20 +39,24 @@ export class FlowNavigationService {
     private userService: UserService,
     private loggingService: LoggingService,
     private snackbarNotificationService: SnackbarNotificationService,
+    private stateService: StateService,
   ) {}
 
-  navigateAfterLogin(userId: number, email: string): Observable<void> {
+  navigateAfterLogin(userId: number): Observable<void> {
     return new Observable((observer) => {
-      const isGovEmail = email.toLowerCase().endsWith('.gov');
-
-      if (isGovEmail) {
-        this.handleNavigation(userId, 'government', observer);
-        return;
-      }
-
       this.userService.getUser(userId).subscribe({
         next: (user: User) => {
-          const flowType = this.getFlowType(false, user.organizationTypeId);
+          if (user.organizationId !== undefined) {
+            this.stateService.setOrganizationId(user.organizationId);
+          }
+          if (user.organizationTypeId !== undefined) {
+            this.stateService.setOrganizationTypeId(user.organizationTypeId);
+          }
+          if (user.userId !== undefined) {
+            this.stateService.setUserId(user.userId);
+          }
+
+          const flowType = this.getFlowType(user.organizationTypeId);
           this.handleNavigation(userId, flowType, observer);
         },
         error: (error) => {
@@ -91,7 +87,7 @@ export class FlowNavigationService {
 
   private handleNavigation(
     userId: number,
-    flowType: 'government' | 'agency' | 'offeror',
+    flowType: 'agency' | 'offeror',
     observer: any,
   ): void {
     const flowConfig = this.FLOW_ROUTES[flowType];
@@ -129,16 +125,8 @@ export class FlowNavigationService {
       });
   }
 
-  private getFlowType(
-    isGovEmail: boolean,
-    organizationTypeId?: number,
-  ): 'government' | 'agency' | 'offeror' {
-    if (isGovEmail) {
-      return 'government';
-    } else if (organizationTypeId === 1) {
-      return 'agency';
-    }
-    return 'offeror';
+  private getFlowType(organizationTypeId?: number): 'agency' | 'offeror' {
+    return organizationTypeId === 1 ? 'agency' : 'offeror';
   }
 
   private navigateBasedOnProgress(

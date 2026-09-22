@@ -19,10 +19,12 @@ import {
   MatDialogModule,
   MatDialogRef,
 } from '@angular/material/dialog';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, interval, take, takeUntil } from 'rxjs';
 import { AuthService } from '../authorization/auth.service';
 import { LoggingService } from '../exceptionhandling/logging.service';
 import { SnackbarNotificationService } from '../shared/service/snackbar-notification.service';
+
+const RESEND_COOLDOWN_SECONDS = 60;
 
 @Component({
   imports: [
@@ -41,18 +43,26 @@ import { SnackbarNotificationService } from '../shared/service/snackbar-notifica
         mat-button
         color="primary"
         (click)="onResendClick()"
-        [disabled]="isLoading"
+        [disabled]="isLoading || cooldownRemaining > 0"
       >
-        {{ isLoading ? 'Sending...' : 'Resend Link' }}
+        {{
+          isLoading
+            ? 'Sending...'
+            : cooldownRemaining > 0
+              ? 'Resend Link (' + cooldownRemaining + 's)'
+              : 'Resend Link'
+        }}
       </button>
       <button mat-raised-button color="primary" mat-dialog-close>Ok</button>
     </mat-dialog-actions>
   `,
 })
-export class ResendPasswordResetDialog {
+export class ResendPasswordResetDialog implements OnDestroy {
+  private destroy$ = new Subject<void>();
   message = '';
   isLoading = false;
   email = '';
+  cooldownRemaining = 0;
 
   constructor(
     public dialogRef: MatDialogRef<ResendPasswordResetDialog>,
@@ -62,17 +72,27 @@ export class ResendPasswordResetDialog {
     private snackbarNotificationService: SnackbarNotificationService,
   ) {
     this.email = data?.email || '';
+    this.cooldownRemaining = data?.cooldownRemaining || 0;
+    if (this.cooldownRemaining > 0) {
+      this.startCooldown(this.cooldownRemaining);
+    }
   }
 
   onResendClick() {
+    if (this.isLoading || this.cooldownRemaining > 0) {
+      return;
+    }
+
     this.isLoading = true;
     this.authService.sendPasswordReset(this.email).subscribe({
       next: (response) => {
         this.isLoading = false;
         this.message = 'Reset link sent successfully! Please check your email.';
+        this.startCooldown(RESEND_COOLDOWN_SECONDS);
       },
       error: (error) => {
         this.isLoading = false;
+        this.startCooldown(RESEND_COOLDOWN_SECONDS);
 
         const correlationId = error?.error?.correlationId;
 
@@ -93,6 +113,20 @@ export class ResendPasswordResetDialog {
         );
       },
     });
+  }
+
+  private startCooldown(seconds: number) {
+    this.cooldownRemaining = seconds;
+    interval(1000)
+      .pipe(take(seconds), takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.cooldownRemaining--;
+      });
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }
 
@@ -121,6 +155,7 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
   showResendButton = false;
   currentEmail = '';
   isLoading = false;
+  cooldownRemaining = 0;
 
   constructor(
     private fb: FormBuilder,
@@ -140,6 +175,7 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
         next: (response) => {
           this.isLoading = false;
           this.forgotPasswordForm.get('email')?.enable();
+          this.startCooldown();
           this.openDialog();
         },
         error: (error) => {
@@ -169,6 +205,10 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
   }
 
   onResendLink() {
+    if (this.isLoading || this.cooldownRemaining > 0) {
+      return;
+    }
+
     this.isLoading = true;
     this.forgotPasswordForm.get('email')?.disable();
 
@@ -176,11 +216,13 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
       next: (response) => {
         this.isLoading = false;
         this.forgotPasswordForm.get('email')?.enable();
+        this.startCooldown();
         this.openDialog();
       },
       error: (error) => {
         this.isLoading = false;
         this.forgotPasswordForm.get('email')?.enable();
+        this.startCooldown();
 
         const correlationId = error?.error?.correlationId;
 
@@ -203,10 +245,22 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
     });
   }
 
+  private startCooldown() {
+    this.cooldownRemaining = RESEND_COOLDOWN_SECONDS;
+    interval(1000)
+      .pipe(take(RESEND_COOLDOWN_SECONDS), takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.cooldownRemaining--;
+      });
+  }
+
   private openDialog() {
     const dialogRef = this.dialog.open(ResendPasswordResetDialog, {
       width: '400px',
-      data: { email: this.currentEmail },
+      data: {
+        email: this.currentEmail,
+        cooldownRemaining: this.cooldownRemaining,
+      },
     });
 
     dialogRef.componentInstance.message = `We've sent a password reset link to ${this.currentEmail}. Please check your email and follow the instructions.`;

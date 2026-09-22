@@ -1,11 +1,10 @@
 <div class="center-container">
-  <mat-card>
-    <mat-card-header style="margin-bottom: 10px"
-      >Thank you for verifying your email. Let’s setup your account! We will
-      need additional information before moving onto the next
-      step.</mat-card-header
-    >
-    <mat-card-title *ngIf="organizationTypeId !== null">
+  <mat-card class="details-card">
+    <p class="intro-text">
+      Thank you for verifying your email. Let's setup your account! We will
+      need additional information before moving onto the next step.
+    </p>
+    <mat-card-title *ngIf="organizationTypeId !== null" class="details-title">
       {{
         organizationTypeId === 1
           ? "Government Agency Details"
@@ -18,7 +17,11 @@
         class="full-width"
         (ngSubmit)="onSubmit()"
       >
-        <mat-form-field appearance="outline" class="full-width">
+        <mat-form-field
+          appearance="outline"
+          class="full-width"
+          subscriptSizing="dynamic"
+        >
           <mat-label>Organization Name</mat-label>
           <input
             matInput
@@ -34,7 +37,11 @@
           </mat-error>
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="full-width">
+        <mat-form-field
+          appearance="outline"
+          class="full-width"
+          subscriptSizing="dynamic"
+        >
           <mat-label>Address</mat-label>
           <input
             matInput
@@ -66,7 +73,11 @@
           </mat-error>
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="full-width">
+        <mat-form-field
+          appearance="outline"
+          class="full-width"
+          subscriptSizing="dynamic"
+        >
           <mat-label>Address 2</mat-label>
           <input
             matInput
@@ -96,7 +107,11 @@
           </mat-error>
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="full-width">
+        <mat-form-field
+          appearance="outline"
+          class="full-width"
+          subscriptSizing="dynamic"
+        >
           <mat-label>City</mat-label>
           <input
             matInput
@@ -127,7 +142,11 @@
           </mat-error>
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="full-width">
+        <mat-form-field
+          appearance="outline"
+          class="full-width"
+          subscriptSizing="dynamic"
+        >
           <mat-label>State</mat-label>
           <mat-select formControlName="stateId" required>
             <mat-option *ngFor="let state of states" [value]="state.codeId">
@@ -141,7 +160,11 @@
           </mat-error>
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="full-width">
+        <mat-form-field
+          appearance="outline"
+          class="full-width"
+          subscriptSizing="dynamic"
+        >
           <mat-label>Zip Code</mat-label>
           <input
             matInput
@@ -166,6 +189,7 @@
           mat-raised-button
           color="primary"
           type="submit"
+          class="submit-button"
           [disabled]="!organizationDetailForm.valid"
         >
           Continue

@@ -46,7 +46,7 @@ export class OfferorProfilePageComponent implements OnInit {
   offerProfileDetails: {
     offerorProfileId: number;
     formTypeId: number;
-    details: string;
+    prohibitedDetails: string;
   }[] = [];
 
   constructor(
@@ -115,6 +115,9 @@ export class OfferorProfilePageComponent implements OnInit {
     if (!this.organizationId) return;
     this.offerorProfileService
       .GetOfferorProfileDiscloserDetails(this.organizationId)
-      .subscribe({ next: (details) => (this.offerProfileDetails = details) });
+      .subscribe({
+        next: (prohibitedDetails) =>
+          (this.offerProfileDetails = prohibitedDetails),
+      });
   }
 }

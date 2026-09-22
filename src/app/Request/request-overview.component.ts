@@ -33,6 +33,33 @@ import { StateService } from './services/state.service';
 import { Subject, takeUntil, Observable } from 'rxjs';
 import { LoggingService } from '../exceptionhandling/logging.service';
 
+/**
+ * Reduces TinyMCE's HTML output down to its actually-visible text.
+ *
+ * A "blank" TinyMCE editor never serializes to ''. Depending on browser and
+ * editor state it can come back as "<p>&nbsp;</p>", "<p>&#160;</p>",
+ * "<p><br data-mce-bogus="1"></p>", etc. Regex-stripping tags/entities is
+ * fragile because it has to special-case every representation. Parsing the
+ * markup and reading textContent instead lets the browser decode whichever
+ * entity form shows up, and JS's \s already treats U+00A0 (nbsp) as
+ * whitespace, so a single strip catches all of them uniformly.
+ */
+function getVisibleText(html: string | null | undefined): string {
+  if (!html) {
+    return '';
+  }
+  if (typeof document !== 'undefined') {
+    const container = document.createElement('div');
+    container.innerHTML = html;
+    return (container.textContent ?? '').replace(/\s+/g, '');
+  }
+  // SSR fallback where document isn't available: best-effort strip.
+  return html
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;|&#160;|&#xa0;/gi, '')
+    .replace(/\s+/g, '');
+}
+
 function atLeastOneFieldFilledValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     if (!(control instanceof FormArray)) {
@@ -42,10 +69,8 @@ function atLeastOneFieldFilledValidator(): ValidatorFn {
     const formArray = control as FormArray;
     const hasAtLeastOneContent = formArray.controls.some((section) => {
       const content = section.get('requestSectionContent')?.value;
-      const cleanContent = content?.replace(/<[^>]*>/g, '').trim();
-      return cleanContent && cleanContent.length > 0;
+      return getVisibleText(content).length > 0;
     });
-
     return hasAtLeastOneContent ? null : { atLeastOneFieldRequired: true };
   };
 }
@@ -79,6 +104,7 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   // cloud version
   public editorConfig = {
+    // try paste_as_text: true, // optional, to force plain text pasting for future testing for pdf generation
     selector: '#your-textarea',
     branding: false,
     toolbar:
@@ -124,7 +150,7 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
     private requestService: RequestService,
     private cdr: ChangeDetectorRef,
     private stateService: StateService,
-    private loggingService: LoggingService
+    private loggingService: LoggingService,
   ) {
     this.organizationId = this.stateService.getOrganizationId() ?? 0;
   }
@@ -162,6 +188,7 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
     this.proposalsOverviewFormGroup = this.fb.group({
       proposalSections: this.fb.array([], [atLeastOneFieldFilledValidator()]),
     });
+    this.formValidityChange.emit(this.proposalsOverviewFormGroup.valid);
 
     if (!this.idParam && !this.requestId) {
       this.getRequestSectionDefaultTitle().subscribe({
@@ -225,13 +252,13 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
         operation: operation,
         userId: this.stateService.getUserId(),
         requestId: this.requestId,
-      }
+      },
     );
   }
 
   get proposalSections(): FormArray {
     return this.proposalsOverviewFormGroup?.get(
-      'proposalSections'
+      'proposalSections',
     ) as FormArray;
   }
 
@@ -285,7 +312,7 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
       const contentControl = section.get('requestSectionContent');
       if (contentControl) {
         const processedContent = this.getProcessedContent(
-          contentControl.value ?? ''
+          contentControl.value ?? '',
         );
         contentControl.setValue(processedContent, { emitEvent: false });
       }
@@ -305,13 +332,9 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
             requestSectionTitle: any;
             requestSectionContent: any;
           }) => {
-            // Clean the content by removing HTML tags and trim whitespace
-            const cleanContent = section.requestSectionContent
-              ?.replace(/<[^>]*>/g, '')
-              .trim();
-            // Only include sections that have actual content
-            return cleanContent && cleanContent.length > 0;
-          }
+            // Only include sections that have actual visible content
+            return getVisibleText(section.requestSectionContent).length > 0;
+          },
         );
 
       // Process only sections with content
@@ -322,13 +345,14 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
             requestSectionTitle: any;
             requestSectionContent: any;
           },
-          idx: number
+          idx: number,
         ) => {
           const payload = {
             requestId: this.requestId,
             requestSectionId: section.requestSectionId,
             requestSectionTitle: section.requestSectionTitle,
             requestSectionContent: section.requestSectionContent,
+            requestSectionTypeId: 1,
           };
 
           this.requestService
@@ -336,26 +360,24 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
             .pipe(takeUntil(this.destroy$))
             .subscribe({
               next: (response) => {
-                if (response.isSuccess) {
-                  const index = this.proposalSections.controls.findIndex(
-                    (control) =>
-                      control.get('requestSectionTitle')?.value ===
-                      section.requestSectionTitle
-                  );
+                const index = this.proposalSections.controls.findIndex(
+                  (control) =>
+                    control.get('requestSectionTitle')?.value ===
+                    section.requestSectionTitle,
+                );
 
-                  if (index !== -1) {
-                    // update original data with request section ids returned from API response
-                    // so that database does not duplicate rows
-                    const proposalSection = this.proposalSections.at(
-                      index
-                    ) as FormGroup;
-                    proposalSection.patchValue({
-                      requestSectionId: response.requestSectionId,
-                    });
-                  }
-
-                  section.requestSectionId = response.requestSectionId;
+                if (index !== -1) {
+                  // update original data with request section ids returned from API response
+                  // so that database does not duplicate rows
+                  const proposalSection = this.proposalSections.at(
+                    index,
+                  ) as FormGroup;
+                  proposalSection.patchValue({
+                    requestSectionId: response.requestSectionId,
+                  });
                 }
+
+                section.requestSectionId = response.requestSectionId;
               },
               error: (error) => {
                 const correlationId = error?.error?.correlationId;
@@ -372,11 +394,11 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
                     operation: 'SaveRequestSections',
                     userId: this.stateService.getUserId(),
                     requestId: this.requestId,
-                  }
+                  },
                 );
               },
             });
-        }
+        },
       );
     }
   }

@@ -28,6 +28,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { UserDesignation } from '../../model/user-designation.model';
 import { Observable } from 'rxjs';
 import { UserService } from '../../../shared/service/user.service';
+import { usPhoneValidator } from '../../../shared/validators/us-phone.validator';
+import { formatUsPhoneAsYouType } from '../../../shared/utils/us-phone.util';
 
 function emailMatchValidator(group: AbstractControl): ValidationErrors | null {
   const email = group.get('workEmail')?.value;
@@ -65,7 +67,6 @@ export class ClerkDesigneeComponent implements OnInit, OnChanges {
   @Input() existingDesignee: UserDesignation | null = null;
   @Input() isLoadingDesignees = false;
 
-  readonly phonePattern = '^\\(\\d{3}\\) \\d{3}-\\d{4}$';
   readonly emailPattern =
     '^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$';
   readonly designationId = 3;
@@ -104,10 +105,7 @@ export class ClerkDesigneeComponent implements OnInit, OnChanges {
         firstName: ['', [Validators.required]],
         lastName: ['', [Validators.required]],
         title: ['', Validators.required],
-        workPhoneNumber: [
-          '',
-          [Validators.required, Validators.pattern(this.phonePattern)],
-        ],
+        workPhoneNumber: ['', [Validators.required, usPhoneValidator()]],
         workEmail: [
           '',
           [Validators.required, Validators.pattern(this.emailPattern)],
@@ -140,11 +138,7 @@ export class ClerkDesigneeComponent implements OnInit, OnChanges {
   }
 
   formatPhoneDisplay(digits: string): string {
-    const d = digits.replace(/\D/g, '');
-    if (d.length === 0) return '';
-    if (d.length <= 3) return `(${d}`;
-    if (d.length <= 6) return `(${d.slice(0, 3)}) ${d.slice(3)}`;
-    return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6, 10)}`;
+    return formatUsPhoneAsYouType(digits);
   }
 
   onPhoneKeydown(event: KeyboardEvent): void {
@@ -215,7 +209,7 @@ export class ClerkDesigneeComponent implements OnInit, OnChanges {
     };
 
     const save$: Observable<unknown> = isExistingUser
-      ? this.userProfileService.updateUser(userPayload)
+      ? this.userProfileService.updateDesigneeInformation(userPayload, this.existingDesignee!.userId!)
       : this.agencyProfileService
           .CreateUser(userPayload)
           .pipe(

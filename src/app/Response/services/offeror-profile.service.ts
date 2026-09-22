@@ -231,27 +231,39 @@ export class OfferorProfileService {
   SaveOfferorProfileDetails(
     organizationId: number,
     formTypeId: number, // formTypeId === documentTypeId
-    details: string | null,
+    prohibitedDetails: string | null,
     ofacIdentification?: boolean | null,
     ofacIdentificationAdditional?: boolean | null,
     chapter25Identification?: boolean | null,
+    chapter25EntityName?: string | null,
+    chapter25RelationshipToOfferor?: string | null,
+    chapter25EngagementYears?: number | null,
+    chapter25EngagementMonths?: number | null,
+    chapter25AnticipatedCessation?: string | null,
   ): Observable<{ offerorProfileId: number }> {
     return this.http.post<{ offerorProfileId: number }>(
       `${this.url}OfferorProfiles/Details/${organizationId}`,
       {
         formTypeId,
-        details,
+        prohibitedDetails,
         ofacIdentification,
         ofacIdentificationAdditional,
         chapter25Identification,
+        chapter25EntityName,
+        chapter25RelationshipToOfferor,
+        chapter25EngagementYears,
+        chapter25EngagementMonths,
+        chapter25AnticipatedCessation,
       },
     );
   }
 
-  GetOfferorProfileDiscloserDetails(
-    organizationId: number,
-  ): Observable<
-    { offerorProfileId: number; formTypeId: number; details: string }[]
+  GetOfferorProfileDiscloserDetails(organizationId: number): Observable<
+    {
+      offerorProfileId: number;
+      formTypeId: number;
+      prohibitedDetails: string;
+    }[]
   > {
     return this.http
       .get<{
@@ -260,7 +272,7 @@ export class OfferorProfileService {
           offerorProfileId: number;
           formTypeId: number;
           formTypeName: string | null;
-          details: string;
+          prohibitedDetails: string;
           organizationId: number;
         }[];
       }>(`${this.url}OfferorProfiles/Details/${organizationId}`)
@@ -271,20 +283,30 @@ export class OfferorProfileService {
     organizationId: number,
     offerorProfileId: number,
     formTypeId: number, // formTypeId === documentTypeId
-    details: string | null,
+    prohibitedDetails: string | null,
     ofacIdentification?: boolean | null,
     ofacIdentificationAdditional?: boolean | null,
     chapter25Identification?: boolean | null,
+    chapter25EntityName?: string | null,
+    chapter25RelationshipToOfferor?: string | null,
+    chapter25EngagementYears?: number | null,
+    chapter25EngagementMonths?: number | null,
+    chapter25AnticipatedCessation?: string | null,
   ): Observable<{ offerorProfileId: number }> {
     return this.http.put<{ offerorProfileId: number }>(
       `${this.url}OfferorProfiles/Details/${organizationId}`,
       {
         offerorProfileId,
         formTypeId,
-        details,
+        prohibitedDetails,
         ofacIdentification,
         ofacIdentificationAdditional,
         chapter25Identification,
+        chapter25EntityName,
+        chapter25RelationshipToOfferor,
+        chapter25EngagementYears,
+        chapter25EngagementMonths,
+        chapter25AnticipatedCessation,
       },
     );
   }

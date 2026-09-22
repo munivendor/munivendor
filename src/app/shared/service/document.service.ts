@@ -4,6 +4,13 @@ import { Observable } from 'rxjs';
 import { ConfigService } from '../../core/services/config.service';
 import { DocumentInstance } from '../../Request/model/documentinstance.model';
 
+export interface DocumentResponseType {
+  codeId: number;
+  codeName: string;
+  codeDesc: string;
+  mapId: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -81,36 +88,84 @@ export class DocumentService {
     });
   }
 
+  /**
+   * Calls GET /Documents/DocumentContent/Response/SharedDrive2/Upload/{requestId}.
+   * The backend zips the offeror response documents and uploads the zip
+   * directly to the organization's configured shared drive — it no longer
+   * streams the file back in the response. The caller only gets back the
+   * correlationId of the upload; there is no blob to download here.
+   * to be implemented in the future.
+   */
   DownloadOfferorZipDocuments(
     requestId: number,
-    requestTypeId?: number,
-    requestStatusId?: number,
-    organizationId?: number,
-    limit?: number,
-    offset?: number,
-  ): Observable<Blob> {
-    let params = new HttpParams();
+  ): Observable<{ correlationId: string }> {
+    return this.http.get<{ correlationId: string }>(
+      `${this.url}Documents/DocumentContent/Response/SharedDrive2/Upload/${requestId}`,
+    );
+  }
 
-    if (requestTypeId !== undefined) {
-      params = params.set('requestTypeId', requestTypeId.toString());
-    }
-    if (requestStatusId !== undefined) {
-      params = params.set('requestStatusId', requestStatusId.toString());
-    }
-    if (organizationId !== undefined) {
-      params = params.set('organizationId', organizationId.toString());
-    }
-    if (limit !== undefined) {
-      params = params.set('limit', limit.toString());
-    }
-    if (offset !== undefined) {
-      params = params.set('offset', offset.toString());
-    }
+  /**
+   * Calls GET /documents/parameterized to generate an autofilled PDF for the
+   * given offer/document. The backend fills the PDF and uploads it
+   * server-side, returning only `{ correlationId }` as JSON — there is no
+   * file content in the response for the caller to download.
+   *
+   * NOTE: `requestDocumentId` (the row's own instance id) is passed as the
+   * API's `sourceRequestDocumentId` param — NOT the row's `sourceRequestDocumentId`
+   * field, which refers to a different, unrelated row.
+   */
+  AutofillDocument(
+    offerId: number,
+    requestDocumentId: number,
+    documentId: number,
+  ): Observable<HttpResponse<{ correlationId: string }>> {
+    const params = new HttpParams()
+      .set('offerId', offerId)
+      .set('sourceRequestDocumentId', requestDocumentId)
+      .set('documentId', documentId);
 
+    // observe: 'response' so callers can inspect the HTTP status code —
+    // the backend returns 206 (Partial Content) when the document was
+    // autofilled but some fields could not be filled in.
+    return this.http.get<{ correlationId: string }>(
+      `${this.url}documents/parameterized`,
+      { params, observe: 'response' },
+    );
+  }
+
+  UpdateRequestDocumentApproval(
+    requestDocumentId: number,
+    approved: boolean,
+  ): Observable<{ isSuccess: boolean }> {
+    return this.http.put<{ isSuccess: boolean }>(`${this.url}RequestDocument`, {
+      requestDocumentId: requestDocumentId,
+      approved: approved,
+    });
+  }
+
+  ResetDocumentInstance(
+    requestDocumentId: number,
+  ): Observable<{ isSuccess: boolean; correlationId: string }> {
+    return this.http.post<{ isSuccess: boolean; correlationId: string }>(
+      `${this.url}DocumentInstances/Reset/${requestDocumentId}`,
+      {},
+    );
+  }
+
+  GetDocumentResponseTypes(): Observable<DocumentResponseType[]> {
+    return this.http.get<DocumentResponseType[]>(
+      `${this.url}ListData/DocumentResponseTypes`,
+    );
+  }
+
+  GetLatestUploadedDocument(
+    organizationId: number,
+    requestDocumentId: number,
+  ): Observable<HttpResponse<Blob>> {
     return this.http.get(
-      `${this.url}Documents/DocumentContent/Response/Zip/${requestId}`,
+      `${this.url}documents/LatestUploaded/${organizationId}/${requestDocumentId}`,
       {
-        params,
+        observe: 'response',
         responseType: 'blob',
       },
     );

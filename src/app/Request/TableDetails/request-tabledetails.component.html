@@ -180,200 +180,211 @@
     </mat-card-content>
   </mat-card>
 
-  <div class="mat-elevation-z8" *ngIf="hasLoadedData" matSort>
-    <table mat-table [dataSource]="dataSource">
-      <ng-container matColumnDef="requestName">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>
-          Solicitation Name
-        </th>
-        <td mat-cell *matCellDef="let request">{{ request.requestName }}</td>
-      </ng-container>
+  <div class="results-wrapper" *ngIf="hasLoadedData" matSort>
+    <div class="table-container">
+      <table mat-table [dataSource]="dataSource" class="requests-table">
+        <ng-container matColumnDef="requestName">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>
+            Solicitation<br />Name
+          </th>
+          <td mat-cell *matCellDef="let request">{{ request.requestName }}</td>
+        </ng-container>
 
-      <ng-container matColumnDef="requestId">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>
-          Solicitation ID
-        </th>
-        <td mat-cell *matCellDef="let request">{{ request.requestId }}</td>
-      </ng-container>
+        <ng-container matColumnDef="requestId">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>
+            Solicitation<br />ID
+          </th>
+          <td mat-cell *matCellDef="let request">{{ request.requestId }}</td>
+        </ng-container>
 
-      <ng-container matColumnDef="requestType">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Type</th>
-        <td mat-cell *matCellDef="let request">
-          {{ request.requestType?.requestTypeDesc }}
-        </td>
-      </ng-container>
+        <ng-container matColumnDef="requestType">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Type</th>
+          <td mat-cell *matCellDef="let request">
+            {{ request.requestType?.requestTypeDesc }}
+          </td>
+        </ng-container>
 
-      <ng-container matColumnDef="category">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Category</th>
-        <td mat-cell *matCellDef="let request">
-          {{
-            displayCategoryName(request.categoryId, request.categoryFullPath)
-          }}
-        </td>
-      </ng-container>
+        <ng-container matColumnDef="category">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Category</th>
+          <td mat-cell *matCellDef="let request">
+            {{
+              displayCategoryName(request.categoryId, request.categoryFullPath)
+            }}
+          </td>
+        </ng-container>
 
-      <ng-container matColumnDef="publishDate">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>
-          Publish Date & Time
-        </th>
-        <td mat-cell *matCellDef="let request">
-          {{
-            request.publishDate
-              ? (request.publishDate | date: "MM/dd/yyyy, h:mm a")
-              : "—"
-          }}
-        </td>
-      </ng-container>
+        <ng-container matColumnDef="publishDate">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>
+            Publish Date & Time
+          </th>
+          <td mat-cell *matCellDef="let request">
+            {{
+              request.publishDate
+                ? (request.publishDate | date: "MM/dd/yyyy, h:mm a")
+                : "—"
+            }}
+          </td>
+        </ng-container>
 
-      <ng-container matColumnDef="closeDateAndTime">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>
-          Close Date & Time
-        </th>
-        <td mat-cell *matCellDef="let request">
-          {{
-            request.closeDate
-              ? (request.closeDate | date: "MM/dd/yyyy, h:mm a")
-              : "—"
-          }}
-        </td>
-      </ng-container>
+        <ng-container matColumnDef="closeDateAndTime">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>
+            Close Date & Time
+          </th>
+          <td mat-cell *matCellDef="let request">
+            {{
+              request.closeDate
+                ? (request.closeDate | date: "MM/dd/yyyy, h:mm a")
+                : "—"
+            }}
+          </td>
+        </ng-container>
 
-      <ng-container matColumnDef="requestStatus">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
-        <td mat-cell *matCellDef="let request">
-          {{ request.agencyRequestStatus?.requestStatusDesc ?? "Draft" }}
-        </td>
-      </ng-container>
+        <ng-container matColumnDef="requestStatus">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+          <td mat-cell *matCellDef="let request">
+            {{ request.agencyRequestStatus?.requestStatusDesc ?? "Draft" }}
+          </td>
+        </ng-container>
 
-      <ng-container matColumnDef="numberOfOffers">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Offers</th>
-        <td mat-cell *matCellDef="let request">
-          <span
-            *ngIf="request.submittedOffersCount > 0"
-            (click)="openOffersDialog(request)"
-            style="cursor: pointer; text-decoration: underline; color: #3f51b5"
-          >
-            {{ request.submittedOffersCount }}
-          </span>
-          <span *ngIf="request.submittedOffersCount === 0">0</span>
-        </td>
-      </ng-container>
-
-      <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef>Actions</th>
-        <td mat-cell *matCellDef="let request">
-          <div class="action-button-container" style="align-items: center">
-            <button
-              mat-raised-button
-              [ngStyle]="
-                getAvailableActions(request).length > 0
-                  ? { 'background-color': 'rgb(43, 104, 207)', color: 'white' }
-                  : {}
+        <ng-container matColumnDef="numberOfOffers">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Offers</th>
+          <td mat-cell *matCellDef="let request">
+            <span
+              *ngIf="request.submittedOffersCount > 0"
+              (click)="openOffersDialog(request)"
+              style="
+                cursor: pointer;
+                text-decoration: underline;
+                color: #3f51b5;
               "
-              [matMenuTriggerFor]="menu"
-              [disabled]="getAvailableActions(request).length === 0"
-              aria-label="Actions menu"
             >
-              Select
-            </button>
+              {{ request.submittedOffersCount }}
+            </span>
+            <span *ngIf="request.submittedOffersCount === 0">0</span>
+          </td>
+        </ng-container>
 
-            <mat-menu #menu="matMenu">
-              <ng-container *ngFor="let action of getAvailableActions(request)">
-                <button
-                  mat-menu-item
-                  (click)="openConfirmationDialog(action, request)"
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let request">
+            <div class="action-button-container">
+              <button
+                mat-raised-button
+                [ngStyle]="
+                  getAvailableActions(request).length > 0
+                    ? {
+                        'background-color': 'rgb(43, 104, 207)',
+                        color: 'white',
+                      }
+                    : {}
+                "
+                [matMenuTriggerFor]="menu"
+                [disabled]="getAvailableActions(request).length === 0"
+                aria-label="Actions menu"
+              >
+                Select
+              </button>
+
+              <mat-menu #menu="matMenu">
+                <ng-container
+                  *ngFor="let action of getAvailableActions(request)"
                 >
-                  <span>{{ action | titlecase }}</span>
-                </button>
-              </ng-container>
-            </mat-menu>
-          </div>
-        </td>
-      </ng-container>
+                  <button
+                    mat-menu-item
+                    (click)="openConfirmationDialog(action, request)"
+                  >
+                    <span>{{ action | titlecase }}</span>
+                  </button>
+                </ng-container>
+              </mat-menu>
+            </div>
+          </td>
+        </ng-container>
 
-      <ng-container matColumnDef="downloadPDF">
-        <th mat-header-cell *matHeaderCellDef>
-          Download as PDF<mat-icon
-            style="font-size: medium; color: #0b74fd; cursor: pointer"
-            [appTooltip]="{
-              header: '',
-              body: 'Download unavailable for Draft.',
-              width: 'auto',
-              showCloseButton: false,
-              showActionButton: false,
-              transformStyle: 'translate(-75%, -103%)',
-            }"
-          >
-            info_outline
-          </mat-icon>
-        </th>
-        <td mat-cell *matCellDef="let request">
-          <div class="action-button-container" style="align-items: center">
-            <button
-              mat-icon-button
-              color="primary"
-              (click)="downloadSolicitation(request)"
-              [disabled]="!canDownloadPDF(request)"
+        <ng-container matColumnDef="downloadPDF">
+          <th mat-header-cell *matHeaderCellDef>
+            Download as PDF<mat-icon
+              style="font-size: medium; color: #0b74fd; cursor: pointer"
+              [appTooltip]="{
+                header: '',
+                body: 'Download unavailable for Draft.',
+                width: 'auto',
+                showCloseButton: false,
+                showActionButton: false,
+                transformStyle: 'translate(-75%, -103%)',
+              }"
             >
-              <mat-icon>download</mat-icon>
-            </button>
-          </div>
-        </td>
-      </ng-container>
+              info_outline
+            </mat-icon>
+          </th>
+          <td mat-cell *matCellDef="let request">
+            <div class="action-button-container" style="align-items: center">
+              <button
+                mat-icon-button
+                color="primary"
+                (click)="downloadSolicitation(request)"
+                [disabled]="!canDownloadPDF(request)"
+              >
+                <mat-icon>download</mat-icon>
+              </button>
+            </div>
+          </td>
+        </ng-container>
 
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-    </table>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
 
-    <mat-paginator
-      [length]="dataSource.data.length"
-      [pageSize]="10"
-      [pageSizeOptions]="[5, 10, 25, 100]"
+      <mat-paginator
+        [length]="dataSource.data.length"
+        [pageSize]="10"
+        [pageSizeOptions]="[5, 10, 25, 100]"
+      >
+      </mat-paginator>
+    </div>
+    <div
+      *ngIf="!hasLoadedData"
+      style="text-align: center; padding: 2rem; height: 100vh"
     >
-    </mat-paginator>
-  </div>
-  <div
-    *ngIf="!hasLoadedData"
-    style="text-align: center; padding: 2rem; height: 100vh"
-  >
-    <div>
-      <p style="font-size: 1.2em; color: #666">
-        There are no solicitations at this time or your filters returned no
-        matches.
-      </p>
+      <div>
+        <p style="font-size: 1.2em; color: #666">
+          There are no solicitations at this time or your filters returned no
+          matches.
+        </p>
+      </div>
     </div>
   </div>
+
+  <mat-card>
+    <ng-template #offersDialog let-data>
+      <h2 mat-dialog-title>Offers for "{{ data.requestName }}"</h2>
+
+      <mat-dialog-content>
+        <div *ngIf="data.offers?.length; else noOffers">
+          <table style="width: 100%">
+            <thead>
+              <tr>
+                <th align="left">Offeror</th>
+                <th align="left">Submitted On</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let offer of data.offers">
+                <td>{{ offer.offerorName }}</td>
+                <td>{{ offer.submittedDate | date: "MM/dd/yyyy, h:mm a" }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <ng-template #noOffers>
+          <p>No offers available.</p>
+        </ng-template>
+      </mat-dialog-content>
+
+      <mat-dialog-actions align="end">
+        <button mat-button mat-dialog-close>Close</button>
+      </mat-dialog-actions>
+    </ng-template>
+  </mat-card>
 </div>
-
-<mat-card>
-  <ng-template #offersDialog let-data>
-    <h2 mat-dialog-title>Offers for "{{ data.requestName }}"</h2>
-
-    <mat-dialog-content>
-      <div *ngIf="data.offers?.length; else noOffers">
-        <table style="width: 100%">
-          <thead>
-            <tr>
-              <th align="left">Offeror</th>
-              <th align="left">Submitted On</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let offer of data.offers">
-              <td>{{ offer.offerorName }}</td>
-              <td>{{ offer.submittedDate | date: "MM/dd/yyyy, h:mm a" }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <ng-template #noOffers>
-        <p>No offers available.</p>
-      </ng-template>
-    </mat-dialog-content>
-
-    <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Close</button>
-    </mat-dialog-actions>
-  </ng-template>
-</mat-card>
