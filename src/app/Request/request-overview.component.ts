@@ -104,6 +104,7 @@ export class RequestOverviewComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   // cloud version
   public editorConfig = {
+    // try paste_as_text: true, // optional, to force plain text pasting for future testing for pdf generation
     selector: '#your-textarea',
     branding: false,
     toolbar:

@@ -298,7 +298,8 @@ export class ResponseDocumentsComponent
                     doc.documentSource,
                   )) as ResponseMethod,
               manualUploadedOn:
-                doc.documentSource === 'UserUpload'
+                doc.documentSource === 'UserUpload' ||
+                doc.documentSource === 'OfferorProfile'
                   ? this.toUtcIsoString(
                       doc.documentInstanceUserUploadLastUpdated,
                     )

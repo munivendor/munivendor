@@ -229,7 +229,6 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
           if (action === 'delete') {
             this.deleteResponse(request);
           }
-          // removed loadAndJoinRequestData() for unsubmit — handled by statusUpdated above
         }
       });
   }
@@ -243,7 +242,7 @@ export class OfferorTableDetailsComponent implements OnInit, OnDestroy {
           this.snackbarNotificationService.showSnackbarSuccess(
             'Offer deleted successfully.',
           );
-          this.loadAndJoinRequestData();
+          this.onSearch();
         },
         error: (error) => {
           const correlationId = error?.error?.correlationId;
