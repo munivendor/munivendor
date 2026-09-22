@@ -96,12 +96,11 @@ export class DocumentService {
    * correlationId of the upload; there is no blob to download here.
    * to be implemented in the future.
    */
-  // using the older shared drive endpoint for now
   DownloadOfferorZipDocuments(
     requestId: number,
   ): Observable<{ correlationId: string }> {
     return this.http.get<{ correlationId: string }>(
-      `${this.url}Documents/DocumentContent/Response/SharedDrive/Zip/${requestId}`,
+      `${this.url}Documents/DocumentContent/Response/SharedDrive2/Upload/${requestId}`,
     );
   }
 

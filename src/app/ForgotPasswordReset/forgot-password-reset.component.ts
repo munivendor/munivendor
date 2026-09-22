@@ -17,7 +17,6 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../authorization/auth.service';
 import { LoggingService } from '../exceptionhandling/logging.service';
-import { SnackbarNotificationService } from '../shared/service/snackbar-notification.service';
 
 @Component({
   selector: 'reset-password',
@@ -58,7 +57,6 @@ export class ForgotPasswordResetComponent implements OnInit, OnDestroy {
     private router: Router,
     private authService: AuthService,
     private loggingService: LoggingService,
-    private snackbarNotificationService: SnackbarNotificationService,
   ) {}
 
   ngOnInit() {
@@ -175,10 +173,6 @@ export class ForgotPasswordResetComponent implements OnInit, OnDestroy {
               operation: 'resetPassword',
               token: this.token,
             },
-          );
-
-          this.snackbarNotificationService.showSnackbarSupportErrorWithCorrelationId(
-            correlationId,
           );
         },
       });
