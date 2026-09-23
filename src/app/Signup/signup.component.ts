@@ -131,9 +131,13 @@ export class SignupComponent implements OnInit, OnDestroy {
   }
 
   prepareGoogleSignIn(): void {
+    console.log('Preparing Google signup');
+
     this.authService.setSkipNextAuthState(true);
     this.authService.setSignupInProgress(true);
     this.googleSignupInitiated = true;
+
+    console.log('Google signup initiated:', this.googleSignupInitiated);
   }
 
   private detectSignupMode(): void {
