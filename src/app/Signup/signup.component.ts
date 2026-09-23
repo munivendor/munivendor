@@ -325,6 +325,7 @@ export class SignupComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         filter((user) => {
+          console.log('Google auth state changed:', user);
           return (
             !!user && !this.userCreationInProgress && this.googleSignupInitiated
           );
