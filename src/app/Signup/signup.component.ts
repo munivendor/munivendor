@@ -325,6 +325,8 @@ export class SignupComponent implements OnInit, OnDestroy {
   }
 
   private setupGoogleAuthListener(): void {
+    this.googleSignupInitiated = true;
+    console.log('Google signup initiated:', this.googleSignupInitiated);
     this.socialAuthService.authState
       .pipe(
         takeUntil(this.destroy$),
