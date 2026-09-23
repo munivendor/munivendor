@@ -332,6 +332,7 @@ export class SignupComponent implements OnInit, OnDestroy {
         }),
 
         switchMap((user) => {
+          console.log('Google user detected:', user);
           this.userCreationInProgress = true;
 
           const googleUserLogin: UserLogin = {
@@ -345,10 +346,20 @@ export class SignupComponent implements OnInit, OnDestroy {
           // spawning an orphaned organization on every attempt.
           return this.authService.login(googleUserLogin).pipe(
             tap(() => this.authService.setSkipNextAuthState(false)),
-            switchMap((loginResponse: number) =>
-              this.flowNavigationService.navigateAfterLogin(loginResponse),
-            ),
+            switchMap((loginResponse: number) => {
+              console.log(
+                'Google login successful, navigating after login:',
+                loginResponse,
+              );
+              return this.flowNavigationService.navigateAfterLogin(
+                loginResponse,
+              );
+            }),
+
             catchError(() => {
+              console.log(
+                'Google login failed, proceeding to create new organization and user.',
+              );
               const selectedOrganizationTypeId =
                 this.signupFormGoogle.getRawValue().organizationTypeId;
 
