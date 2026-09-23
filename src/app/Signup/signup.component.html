@@ -1,9 +1,11 @@
 <div class="center-container">
-  <mat-card class="details-card">
-    <mat-card-title class="details-title">
-      Welcome to MuniVendor -
-      {{ signupMode === "agency" ? "Agency" : "Offeror" }} Signup
-    </mat-card-title>
+  <mat-card class="signup-card">
+    <mat-card-header>
+      <mat-card-title>
+        Welcome to Munivendor -
+        {{ signupMode === "agency" ? "Agency" : "Offeror" }} Signup
+      </mat-card-title>
+    </mat-card-header>
     <mat-card-content>
       <form [formGroup]="signupFormGoogle">
         <div class="google-btn-container">
@@ -13,7 +15,7 @@
             size="medium"
             text="signup_with"
             theme="filled_blue"
-            (pointerdown)="prepareGoogleSignIn()"
+            (click)="prepareGoogleSignIn()"
             [width]="buttonWidth"
           >
           </asl-google-signin-button>
@@ -25,11 +27,7 @@
       </div>
 
       <form [formGroup]="signupFormEmail" (ngSubmit)="onSubmitByEmail()">
-        <mat-form-field
-          appearance="outline"
-          class="full-width"
-          subscriptSizing="dynamic"
-        >
+        <mat-form-field class="full-width">
           <mat-label>First Name</mat-label>
           <input
             matInput
@@ -51,11 +49,7 @@
           </mat-error>
         </mat-form-field>
 
-        <mat-form-field
-          appearance="outline"
-          class="full-width"
-          subscriptSizing="dynamic"
-        >
+        <mat-form-field class="full-width">
           <mat-label>Last Name</mat-label>
           <input
             matInput
@@ -77,11 +71,7 @@
           </mat-error>
         </mat-form-field>
 
-        <mat-form-field
-          appearance="outline"
-          class="full-width"
-          subscriptSizing="dynamic"
-        >
+        <mat-form-field class="full-width">
           <mat-label>Work Email/Username</mat-label>
           <input
             matInput
@@ -103,11 +93,7 @@
           </mat-error>
         </mat-form-field>
 
-        <mat-form-field
-          appearance="outline"
-          class="full-width"
-          subscriptSizing="dynamic"
-        >
+        <mat-form-field class="full-width">
           <mat-label>Password</mat-label>
           <input
             matInput
@@ -137,11 +123,7 @@
           </mat-error>
         </mat-form-field>
 
-        <mat-form-field
-          appearance="outline"
-          class="full-width"
-          subscriptSizing="dynamic"
-        >
+        <mat-form-field class="full-width">
           <mat-label>Confirm Password</mat-label>
           <input
             matInput
@@ -180,7 +162,8 @@
         </mat-form-field>
 
         <button
-          class="submit-button"
+          style="margin-bottom: 1rem"
+          class="full-width"
           mat-raised-button
           color="primary"
           type="submit"
@@ -188,10 +171,10 @@
           Sign Up
         </button>
 
-        <p class="footer-text">
-          Already have an account? Click here to
-          <a class="back-link" [routerLink]="['/login']">log in</a>.
-        </p>
+        <span
+          >Already have an account? Click here to
+          <a [routerLink]="['/login']">log in</a>.
+        </span>
       </form>
     </mat-card-content>
   </mat-card>
