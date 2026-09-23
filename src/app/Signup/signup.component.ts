@@ -369,6 +369,7 @@ export class SignupComponent implements OnInit, OnDestroy {
                       organizationId: orgResponse.organizationId,
                       organizationTypeId: selectedOrganizationTypeId,
                     };
+                    console.log('User data to create:', userData);
                     this.stateService.setOrganizationTypeId(
                       selectedOrganizationTypeId,
                     );
