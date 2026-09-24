@@ -275,8 +275,10 @@ export class AuthService {
       );
   }
 
-  logout(): void {
-    this.snackbarNotificationService.dismissAll();
+  logout(navigateToLogin: boolean = true): void {
+    if (navigateToLogin) {
+      this.snackbarNotificationService.dismissAll();
+    }
 
     if (!this.authState.value) {
       this.clearCurrentSession();
@@ -297,28 +299,30 @@ export class AuthService {
             this.userLoggedOut$.next();
           } catch (error) {
           } finally {
-            this.safeResetAuthState();
+            this.safeResetAuthState(navigateToLogin);
           }
         },
         error: (error) => {
-          this.safeResetAuthState();
+          this.safeResetAuthState(navigateToLogin);
         },
       });
   }
 
-  private safeResetAuthState(): void {
+  private safeResetAuthState(navigateToLogin: boolean = true): void {
     if (!this.authState.value) {
       return;
     }
 
-    this.snackbarNotificationService.dismissAll();
+    if (navigateToLogin) {
+      this.snackbarNotificationService.dismissAll();
+    }
 
     this.userSubject.next(null);
     this.authState.next(false);
     this.isLoggingIn.next(false);
     this.stateService.clearOrganizationId();
 
-    if (this.router.url !== '/login') {
+    if (navigateToLogin && this.router.url !== '/login') {
       this.router.navigate(['/login']);
     }
   }
