@@ -18,6 +18,7 @@ import {
   MatDialogActions,
 } from '@angular/material/dialog';
 import { FormsModule } from '@angular/forms';
+import { HttpResponse } from '@angular/common/http';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { CancellationReasonDialog } from '../CancellationReasonDialog/cancellation-reason-dialog.component';
@@ -32,11 +33,20 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { StateService } from '../services/state.service';
 import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
+import { FeatureFlagService } from '../../shared/service/feature-flag.service';
 
 export interface DialogData {
   action: string;
   request: Request;
 }
+
+// Backend feature flag (Microsoft.FeatureManagement) that kill-switches
+// uploading offeror response zips to the agency's shared drive. While on,
+// the "Open"/"Redownload" solicitation actions fall back to zipping the
+// documents and downloading them locally instead of uploading to the
+// shared drive.
+const DISABLE_SHARED_DRIVE_SOLICITATION_UPLOAD_FEATURE_FLAG =
+  'DisableSharedDriveSolicitationUpload';
 
 @Component({
   selector: 'request-confirmation-dialog',
@@ -80,6 +90,7 @@ export class RequestConfirmationDialog implements OnDestroy {
     private snackBar: MatSnackBar,
     private stateService: StateService,
     private snackbarNotificationService: SnackbarNotificationService,
+    private featureFlagService: FeatureFlagService,
   ) {}
 
   getConfirmationMessage(): string {
@@ -385,7 +396,21 @@ export class RequestConfirmationDialog implements OnDestroy {
     this.destroy$.complete();
   }
 
-  downloadZipDocuments(request: any): Observable<{ correlationId: string }> {
+  downloadZipDocuments(request: any): Observable<unknown> {
+    return this.featureFlagService
+      .isEnabled(DISABLE_SHARED_DRIVE_SOLICITATION_UPLOAD_FEATURE_FLAG)
+      .pipe(
+        switchMap((sharedDriveUploadDisabled) =>
+          sharedDriveUploadDisabled
+            ? this.downloadZipDocumentsLocally(request)
+            : this.uploadZipDocumentsToSharedDrive(request),
+        ),
+      );
+  }
+
+  private uploadZipDocumentsToSharedDrive(
+    request: any,
+  ): Observable<{ correlationId: string }> {
     this.snackBar.open(
       'Download in Progress — The offers from this solicitation are currently being decrypted and uploaded to the shared drive that your agency previously designated. This is a background process. You may continue to use the MuniVendor platform during this operation.',
       'Dismiss',
@@ -402,6 +427,68 @@ export class RequestConfirmationDialog implements OnDestroy {
           );
         }),
       );
+  }
+
+  private downloadZipDocumentsLocally(
+    request: any,
+  ): Observable<HttpResponse<Blob>> {
+    this.snackBar.open(
+      'Download in Progress — The offers from this solicitation are currently being decrypted and zipped and will be downloaded in the background. You may continue to use the MuniVendor platform during this operation.',
+      'Dismiss',
+      { duration: 0, verticalPosition: 'top', horizontalPosition: 'center' },
+    );
+
+    return this.documentService
+      .DownloadOfferorZipDocumentsLocally(request.requestId)
+      .pipe(
+        tap((response) => {
+          this.snackBar.dismiss();
+
+          const blob = response.body;
+          if (blob) {
+            const contentDisposition = response.headers.get(
+              'Content-Disposition',
+            );
+            const fileName = this.parseContentDispositionFileName(
+              contentDisposition,
+              `Request-${request.requestId}.zip`,
+            );
+
+            const blobUrl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(blobUrl);
+          }
+
+          this.snackbarNotificationService.showSnackbarSuccess(
+            'The zip file has been downloaded.',
+          );
+        }),
+      );
+  }
+
+  private parseContentDispositionFileName(
+    contentDisposition: string | null,
+    fallback: string,
+  ): string {
+    if (!contentDisposition) return fallback;
+
+    const rfcMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+    if (rfcMatch?.[1]) {
+      return decodeURIComponent(rfcMatch[1].trim());
+    }
+
+    const quotedMatch = contentDisposition.match(/filename="([^"]+)"/);
+    if (quotedMatch?.[1]) return quotedMatch[1];
+
+    const unquotedMatch = contentDisposition.match(/filename=([^;]+)/);
+    if (unquotedMatch?.[1]) return unquotedMatch[1].trim();
+
+    return fallback;
   }
 
   openCancellationReasonDialog(action: string, request: any): void {
