@@ -131,13 +131,9 @@ export class SignupComponent implements OnInit, OnDestroy {
   }
 
   prepareGoogleSignIn(): void {
-    console.log('Preparing Google signup');
-
     this.authService.setSkipNextAuthState(true);
     this.authService.setSignupInProgress(true);
     this.googleSignupInitiated = true;
-
-    console.log('Google signup initiated:', this.googleSignupInitiated);
   }
 
   private detectSignupMode(): void {
@@ -326,24 +322,17 @@ export class SignupComponent implements OnInit, OnDestroy {
 
   private setupGoogleAuthListener(): void {
     this.googleSignupInitiated = true;
-    console.log('Google signup initiated:', this.googleSignupInitiated);
+
     this.socialAuthService.authState
       .pipe(
         takeUntil(this.destroy$),
         filter((user) => {
-          console.log('Google auth state changed:', user);
-          console.log(
-            'User creation in progress:',
-            this.userCreationInProgress,
-          );
-          console.log('Google signup initiated:', this.googleSignupInitiated);
           return (
             !!user && !this.userCreationInProgress && this.googleSignupInitiated
           );
         }),
 
         switchMap((user) => {
-          console.log('Google user detected:', user);
           this.userCreationInProgress = true;
 
           const googleUserLogin: UserLogin = {
@@ -351,26 +340,23 @@ export class SignupComponent implements OnInit, OnDestroy {
             username: user.email,
           };
 
-          // Try logging in with this Google identity first. Only create a
-          // new organization/user if no account exists yet for it — this
-          // prevents a repeat Google signup by an existing account from
-          // spawning an orphaned organization on every attempt.
+          // Try logging in with this Google identity first. This tells us
+          // whether an account already exists for it — if so, log back out
+          // immediately and display an error instead of creating a
+          // new organization/user (which would spawn an orphaned
+          // organization on every repeat Google signup attempt).
           return this.authService.login(googleUserLogin).pipe(
             tap(() => this.authService.setSkipNextAuthState(false)),
-            switchMap((loginResponse: number) => {
-              console.log(
-                'Google login successful, navigating after login:',
-                loginResponse,
+            switchMap(() => {
+              this.authService.logout(false);
+              this.socialAuthService.signOut().catch(() => {});
+              this.snackbarNotificationService.showSnackbarError(
+                'Sign up failed. This email may already exist or an error occurred.',
               );
-              return this.flowNavigationService.navigateAfterLogin(
-                loginResponse,
-              );
+              return of(null);
             }),
 
             catchError(() => {
-              console.log(
-                'Google login failed, proceeding to create new organization and user.',
-              );
               const selectedOrganizationTypeId =
                 this.signupFormGoogle.getRawValue().organizationTypeId;
 
@@ -392,7 +378,7 @@ export class SignupComponent implements OnInit, OnDestroy {
                       organizationId: orgResponse.organizationId,
                       organizationTypeId: selectedOrganizationTypeId,
                     };
-                    console.log('User data to create:', userData);
+
                     this.stateService.setOrganizationTypeId(
                       selectedOrganizationTypeId,
                     );
@@ -401,7 +387,7 @@ export class SignupComponent implements OnInit, OnDestroy {
                     );
                     return this.createOrLoginGoogleUser(userData);
                   }),
-                  catchError((error) => {
+                  catchError(() => {
                     this.userCreationInProgress = false;
                     this.authService.setSignupInProgress(false);
                     this.authService.setSkipNextAuthState(false);
@@ -433,8 +419,8 @@ export class SignupComponent implements OnInit, OnDestroy {
         this.stateService.setUserId(userId);
       }),
       catchError((error) => {
-        if (error.status === 409) {
-          return of(null);
+        if (error.status === 400) {
+          return throwError(() => error);
         }
         const correlationId = error?.error?.correlationId;
         this.loggingService.logException(
@@ -523,6 +509,12 @@ export class SignupComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         error: (error) => {
+          if (error.status === 400) {
+            this.snackbarNotificationService.showSnackbarError(
+              'Sign up failed. This email may already exist or an error occurred.',
+            );
+            return;
+          }
           const correlationId = error?.error?.correlationId;
           this.loggingService.logException(
             new Error(`HTTP Error ${error.status}: ${error.statusText}`),
