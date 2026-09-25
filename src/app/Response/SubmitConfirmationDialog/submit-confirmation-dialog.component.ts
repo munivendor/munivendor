@@ -6,12 +6,13 @@ import {
   MAT_DIALOG_DATA,
 } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, switchMap, takeUntil } from 'rxjs';
 import { Router } from '@angular/router';
 import { StateService } from '../../Request/services/state.service';
 import { CreditPurchaseDialogComponent } from '../CreditPurchaseDialog/credit-purchase-dialog.component';
 import { PaymentInfoService } from '../BillingInformation/services/payment-info.service';
 import { SnackbarNotificationService } from '../../shared/service/snackbar-notification.service';
+import { AddendumService } from '../../shared/service/addendum.service';
 
 @Component({
   selector: 'submit-confirmation-dialog',
@@ -30,7 +31,14 @@ export class SubmitConfirmationDialogComponent implements OnDestroy {
     private stateService: StateService,
     private dialogRef: MatDialogRef<SubmitConfirmationDialogComponent>,
     private snackbarNotificationService: SnackbarNotificationService,
-    @Inject(MAT_DIALOG_DATA) public data: { responseId: string },
+    private addendumService: AddendumService,
+    @Inject(MAT_DIALOG_DATA)
+    public data: {
+      responseId: string;
+      solicitationId?: number;
+      organizationId?: number;
+      addendumCount?: number;
+    },
   ) {}
 
   cancel(): void {
@@ -44,7 +52,31 @@ export class SubmitConfirmationDialogComponent implements OnDestroy {
 
   confirm(): void {
     const requestId = +this.data.responseId;
-    this.attemptSubmitOffer(requestId);
+
+    if (this.data.solicitationId && this.data.addendumCount) {
+      this.addendumService
+        .SaveSolicitationAddendumResponse(
+          this.data.solicitationId,
+          requestId,
+          this.organizationId ?? 0,
+          this.data.addendumCount,
+        )
+        .pipe(
+          takeUntil(this.destroy$),
+          switchMap(() =>
+            this.paymentInfoService.submitOffer(
+              this.organizationId ?? 0,
+              requestId,
+            ),
+          ),
+        )
+        .subscribe({
+          next: () => this.cleanupSessionAndNavigate(),
+          error: (error) => this.handleSubmissionError(requestId, error),
+        });
+    } else {
+      this.attemptSubmitOffer(requestId);
+    }
   }
 
   private attemptSubmitOffer(requestId: number): void {

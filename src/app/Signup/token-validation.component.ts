@@ -25,23 +25,35 @@ export class TokenValidationComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private userService: UserService,
     private router: Router,
-    private loggingService: LoggingService
+    private loggingService: LoggingService,
   ) {}
 
   ngOnInit() {
     this.route.queryParams
       .pipe(takeUntil(this.destroy$))
       .subscribe((params) => {
-        this.token = params['token'];
-        this.userId = params['userId'];
-        if (this.token) {
-          if (this.userId !== null) {
-            this.validateToken(this.token, this.userId);
-          } else {
-            this.verificationStatus = 'Invalid or missing user ID.';
-          }
-        } else {
+        const encoded = params['d'];
+
+        if (!encoded) {
           this.verificationStatus = 'Invalid or missing verification link.';
+          return;
+        }
+
+        // Decode the entire query string
+        const decoded = decodeURIComponent(encoded);
+        // decoded = "token=abc123&userId=346"
+
+        // Parse manually
+        const parts = new URLSearchParams(decoded);
+        this.token = parts.get('token');
+        const userIdStr = parts.get('userId');
+        const parsedUserId = userIdStr !== null ? parseInt(userIdStr, 10) : NaN;
+        this.userId = !isNaN(parsedUserId) ? parsedUserId : null;
+
+        if (this.token && this.userId) {
+          this.validateToken(this.token, this.userId);
+        } else {
+          this.verificationStatus = 'Invalid or missing verification data.';
         }
       });
   }
@@ -72,7 +84,7 @@ export class TokenValidationComponent implements OnInit, OnDestroy {
               methodName: 'validateToken',
               className: 'TokenValidationComponent',
               operation: 'ValidateEmailToken',
-            }
+            },
           );
 
           setTimeout(() => this.router.navigate(['/signup']), 15000);

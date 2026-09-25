@@ -189,8 +189,14 @@
     </mat-card-content>
   </mat-card>
 
-  <div class="mat-elevation-z8" *ngIf="hasLoadedData">
-    <table mat-table [dataSource]="dataSource" matSort>
+  <div class="results-wrapper" *ngIf="hasLoadedData">
+    <div class="table-container">
+      <table
+        mat-table
+        [dataSource]="dataSource"
+        matSort
+        class="requests-table"
+      >
       <ng-container matColumnDef="requestName">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
         <td mat-cell *matCellDef="let row">{{ row.requestName }}</td>
@@ -198,53 +204,59 @@
 
       <ng-container matColumnDef="agencyOrganizationName">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>
-          Agency Organization
+          Agency<br />Organization
         </th>
         <td mat-cell *matCellDef="let row">
           {{ row.agencyOrganizationName ?? "Example Name" }}
         </td>
       </ng-container>
 
-      <ng-container matColumnDef="requestId">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>ID</th>
-        <td mat-cell *matCellDef="let row">{{ row.requestId }}</td>
-      </ng-container>
+        <ng-container matColumnDef="requestId">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>ID</th>
+          <td mat-cell *matCellDef="let row">{{ row.requestId }}</td>
+        </ng-container>
 
-      <ng-container matColumnDef="requestType">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Type</th>
-        <td mat-cell *matCellDef="let row">
-          {{ row.requestType?.requestTypeDesc }}
-        </td>
-      </ng-container>
+        <ng-container matColumnDef="requestType">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Type</th>
+          <td mat-cell *matCellDef="let row">
+            {{ row.requestType?.requestTypeDesc }}
+          </td>
+        </ng-container>
 
-      <ng-container matColumnDef="category">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Category</th>
-        <td mat-cell *matCellDef="let row">
-          {{ displayCategoryName(row.categoryId, row.categoryFullPath) }}
-        </td>
-      </ng-container>
+        <ng-container matColumnDef="category">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Category</th>
+          <td mat-cell *matCellDef="let row">
+            {{ displayCategoryName(row.categoryId, row.categoryFullPath) }}
+          </td>
+        </ng-container>
 
       <ng-container matColumnDef="publishDate">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>
-          Publish Date & Time
+          Publish<br />Date & Time
         </th>
         <td mat-cell *matCellDef="let row">
-          {{ row.publishDate | date: "MM/dd/yyyy, h:mm a" }}
+          <div class="date-time-cell">
+            <span>{{ row.publishDate | date: "MM/dd/yyyy" }}</span>
+            <span>{{ row.publishDate | date: "h:mm a" }}</span>
+          </div>
         </td>
       </ng-container>
 
       <ng-container matColumnDef="closeDateAndTime">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>
-          Close Date & Time
+          Close<br />Date & Time
         </th>
         <td mat-cell *matCellDef="let row">
-          {{ row.closeDate | date: "MM/dd/yyyy, h:mm a" }}
+          <div class="date-time-cell">
+            <span>{{ row.closeDate | date: "MM/dd/yyyy" }}</span>
+            <span>{{ row.closeDate | date: "h:mm a" }}</span>
+          </div>
         </td>
       </ng-container>
 
       <ng-container matColumnDef="offerorRequestStatus">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>
-          Offeror Status
+          Offeror<br />Status
         </th>
         <td mat-cell *matCellDef="let row">
           {{ row.offerorRequestStatus?.requestStatusDesc ?? "None" }}
@@ -252,47 +264,56 @@
       </ng-container>
 
       <ng-container matColumnDef="agencyRequestStatus">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Agency Status</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>
+          Agency<br />Status
+        </th>
         <td mat-cell *matCellDef="let row">
           {{ row.agencyRequestStatus?.requestStatusDesc ?? "Draft" }}
         </td>
       </ng-container>
 
-      <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef>Actions</th>
-        <td mat-cell *matCellDef="let request">
-          <div class="action-button-container" style="align-items: center">
-            <button
-              mat-raised-button
-              [ngStyle]="
-                getAvailableActions(request).length > 0
-                  ? { 'background-color': 'rgb(43, 104, 207)', color: 'white' }
-                  : {}
-              "
-              [matMenuTriggerFor]="menu"
-              [disabled]="getAvailableActions(request).length === 0"
-              aria-label="Actions menu"
-            >
-              {{ getAvailableActions(request).length > 0 ? "Select" : "None" }}
-            </button>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let request">
+            <div class="action-button-container" style="align-items: center">
+              <button
+                mat-raised-button
+                [ngStyle]="
+                  getAvailableActions(request).length > 0
+                    ? {
+                        'background-color': 'rgb(43, 104, 207)',
+                        color: 'white',
+                      }
+                    : {}
+                "
+                [matMenuTriggerFor]="menu"
+                [disabled]="getAvailableActions(request).length === 0"
+                aria-label="Actions menu"
+              >
+                {{
+                  getAvailableActions(request).length > 0 ? "Select" : "None"
+                }}
+              </button>
 
-            <mat-menu #menu="matMenu">
-              <ng-container *ngFor="let action of getAvailableActions(request)">
-                <button
-                  *ngIf="action !== 'noneDisabled'"
-                  mat-menu-item
-                  (click)="openConfirmationDialog(action, request)"
+              <mat-menu #menu="matMenu">
+                <ng-container
+                  *ngFor="let action of getAvailableActions(request)"
                 >
-                  <span>{{ action | titlecase }}</span>
-                </button>
-              </ng-container>
-            </mat-menu>
-          </div>
-        </td>
-      </ng-container>
+                  <button
+                    *ngIf="action !== 'noneDisabled'"
+                    mat-menu-item
+                    (click)="openConfirmationDialog(action, request)"
+                  >
+                    <span>{{ action | titlecase }}</span>
+                  </button>
+                </ng-container>
+              </mat-menu>
+            </div>
+          </td>
+        </ng-container>
 
       <ng-container matColumnDef="downloadPDF">
-        <th mat-header-cell *matHeaderCellDef>Download as PDF</th>
+        <th mat-header-cell *matHeaderCellDef>Download<br />as PDF</th>
         <td mat-cell *matCellDef="let request">
           <div class="action-button-container" style="align-items: center">
             <button
@@ -308,7 +329,8 @@
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-    </table>
+      </table>
+    </div>
 
     <mat-paginator
       [length]="dataSource.data.length"

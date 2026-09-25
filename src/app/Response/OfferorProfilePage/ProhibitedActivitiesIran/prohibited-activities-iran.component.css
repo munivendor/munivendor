@@ -64,6 +64,7 @@
   padding: 24px 28px;
   display: flex;
   flex-direction: column;
+  gap: 8px;
 }
 
 /* ── Form sections ───────────────────────────────── */
@@ -98,6 +99,16 @@
   font-size: 0.875rem;
   color: #374151;
   line-height: 1.55;
+}
+
+/* ── Engagement duration ─────────────────────────── */
+.duration-row {
+  display: flex;
+  gap: 16px;
+}
+
+.duration-field {
+  width: 200px;
 }
 
 /* ── Upload section ──────────────────────────────── */

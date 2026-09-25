@@ -82,7 +82,7 @@ export class ResponseDetailsComponent implements OnInit {
     private http: HttpClient,
     public dialog: MatDialog,
     private loggingService: LoggingService,
-    private loadingService: LoadingService
+    private loadingService: LoadingService,
   ) {
     this.responseForm = this.fb.group({
       responseName: ['', Validators.required],
@@ -103,6 +103,12 @@ export class ResponseDetailsComponent implements OnInit {
           next: ({ agencyRequest, requestSections }) => {
             this.agencyRequest = agencyRequest;
             this.requestSections = requestSections.requestSections;
+
+            const addendumCount = (
+              requestSections.requestSections ?? []
+            ).filter((s: any) => s.requestSectionTypeId === 2).length;
+            this.stateService.setAddendumCount(addendumCount);
+
             this.loadingService.hide();
           },
           error: (error) => {
@@ -117,7 +123,7 @@ export class ResponseDetailsComponent implements OnInit {
 
             const operation =
               Object.entries(operationMap).find(([key]) =>
-                errorUrl.includes(key)
+                errorUrl.includes(key),
               )?.[1] || 'UnknownOperation';
 
             this.loggingService.logException(
@@ -131,7 +137,7 @@ export class ResponseDetailsComponent implements OnInit {
                 className: 'ResponseDetailsComponent',
                 operation: operation,
                 userId: this.stateService.getUserId(),
-              }
+              },
             );
           },
         });
@@ -226,7 +232,7 @@ export class ResponseDetailsComponent implements OnInit {
       .post(
         '/api/generate-pdf/' + this.sourceIdParam,
         { html: content },
-        { responseType: 'blob' }
+        { responseType: 'blob' },
       )
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -256,7 +262,7 @@ export class ResponseDetailsComponent implements OnInit {
               className: 'ResponseDetailsComponent',
               operation: 'GeneratePDF',
               userId: this.stateService.getUserId(),
-            }
+            },
           );
         },
       });

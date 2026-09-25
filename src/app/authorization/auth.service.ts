@@ -192,6 +192,12 @@ export class AuthService {
               }
             }),
             catchError((userError) => {
+              if (
+                userError.status === 401 ||
+                userError.status === 404
+              ) {
+                this.logout();
+              }
               return of(null);
             }),
           );
@@ -199,7 +205,7 @@ export class AuthService {
         catchError((err) => {
           this.setAuthenticated(false);
           if (
-            err.status === 401 &&
+            (err.status === 401 || err.status === 404) &&
             !this.allowGuestUrls.has(window.location.pathname)
           ) {
             this.router.navigate(['/login']);
@@ -219,8 +225,8 @@ export class AuthService {
             !!user &&
             !skipNext &&
             !signupInProgress &&
-            this.router.url !== '/signup',
-          this.router.url !== '/offeror/signup' &&
+            this.router.url !== '/signup' &&
+            this.router.url !== '/offeror/signup' &&
             this.router.url !== '/agency/signup',
         ),
       )
@@ -248,38 +254,18 @@ export class AuthService {
   login(userLogin: UserLogin): Observable<any> {
     this.isLoggingIn.next(true);
     return this.http
-      .post<{ UserId: number; Token: string }>(`${this.url}login`, userLogin, {
+      .post<number>(`${this.url}login`, userLogin, {
         withCredentials: true,
       })
       .pipe(
         tap((userId) => {
           if (userId) {
             this.authState.next(true);
-            this.userSubject.next(userId as any);
-            this.userService.getUser(Number(userId)).subscribe(
-              (user: User) => {
-                if (user.organizationId !== undefined) {
-                  this.stateService.setOrganizationId(user.organizationId);
-                }
-                if (user.organizationTypeId !== undefined) {
-                  this.stateService.setOrganizationTypeId(
-                    user.organizationTypeId,
-                  );
-                }
-                if (user.userId !== undefined) {
-                  this.stateService.setUserId(user.userId);
-                }
-
-                const userSession: UserSession = {
-                  userId: Number(userId),
-                  timestamp: Date.now(),
-                };
-                this.setCurrentSession(userSession);
-              },
-              (error) => {
-                console.error('Error fetching user data:', error);
-              },
-            );
+            this.userSubject.next(userId);
+            this.setCurrentSession({
+              userId,
+              timestamp: Date.now(),
+            });
           }
         }),
         catchError((error: HttpErrorResponse) => {
@@ -289,7 +275,11 @@ export class AuthService {
       );
   }
 
-  logout(): void {
+  logout(navigateToLogin: boolean = true): void {
+    if (navigateToLogin) {
+      this.snackbarNotificationService.dismissAll();
+    }
+
     if (!this.authState.value) {
       this.clearCurrentSession();
 
@@ -309,18 +299,22 @@ export class AuthService {
             this.userLoggedOut$.next();
           } catch (error) {
           } finally {
-            this.safeResetAuthState();
+            this.safeResetAuthState(navigateToLogin);
           }
         },
         error: (error) => {
-          this.safeResetAuthState();
+          this.safeResetAuthState(navigateToLogin);
         },
       });
   }
 
-  private safeResetAuthState(): void {
+  private safeResetAuthState(navigateToLogin: boolean = true): void {
     if (!this.authState.value) {
       return;
+    }
+
+    if (navigateToLogin) {
+      this.snackbarNotificationService.dismissAll();
     }
 
     this.userSubject.next(null);
@@ -328,7 +322,7 @@ export class AuthService {
     this.isLoggingIn.next(false);
     this.stateService.clearOrganizationId();
 
-    if (this.router.url !== '/login') {
+    if (navigateToLogin && this.router.url !== '/login') {
       this.router.navigate(['/login']);
     }
   }
@@ -354,21 +348,8 @@ export class AuthService {
   private completeLoginProcess(userId: number, email: string): void {
     this.userSubject.next(userId);
 
-    this.userService
-      .getUser(userId)
-      .pipe(
-        tap((user: User) => {
-          if (user.organizationId !== undefined) {
-            this.stateService.setOrganizationId(user.organizationId);
-          }
-          if (user.organizationTypeId !== undefined) {
-            this.stateService.setOrganizationTypeId(user.organizationTypeId);
-          }
-        }),
-        switchMap(() => {
-          return this.flowNavigationService.navigateAfterLogin(userId, email);
-        }),
-      )
+    this.flowNavigationService
+      .navigateAfterLogin(userId)
       .subscribe({
         next: () => {
           this.setAuthenticated(true, userId);

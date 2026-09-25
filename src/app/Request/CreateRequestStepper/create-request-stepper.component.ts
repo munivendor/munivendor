@@ -70,13 +70,19 @@ export class CreateRequestStepper implements OnInit, OnDestroy {
   municipalityDocuments: Document[] = [];
   finalReviewFormGroup!: FormGroup;
   idParam?: string | null;
-  isStepValid = false;
+  // Tracked per step (rather than one shared flag) because each step's
+  // component only emits formValidityChange on real status changes, not on
+  // every re-render — a shared flag either gets reset and never re-set when
+  // navigating back to an already-valid step, or carries a stale value
+  // forward into a step that hasn't emitted yet.
+  isStep1Valid = false;
+  isStep2Valid = false;
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private stateService: StateService,
-    @Inject(PLATFORM_ID) private platformId: Object
+    @Inject(PLATFORM_ID) private platformId: Object,
   ) {
     this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       this.idParam = params.get('requestId');
@@ -90,9 +96,9 @@ export class CreateRequestStepper implements OnInit, OnDestroy {
     this.router.events
       .pipe(
         filter(
-          (event): event is NavigationStart => event instanceof NavigationStart
+          (event): event is NavigationStart => event instanceof NavigationStart,
         ),
-        takeUntil(this.destroy$)
+        takeUntil(this.destroy$),
       )
       .subscribe((event) => {
         // Check if navigating away from create-request-view
@@ -162,8 +168,12 @@ export class CreateRequestStepper implements OnInit, OnDestroy {
       'You have unsaved changes. Are you sure you want to leave?';
   }
 
-  onFormValidityChange(valid: boolean) {
-    this.isStepValid = valid;
+  onStep1ValidityChange(valid: boolean) {
+    this.isStep1Valid = valid;
+  }
+
+  onStep2ValidityChange(valid: boolean) {
+    this.isStep2Valid = valid;
   }
 
   ngOnDestroy(): void {
